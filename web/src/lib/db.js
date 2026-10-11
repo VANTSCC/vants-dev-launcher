@@ -4,6 +4,7 @@ let tokenGetter = async () => null
 export function setTokenGetter(fn) {
   tokenGetter = fn
 }
+export const getToken = () => tokenGetter()
 
 const cache = new Map()
 const TTL = 30 * 1000

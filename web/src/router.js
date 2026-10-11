@@ -6,6 +6,7 @@ import TournamentsView from './views/TournamentsView.vue'
 import PlayersView from './views/PlayersView.vue'
 import PlayerProfileView from './views/PlayerProfileView.vue'
 import CalendarView from './views/CalendarView.vue'
+import AdminView from './views/AdminView.vue'
 
 // Rutas con hash (#/cuenta), igual que la web actual, para no romper enlaces ni GitHub Pages.
 export default createRouter({
@@ -18,6 +19,7 @@ export default createRouter({
     { path: '/jugadores', name: 'jugadores', component: PlayersView },
     { path: '/jugadores/:id', name: 'jugador', component: PlayerProfileView },
     { path: '/calendario', name: 'calendario', component: CalendarView },
+    { path: '/admin', name: 'admin', component: AdminView },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
   scrollBehavior: () => ({ top: 0 }),
