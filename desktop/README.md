@@ -1,7 +1,7 @@
 # VANTS — app de escritorio (Tauri)
 
 App de escritorio de VANTS hecha con **Tauri v2**: abre la web real
-(`https://feispla.github.io/Vantcall/`) en una ventana nativa ligera (~5 MB instalador,
+(`https://feispla.github.io/Vants/`) en una ventana nativa ligera (~5 MB instalador,
 usa el WebView del sistema). Como la app de Android, **se actualiza sola con la web**:
 cada push a `main` publica la web y la app de escritorio la muestra al instante.
 
