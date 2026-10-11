@@ -14,7 +14,7 @@ const REQUIRED_SIGNED = ['op_endpoint', 'claimed_id', 'identity', 'return_to', '
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const DEFAULT_REDIRECTS = [
-  'https://feispla.github.io/Vantcall/',
+  'https://feispla.github.io/Vants/',
   'https://vantsbetaa.pplx.app/',
   'https://vantsbeta.pplx.app/',
   'vants://auth/callback',
