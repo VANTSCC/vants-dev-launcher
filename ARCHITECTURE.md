@@ -15,7 +15,7 @@ flowchart TB
     end
 
     subgraph Hosting["Hosting estatico"]
-        Pages["GitHub Pages - feispla.github.io/Vantcall"]
+        Pages["GitHub Pages - feispla.github.io/Vants"]
         Netlify["Netlify - mismo sitio, sin build"]
     end
 
@@ -121,7 +121,7 @@ Pendiente conocido: la verificación de firma de Stripe (`verifyStripeSignature`
 
 ## 6. Apps
 
-- **Desktop (Tauri)**: `desktop/`. La ventana principal carga `https://feispla.github.io/Vantcall/`, así que recibe los cambios de la web sin recompilar. Se recompila solo si cambia `desktop/**` (workflow `desktop-build.yml`).
+- **Desktop (Tauri)**: `desktop/`. La ventana principal carga `https://feispla.github.io/Vants/`, así que recibe los cambios de la web sin recompilar. Se recompila solo si cambia `desktop/**` (workflow `desktop-build.yml`).
 - **Android (TWA)**: `android/`. Trusted Web Activity que abre la URL de la web, con `UpdateGateActivity` para forzar actualizaciones. Verificación de dominio en `.well-known/assetlinks.json`. Workflow `android-build.yml`.
 
 ## 7. Bot de Discord (`bot/`)

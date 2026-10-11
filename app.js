@@ -663,7 +663,7 @@ function renderPage(pageId) {
   if (window.VantAuth) window.VantAuth.afterRender(pageId);
 }
 
-const BASE = location.pathname.startsWith('/Vantcall') ? '/Vantcall' : '';
+const BASE = location.pathname.startsWith('/Vants') ? '/Vants' : (location.pathname.startsWith('/Vantcall') ? '/Vantcall' : '');
 
 function currentRoute() {
   if (location.hash.startsWith('#/')) return location.hash.replace('#/', '').split('?')[0];

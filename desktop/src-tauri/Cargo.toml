@@ -4,7 +4,7 @@ version = "1.0.3"
 description = "VANTS"
 authors = ["VANTS"]
 license = "MIT"
-repository = "https://github.com/feispla/Vantcall"
+repository = "https://github.com/feispla/Vants"
 edition = "2021"
 
 [build-dependencies]

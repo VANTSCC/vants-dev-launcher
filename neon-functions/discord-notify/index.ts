@@ -13,7 +13,7 @@ const pool = new Pool({
 });
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN ?? '';
-const SITE = (process.env.VANTS_SITE_URL ?? 'https://feispla.github.io/Vantcall').replace(/\/$/, '');
+const SITE = (process.env.VANTS_SITE_URL ?? 'https://feispla.github.io/Vants').replace(/\/$/, '');
 const NOTIFY_SECRET = process.env.DISCORD_NOTIFY_SECRET ?? '';
 
 const cors = {
@@ -120,7 +120,7 @@ async function targetFor(category: Category): Promise<Target | null> {
 async function send(target: Target, embed: Embed): Promise<{ ok: boolean; status: number; retryAfter?: number; error?: string }> {
   const body = JSON.stringify({ embeds: [{ ...embed, footer: { text: 'VANTS · vantcall esports' }, timestamp: new Date().toISOString() }], allowed_mentions: { parse: [] } });
   const url = target.kind === 'bot' ? `https://discord.com/api/v10/channels/${target.channelId}/messages` : `${target.url}?wait=true`;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', 'User-Agent': 'VANTS-Notify (https://feispla.github.io/Vantcall, 1.0)' };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', 'User-Agent': 'VANTS-Notify (https://feispla.github.io/Vants, 1.0)' };
   if (target.kind === 'bot') headers.Authorization = `Bot ${BOT_TOKEN}`;
   const r = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(8000) });
   if (r.ok) return { ok: true, status: r.status };

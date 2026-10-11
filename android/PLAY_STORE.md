@@ -9,7 +9,7 @@ VANTS es la plataforma competitiva de esports para jugadores de VALORANT, Counte
 - Torneos, calendario e inscripcion desde el movil.
 - Vincula tu cuenta de Discord, Steam y Riot.
 - Zona exclusiva para miembros.
-Categoria sugerida: Deportes o Entretenimiento. Politica de privacidad: https://feispla.github.io/Vantcall/privacidad.html
+Categoria sugerida: Deportes o Entretenimiento. Politica de privacidad: https://feispla.github.io/Vants/privacidad.html
 
 Graficos listos en `android/store/`: icono 512 y grafico de funciones 1024x500.
 Faltan **capturas de pantalla** (minimo 2, del movil) - haz capturas de la app instalada.
