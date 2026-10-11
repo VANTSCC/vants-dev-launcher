@@ -23,7 +23,7 @@
   const flags = { get: (k) => (mem.has(k) ? mem.get(k) : null), set: (k, v) => mem.set(k, String(v)), del: (k) => mem.delete(k) };
 
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // Siempre la carpeta raíz de la web (p. ej. /Vantcall/), aunque la URL sea /Vantcall/cuenta o /Vantcall/index.html
+  // Siempre la carpeta raíz de la web (p. ej. /Vants/), aunque la URL sea /Vants/cuenta o /Vants/index.html
   const baseUrl = () => window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
   const go = (route) => { if (window.location.hash !== '#/' + route) window.location.hash = '#/' + route; else if (typeof router === 'function') router(); };
 
