@@ -36,7 +36,7 @@ test('con sesion, ir a Inicio y volver a la cuenta mantiene los botones de perfi
   // El bug original: tras Inicio -> Cuenta, el boton Streamer desaparecia.
   await page.getByRole('link', { name: 'Inicio' }).first().click()
   await expect(page).toHaveURL(/#\/$/)
-  await page.getByTestId('nav-account').click()
+  await page.locator('[data-test^="nav-account"]:visible').click()
   await expect(page).toHaveURL(/#\/cuenta/)
 
   for (const k of ['friends', 'faceit', 'streamer']) {
