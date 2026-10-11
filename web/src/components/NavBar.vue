@@ -1,15 +1,15 @@
 <script setup>
 import { session, login, logout } from '../lib/auth.js'
 
-// Las secciones migradas son internas; Planes sigue en la web actual (fase siguiente).
-// icon: ruta SVG simple (24x24). mobile:false las oculta de la barra inferior.
+// Todas las secciones principales son internas. icon: ruta SVG simple (24x24).
+// mobile:false las oculta de la barra inferior.
 const links = [
   { label: 'Inicio', to: '/', internal: true, icon: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
   { label: 'Ranked', to: '/ranked', internal: true, icon: 'M4 20V10h4v10zm6 0V4h4v16zm6 0v-7h4v7z' },
   { label: 'Torneos', to: '/torneos', internal: true, icon: 'M7 4h10v4a5 5 0 0 1-10 0zM5 5H3v2a3 3 0 0 0 3 3M19 5h2v2a3 3 0 0 1-3 3M10 14h4v3h2v3H8v-3h2z' },
   { label: 'Jugadores', to: '/jugadores', internal: true, icon: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-8 9a8 8 0 0 1 16 0z' },
   { label: 'Calendario', to: '/calendario', internal: true, icon: 'M5 4h14a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm0 5h14M8 2v4m8-4v4' },
-  { label: 'Planes', href: '../index.html#/precios', icon: 'M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z', mobile: false },
+  { label: 'Planes', to: '/planes', internal: true, icon: 'M12 2l3 7 7 .6-5.3 4.7 1.6 7.2L12 17.8 5.7 21.5l1.6-7.2L2 9.6 9 9z', mobile: false },
 ]
 </script>
 
@@ -33,16 +33,18 @@ const links = [
     <router-link to="/" class="brand title side-brand" aria-label="VANTS inicio">VANTS</router-link>
 
     <nav class="links" aria-label="Principal">
-      <template v-for="l in links" :key="l.label">
-        <router-link v-if="l.internal" :to="l.to" class="link" active-class="" exact-active-class="active">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="l.icon" /></svg>
-          <span>{{ l.label }}</span>
-        </router-link>
-        <a v-else :href="l.href" class="link" :class="{ 'hide-mobile': l.mobile === false }">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="l.icon" /></svg>
-          <span>{{ l.label }}</span>
-        </a>
-      </template>
+      <router-link
+        v-for="l in links"
+        :key="l.label"
+        :to="l.to"
+        class="link"
+        :class="{ 'hide-mobile': l.mobile === false }"
+        active-class=""
+        exact-active-class="active"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="l.icon" /></svg>
+        <span>{{ l.label }}</span>
+      </router-link>
     </nav>
 
     <div class="side-actions">
