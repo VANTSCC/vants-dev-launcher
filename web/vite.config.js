@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// base './' para que funcione bajo /Vantcall/web/ en GitHub Pages y en Netlify.
+// base './' para que funcione bajo /Vants/web/ en GitHub Pages y en Netlify.
 export default defineConfig({
   base: './',
   plugins: [vue()],
