@@ -4,8 +4,8 @@ plugins {
 
 // ---- Web que abre la app (gradle.properties o -PWEB_HOST=...) ----
 def webHost      = findProperty('WEB_HOST')        ?: 'feispla.github.io'
-def webPathPref  = findProperty('WEB_PATH_PREFIX') ?: '/Vantcall'
-def webStartUrl  = findProperty('WEB_START_URL')   ?: 'https://feispla.github.io/Vantcall/'
+def webPathPref  = findProperty('WEB_PATH_PREFIX') ?: '/Vants'
+def webStartUrl  = findProperty('WEB_START_URL')   ?: 'https://feispla.github.io/Vants/'
 
 // ---- Firma: variables de entorno (CI) o keystore.properties (local). Nada en el codigo. ----
 def ksProps = new Properties()
