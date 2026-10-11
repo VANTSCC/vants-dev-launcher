@@ -8,6 +8,7 @@ import discord
 from discord import app_commands
 
 from commands.perfil import perfil_handler
+from commands.verificar import verificar_handler
 from commands.vincular import vincular_riot_handler
 from commands.moderacion import (
     warn_handler, kick_handler, ban_handler, mute_handler,
@@ -67,6 +68,14 @@ tree.add_command(vincular_group, guild=GUILD)
 @app_commands.describe(usuario="Jugador a consultar (opcional, por defecto tú)")
 async def perfil_command(interaction: discord.Interaction, usuario: discord.User | None = None) -> None:
     await perfil_handler(interaction, usuario)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMANDO: verificar
+# ─────────────────────────────────────────────────────────────────────────────
+@tree.command(guild=GUILD, name="verificar", description="Comprueba si tu Discord esta verificado en VANTS")
+async def verificar_command(interaction: discord.Interaction) -> None:
+    await verificar_handler(interaction)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
