@@ -1,16 +1,10 @@
 import { NEON_DATA_API } from '../config.js'
-import { buildParams, fetchRows, countRows, clearCache } from './db.js'
-import { session } from './auth.js'
+import { buildParams, fetchRows, countRows, clearCache, getToken } from './db.js'
 
 // Escrituras del panel: siempre con sesion (Neon Data API). La seguridad real la
 // dan los permisos/RLS de Neon; esta pagina solo oculta el panel a quien no es admin.
-let tokenFn = null
-export function setAdminTokenGetter(fn) {
-  tokenFn = fn
-}
-
 export async function patchRows(table, filters, body) {
-  const token = tokenFn ? await tokenFn() : null
+  const token = await getToken()
   if (!token) throw new Error('Necesitas iniciar sesion')
   const params = buildParams({ filters })
   const res = await fetch(`${NEON_DATA_API}/${table}?${params}`, {
@@ -58,4 +52,3 @@ export const getAlertCounts = async () => {
 export const retryAlert = (id) => patchRows('bot_alerts', { id: `eq.${id}` }, { status: 'pending', attempts: 0, error: null })
 export const setSetting = (key, enabled) =>
   patchRows('bot_settings', { key: `eq.${key}` }, { enabled, updated_at: new Date().toISOString() })
-export { session }
