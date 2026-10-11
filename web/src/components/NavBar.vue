@@ -1,11 +1,11 @@
 <script setup>
 import { session, login, logout } from '../lib/auth.js'
 
-// Enlaces a secciones que siguen en la web actual (fases siguientes las migran).
+// Las secciones migradas son internas; el resto sigue en la web actual (fases siguientes las migran).
 const links = [
   { label: 'Inicio', to: '/', internal: true },
-  { label: 'Ranked', href: '../index.html#/ranked' },
-  { label: 'Torneos', href: '../index.html#/torneos' },
+  { label: 'Ranked', to: '/ranked', internal: true },
+  { label: 'Torneos', to: '/torneos', internal: true },
   { label: 'Jugadores', href: '../index.html#/jugadores' },
   { label: 'Calendario', href: '../index.html#/calendario' },
   { label: 'Planes', href: '../index.html#/precios' },

@@ -122,6 +122,16 @@ export const getUpcomingTournaments = (limit = 4) =>
     }),
   )
 
+/** Todos los torneos (para la pagina de Torneos); el filtrado por estado se hace en la vista. */
+export const getTournaments = (limit = 60) =>
+  cached(`tournaments-all:${limit}`, () =>
+    fetchRows('tournaments', {
+      select: 'id,slug,name,game,status,prize_pool,starts_at,current_participants,max_participants',
+      order: 'starts_at.desc.nullslast',
+      limit,
+    }),
+  )
+
 export async function getPlayerByAuthId(sub) {
   const rows = await fetchRows('players', {
     select: 'id,username,display_name,avatar_url,region,country,main_game,verified,created_at',
