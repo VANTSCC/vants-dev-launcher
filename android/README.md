@@ -1,7 +1,7 @@
 # VANTS - app Android (Google Play)
 
 App Android de la plataforma de torneos VANTS. Es una **Trusted Web Activity (TWA)**: abre la web
-real (`https://feispla.github.io/Vantcall/`) en Chrome a pantalla completa. Por eso:
+real (`https://feispla.github.io/Vants/`) en Chrome a pantalla completa. Por eso:
 
 - **Se actualiza sola con la web**: cada push a `main` publica la web en GitHub Pages y la app
   la muestra al instante. No hay que recompilar ni resubir la app para cambios de la web.
@@ -50,7 +50,7 @@ Android Studio crea el wrapper de Gradle automaticamente (Gradle 8.11.1, JDK 17)
 
 Una TWA solo oculta la barra del navegador si el **origen** publica
 `https://DOMINIO/.well-known/assetlinks.json`. GitHub Pages sirve esta web en una *subruta*
-(`feispla.github.io/Vantcall/`), y el archivo tendria que estar en `feispla.github.io/.well-known/`.
+(`feispla.github.io/Vants/`), y el archivo tendria que estar en `feispla.github.io/.well-known/`.
 Opciones:
 
 1. **Dominio propio** (recomendado, p. ej. `vants.gg`) apuntando a este repo de Pages: el archivo

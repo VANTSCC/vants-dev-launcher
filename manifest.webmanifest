@@ -2,8 +2,8 @@
   "name": "VANTS — Plataforma competitiva de esports",
   "short_name": "VANTS",
   "description": "Ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends.",
-  "start_url": "/Vantcall/",
-  "scope": "/Vantcall/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0b131b",
@@ -16,35 +16,35 @@
   ],
   "icons": [
     {
-      "src": "/Vantcall/assets/brand/vants-mark-192.png",
+      "src": "./assets/brand/vants-mark-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Vantcall/assets/brand/vants-mark-512.png",
+      "src": "./assets/brand/vants-mark-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Vantcall/assets/brand/vants-maskable-512.png",
+      "src": "./assets/brand/vants-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/Vantcall/assets/brand/apple-touch-icon.png",
+      "src": "./assets/brand/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "/Vantcall/assets/brand/favicon-32.png",
+      "src": "./assets/brand/favicon-32.png",
       "sizes": "32x32",
       "type": "image/png"
     }
   ],
-  "id": "/Vantcall/",
+  "id": "./",
   "display_override": [
     "standalone",
     "minimal-ui"
@@ -53,10 +53,10 @@
     {
       "name": "Torneos",
       "short_name": "Torneos",
-      "url": "/Vantcall/torneos.html",
+      "url": "./torneos.html",
       "icons": [
         {
-          "src": "/Vantcall/assets/brand/vants-mark-192.png",
+          "src": "./assets/brand/vants-mark-192.png",
           "sizes": "192x192"
         }
       ]
@@ -64,10 +64,10 @@
     {
       "name": "Ranked",
       "short_name": "Ranked",
-      "url": "/Vantcall/ranked.html",
+      "url": "./ranked.html",
       "icons": [
         {
-          "src": "/Vantcall/assets/brand/vants-mark-192.png",
+          "src": "./assets/brand/vants-mark-192.png",
           "sizes": "192x192"
         }
       ]
@@ -75,10 +75,10 @@
     {
       "name": "Calendario",
       "short_name": "Calendario",
-      "url": "/Vantcall/calendario.html",
+      "url": "./calendario.html",
       "icons": [
         {
-          "src": "/Vantcall/assets/brand/vants-mark-192.png",
+          "src": "./assets/brand/vants-mark-192.png",
           "sizes": "192x192"
         }
       ]

@@ -1,5 +1,5 @@
 // VANTS — Service Worker: cache de la app shell para carga rapida y soporte offline basico (mejorado)
-const VERSION = 'vants-v10';
+const VERSION = 'vants-v11';
 const SHELL = [
   './',
   './index.html',
