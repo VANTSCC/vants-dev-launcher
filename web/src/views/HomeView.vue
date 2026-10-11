@@ -12,6 +12,12 @@ const season = ref(null)
 const top = ref([])
 const tournaments = ref([])
 
+const modes = [
+  { label: 'Emparejamiento', to: '/ranked', hint: 'Sube de rango con MMR real' },
+  { label: 'Liga', to: '/ranked', hint: 'Clasificación de la temporada' },
+  { label: 'Torneos', to: '/torneos', hint: 'Inscríbete y compite' },
+]
+
 onMounted(async () => {
   try {
     const [s, t, se] = await Promise.all([getStats(), getUpcomingTournaments(4), getActiveSeason()])
@@ -36,8 +42,18 @@ onMounted(async () => {
       <div class="hero-cta">
         <button v-if="session.ready && !session.loggedIn" class="btn btn-primary" data-test="hero-login" @click="login()">Entrar gratis</button>
         <router-link v-else-if="session.loggedIn" to="/cuenta" class="btn btn-primary">Ir a mi cuenta</router-link>
-        <a class="btn" href="../index.html#/torneos">Ver torneos</a>
+        <router-link class="btn" to="/torneos">Ver torneos</router-link>
       </div>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="grid modes" data-test="modes">
+      <router-link v-for="m in modes" :key="m.label" :to="m.to" class="mode">
+        <span class="mode-art" aria-hidden="true"></span>
+        <span class="mode-label">{{ m.label }}</span>
+        <span class="muted mode-hint">{{ m.hint }}</span>
+      </router-link>
     </div>
   </section>
 
@@ -85,14 +101,22 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.hero { background: radial-gradient(1200px 400px at 80% -10%, rgba(255,85,0,.22), transparent), linear-gradient(180deg, #151515, var(--bg)); border-bottom: 1px solid var(--line); padding: 72px 0 56px; }
+.hero { background: radial-gradient(1200px 400px at 80% -10%, rgba(255,85,0,.28), transparent), repeating-linear-gradient(135deg, rgba(255,255,255,.02) 0 14px, transparent 14px 28px), linear-gradient(180deg, #151515, var(--bg)); border-bottom: 1px solid var(--line); padding: 64px 0 56px; }
 .hero-inner { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
-.hero-title { font-size: clamp(44px, 8vw, 92px); }
+.hero-title { font-size: clamp(40px, 7vw, 84px); }
 .accent { color: var(--accent); }
 .hero-sub { font-size: 18px; max-width: 560px; }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
-.stats { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: -28px; position: relative; }
-.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 32px; }
+
+.modes { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: -28px; position: relative; }
+.mode { display: flex; flex-direction: column; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; transition: transform .15s, border-color .15s; }
+.mode:hover { transform: translateY(-3px); border-color: var(--accent); }
+.mode-art { height: 110px; background: radial-gradient(circle at 50% 120%, rgba(255,255,255,.18), transparent 60%), linear-gradient(180deg, #ff5500 0%, #8a2a00 100%); }
+.mode-label { padding: 12px 16px 0; font-weight: 700; font-size: 18px; }
+.mode-hint { padding: 0 16px 14px; font-size: 13px; }
+
+.stats { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: 24px; position: relative; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 32px; }
 .h2 { font-size: 26px; margin-bottom: 14px; }
 .rows { list-style: none; padding: 0; display: flex; flex-direction: column; }
 .row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
