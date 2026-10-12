@@ -43,7 +43,12 @@ export async function initAuth() {
     })
 
     const q = window.location.search
-    if (q.includes('code=') && q.includes('state=')) {
+    if (q.includes('error=')) {
+      // Auth0 devolvio un error en la URL: mostrarlo en vez de fallar en silencio.
+      const p = new URLSearchParams(q)
+      session.error = p.get('error_description') || p.get('error')
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
+    } else if (q.includes('code=') && q.includes('state=')) {
       await client.handleRedirectCallback()
       window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
     }
@@ -65,10 +70,21 @@ export async function initAuth() {
   }
 }
 
+/**
+ * Sin `connection`: abre la pantalla #/entrar con los botones de cada proveedor.
+ * Con `connection` (p. ej. 'google-oauth2', 'discord'): redirige directo a Auth0.
+ */
 export function login(connection) {
-  if (!client) return
+  if (!connection) {
+    window.location.hash = '#/entrar'
+    return
+  }
+  if (!client) {
+    session.error = 'El inicio de sesión no está disponible ahora mismo. Recarga la página.'
+    return
+  }
   return client.loginWithRedirect({
-    authorizationParams: connection ? { connection } : {},
+    authorizationParams: { connection },
   })
 }
 
