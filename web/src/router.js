@@ -8,12 +8,14 @@ import PlayerProfileView from './views/PlayerProfileView.vue'
 import CalendarView from './views/CalendarView.vue'
 import PlansView from './views/PlansView.vue'
 import AdminView from './views/AdminView.vue'
+import LoginView from './views/LoginView.vue'
 
 // Rutas con hash (#/cuenta), igual que la web actual, para no romper enlaces ni GitHub Pages.
 export default createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', name: 'inicio', component: HomeView },
+    { path: '/entrar', name: 'entrar', component: LoginView },
     { path: '/cuenta', name: 'cuenta', component: AccountView },
     { path: '/ranked', name: 'ranked', component: RankedView },
     { path: '/torneos', name: 'torneos', component: TournamentsView },
