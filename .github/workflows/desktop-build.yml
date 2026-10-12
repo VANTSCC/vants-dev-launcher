@@ -53,14 +53,16 @@ jobs:
       - name: Generar iconos desde la marca VANTS
         run: npx tauri icon ../assets/brand/vants-mark-1024.png -o src-tauri/icons
 
+      # Cada ejecucion usa su propia etiqueta (version + numero de build). Asi nunca intenta
+      # sobrescribir assets de una release ya publicada (las releases inmutables lo prohiben).
       - name: Compilar instaladores
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: desktop-v__VERSION__
-          releaseName: 'VANTS Desktop v__VERSION__'
+          tagName: desktop-v__VERSION__-build${{ github.run_number }}
+          releaseName: 'VANTS Desktop v__VERSION__ (build ${{ github.run_number }})'
           releaseBody: 'Instaladores de VANTS para Windows, macOS y Linux. Se actualiza sola con la web.'
           releaseDraft: true
           prerelease: false

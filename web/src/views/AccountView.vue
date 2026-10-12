@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { session, login, logout } from '../lib/auth.js'
 import { getGameAccounts, getPlayerByAuthId, getPlayerStanding } from '../lib/db.js'
 import { formatDate, gameProfileUrl, playerName, winRate } from '../lib/format.js'
+import FaceitLink from '../components/FaceitLink.vue'
 
 const loading = ref(true)
 const error = ref(null)
@@ -35,11 +36,16 @@ watch(() => session.loggedIn, load)
 
 const account = (game) => accounts.value.find((a) => a.game === game) || null
 
-// Los botones de accion viven en el template: se renderizan siempre que haya sesion,
-// sin depender de ningun redibujado externo (el bug de la web actual).
+function scrollToFaceit(e) {
+  e.preventDefault()
+  const el = document.getElementById('faceit')
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// Los botones de accion viven en el template: se renderizan siempre que haya sesion.
 const actions = [
-  { key: 'friends', label: 'Agregar amigos', href: '../index.html#/jugadores' },
-  { key: 'faceit', label: 'FACEIT', href: '../index.html#/cuenta' },
+  { key: 'friends', label: 'Agregar amigos', href: '#/jugadores' },
+  { key: 'faceit', label: 'FACEIT', href: '#faceit', onClick: scrollToFaceit },
   { key: 'streamer', label: 'Streamer', href: '../index.html#/cuenta' },
 ]
 </script>
@@ -72,8 +78,10 @@ const actions = [
         </header>
 
         <nav class="actions" aria-label="Acciones de perfil" data-test="profile-actions">
-          <a v-for="a in actions" :key="a.key" :href="a.href" class="btn" :data-test="`action-${a.key}`">{{ a.label }}</a>
+          <a v-for="a in actions" :key="a.key" :href="a.href" class="btn" :data-test="`action-${a.key}`" @click="a.onClick && a.onClick($event)">{{ a.label }}</a>
         </nav>
+
+        <FaceitLink />
 
         <section class="card">
           <h2 class="title h2">Cuentas vinculadas</h2>
