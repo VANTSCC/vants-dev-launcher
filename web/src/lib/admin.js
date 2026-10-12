@@ -52,3 +52,6 @@ export const getAlertCounts = async () => {
 export const retryAlert = (id) => patchRows('bot_alerts', { id: `eq.${id}` }, { status: 'pending', attempts: 0, error: null })
 export const setSetting = (key, enabled) =>
   patchRows('bot_settings', { key: `eq.${key}` }, { enabled, updated_at: new Date().toISOString() })
+
+// Compatibilidad: AdminView lo importa; el token ya llega via setTokenGetter (db.js).
+export function setAdminTokenGetter() {}
