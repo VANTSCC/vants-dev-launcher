@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPlayerById, getPlayerSeasons } from '../lib/players.js'
 import { formatDate, playerName, winRate } from '../lib/format.js'
+import FaceitMatches from '../components/FaceitMatches.vue'
 
 const route = useRoute()
 const loading = ref(true)
@@ -55,6 +56,8 @@ onMounted(async () => {
           <div class="card stat"><strong class="title">{{ totals.losses }}</strong><span class="muted">Derrotas</span></div>
           <div class="card stat"><strong class="title">{{ totals.wr }}%</strong><span class="muted">Win rate</span></div>
         </div>
+
+        <FaceitMatches v-if="player.username" :username="player.username" />
 
         <div class="card">
           <h2 class="title">Colocaciones de temporada</h2>
