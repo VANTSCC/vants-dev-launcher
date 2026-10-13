@@ -1,0 +1,15 @@
+# Firma: NUNCA subir llaves ni contrasenas
+*.jks
+*.keystore
+keystore.properties
+local.properties
+
+# Build
+.gradle/
+build/
+app/build/
+*.apk
+*.aab
+.idea/
+*.iml
+.DS_Store

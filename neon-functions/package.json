@@ -1,0 +1,14 @@
+{
+  "name": "vants-neon-functions",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@neon/config": "latest",
+    "@neon/functions": "latest",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0"
+  }
+}

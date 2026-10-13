@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">VANTS</string>
+
+    <!--
+      Digital Asset Links (lado app). Si cambias WEB_HOST en gradle.properties,
+      cambia tambien "site" aqui. Debe ser solo el origen (https://dominio), sin ruta.
+    -->
+    <string name="asset_statements" translatable="false">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {
+                \"namespace\": \"web\",
+                \"site\": \"https://feispla.github.io\"
+            }
+        }]
+    </string>
+</resources>

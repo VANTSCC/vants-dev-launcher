@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.vantsports.app",
+      "sha256_cert_fingerprints": [
+        "EE:75:91:32:67:92:78:C0:61:84:45:12:62:AD:0F:58:86:2E:FB:69:7A:22:3C:A1:E5:7A:A5:1A:69:C0:20:4D"
+      ]
+    }
+  }
+]

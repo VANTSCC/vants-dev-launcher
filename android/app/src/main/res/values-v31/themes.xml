@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Vants.Gate" parent="Theme.Vants">
+        <item name="android:windowSplashScreenBackground">@color/vants_bg</item>
+    </style>
+</resources>

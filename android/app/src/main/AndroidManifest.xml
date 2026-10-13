@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Solo Internet. Sin GET_ACCOUNTS, sin permisos sensibles. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Necesario en Android 11+ para detectar navegadores compatibles con Custom Tabs / TWA -->
+    <queries>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Vants">
+
+        <!-- Declaracion Digital Asset Links del lado de la app -->
+        <meta-data
+            android:name="asset_statements"
+            android:resource="@string/asset_statements" />
+
+        <!-- Puerta de entrada: comprueba actualizaciones de Play y abre la web -->
+        <activity
+            android:name=".UpdateGateActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Vants.Gate">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- La web VANTS a pantalla completa (Trusted Web Activity) -->
+        <activity
+            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:alwaysRetainTaskState="true"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Vants.Gate">
+
+            <meta-data
+                android:name="android.support.customtabs.trusted.DEFAULT_URL"
+                android:value="${webStartUrl}" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
+                android:resource="@color/vants_bg" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
+                android:resource="@color/vants_bg" />
+
+            <!-- Enlaces de la web se abren en la app -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="${webHost}"
+                    android:pathPrefix="${webPathPrefix}" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

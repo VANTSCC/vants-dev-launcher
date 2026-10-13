@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Vants" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/vants_bg</item>
+        <item name="android:statusBarColor">@color/vants_bg</item>
+        <item name="android:navigationBarColor">@color/vants_bg</item>
+    </style>
+
+    <!-- Pantalla puente sin interfaz: solo el fondo VANTS -->
+    <style name="Theme.Vants.Gate" parent="Theme.Vants" />
+</resources>

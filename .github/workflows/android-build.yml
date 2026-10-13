@@ -1,0 +1,91 @@
+name: Android - compilar APK/AAB
+
+# Cada push que toque android/ compila la app. Si hay llave de firma en los secretos,
+# genera APK y AAB firmados; si no, genera un APK debug para pruebas.
+# La WEB no necesita recompilar la app: la app abre la web en vivo (GitHub Pages).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    env:
+      # Secretos (Settings -> Secrets and variables -> Actions). Todos opcionales.
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      # versionCode sube solo en cada ejecucion (Play exige que siempre aumente).
+      VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Preparar llave de firma
+        if: ${{ env.KEYSTORE_B64 != '' }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Compilar release firmado (APK + AAB)
+        if: ${{ env.KEYSTORE_B64 != '' }}
+        run: gradle :app:assembleRelease :app:bundleRelease --stacktrace
+
+      - name: Compilar debug (sin llave de firma)
+        if: ${{ env.KEYSTORE_B64 == '' }}
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: vants-apk
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Subir AAB (para Play Store)
+        if: ${{ env.KEYSTORE_B64 != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vants-aab
+          path: android/app/build/outputs/bundle/release/*.aab
+
+      # Opcional: publica solo en la pista "internal" de Play. Requiere que la PRIMERA version
+      # ya se haya subido a mano en Play Console y el secreto PLAY_SERVICE_ACCOUNT_JSON.
+      - name: Publicar en Play (pista interna)
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.KEYSTORE_B64 != '' && env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.vantsports.app
+          releaseFiles: android/app/build/outputs/bundle/release/*.aab
+          track: internal
+          status: completed

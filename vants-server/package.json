@@ -1,0 +1,16 @@
+{
+  "name": "vants-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Servidor VANTS: web + bot de Discord (anuncios de torneos, membresías, lives y campeones)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+  }
+}

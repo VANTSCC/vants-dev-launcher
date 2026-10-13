@@ -1,0 +1,88 @@
+plugins {
+    id 'com.android.application'
+}
+
+// ---- Web que abre la app (gradle.properties o -PWEB_HOST=...) ----
+def webHost      = findProperty('WEB_HOST')        ?: 'feispla.github.io'
+def webPathPref  = findProperty('WEB_PATH_PREFIX') ?: '/Vants'
+def webStartUrl  = findProperty('WEB_START_URL')   ?: 'https://feispla.github.io/Vants/'
+
+// ---- Version: CI la pasa por env; si falta o esta vacia se usan valores por defecto. ----
+// (Antes `versionName System.getenv(..) ?: '1.1.0'` se parseaba como versionName(null) -> "Value is null".)
+def envOr = { String key, String fallback -> def v = System.getenv(key); (v != null && v.trim()) ? v.trim() : fallback }
+def appVersionCode = envOr('VERSION_CODE', '2').toInteger()
+def appVersionName = envOr('VERSION_NAME', '1.1.0')
+
+// ---- Firma: variables de entorno (CI) o keystore.properties (local). Nada en el codigo. ----
+def ksProps = new Properties()
+def ksFile = rootProject.file('keystore.properties')
+if (ksFile.exists()) { ksFile.withInputStream { ksProps.load(it) } }
+def signVal = { String propKey, String envKey -> System.getenv(envKey) ?: ksProps.getProperty(propKey) }
+
+android {
+    namespace = 'com.vantsports.app'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.vantsports.app"
+        minSdk = 21
+        targetSdk = 36
+        // En CI se sube automaticamente con el numero de ejecucion (VERSION_CODE).
+        versionCode = appVersionCode
+        versionName = appVersionName
+
+        manifestPlaceholders = [
+                webHost       : webHost,
+                webPathPrefix : webPathPref,
+                webStartUrl   : webStartUrl
+        ]
+    }
+
+    signingConfigs {
+        release {
+            def sf = signVal('storeFile', 'KEYSTORE_FILE')
+            if (sf) {
+                storeFile = file(sf)
+                storePassword = signVal('storePassword', 'KEYSTORE_PASSWORD')
+                keyAlias = signVal('keyAlias', 'KEY_ALIAS')
+                keyPassword = signVal('keyPassword', 'KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Si no hay llave configurada se genera sin firmar (el CI de PRs no necesita secretos).
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig = signingConfigs.release
+            }
+        }
+        debug {
+            applicationIdSuffix = '.debug'
+            versionNameSuffix = '-debug'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    bundle {
+        language { enableSplit = false }
+    }
+
+    lint {
+        abortOnError = false
+    }
+}
+
+dependencies {
+    // Trusted Web Activity: abre la web real en Chrome a pantalla completa (OAuth de Google/Discord funciona).
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+    // Actualizaciones in-app de Google Play.
+    implementation 'com.google.android.play:app-update:2.1.0'
+}

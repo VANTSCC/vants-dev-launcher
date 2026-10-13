@@ -1,0 +1,43 @@
+# Secretos y entornos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python (bot de Discord)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Artefactos de build/pruebas locales
+dist/
+test-results/
+playwright-report/
+
+# Archivos de trabajo temporales
+_shell*.*
+_diag*.*
+_css*.*
+_shots*.*
+preview/
+
+# Android: nunca subir llaves de firma
+*.jks
+*.keystore
+keystore.properties
+local.properties
+android/.gradle/
+android/**/build/
+*.apk
+*.aab
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
