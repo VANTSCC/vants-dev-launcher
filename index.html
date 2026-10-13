@@ -1,268 +1,1274 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 <head>
-    <!-- Google Tag Manager -->
-      <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-MZPW89N2');</script>
-        <!-- End Google Tag Manager -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>VANTS — Plataforma competitiva de esports: ranked, torneos y ligas</title>
-  <meta name="description" content="VANTCALL Esports: ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Entra gratis con Google, Discord, Steam o correo.">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VANTS — Torneos amateur de CS2, VALORANT y LoL</title>
+<meta name="description" content="VANTS: torneos online semanales de Counter-Strike 2, VALORANT y League of Legends. Bracket en directo y premios en metálico."/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%230B0B0C'/%3E%3Cpath d='M8 10 L24 40 L40 10' fill='none' stroke='%23C9FF2E' stroke-width='6'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============ BASE ============ */
+:root{
+  --bg:#0B0B0C; --bg2:#101013; --bg3:#141418;
+  --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+  --ink:#F2F1EC; --mut:#A9A9A1;
+  --acc:#C9FF2E; --cs2:#F0A33C; --val:#FF4655; --lol:#D0A85C;
+  --fd:'Anton',sans-serif; --fb:'Archivo',sans-serif; --fm:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;scroll-padding-top:92px}
+body{background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:16px;line-height:1.55;overflow-x:hidden}
+body.lock{overflow:hidden}
+::selection{background:var(--acc);color:#000}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#26262b;border:2px solid var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+img{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.ic{width:1em;height:1em;stroke-width:2}
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800,900&f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500,600&display=swap" rel="stylesheet">
-    <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,600,700,800,900&f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet">
-  </noscript>
+/* grano sutil sobre toda la página */
+body::after{
+  content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
 
-  <link rel="stylesheet" href="./bundle.css?v=8">
-  <link rel="stylesheet" href="./vantcall-cls-fixes.css?v=8">
-  <link rel="stylesheet" href="./spotify.css?v=8">
-  <link rel="stylesheet" href="./desktop-shell.css?v=1">
-    <link rel="stylesheet" href="./viteconf-theme.css?v=1">
-  <link rel="preload" as="image" href="./assets/hero-arena.jpg">
+/* ============ CURSOR ============ */
+.cur-dot,.cur-ring{display:none;position:fixed;top:0;left:0;z-index:9000;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%)}
+.cur-dot{width:6px;height:6px;background:var(--acc)}
+.cur-ring{width:34px;height:34px;border:1px solid rgba(255,255,255,.35);transition:width .25s,height .25s,border-color .25s}
+.cur-ring.hot{width:58px;height:58px;border-color:var(--acc)}
+@media(pointer:fine){
+  body.cursor-on{cursor:none}
+  body.cursor-on a,body.cursor-on button,body.cursor-on label{cursor:none}
+  body.cursor-on input,body.cursor-on textarea,body.cursor-on select{cursor:text}
+  .cur-dot,.cur-ring{display:block}
+}
 
-  <link rel="icon" type="image/svg+xml" href="./assets/brand/favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="./assets/brand/favicon-32.png">
-  <link rel="apple-touch-icon" href="./assets/brand/apple-touch-icon.png">
-  <meta name="theme-color" content="#0b131b">
+/* ============ LOADER ============ */
+#loader{position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;transition:transform .7s cubic-bezier(.76,0,.24,1)}
+#loader.done{transform:translateY(-100%)}
+.ld-mark{width:52px;height:52px;color:var(--ink)}
+.ld-mark path{stroke-dasharray:90;stroke-dashoffset:90;animation:draw 1s cubic-bezier(.6,0,.2,1) forwards}
+.ld-mark path.p2{stroke-dasharray:60;stroke-dashoffset:60;animation-delay:.15s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.ld-word{font-family:var(--fd);font-size:2rem;letter-spacing:.14em;margin-top:10px;overflow:hidden}
+.ld-word span{display:inline-block;transform:translateY(110%);animation:up .7s .3s cubic-bezier(.19,1,.22,1) forwards}
+@keyframes up{to{transform:none}}
+.ld-bar{width:min(240px,60vw);height:2px;background:var(--line);overflow:hidden}
+.ld-bar span{display:block;height:100%;width:0;background:var(--acc)}
+.ld-pct{font-family:var(--fm);font-size:.7rem;letter-spacing:.3em;color:var(--mut)}
 
-  <link rel="manifest" href="./manifest.webmanifest">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="VANTS">
-  <meta name="application-name" content="VANTS">
-  <link rel="canonical" href="https://feispla.github.io/Vants/">
+/* ============ NAV ============ */
+.nav{position:fixed;top:0;left:0;right:0;z-index:900;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,56px);border-bottom:1px solid transparent;transition:background .35s,border-color .35s,backdrop-filter .35s}
+.nav.scrolled{background:rgba(11,11,12,.82);backdrop-filter:blur(14px);border-color:var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--fd);font-size:1.5rem;letter-spacing:.1em}
+.brand svg{width:22px;height:22px}
+.brand b{color:var(--acc)}
+.nav-links{display:flex;gap:34px;align-items:center}
+.nav-links a{font-family:var(--fm);font-size:.72rem;letter-spacing:.22em;color:var(--mut);position:relative;padding:6px 0;transition:color .25s}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--acc);transform:scaleX(0);transform-origin:right;transition:transform .35s cubic-bezier(.19,1,.22,1)}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after{transform:scaleX(1);transform-origin:left}
+.nav-right{display:flex;align-items:center;gap:18px}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--fm);font-size:.75rem;font-weight:700;letter-spacing:.18em;padding:14px 24px;border:1px solid transparent;transition:transform .2s ease-out,background .25s,color .25s,border-color .25s;white-space:nowrap}
+.btn .ic{width:15px;height:15px;transition:transform .3s}
+.btn:hover .ic{transform:translate(3px,-3px)}
+.btn-acc{background:var(--acc);color:#0B0B0C}
+.btn-acc:hover{background:var(--ink)}
+.btn-ghost{border-color:var(--line2);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+.btn-nav{padding:11px 20px}
+.btn-nav.owned{background:transparent;border-color:var(--acc);color:var(--acc)}
+.burger{display:none;width:42px;height:42px;align-items:center;justify-content:center;border:1px solid var(--line2)}
+.burger .ic{width:20px;height:20px}
+.mnav{position:fixed;inset:0;z-index:850;background:var(--bg);display:flex;flex-direction:column;justify-content:center;padding:0 8vw;gap:6px;visibility:hidden;opacity:0;transition:opacity .35s,visibility .35s}
+.mnav.on{visibility:visible;opacity:1}
+.mnav a{font-family:var(--fd);font-size:clamp(2.4rem,10vw,4rem);border-bottom:1px solid var(--line);padding:14px 0;display:flex;justify-content:space-between;align-items:center;transform:translateY(24px);opacity:0;transition:transform .5s cubic-bezier(.19,1,.22,1),opacity .5s,color .2s}
+.mnav a i{font-style:normal;font-family:var(--fm);font-size:.75rem;color:var(--acc)}
+.mnav.on a{transform:none;opacity:1}
+.mnav a:hover{color:var(--acc)}
 
-  <!-- Google Analytics (GA4) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1DZQTTK7XX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){ dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-1DZQTTK7XX', { send_page_view: false });
-  </script>
+/* ============ HERO ============ */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;overflow:hidden}
+#arenaCv{position:absolute;inset:0;width:100%;height:100%}
+.hero-inner{position:relative;z-index:2;max-width:1360px;width:100%;margin:0 auto;padding:130px clamp(20px,4vw,56px) 0;flex:1;display:flex;flex-direction:column}
+.hero-par{will-change:transform}
+.h-kick{font-family:var(--fm);font-size:.72rem;letter-spacing:.3em;color:var(--mut);display:flex;align-items:center;gap:14px}
+.h-kick::before{content:"";width:36px;height:1px;background:var(--acc)}
+.h-title{font-family:var(--fd);font-weight:400;font-size:clamp(4.2rem,13.5vw,11.5rem);line-height:.94;letter-spacing:.01em;margin:26px 0 34px;text-transform:uppercase}
+.hl{display:block;overflow:hidden}
+.hl>span{display:block;transform:translateY(112%);transition:transform 1s cubic-bezier(.19,1,.22,1)}
+.hl:nth-child(2)>span{transition-delay:.08s}
+.hl:nth-child(3)>span{transition-delay:.16s}
+body.loaded .hl>span{transform:none}
+.outl{color:transparent;-webkit-text-stroke:2px var(--ink)}
+.h-title .dot{font-style:normal;color:var(--acc)}
+.h-sub{max-width:520px;color:var(--mut);font-size:1.02rem}
+.h-sub b{color:var(--ink);font-weight:600}
+.h-ctas{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+.h-fade{opacity:0;transform:translateY(22px);transition:opacity .9s ease,transform .9s cubic-bezier(.19,1,.22,1)}
+body.loaded .h-fade{opacity:1;transform:none}
+body.loaded .h-fade.d1{transition-delay:.25s}
+body.loaded .h-fade.d2{transition-delay:.4s}
+body.loaded .h-fade.d3{transition-delay:.55s}
+.h-stats{margin-top:auto;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+.hs{padding:22px 26px 30px 0;border-right:1px solid var(--line)}
+.hs:last-child{border-right:0}
+.hs b{display:block;font-family:var(--fd);font-weight:400;font-size:clamp(1.7rem,3.4vw,2.6rem);color:var(--acc)}
+.hs span{font-family:var(--fm);font-size:.62rem;letter-spacing:.24em;color:var(--mut)}
+.h-scroll{position:absolute;right:clamp(20px,4vw,56px);bottom:120px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--mut);font-family:var(--fm);font-size:.62rem;letter-spacing:.4em;writing-mode:vertical-rl}
+.h-scroll .ic{width:14px;height:14px;animation:bd 1.8s infinite}
+@keyframes bd{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+/* ticker */
+.ticker{position:relative;z-index:2;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg)}
+.ticker-label{position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;gap:8px;padding:0 18px;background:var(--acc);color:#0B0B0C;font-family:var(--fm);font-weight:700;font-size:.68rem;letter-spacing:.24em}
+.ticker-label .dotl{width:7px;height:7px;border-radius:50%;background:#0B0B0C;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.ticker-track{display:flex;width:max-content;animation:tick 34s linear infinite;padding-left:150px}
+.ticker:hover .ticker-track{animation-play-state:paused}
+@keyframes tick{to{transform:translateX(-50%)}}
+.tk{display:flex;align-items:center;font-family:var(--fm);font-size:.78rem;letter-spacing:.1em;color:var(--mut);white-space:nowrap;padding:14px 0}
+.tk b{color:var(--ink);font-weight:500}
+.tk-sep{color:var(--acc);margin:0 22px;font-weight:700}
 
-  <!-- Vercel Speed Insights -->
-  <script>
-    window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-  </script>
+/* ============ SECCIONES ============ */
+section{border-top:1px solid var(--line)}
+.wrap{max-width:1360px;margin:0 auto;padding:clamp(80px,11vh,130px) clamp(20px,4vw,56px)}
+.sec-head{display:grid;grid-template-columns:auto 1fr minmax(0,340px);gap:28px;align-items:end;margin-bottom:clamp(40px,6vh,64px)}
+.sec-num{font-family:var(--fm);font-size:.72rem;letter-spacing:.3em;color:var(--acc);border:1px solid var(--line2);padding:8px 12px}
+.sec-title{font-family:var(--fd);font-weight:400;font-size:clamp(2.4rem,6vw,4.6rem);line-height:1;letter-spacing:.01em;text-transform:uppercase}
+.sec-note{color:var(--mut);font-size:.92rem;padding-bottom:6px}
+[data-reveal]{opacity:0;transform:translateY(30px);transition:opacity .85s ease,transform .85s cubic-bezier(.19,1,.22,1)}
+[data-reveal].in{opacity:1;transform:none}
 
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="VANTS">
-  <meta property="og:title" content="VANTS — Plataforma competitiva de esports: ranked, torneos y ligas">
-  <meta property="og:description" content="Ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Entra gratis con Google, Discord, Steam o correo.">
-  <meta property="og:url" content="https://feispla.github.io/Vants/">
-  <meta property="og:image" content="https://feispla.github.io/Vants/assets/brand/og-vants.jpg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:locale" content="es_ES">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="VANTS — Plataforma competitiva de esports: ranked, torneos y ligas">
-  <meta name="twitter:description" content="Ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Entra gratis con Google, Discord, Steam o correo.">
-  <meta name="twitter:image" content="https://feispla.github.io/Vants/assets/brand/og-vants.jpg">
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": "https://feispla.github.io/Vants/#org",
-        "name": "VANTS",
-        "alternateName": "VANTCALL Esports",
-        "url": "https://feispla.github.io/Vants/",
-        "logo": "https://feispla.github.io/Vants/assets/brand/vants-mark-1024.png",
-        "description": "Plataforma competitiva de esports: ranked con MMR, torneos con premios y ligas de VALORANT, CS2 y League of Legends.",
-        "sameAs": [
-          "https://discord.gg/rCHE7jvRS4",
-          "https://x.com/feispla",
-          "https://kick.com/feispla"
-        ]
-      },
-      {
-        "@type": "WebSite",
-        "@id": "https://feispla.github.io/Vants/#site",
-        "url": "https://feispla.github.io/Vants/",
-        "name": "VANTS",
-        "publisher": { "@id": "https://feispla.github.io/Vants/#org" },
-        "inLanguage": "es"
-      },
-      {
-        "@type": "SportsOrganization",
-        "@id": "https://feispla.github.io/Vants/#league",
-        "name": "VANTS Liga Competitiva",
-        "sport": "eSports",
-        "url": "https://feispla.github.io/Vants/",
-        "parentOrganization": { "@id": "https://feispla.github.io/Vants/#org" }
-      }
-    ]
-  }
-  </script>
+/* ============ ARENAS ============ */
+.arena{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:clamp(28px,4vw,64px);align-items:start}
+.a-item{width:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;text-align:left;padding:22px 12px;border-top:1px solid var(--line);transition:background .3s,padding-left .3s;position:relative}
+.a-item:last-of-type{border-bottom:1px solid var(--line)}
+.a-item::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);transform:scaleY(0);transition:transform .35s}
+.a-num{font-family:var(--fm);font-size:.72rem;color:var(--mut);letter-spacing:.2em}
+.a-name{font-family:var(--fd);font-weight:400;font-size:clamp(1.4rem,2.6vw,2rem);letter-spacing:.02em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.5);transition:color .3s,-webkit-text-stroke .3s;text-transform:uppercase}
+.a-arrow{color:var(--mut);opacity:0;transform:translate(-6px,6px);transition:all .3s}
+.a-item:hover{background:var(--bg2);padding-left:20px}
+.a-item:hover .a-name{color:var(--ink);-webkit-text-stroke:0px transparent}
+.a-item.on::before{transform:scaleY(1)}
+.a-item.on .a-name{color:var(--acc);-webkit-text-stroke:0}
+.a-item.on .a-num{color:var(--acc)}
+.a-item.on .a-arrow{opacity:1;transform:none;color:var(--acc)}
+.a-more{margin-top:22px;font-family:var(--fm);font-size:.65rem;letter-spacing:.22em;color:var(--mut);border-top:1px dashed var(--line2);padding-top:16px}
+.a-more b{color:var(--ink);font-weight:500}
+.arena-panel{position:relative;overflow:hidden;background:var(--bg2);border:1px solid var(--line);min-height:480px}
+#apBody{padding:clamp(22px,3vw,40px)}
+.ap-wipe{position:absolute;inset:0;z-index:5;transform:scaleX(0);transform-origin:left;transition:transform .34s ease-in}
+.ap-wipe.cover{transform:scaleX(1)}
+.ap-top{display:flex;align-items:flex-start;gap:20px}
+.ap-num{font-family:var(--fd);font-size:clamp(3.4rem,6vw,5.4rem);line-height:1;color:transparent;-webkit-text-stroke:1.5px var(--line2)}
+.ap-name{font-family:var(--fd);font-weight:400;font-size:clamp(1.8rem,3.4vw,2.8rem);line-height:1.05;text-transform:uppercase}
+.ap-line{display:block;height:4px;width:64px;margin-top:10px}
+.ap-tag{color:var(--mut);max-width:560px;margin:18px 0 16px;font-size:.95rem}
+.ap-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.ap-chips span{font-family:var(--fm);font-size:.64rem;letter-spacing:.16em;border:1px solid var(--line2);padding:6px 12px;color:var(--mut)}
+.ap-video{position:relative;aspect-ratio:16/9;background:var(--bg3);border:1px solid var(--line)}
+.vfacade{position:absolute;inset:0;width:100%;overflow:hidden;display:block;text-align:left}
+.vfacade img{width:100%;height:100%;object-fit:cover;filter:saturate(.92) contrast(1.05);transition:transform .6s cubic-bezier(.19,1,.22,1)}
+.vfacade:hover img{transform:scale(1.045)}
+.vf-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:72px;border-radius:50%;background:var(--acc);color:#0B0B0C;display:flex;align-items:center;justify-content:center;transition:transform .3s}
+.vf-play .ic{width:26px;height:26px;fill:#0B0B0C;margin-left:3px}
+.vfacade:hover .vf-play{transform:translate(-50%,-50%) scale(1.1)}
+.vf-tag{position:absolute;left:14px;bottom:12px;font-family:var(--fm);font-size:.6rem;letter-spacing:.24em;color:var(--ink);background:rgba(11,11,12,.78);padding:7px 10px}
+.vfacade.nofill{display:flex;align-items:center;justify-content:center}
+.vf-fallback{display:flex;flex-direction:column;gap:8px;align-items:center;color:var(--mut);font-family:var(--fm);font-size:.66rem;letter-spacing:.26em}
+.vf-fallback b{font-family:var(--fd);font-weight:400;font-size:2.4rem;letter-spacing:.06em;color:transparent;-webkit-text-stroke:1px var(--line2)}
+.vfacade.playing{cursor:default}
+.vfacade iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.ap-stats{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-top:0}
+.ap-stats div{padding:16px 18px;border-right:1px solid var(--line)}
+.ap-stats div:last-child{border-right:0}
+.ap-stats b{display:block;font-family:var(--fd);font-weight:400;font-size:1.5rem;color:var(--acc)}
+.ap-stats span{font-family:var(--fm);font-size:.6rem;letter-spacing:.22em;color:var(--mut)}
+
+/* ============ TORNEOS ============ */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px}
+.f-btn{font-family:var(--fm);font-size:.68rem;letter-spacing:.2em;padding:10px 18px;border:1px solid var(--line2);color:var(--mut);transition:all .25s}
+.f-btn i{font-style:normal;color:var(--acc);margin-left:6px}
+.f-btn:hover{color:var(--ink);border-color:var(--ink)}
+.f-btn.on{background:var(--acc);border-color:var(--acc);color:#0B0B0C;font-weight:700}
+.f-btn.on i{color:#0B0B0C}
+.t-row{border-top:1px solid var(--line);opacity:1;transform:none;transition:opacity .3s,transform .3s}
+.t-row:last-child{border-bottom:1px solid var(--line)}
+.t-row.hideout{opacity:0;transform:translateY(10px)}
+.t-main{width:100%;display:grid;grid-template-columns:96px 1fr 130px 110px 220px 44px;gap:18px;align-items:center;text-align:left;padding:24px 8px;transition:background .3s,padding-left .3s}
+.t-main:hover{background:var(--bg2);padding-left:20px}
+.t-date b{display:block;font-family:var(--fd);font-weight:400;font-size:1.15rem;letter-spacing:.04em}
+.t-date i{font-style:normal;font-family:var(--fm);font-size:.6rem;letter-spacing:.16em;color:var(--mut)}
+.t-name{font-family:var(--fd);font-weight:400;font-size:clamp(1.3rem,2.6vw,1.9rem);letter-spacing:.02em;text-transform:uppercase;transition:transform .3s,color .3s}
+.t-main:hover .t-name{transform:translateX(6px)}
+.t-game{font-family:var(--fm);font-size:.62rem;letter-spacing:.2em;border:1px solid var(--gc);color:var(--gc);text-align:center;padding:7px 0}
+.t-prize{font-family:var(--fd);font-weight:400;font-size:1.4rem;color:var(--acc)}
+.t-slots{display:flex;flex-direction:column;gap:7px}
+.ts-txt{font-family:var(--fm);font-size:.64rem;letter-spacing:.14em;color:var(--mut)}
+.ts-txt b{color:var(--val);font-weight:700}
+.ts-bar{display:block;height:4px;background:var(--bg3);overflow:hidden}
+.ts-bar span{display:block;height:100%;background:var(--acc);transition:width .6s cubic-bezier(.19,1,.22,1)}
+.t-row.full .ts-bar span{background:var(--val)}
+.t-chev{display:flex;align-items:center;justify-content:center;color:var(--mut);transition:transform .4s,color .3s}
+.t-chev .ic{width:18px;height:18px}
+.t-row.open .t-chev{transform:rotate(180deg);color:var(--acc)}
+.t-details{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s cubic-bezier(.19,1,.22,1)}
+.t-row.open .t-details{grid-template-rows:1fr}
+.td-in{overflow:hidden}
+.td-wrap{padding:4px 8px 30px;display:flex;flex-direction:column;gap:20px}
+.td-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.td-grid div{border-left:2px solid var(--acc);padding-left:14px}
+.td-grid b{display:block;font-family:var(--fm);font-size:.6rem;letter-spacing:.24em;color:var(--mut);margin-bottom:6px;font-weight:500}
+.td-grid p{font-size:.88rem;color:var(--ink)}
+.td-cta{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.td-note{font-family:var(--fm);font-size:.66rem;letter-spacing:.14em;color:var(--mut)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.25);border-top-color:#0B0B0C;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.btn:disabled{opacity:.75;pointer-events:none}
+
+/* ============ PASS ============ */
+.pass{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(30px,4vw,70px);align-items:start}
+.pass-title{font-family:var(--fd);font-weight:400;font-size:clamp(2.6rem,6vw,4.8rem);line-height:1;text-transform:uppercase}
+.pass-title em{font-style:normal;color:transparent;-webkit-text-stroke:2px var(--acc)}
+.pass-sub{color:var(--mut);max-width:520px;margin:18px 0 34px}
+.perks{list-style:none}
+.perks li{display:flex;gap:16px;align-items:center;padding:16px 4px;border-top:1px solid var(--line);font-size:.95rem}
+.perks li:last-child{border-bottom:1px solid var(--line)}
+.pk{flex:none;width:38px;height:38px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc)}
+.pk .ic{width:17px;height:17px}
+.perks b{font-weight:600}
+.perks i{font-style:normal;display:block;font-size:.8rem;color:var(--mut)}
+.price-box{background:var(--acc);color:#0B0B0C;padding:clamp(26px,3vw,42px);display:flex;flex-direction:column;gap:22px}
+.pt-toggle{display:flex;border:1px solid #0B0B0C;width:max-content}
+.pt-opt{font-family:var(--fm);font-size:.68rem;font-weight:700;letter-spacing:.18em;padding:11px 20px;color:#0B0B0C;transition:background .25s,color .25s}
+.pt-opt.on{background:#0B0B0C;color:var(--acc)}
+.pb-price{display:flex;align-items:baseline;gap:8px}
+.pb-price b{font-family:var(--fd);font-weight:400;font-size:clamp(3.6rem,6vw,5.6rem);line-height:1}
+.pb-price span{font-family:var(--fm);font-size:.8rem;font-weight:700;letter-spacing:.1em}
+.pb-save{font-family:var(--fm);font-size:.62rem;font-weight:700;letter-spacing:.2em;border:1px solid #0B0B0C;padding:6px 10px;width:max-content;transition:opacity .3s}
+.pb-save.off{opacity:0}
+.pb-note{font-family:var(--fm);font-size:.68rem;letter-spacing:.06em}
+.btn-dark{background:#0B0B0C;color:var(--acc);justify-content:center}
+.btn-dark:hover{background:var(--ink);color:#0B0B0C}
+.btn-dark .spin{border-color:rgba(201,255,46,.3);border-top-color:var(--acc)}
+.pb-legal{font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;color:rgba(11,11,12,.65)}
+
+/* ============ RANKING ============ */
+.r-head,.r-row{display:grid;grid-template-columns:64px minmax(0,1.6fr) 130px minmax(120px,1fr) 120px 70px;gap:16px;align-items:center}
+.r-head{font-family:var(--fm);font-size:.6rem;letter-spacing:.26em;color:var(--mut);padding:0 8px 14px}
+.r-row{border-top:1px solid var(--line);padding:16px 8px;transition:background .3s}
+.r-row:last-child{border-bottom:1px solid var(--line)}
+.r-row:hover{background:var(--bg2)}
+.r-row.first{border-left:3px solid var(--acc);padding-left:14px}
+.r-pos{font-family:var(--fd);font-weight:400;font-size:1.5rem;color:var(--mut)}
+.r-row.first .r-pos{color:var(--acc)}
+.r-ava{width:40px;height:40px;border:1px solid var(--gc);color:var(--gc);display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:.7rem;font-weight:700;flex:none}
+.r-id b{display:block;font-weight:600;font-size:1.02rem}
+.r-id i{font-style:normal;font-family:var(--fm);font-size:.62rem;letter-spacing:.16em;color:var(--mut)}
+.r-form{display:flex;gap:5px}
+.r-form span{width:10px;height:10px;flex:none}
+.r-form .w{background:var(--acc)}
+.r-form .l{border:1px solid var(--line2)}
+.r-pts{display:flex;align-items:center;gap:14px}
+.rp-bar{flex:1;height:4px;background:var(--bg3)}
+.rp-bar span{display:block;height:100%;width:0;background:var(--acc);transition:width 1.2s cubic-bezier(.19,1,.22,1)}
+.r-pts b{font-family:var(--fd);font-weight:400;font-size:1.25rem;min-width:64px;text-align:right}
+.r-delta{font-family:var(--fm);font-size:.7rem;font-weight:700;display:flex;align-items:center;gap:4px;justify-content:flex-end}
+.r-delta.up{color:var(--acc)} .r-delta.dn{color:var(--val)} .r-delta.eq{color:var(--mut)}
+.r-delta .ic{width:13px;height:13px}
+
+/* ============ FOOTER ============ */
+.cta-band{display:flex;align-items:center;justify-content:space-between;gap:26px;flex-wrap:wrap;padding-bottom:clamp(60px,8vh,90px)}
+.cta-band h2{font-family:var(--fd);font-weight:400;font-size:clamp(2.4rem,6.5vw,5rem);line-height:1;text-transform:uppercase}
+.cta-band h2 em{font-style:normal;color:var(--acc)}
+footer{border-top:1px solid var(--line);position:relative;overflow:hidden}
+.ft{display:grid;grid-template-columns:1.3fr .7fr .7fr 1.1fr;gap:40px;padding:clamp(50px,7vh,80px) 0}
+.ft h4{font-family:var(--fm);font-size:.62rem;letter-spacing:.28em;color:var(--mut);margin-bottom:18px;font-weight:500}
+.ft-col a{display:block;color:var(--mut);font-size:.9rem;padding:5px 0;transition:color .25s,transform .25s}
+.ft-col a:hover{color:var(--acc);transform:translateX(4px)}
+.ft-brand p{color:var(--mut);font-size:.9rem;max-width:300px;margin:14px 0 20px}
+.socials{display:flex;gap:10px}
+.socials a{width:40px;height:40px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--mut);transition:all .25s}
+.socials a:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-3px)}
+.socials .ic{width:17px;height:17px}
+.nl{display:flex;border:1px solid var(--line2)}
+.nl input{flex:1;min-width:0;background:transparent;border:0;color:var(--ink);font-family:var(--fm);font-size:.8rem;padding:0 16px;outline:none}
+.nl input::placeholder{color:#62625c}
+.nl button{width:52px;height:50px;background:var(--acc);color:#0B0B0C;display:flex;align-items:center;justify-content:center;flex:none;transition:background .25s}
+.nl button:hover{background:var(--ink)}
+.nl-hint{font-family:var(--fm);font-size:.6rem;letter-spacing:.14em;color:var(--mut);margin-top:10px}
+.ft-giant{font-family:var(--fd);font-weight:400;font-size:clamp(6rem,22vw,21rem);line-height:.78;text-align:center;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.14);user-select:none;transition:color .6s,-webkit-text-stroke .6s;letter-spacing:.02em}
+.ft-giant:hover{color:var(--acc);-webkit-text-stroke:0}
+.ft-legal{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding:22px 0;font-family:var(--fm);font-size:.62rem;letter-spacing:.16em;color:var(--mut)}
+.ft-legal div{display:flex;gap:24px}
+.ft-legal a{transition:color .25s}
+.ft-legal a:hover{color:var(--acc)}
+
+/* ============ MODAL / TOAST ============ */
+.modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;visibility:hidden;opacity:0;transition:opacity .3s,visibility .3s}
+.modal.on{visibility:visible;opacity:1}
+.modal-back{position:absolute;inset:0;background:rgba(5,5,6,.7);backdrop-filter:blur(6px)}
+.modal-panel{position:relative;width:min(520px,100%);max-height:88vh;overflow:auto;background:var(--bg2);border:1px solid var(--line2);padding:34px;transform:translateY(26px) scale(.98);transition:transform .4s cubic-bezier(.19,1,.22,1)}
+.modal.on .modal-panel{transform:none}
+.modal-x{position:absolute;top:14px;right:14px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--mut);border:1px solid transparent;transition:all .25s}
+.modal-x:hover{color:var(--ink);border-color:var(--line2)}
+.modal-x .ic{width:18px;height:18px}
+.m-kick{font-family:var(--fm);font-size:.64rem;letter-spacing:.26em;color:var(--acc);margin-bottom:10px}
+.m-title{font-family:var(--fd);font-weight:400;font-size:2rem;line-height:1.05;text-transform:uppercase}
+.m-sub{color:var(--mut);font-size:.9rem;margin:10px 0 24px}
+.m-sum{border:1px solid var(--line);margin-bottom:24px}
+.m-sum div{display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line);font-family:var(--fm);font-size:.78rem}
+.m-sum div:last-child{border-bottom:0}
+.m-sum span{color:var(--mut);letter-spacing:.14em;font-size:.64rem;align-self:center}
+.m-sum b{font-weight:700}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-family:var(--fm);font-size:.6rem;letter-spacing:.24em;color:var(--mut);margin-bottom:8px}
+.fld input{width:100%;background:var(--bg);border:1px solid var(--line2);color:var(--ink);font-family:var(--fm);font-size:.85rem;padding:13px 14px;outline:none;transition:border-color .25s}
+.fld input:focus{border-color:var(--acc)}
+.fld.bad input{border-color:var(--val)}
+.ferr{display:none;font-family:var(--fm);font-size:.62rem;letter-spacing:.08em;color:var(--val);margin-top:6px}
+.fld.bad .ferr{display:block}
+.fcheck{display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--mut);margin:20px 0;cursor:pointer}
+.fcheck input{accent-color:var(--acc);margin-top:3px;width:15px;height:15px;flex:none}
+.fcheck.bad{color:var(--val)}
+.w100{width:100%;justify-content:center}
+.toasts{position:fixed;right:20px;bottom:20px;z-index:1500;display:flex;flex-direction:column;gap:10px}
+.toast{position:relative;display:flex;gap:12px;align-items:flex-start;background:var(--bg3);border:1px solid var(--line2);border-left:3px solid var(--acc);padding:15px 18px;width:min(360px,calc(100vw - 40px));transform:translateX(30px);opacity:0;transition:transform .45s cubic-bezier(.19,1,.22,1),opacity .45s}
+.toast.on{transform:none;opacity:1}
+.toast.out{transform:translateX(30px);opacity:0}
+.toast .ic{width:18px;height:18px;color:var(--acc);flex:none;margin-top:1px}
+.toast.warn{border-left-color:var(--val)} .toast.warn .ic{color:var(--val)}
+.toast p{font-size:.84rem;color:var(--ink)}
+.toast i{position:absolute;left:0;bottom:0;height:2px;background:var(--acc);width:100%;transform-origin:left;animation:life 3.6s linear forwards}
+.toast.warn i{background:var(--val)}
+@keyframes life{to{transform:scaleX(0)}}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:1080px){
+  .nav-links{display:none}
+  .burger{display:flex}
+  .arena{grid-template-columns:1fr}
+  .a-list-row{display:flex;overflow-x:auto;gap:0;border:1px solid var(--line)}
+  .a-list-row .a-item{border:0;border-right:1px solid var(--line);min-width:220px}
+  .a-list-row .a-item:last-of-type{border-right:0;border-bottom:0}
+  .pass{grid-template-columns:1fr}
+  .sec-head{grid-template-columns:auto 1fr}
+  .sec-note{grid-column:1/-1}
+}
+@media(max-width:920px){
+  .t-main{grid-template-columns:1fr 1fr 34px;grid-template-areas:"date tag chev" "name name name" "prize slots slots";row-gap:12px}
+  .t-date{grid-area:date} .t-game{grid-area:tag} .t-name{grid-area:name}
+  .t-prize{grid-area:prize} .t-slots{grid-area:slots} .t-chev{grid-area:chev}
+  .td-grid{grid-template-columns:1fr 1fr}
+  .h-stats{grid-template-columns:1fr 1fr}
+  .hs:nth-child(2){border-right:0}
+  .hs{border-bottom:1px solid var(--line);padding-bottom:18px}
+  .h-scroll{display:none}
+  .r-head{display:none}
+  .r-wrap{overflow-x:auto}
+  .r-inner{min-width:760px}
+  .ft{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .ft{grid-template-columns:1fr}
+  .ap-stats{grid-template-columns:1fr}
+  .ap-stats div{border-right:0;border-bottom:1px solid var(--line)}
+  .td-grid{grid-template-columns:1fr}
+  .btn-nav{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
+}
+</style>
 </head>
-<body>
-              <a href="#main" class="skip-link">Saltar al contenido</a>
+<body class="lock">
 
-  <button id="pwa-install-btn" type="button" aria-label="Instalar VANTS" style="display:none; position:fixed; right:16px; bottom:20px; z-index:9999; padding:12px 16px; border:0; border-radius:999px; background:#0ea5e9; color:white; box-shadow:0 12px 30px rgba(14,165,233,.35); font-weight:700; cursor:pointer;">Instalar app</button>
+<!-- cursor personalizado -->
+<div class="cur-dot" aria-hidden="true"></div>
+<div class="cur-ring" aria-hidden="true"></div>
 
-  <div class="layout">
-    <header class="header">
-      <div class="header-left">
-        <button class="menu-toggle" aria-label="Abrir menú" id="menu-toggle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-        <a href="#/inicio" class="logo">
-          <img src="./assets/brand/vants-mark.svg" alt="" width="30" height="30">
-          VANTS
-        </a>
-      </div>
-
-      <nav class="main-nav" aria-label="Navegación principal">
-        <a href="#/inicio" class="nav-item"><span class="nav-number">01</span> INICIO</a>
-        <a href="#/calendario" class="nav-item"><span class="nav-number">02</span> CALENDARIO</a>
-        <a href="#/ranked" class="nav-item"><span class="nav-number">03</span> RANKED</a>
-        <a href="#/torneos" class="nav-item"><span class="nav-number">04</span> TORNEOS</a>
-        <a href="#/jugadores" class="nav-item"><span class="nav-number">05</span> JUGADORES</a>
-        <a href="#/precios" class="nav-item"><span class="nav-number">06</span> PRECIOS</a>
-        <a href="#/zona" class="nav-item nav-item-zona" data-zona-link><span class="nav-number">07</span> ZONA VIP</a>
-      </nav>
-
-      <nav class="mobile-nav" id="mobile-nav" aria-label="Navegación móvil">
-        <a href="#/inicio" class="mobile-nav-item"><span class="mobile-nav-number">01</span> INICIO</a>
-        <a href="#/calendario" class="mobile-nav-item"><span class="mobile-nav-number">02</span> CALENDARIO</a>
-        <a href="#/ranked" class="mobile-nav-item"><span class="mobile-nav-number">03</span> RANKED</a>
-        <a href="#/torneos" class="mobile-nav-item"><span class="mobile-nav-number">04</span> TORNEOS</a>
-        <a href="#/jugadores" class="mobile-nav-item"><span class="mobile-nav-number">05</span> JUGADORES</a>
-        <a href="#/precios" class="mobile-nav-item"><span class="mobile-nav-number">06</span> PRECIOS</a>
-        <a href="#/zona" class="mobile-nav-item" data-zona-link><span class="mobile-nav-number">07</span> ZONA VIP</a>
-      </nav>
-
-      <div class="header-right">
-        <a href="#/admin" class="header-link header-admin" id="admin-link" hidden>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6z"/></svg>
-          <span>Admin</span>
-        </a>
-        <a href="#/login" class="header-link" id="auth-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
-          <span id="auth-link-label">Login</span>
-        </a>
-        <button class="theme-toggle" data-theme-toggle aria-label="Cambiar tema"></button>
-      </div>
-    </header>
-
-    <main class="main" id="main" tabindex="-1">
-      <!-- Content rendered by app.js -->
-    </main>
-
-    <footer class="footer">
-      <div class="footer-grid">
-        <div class="footer-col footer-brand">
-          <div class="footer-logo">
-            <img src="./assets/brand/vants-mark.svg" alt="" width="30" height="30">
-            <span>VANTS</span>
-          </div>
-          <p>VANTS · circuito competitivo.<br>Ranked, torneos, calendario y eventos.</p>
-        </div>
-        <div class="footer-col">
-          <div class="footer-heading">ESCENAS</div>
-          <a href="#/calendario">Calendario</a>
-          <a href="#/jugadores">Jugadores</a>
-          <a href="#/ranked">Ranked</a>
-          <a href="#/inicio">Acerca</a>
-        </div>
-        <div class="footer-col">
-          <div class="footer-heading">PLATAFORMA</div>
-          <a href="#/login">Iniciar sesión</a>
-          <a href="#/precios">Precios</a>
-          <a href="#/torneos">Torneos</a>
-          <a href="#/registro">Registro</a>
-          <a href="#/zona">Zona VIP</a>
-        </div>
-        <div class="footer-col">
-          <div class="footer-heading">SEÑAL</div>
-          <a href="mailto:feispla@hotmail.com">feispla@hotmail.com</a>
-          <a href="https://x.com/feispla" target="_blank" rel="noopener noreferrer">X @vantcalls</a>
-          <a href="https://kick.com/feispla" target="_blank" rel="noopener noreferrer">Kick / feispla</a>
-          <a href="https://discord.gg/rCHE7jvRS4" target="_blank" rel="noopener noreferrer">Discord oficial</a>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>VANTS — Plataforma competitiva</p>
-        <p class="footer-legal-links"><a href="./privacidad.html">Política de Privacidad</a> · <a href="./terminos.html">Condiciones del Servicio</a></p>
-        <p class="footer-legal">VANTS no está afiliada a Riot Games ni a Valve. VALORANT y League of Legends son marcas de Riot Games, Inc. Counter-Strike es una marca de Valve Corporation.</p>
-      </div>
-    </footer>
+<!-- preloader -->
+<div id="loader" aria-hidden="true">
+  <div class="ld-logo">
+    <svg class="ld-mark" viewBox="0 0 48 48" fill="none">
+      <path class="p1" d="M6 8 L24 40 L42 8" stroke="currentColor" stroke-width="4.5"/>
+      <path class="p2" d="M15 8 L24 24 L33 8" stroke="#C9FF2E" stroke-width="4.5"/>
+    </svg>
+    <div class="ld-word"><span>VANTS</span></div>
   </div>
+  <div class="ld-bar"><span id="ldFill"></span></div>
+  <div class="ld-pct" id="ldPct">0%</div>
+</div>
 
-  <!-- Auth0 SPA SDK (reemplaza a Supabase JS) -->
-  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
-  <!-- Configuración Auth0 + Neon Data API (reemplaza a db.js) -->
-  <script src="./auth0-config.js?v=13" defer></script>
-  <script src="./app.js?v=8" defer></script>
-  <script src="./auth-pages.js?v=1" defer></script>
-  <script src="./spotify-player.js?v=8" defer></script>
-  <!-- Auth con Auth0  -->
-  <script src="./auth.js?v=15" defer></script>
-  <!-- Módulos de la plataforma -->
-  <script src="./streamer.js?v=1" defer></script>
-  <script src="./socials.js?v=1" defer></script>
-  <script src="./rank-calc.js?v=1" defer></script>
-  <script src="./zona.js?v=8" defer></script>
-  <script src="./premium.js?v=8" defer></script>
-  <script src="./desktop-shell.js?v=1" defer></script>
-  <script src="./faceit.js?v=2" defer></script>
-  <script src="./profile-extras.js?v=3" defer></script>
-  <script src="./faceit-matches.js?v=2" defer></script>
-  <script>
-    const installBtn = document.getElementById('pwa-install-btn');
+<!-- navegación -->
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="VANTS inicio">
+    <svg viewBox="0 0 48 48" fill="none"><path d="M6 8 L24 40 L42 8" stroke="currentColor" stroke-width="5"/><path d="M15 8 L24 24 L33 8" stroke="#C9FF2E" stroke-width="5"/></svg>
+    VANT<b>S</b>
+  </a>
+  <nav class="nav-links" aria-label="Principal">
+    <a href="#arenas">ARENAS</a>
+    <a href="#torneos">TORNEOS</a>
+    <a href="#pass">PASS</a>
+    <a href="#ranking">RANKING</a>
+  </nav>
+  <div class="nav-right">
+    <a href="#pass" class="btn btn-acc btn-nav" id="navJoin"><span>HAZTE PASS</span><i data-lucide="zap" class="ic"></i></a>
+    <button class="burger" id="burger" aria-label="Abrir menú"><i data-lucide="menu" class="ic"></i></button>
+  </div>
+</header>
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        try {
-          const reg = await navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' });
-          if (reg.waiting) {
-            document.dispatchEvent(new CustomEvent('swUpdated', { detail: { registration: reg } }));
-          }
+<!-- menú móvil -->
+<div class="mnav" id="mnav">
+  <a href="#arenas" style="transition-delay:.05s">ARENAS<i>01</i></a>
+  <a href="#torneos" style="transition-delay:.12s">TORNEOS<i>02</i></a>
+  <a href="#pass" style="transition-delay:.19s">PASS<i>03</i></a>
+  <a href="#ranking" style="transition-delay:.26s">RANKING<i>04</i></a>
+</div>
 
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            newWorker?.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                document.dispatchEvent(new CustomEvent('swUpdated', { detail: { registration: reg } }));
-              }
-            });
-          });
+<main id="top">
 
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (refreshing) return;
-            refreshing = true;
-            window.location.reload();
-          });
-        } catch (err) {
-          console.error('No se pudo registrar el ServiceWorker:', err);
-        }
-      });
+  <!-- ============ HERO ============ -->
+  <section class="hero" style="border-top:0">
+    <canvas id="arenaCv" aria-hidden="true"></canvas>
+    <div class="hero-inner">
+      <div class="hero-par">
+        <p class="h-kick h-fade">TORNEOS AMATEUR · TEMPORADA 04 · EU-WEST</p>
+        <h1 class="h-title">
+          <span class="hl"><span>JUEGA.</span></span>
+          <span class="hl"><span class="outl">GANA.</span></span>
+          <span class="hl"><span>COBRA<i class="dot">.</i></span></span>
+        </h1>
+        <div class="h-sub h-fade d1">
+          <p>Torneos online semanales de <b>Counter-Strike 2</b>, <b>VALORANT</b> y <b>League of Legends</b>. Bracket en directo, árbitros, anti-cheat y <b>premio en metálico cada semana</b>.</p>
+          <div class="h-ctas">
+            <a href="#torneos" class="btn btn-acc" data-magnetic><span>INSCRÍBETE AL PRÓXIMO</span><i data-lucide="arrow-up-right" class="ic"></i></a>
+            <a href="#arenas" class="btn btn-ghost" data-magnetic><span>VER LAS ARENAS</span><i data-lucide="play" class="ic"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="h-stats h-fade d2" id="heroStats">
+        <div class="hs"><b data-count="12450" data-prefix="€">€0</b><span>PREMIOS REPARTIDOS</span></div>
+        <div class="hs"><b data-count="38">0</b><span>TORNEOS JUGADOS</span></div>
+        <div class="hs"><b data-count="1204">0</b><span>JUGADORES REGISTRADOS</span></div>
+        <div class="hs"><b data-count="3">0</b><span>ARENAS ACTIVAS</span></div>
+      </div>
+    </div>
+    <div class="h-scroll h-fade d3" aria-hidden="true"><span>SCROLL</span><i data-lucide="arrow-down" class="ic"></i></div>
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-label"><span class="dotl"></span>EN VIVO</div>
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+  </section>
 
-      window.addEventListener('beforeinstallprompt', (event) => {
-        event.preventDefault();
-        window.deferredPrompt = event;
-        installBtn.style.display = 'block';
-        document.dispatchEvent(new CustomEvent('pwaInstallAvailable'));
+  <!-- ============ ARENAS ============ -->
+  <section id="arenas">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num" data-reveal>01</span>
+        <h2 class="sec-title" data-reveal style="transition-delay:.08s">Elige tu arena</h2>
+        <p class="sec-note" data-reveal style="transition-delay:.16s">Tres juegos, una misma temporada. Cada arena tiene su liga, su ranking y su premio mensual.</p>
+      </div>
+      <div class="arena">
+        <div>
+          <div id="arenaList" role="tablist" aria-label="Juegos"></div>
+          <p class="a-more" data-reveal>NUEVAS ARENAS EN CAMINO — <b>ROCKET LEAGUE · R6 · APEX</b></p>
+        </div>
+        <div class="arena-panel" data-reveal style="transition-delay:.1s">
+          <div id="apBody"></div>
+          <div class="ap-wipe" id="apWipe"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TORNEOS ============ -->
+  <section id="torneos">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num" data-reveal>02</span>
+        <h2 class="sec-title" data-reveal style="transition-delay:.08s">Próximos torneos</h2>
+        <p class="sec-note" data-reveal style="transition-delay:.16s">Inscripción abierta por equipos. Despliega cada torneo para ver formato, reparto del premio y requisitos.</p>
+      </div>
+      <div class="filters" id="filterBar" data-reveal></div>
+      <div id="tourList" data-reveal style="transition-delay:.1s"></div>
+    </div>
+  </section>
+
+  <!-- ============ PASS ============ -->
+  <section id="pass">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num" data-reveal>03</span>
+        <h2 class="sec-title" data-reveal style="transition-delay:.08s">VANTS PASS</h2>
+        <p class="sec-note" data-reveal style="transition-delay:.16s">Un pase, toda la temporada. Prioridad, puntos dobles y caché por partida en las ligas semanales.</p>
+      </div>
+      <div class="pass">
+        <div data-reveal>
+          <h3 class="pass-title">Compite como un pro.<br/><em>Cobra como uno.</em></h3>
+          <p class="pass-sub">El PASS desbloquea todo el ecosistema competitivo de VANTS y te convierte en jugador con caché: cada victoria en liga semanal suma a tu bolsa.</p>
+          <ul class="perks">
+            <li><span class="pk"><i data-lucide="zap" class="ic"></i></span><span><b>Inscripción prioritaria</b><i>Reserva tu plaza 48h antes de que abran los brackets públicos.</i></span></li>
+            <li><span class="pk"><i data-lucide="coins" class="ic"></i></span><span><b>Caché por partida en ligas</b><i>Comisión fija por victoria en las ligas semanales de tu arena.</i></span></li>
+            <li><span class="pk"><i data-lucide="trophy" class="ic"></i></span><span><b>Puntos de temporada x2</b><i>Escalas más rápido en el ranking y accedes a la Gran Final.</i></span></li>
+            <li><span class="pk"><i data-lucide="bar-chart-3" class="ic"></i></span><span><b>Estadísticas avanzadas</b><i>Historial de partidas, mapas, héroes y VODs marcados.</i></span></li>
+            <li><span class="pk"><i data-lucide="badge-check" class="ic"></i></span><span><b>Insignia PASS verificada</b><i>Visible en brackets, perfil y resultados en directo.</i></span></li>
+          </ul>
+        </div>
+        <div class="price-box" data-reveal style="transition-delay:.12s">
+          <div class="pt-toggle" role="group" aria-label="Plan">
+            <button class="pt-opt" data-plan="month">MENSUAL</button>
+            <button class="pt-opt on" data-plan="season">TEMPORADA</button>
+          </div>
+          <div class="pb-price"><b id="pbPrice">39,99</b><span id="pbPer">€ / temporada</span></div>
+          <span class="pb-save" id="pbSave">AHORRAS 33% VS. MENSUAL</span>
+          <p class="pb-note" id="pbNote">Un solo pago · 3 meses de temporada (sep – nov)</p>
+          <button class="btn btn-dark" id="buyPass" data-magnetic><span>CONSEGUIR PASS</span><i data-lucide="arrow-up-right" class="ic"></i></button>
+          <p class="pb-legal">Pago de demostración — no se realiza ningún cargo real. Cancela cuando quieras.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RANKING ============ -->
+  <section id="ranking">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num" data-reveal>04</span>
+        <h2 class="sec-title" data-reveal style="transition-delay:.08s">Ranking de temporada</h2>
+        <p class="sec-note" data-reveal style="transition-delay:.16s">Top operadores por puntos VANTS. Solo los 8 primeros clasifican a la Gran Final de noviembre.</p>
+      </div>
+      <div class="r-wrap" data-reveal>
+        <div class="r-inner">
+          <div class="r-head"><span>POS</span><span>JUGADOR</span><span>FORMA</span><span>PUNTOS</span><span style="text-align:right">V–D</span><span style="text-align:right">Δ</span></div>
+          <div id="rankBody"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA + FOOTER ============ -->
+  <footer>
+    <div class="wrap" style="padding-bottom:0">
+      <div class="cta-band" data-reveal>
+        <h2>¿Listo para<br/><em>competir?</em></h2>
+        <a href="#torneos" class="btn btn-acc" data-magnetic><span>VER TORNEOS ABIERTOS</span><i data-lucide="arrow-up-right" class="ic"></i></a>
+      </div>
+    </div>
+    <div class="wrap" style="padding-top:0;padding-bottom:0">
+      <div class="ft">
+        <div class="ft-brand">
+          <a class="brand" href="#top"><svg viewBox="0 0 48 48" fill="none" style="width:22px;height:22px"><path d="M6 8 L24 40 L42 8" stroke="currentColor" stroke-width="5"/><path d="M15 8 L24 24 L33 8" stroke="#C9FF2E" stroke-width="5"/></svg>VANT<b>S</b></a>
+          <p>La liga amateur donde nacen los nombres. CS2, VALORANT y League of Legends, cada semana, con premios reales.</p>
+          <div class="socials">
+            <a href="#" data-social aria-label="Twitch"><i data-lucide="twitch" class="ic"></i></a>
+            <a href="#" data-social aria-label="YouTube"><i data-lucide="youtube" class="ic"></i></a>
+            <a href="#" data-social aria-label="Instagram"><i data-lucide="instagram" class="ic"></i></a>
+          </div>
+        </div>
+        <div class="ft-col">
+          <h4>COMPETICIÓN</h4>
+          <a href="#arenas">Arenas</a><a href="#torneos">Torneos</a><a href="#ranking">Ranking</a><a href="#pass">VANTS Pass</a>
+        </div>
+        <div class="ft-col">
+          <h4>COMUNIDAD</h4>
+          <a href="#" data-info="discord">Discord</a><a href="#" data-info="arbitros">Árbitros</a><a href="#" data-info="reglas">Reglamento</a><a href="#" data-info="patrocinio">Para marcas</a>
+        </div>
+        <div>
+          <h4>BOLSA DE PREGONAS</h4>
+          <form class="nl" id="nlForm" novalidate>
+            <input id="nlMail" type="email" placeholder="tu@email.gg" aria-label="Tu email"/>
+            <button type="submit" aria-label="Suscribirme"><i data-lucide="arrow-right" class="ic"></i></button>
+          </form>
+          <p class="nl-hint">Calendario semanal + resultados. Sin spam.</p>
+        </div>
+      </div>
+      <div class="ft-giant" aria-hidden="true">VANTS</div>
+      <div class="ft-legal">
+        <span>© 2025 VANTS — PROYECTO DE LA COMUNIDAD</span>
+        <div><a href="#" data-info="terminos">TÉRMINOS</a><a href="#" data-info="privacidad">PRIVACIDAD</a><a href="#" data-info="cookies">COOKIES</a></div>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- modal -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-back" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-x" data-close aria-label="Cerrar"><i data-lucide="x" class="ic"></i></button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+/* =========================================================
+   VANTS — lógica de la página (todo local, sin backend)
+   ========================================================= */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const icons = () => { if (window.lucide) lucide.createIcons(); };
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Datos: JUEGOS ----------
+   videoId: toma el ID de cualquier vídeo de YouTube (youtube.com/watch?v=XXXX → XXXX).
+   Si un ID no existe, la portada muestra un póster propio y la web no se rompe. */
+const GAMES = [
+  { id:'cs2', num:'01', name:'Counter-Strike 2', short:'CS2', color:'#F0A33C', videoId:'ed-QS1Piaa8',
+    tagline:'Precisión milimétrica y economía de rondas. La arena táctica por excelencia, con servidores 128 tick y formato MR12.',
+    chips:['5v5 · MR12','BO1 / BO3','EU-West · 128 tick'],
+    stats:[['486','JUGADORES INSCRITOS'],['€760','PREMIO DEL MES'],['12 SEP','PRÓXIMO EVENTO']] },
+  { id:'val', num:'02', name:'Valorant', short:'VALORANT', color:'#FF4655', videoId:'e_E9W2vsRbQ',
+    tagline:'Habilidades, pulso y clutches. Rotación semanal de mapas y brackets a doble eliminación con árbitro en sala.',
+    chips:['5v5 · MR12','Doble eliminación','Anti-cheat obligatorio'],
+    stats:[['352','JUGADORES INSCRITOS'],['€540','PREMIO DEL MES'],['14 SEP','PRÓXIMO EVENTO']] },
+  { id:'lol', num:'03', name:'League of Legends', short:'LOL', color:'#D0A85C', videoId:'aR-KAldshAE',
+    tagline:'Macro, objetivos y sinergia. Draft competitivo con pick & ban y liga regular que alimenta los playoffs de noviembre.',
+    chips:["5v5 · Grieta del Invocador",'Liga + playoffs','Draft serpiente'],
+    stats:[['298','JUGADORES INSCRITOS'],['€380','PREMIO DEL MES'],['16 SEP','PRÓXIMO EVENTO']] },
+];
+const GAME_MAP = Object.fromEntries(GAMES.map(g => [g.id, g]));
+
+/* ---------- Datos: TORNEOS ---------- */
+const TOURNAMENTS = [
+  { id:1, date:'12 SEP', time:'19:00', name:'Voltaje Cup #12',       game:'cs2', prize:400,  taken:24, total:32, format:'BO1 eliminatorio · BO3 desde semis · MR12', dist:'1º €250 · 2º €100 · 3º–4º €25', server:'EU-West · 128 tick', reqs:'5 jugadores · VAC clean · cuenta VANTS verificada' },
+  { id:2, date:'14 SEP', time:'20:00', name:'Rayo Masters #6',       game:'val', prize:250,  taken:16, total:16, format:'Doble eliminación · BO1 / BO3 en grand final', dist:'1º €150 · 2º €70 · 3º €30',   server:'EU · Frankfurt',     reqs:'5 jugadores · Vanguard activo · Riot ID' },
+  { id:3, date:'16 SEP', time:'21:00', name:'Hex Liga · Semana 7',    game:'lol', prize:150,  taken:7,  total:8,  format:'Liga regular · BO1 · pick & ban competitivo',  dist:'1º €90 · 2º €40 · 3º €20',    server:'EUW',                reqs:'5 jugadores + suplente · Riot ID' },
+  { id:4, date:'18 SEP', time:'22:00', name:'Clutch Night #5',        game:'cs2', prize:120,  taken:9,  total:16, format:'Suizo a 5 rondas · top 8 a bracket final',     dist:'1º €70 · 2º €30 · 3º €20',    server:'EU-West · 128 tick', reqs:'5 jugadores · VAC clean' },
+  { id:5, date:'21 SEP', time:'18:00', name:'Ascensión Open',         game:'val', prize:600,  taken:41, total:64, format:'Doble eliminación · BO3 en todo el bracket',   dist:'1º €350 · 2º €150 · 3º–4º €50', server:'EU · Frankfurt',   reqs:'5 jugadores · Vanguard activo · Riot ID' },
+  { id:6, date:'28 SEP', time:'17:00', name:'Gran Final · Temporada', game:'lol', prize:1000, taken:4,  total:4,  format:'BO5 · formato MSI · draft competitivo',        dist:'1º €600 · 2º €250 · 3º €150', server:'EUW · Presencial',   reqs:'Solo clasificados · roster cerrado' },
+];
+
+/* ---------- Datos: RANKING ---------- */
+const RANKING = [
+  { pos:1, name:'kRySt4L',   team:'NOVA9',        game:'VALORANT', color:'#FF4655', w:31, l:7,  pts:2840, delta:3,  form:'WWLWW' },
+  { pos:2, name:'Dru1d',     team:'KOMBAT CLUB',  game:'CS2',      color:'#F0A33C', w:29, l:9,  pts:2612, delta:1,  form:'WWWLW' },
+  { pos:3, name:'Mazoku',    team:'HEX DYNASTY',  game:'LOL',      color:'#D0A85C', w:27, l:11, pts:2495, delta:-1, form:'LWWWW' },
+  { pos:4, name:'Fr4ggs',    team:'ONYX',         game:'CS2',      color:'#F0A33C', w:25, l:13, pts:2310, delta:2,  form:'WLWLW' },
+  { pos:5, name:'Silv3r',    team:'ARDENT',       game:'VALORANT', color:'#FF4655', w:24, l:14, pts:2204, delta:0,  form:'WWLLW' },
+  { pos:6, name:'NeonPanda', team:'VOID WARDEN',  game:'LOL',      color:'#D0A85C', w:22, l:16, pts:2088, delta:-2, form:'LWLWL' },
+];
+
+/* ---------- Toasts ---------- */
+function toast(msg, type = 'ok') {
+  const box = $('#toasts');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'warn' ? ' warn' : '');
+  el.setAttribute('role', 'status');
+  el.innerHTML = `<i data-lucide="${type === 'warn' ? 'alert-triangle' : 'check-circle-2'}" class="ic"></i><p>${msg}</p><i></i>`;
+  box.appendChild(el);
+  icons();
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 500); }, 3600);
+}
+
+/* ---------- Modal ---------- */
+const modal = $('#modal');
+function openModal(html) {
+  $('#modalBody').innerHTML = html;
+  modal.classList.add('on');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('lock');
+  icons();
+}
+function closeModal() {
+  modal.classList.remove('on');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('lock');
+}
+modal.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeModal(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); $('#mnav').classList.remove('on'); } });
+
+/* ---------- Botón en carga + validación de formularios ---------- */
+function btnLoading(btn, on, label) {
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? `<span class="spin"></span><span>${label || 'PROCESANDO…'}</span>`
+    : label;
+}
+function markBad(input, bad) { input.closest('.fld')?.classList.toggle('bad', bad); return !bad; }
+const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+
+/* ---------- Preloader ---------- */
+(function loader() {
+  const fill = $('#ldFill'), pct = $('#ldPct'), box = $('#loader');
+  const finish = () => {
+    box.classList.add('done');
+    document.body.classList.remove('lock');
+    document.body.classList.add('loaded');
+    setTimeout(() => box.remove(), 800);
+  };
+  if (REDUCED) return finish();
+  let p = 0;
+  (function step() {
+    p = Math.min(100, p + 2 + Math.random() * 9);
+    fill.style.width = p + '%';
+    pct.textContent = Math.round(p) + '%';
+    if (p < 100) setTimeout(step, 55); else setTimeout(finish, 260);
+  })();
+})();
+
+/* ---------- Cursor personalizado ---------- */
+(function cursor() {
+  if (!matchMedia('(pointer:fine)').matches) return;
+  document.body.classList.add('cursor-on');
+  const dot = $('.cur-dot'), ring = $('.cur-ring');
+  let mx = innerWidth / 2, my = innerHeight / 2, rx = mx, ry = my;
+  addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  (function loop() {
+    rx += (mx - rx) * .16; ry += (my - ry) * .16;
+    dot.style.transform  = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+    ring.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+    requestAnimationFrame(loop);
+  })();
+  addEventListener('mouseover', e => ring.classList.toggle('hot', !!e.target.closest('a,button,label,input,select,textarea')));
+})();
+
+/* ---------- Nav: scroll + menú móvil ---------- */
+const nav = $('#nav'), mnav = $('#mnav');
+addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40), { passive:true });
+ $('#burger').addEventListener('click', () => {
+  const on = mnav.classList.toggle('on');
+  document.body.classList.toggle('lock', on);
+  $('#burger').innerHTML = `<i data-lucide="${on ? 'x' : 'menu'}" class="ic"></i>`;
+  icons();
+});
+mnav.addEventListener('click', e => {
+  if (e.target.closest('a')) { mnav.classList.remove('on'); document.body.classList.remove('lock');
+    $('#burger').innerHTML = '<i data-lucide="menu" class="ic"></i>'; icons(); }
+});
+
+/* ---------- Canvas: bracket generativo del hero ---------- */
+(function heroCanvas() {
+  const cv = $('#arenaCv'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, edges = [], nodes = [], crosses = [], pulses = [], t0 = performance.now(), visible = true;
+  const mouse = { x:-9999, y:-9999 };
+  const ACC = '#C9FF2E';
+
+  function build() {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const small = W < 860;
+    const x0 = small ? W * .08 : W * .46, x1 = small ? W * .92 : W * .93;
+    const top = H * .16, avail = H * .62, cols = 5;
+    nodes = []; edges = [];
+    for (let c = 0; c < cols; c++) {
+      const n = Math.pow(2, cols - 1 - c), x = x0 + (x1 - x0) * (c / (cols - 1));
+      const gap = Math.min(avail / n, H * .72 / n);
+      for (let k = 0; k < n; k++) {
+        nodes.push({ c, x, y: top + avail / 2 + (k - (n - 1) / 2) * gap, flash: 0 });
+      }
+    }
+    const idx = (c, k) => nodes.findIndex(n => n.c === c && n.k === undefined) ; // helper no usado
+    nodes.forEach((n, i) => n.i = i);
+    for (let c = 0; c < cols - 1; c++) {
+      const cur = nodes.filter(n => n.c === c).sort((a, b) => a.y - b.y);
+      const nxt = nodes.filter(n => n.c === c + 1).sort((a, b) => a.y - b.y);
+      cur.forEach((n, k) => {
+        const m = nxt[Math.floor(k / 2)];
+        const pts = [];
+        for (let s = 0; s <= 14; s++) pts.push(bez(n, m, s / 14));
+        const len = pts.slice(1).reduce((a, p, j) => a + Math.hypot(p.x - pts[j].x, p.y - pts[j].y), 0);
+        edges.push({ a: n, b: m, pts, len, delay: .12 * c + Math.random() * .5 });
       });
     }
+    crosses = [];
+    const step = 110;
+    for (let x = step; x < W; x += step)
+      for (let y = step; y < H; y += step) crosses.push({ x, y });
+  }
+  function bez(a, b, t) {
+    const c1x = a.x + (b.x - a.x) * .45, c1y = a.y;
+    const c2x = a.x + (b.x - a.x) * .55, c2y = b.y;
+    const u = 1 - t;
+    return {
+      x: u*u*u*a.x + 3*u*u*t*c1x + 3*u*t*t*c2x + t*t*t*b.x,
+      y: u*u*u*a.y + 3*u*u*t*c1y + 3*u*t*t*c2y + t*t*t*b.y
+    };
+  }
+  // pulsos que viajan por el bracket (partidas "fluyendo" hacia la final)
+  setInterval(() => {
+    if (!visible || REDUCED || !edges.length) return;
+    pulses.push({ e: edges[Math.floor(Math.random() * edges.length)], t: 0 });
+  }, 620);
 
-    installBtn?.addEventListener('click', async () => {
-      if (!window.deferredPrompt) return;
-      window.deferredPrompt.prompt();
-      const { outcome } = await window.deferredPrompt.userChoice;
-      console.log('PWA install outcome:', outcome);
-      installBtn.style.display = 'none';
-      window.deferredPrompt = null;
+  function draw(now) {
+    requestAnimationFrame(draw);
+    if (!visible) return;
+    ctx.clearRect(0, 0, W, H);
+    const T = (now - t0) / 1000;
+
+    // retícula de cruces
+    ctx.strokeStyle = 'rgba(255,255,255,.055)'; ctx.lineWidth = 1;
+    crosses.forEach(c => { ctx.beginPath(); ctx.moveTo(c.x - 4, c.y); ctx.lineTo(c.x + 4, c.y);
+      ctx.moveTo(c.x, c.y - 4); ctx.lineTo(c.x, c.y + 4); ctx.stroke(); });
+
+    // aristas
+    edges.forEach(e => {
+      const t = Math.max(0, Math.min(1, (T - e.delay) / .9));
+      if (t <= 0) return;
+      const mxm = e.pts[7];
+      const d = Math.hypot(mouse.x - mxm.x, mouse.y - mxm.y);
+      const hot = d < 120 ? (1 - d / 120) : 0;
+      ctx.setLineDash([e.len]); ctx.lineDashOffset = e.len * (1 - t);
+      ctx.strokeStyle = hot > 0 ? ACC : 'rgba(255,255,255,.14)';
+      ctx.globalAlpha = hot > 0 ? .25 + hot * .7 : 1;
+      ctx.lineWidth = hot > 0 ? 1.4 : 1;
+      ctx.beginPath(); ctx.moveTo(e.pts[0].x, e.pts[0].y);
+      e.pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y)); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.setLineDash([]);
     });
-  </script>
+
+    // nodos
+    nodes.forEach(n => {
+      n.flash = Math.max(0, n.flash - .03);
+      ctx.beginPath(); ctx.arc(n.x, n.y, 2.4, 0, 7);
+      ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.fill();
+      if (n.flash > 0) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, 4 + (1 - n.flash) * 9, 0, 7);
+        ctx.strokeStyle = ACC; ctx.globalAlpha = n.flash * .8; ctx.stroke(); ctx.globalAlpha = 1;
+      }
+    });
+
+    // anillo "gran final"
+    const fin = nodes[nodes.length - 1];
+    if (fin) {
+      const r = 9 + Math.sin(now / 380) * 3;
+      ctx.beginPath(); ctx.arc(fin.x, fin.y, r, 0, 7);
+      ctx.strokeStyle = ACC; ctx.globalAlpha = .55; ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(fin.x, fin.y, 3.4, 0, 7); ctx.fillStyle = ACC; ctx.fill();
+    }
+
+    // pulsos
+    pulses = pulses.filter(p => p.t < 1);
+    pulses.forEach(p => {
+      p.t += .022;
+      const i = Math.min(14, Math.floor(p.t * 14));
+      const pt = p.e.pts[i];
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.2, 0, 7); ctx.fillStyle = ACC; ctx.fill();
+      for (let s = 1; s <= 4; s++) {
+        const j = i - s; if (j < 0) break;
+        ctx.globalAlpha = .5 - s * .11;
+        ctx.beginPath(); ctx.arc(p.e.pts[j].x, p.e.pts[j].y, 1.6, 0, 7); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if (p.t > .97) p.e.b.flash = 1;
+    });
+  }
+  cv.parentElement.addEventListener('mousemove', e => {
+    const r = cv.getBoundingClientRect();
+    mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
+  });
+  cv.parentElement.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+  new IntersectionObserver(en => visible = en[0].isIntersecting).observe(cv.parentElement);
+  addEventListener('resize', build);
+  build(); requestAnimationFrame(draw);
+})();
+
+/* ---------- Ticker ---------- */
+(function ticker() {
+  const items = [
+    '<b>NOVA9 13–9 KOMBAT</b> · VOLTAJE CUP #11 · CS2',
+    '<b>VERSA 2–1 ONYX</b> · RAYO MASTERS · VALORANT',
+    '<b>kRySt4L ACE 1v4</b> · CLUTCH NIGHT · CS2',
+    '<b>ARDENT 18–2 HEX</b> · LIGA S7 · LOL',
+    '<b>+€12.450</b> REPARTIDOS ESTA TEMPORADA',
+    'INSCRIPCIONES ABIERTAS · <b>ASCENSIÓN OPEN 21 SEP</b>',
+  ];
+  const half = items.map(t => `<span class="tk">${t}<span class="tk-sep">//</span></span>`).join('');
+  $('#tickerTrack').innerHTML = `<div style="display:flex">${half}</div><div style="display:flex">${half}</div>`;
+})();
+
+/* ---------- Arenas (lista + panel con vídeo) ---------- */
+let curGame = 0, wipeLock = false;
+(function arenas() {
+  const list = $('#arenaList'), body = $('#apBody'), wipe = $('#apWipe');
+  list.innerHTML = GAMES.map((g, i) => `
+    <button class="a-item" role="tab" data-g="${i}" aria-label="Arena ${g.name}">
+      <span class="a-num">${g.num}</span>
+      <span class="a-name">${g.name}</span>
+      <span class="a-arrow"><i data-lucide="arrow-up-right" class="ic"></i></span>
+    </button>`).join('');
+
+  function facade(g) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'vfacade';
+    b.setAttribute('aria-label', 'Reproducir tráiler de ' + g.name);
+    b.innerHTML = `<img alt="Tráiler de ${g.name}" src="https://i.ytimg.com/vi/${g.videoId}/maxresdefault.jpg">
+      <span class="vf-play"><i data-lucide="play" class="ic"></i></span>
+      <span class="vf-tag">TRÁILER OFICIAL · CLIC PARA REPRODUCIR</span>`;
+    const img = b.querySelector('img'); let step = 0;
+    img.onerror = () => {
+      step++;
+      if (step === 1) img.src = `https://i.ytimg.com/vi/${g.videoId}/hqdefault.jpg`;
+      else if (step === 2) { img.remove(); b.classList.add('nofill');
+        b.insertAdjacentHTML('beforeend', `<span class="vf-fallback"><b>${g.short}</b>TRÁILER NO DISPONIBLE OFFLINE</span>`); }
+    };
+    b.addEventListener('click', () => {
+      if (b.classList.contains('playing')) return;
+      b.classList.add('playing');
+      b.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${g.videoId}?autoplay=1&rel=0&modestbranding=1"
+        title="Tráiler de ${g.name}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
+    });
+    return b;
+  }
+
+  function renderPanel(g) {
+    body.innerHTML = `
+      <div class="ap-top">
+        <span class="ap-num">${g.num}</span>
+        <div><h3 class="ap-name">${g.name}</h3><span class="ap-line" style="background:${g.color}"></span></div>
+      </div>
+      <p class="ap-tag">${g.tagline}</p>
+      <div class="ap-chips">${g.chips.map(c => `<span>${c}</span>`).join('')}</div>
+      <div class="ap-video" id="apVideo"></div>
+      <div class="ap-stats">${g.stats.map(s => `<div><b>${s[0]}</b><span>${s[1]}</span></div>`).join('')}</div>`;
+    $('#apVideo').appendChild(facade(g));
+    icons();
+  }
+
+  function switchTo(i) {
+    if (wipeLock || i === curGame) return;
+    wipeLock = true;
+    const g = GAMES[i];
+    $$('.a-item').forEach((b, k) => b.classList.toggle('on', k === i));
+    if (REDUCED) { curGame = i; renderPanel(g); wipeLock = false; return; }
+    wipe.style.background = g.color;
+    wipe.style.transformOrigin = 'left';
+    wipe.classList.add('cover');
+    setTimeout(() => {
+      curGame = i; renderPanel(g);
+      wipe.style.transformOrigin = 'right';
+      wipe.classList.remove('cover');
+      setTimeout(() => wipeLock = false, 360);
+    }, 360);
+  }
+  list.addEventListener('click', e => {
+    const b = e.target.closest('.a-item');
+    if (b) switchTo(+b.dataset.g);
+  });
+  // estado inicial
+  $$('.a-item')[0].classList.add('on');
+  renderPanel(GAMES[0]);
+})();
+
+/* ---------- Torneos: render, filtros, despliegue, inscripción ---------- */
+(function tournaments() {
+  const list = $('#tourList'), bar = $('#filterBar');
+  const isFull = t => t.taken >= t.total;
+
+  function rowHTML(t) {
+    const g = GAME_MAP[t.game], pct = Math.round(t.taken / t.total * 100);
+    return `
+    <article class="t-row ${isFull(t) ? 'full' : ''}" data-game="${t.game}" data-id="${t.id}">
+      <button class="t-main" type="button" aria-expanded="false">
+        <span class="t-date"><b>${t.date}</b><i>${t.time} CEST</i></span>
+        <span class="t-name">${t.name}</span>
+        <span class="t-game" style="--gc:${g.color}">${g.short}</span>
+        <span class="t-prize">€${t.prize.toLocaleString('es-ES')}</span>
+        <span class="t-slots">
+          <span class="ts-txt">${t.taken}/${t.total} plazas${isFull(t) ? ' · <b>COMPLETO</b>' : ''}</span>
+          <span class="ts-bar"><span style="width:${pct}%"></span></span>
+        </span>
+        <span class="t-chev"><i data-lucide="chevron-down" class="ic"></i></span>
+      </button>
+      <div class="t-details"><div class="td-in"><div class="td-wrap">
+        <div class="td-grid">
+          <div><b>FORMATO</b><p>${t.format}</p></div>
+          <div><b>REPARTO DEL PREMIO</b><p>${t.dist}</p></div>
+          <div><b>SERVIDOR</b><p>${t.server}</p></div>
+          <div><b>REQUISITOS</b><p>${t.reqs}</p></div>
+        </div>
+        <div class="td-cta">
+          <span class="td-note">INSCRIPCIÓN GRATUITA PARA CUENTAS VANTS</span>
+          <button class="btn ${isFull(t) ? 'btn-ghost' : 'btn-acc'} btn-signup" data-id="${t.id}">
+            <span>${isFull(t) ? 'APÚNTATE A LA LISTA DE ESPERA' : 'INSCRIBIR EQUIPO'}</span><i data-lucide="arrow-up-right" class="ic"></i>
+          </button>
+        </div>
+      </div></div></div>
+    </article>`;
+  }
+
+  list.innerHTML = TOURNAMENTS.map(rowHTML).join('');
+  icons();
+
+  // filtros por juego
+  const counts = { all: TOURNAMENTS.length };
+  TOURNAMENTS.forEach(t => counts[t.game] = (counts[t.game] || 0) + 1);
+  const filters = [['all','TODOS'], ['cs2','CS2'], ['val','VALORANT'], ['lol','LOL']];
+  bar.innerHTML = filters.map(([k, l], i) =>
+    `<button class="f-btn ${i === 0 ? 'on' : ''}" data-f="${k}">${l}<i>${counts[k] || 0}</i></button>`).join('');
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('.f-btn'); if (!b) return;
+    $$('.f-btn').forEach(x => x.classList.toggle('on', x === b));
+    const f = b.dataset.f;
+    $$('.t-row').forEach(r => {
+      const show = f === 'all' || r.dataset.game === f;
+      if (show) {
+        r.style.display = '';
+        requestAnimationFrame(() => requestAnimationFrame(() => r.classList.remove('hideout')));
+      } else {
+        r.classList.add('hideout');
+        setTimeout(() => { if (r.classList.contains('hideout')) r.style.display = 'none'; }, 300);
+      }
+    });
+  });
+
+  // desplegar detalles
+  list.addEventListener('click', e => {
+    if (e.target.closest('.btn-signup')) return;
+    const main = e.target.closest('.t-main'); if (!main) return;
+    const row = main.closest('.t-row');
+    row.classList.toggle('open');
+    main.setAttribute('aria-expanded', row.classList.contains('open'));
+  });
+
+  // inscripción / lista de espera
+  list.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-signup'); if (!btn) return;
+    const t = TOURNAMENTS.find(x => x.id === +btn.dataset.id);
+    if (isFull(t)) return toast(`Has entrado en la lista de espera de ${t.name}. Te avisaremos si se libera una plaza.`, 'warn');
+    openSignup(t);
+  });
+
+  function openSignup(t) {
+    const g = GAME_MAP[t.game];
+    openModal(`
+      <div class="m-kick">INSCRIPCIÓN · ${g.short} · ${t.date} ${t.time} CEST</div>
+      <h3 class="m-title">${t.name}</h3>
+      <p class="m-sub">Premio €${t.prize.toLocaleString('es-ES')} — ${t.taken}/${t.total} plazas ocupadas. Formato: ${t.format}.</p>
+      <form id="sgForm" novalidate>
+        <div class="fld"><label for="fNick">NICK CAPITÁN / IN-GAME *</label>
+          <input id="fNick" name="nick" type="text" placeholder="p. ej. kRySt4L" autocomplete="off"/>
+          <span class="ferr">Escribe al menos 2 caracteres.</span></div>
+        <div class="fld"><label for="fMail">EMAIL DE CONTACTO *</label>
+          <input id="fMail" name="email" type="email" placeholder="capitan@equipo.gg"/>
+          <span class="ferr">Ese email no parece válido.</span></div>
+        <div class="fld"><label for="fTeam">NOMBRE DE EQUIPO *</label>
+          <input id="fTeam" name="team" type="text" placeholder="p. ej. NOVA9"/>
+          <span class="ferr">Necesitamos el nombre del equipo.</span></div>
+        <label class="fcheck" id="fTerms"><input type="checkbox"/>
+          <span>Acepto las bases del torneo, el reglamento anti-cheat y el horario de disputa.</span></label>
+        <button class="btn btn-acc w100" type="submit"><span>CONFIRMAR INSCRIPCIÓN</span></button>
+      </form>`);
+    $('#sgForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const nick = $('#fNick'), mail = $('#fMail'), team = $('#fTeam'), terms = $('#fTerms');
+      let ok = true;
+      ok = markBad(nick, nick.value.trim().length < 2) && ok;
+      ok = markBad(mail, !emailOk(mail.value)) && ok;
+      ok = markBad(team, team.value.trim().length < 2) && ok;
+      terms.classList.toggle('bad', !terms.querySelector('input').checked);
+      if (!ok || !terms.querySelector('input').checked) return;
+      const btn = e.target.querySelector('button[type=submit]');
+      btnLoading(btn, true, 'RESERVANDO PLAZA…');
+      setTimeout(() => {
+        closeModal();
+        toast(`Equipo <b>${team.value.trim()}</b> inscrito en ${t.name}. Revisa ${mail.value.trim()}.`);
+        t.taken++; updateSlots(t);
+      }, 950);
+    });
+  }
+
+  function updateSlots(t) {
+    const row = list.querySelector(`.t-row[data-id="${t.id}"]`); if (!row) return;
+    const full = isFull(t);
+    row.classList.toggle('full', full);
+    row.querySelector('.ts-txt').innerHTML = `${t.taken}/${t.total} plazas${full ? ' · <b>COMPLETO</b>' : ''}`;
+    row.querySelector('.ts-bar span').style.width = Math.round(t.taken / t.total * 100) + '%';
+    const btn = row.querySelector('.btn-signup');
+    if (full) {
+      btn.className = 'btn btn-ghost btn-signup';
+      btn.innerHTML = `<span>APÚNTATE A LA LISTA DE ESPERA</span><i data-lucide="arrow-up-right" class="ic"></i>`;
+      icons();
+    }
+  }
+})();
+
+/* ---------- VANTS PASS ---------- */
+const PLANS = {
+  month:  { label:'MENSUAL',   price:7.99,  per:'€ / mes',        save:false, note:'Se renueva cada mes · cancela cuando quieras' },
+  season: { label:'TEMPORADA 04', price:39.99, per:'€ / temporada', save:true,  note:'Un solo pago · 3 meses de temporada (sep – nov)' },
+};
+let plan = 'season', passOwned = false;
+(function pass() {
+  const priceEl = $('#pbPrice'), perEl = $('#pbPer'), noteEl = $('#pbNote'), saveEl = $('#pbSave');
+  let shown = PLANS[plan].price;
+  function tween(to) {
+    if (REDUCED) { shown = to; priceEl.textContent = to.toFixed(2).replace('.', ','); return; }
+    const from = shown, t0 = performance.now();
+    (function f(now) {
+      const t = Math.min(1, (now - t0) / 480), e = 1 - Math.pow(1 - t, 3);
+      shown = from + (to - from) * e;
+      priceEl.textContent = shown.toFixed(2).replace('.', ',');
+      if (t < 1) requestAnimationFrame(f);
+    })(t0);
+  }
+  $$('.pt-opt').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.plan === plan) return;
+    plan = b.dataset.plan;
+    $$('.pt-opt').forEach(x => x.classList.toggle('on', x === b));
+    const p = PLANS[plan];
+    tween(p.price); perEl.textContent = p.per; noteEl.textContent = p.note;
+    saveEl.classList.toggle('off', !p.save);
+  }));
+  $('#buyPass').addEventListener('click', () => {
+    const p = PLANS[plan];
+    openModal(`
+      <div class="m-kick">VANTS PASS · ${p.label}</div>
+      <h3 class="m-title">Activa tu pase</h3>
+      <p class="m-sub">Prioridad, puntos x2 y caché por partida desde el momento de la activación.</p>
+      <div class="m-sum">
+        <div><span>PLAN</span><b>${p.label}</b></div>
+        <div><span>PRECIO</span><b>${p.price.toFixed(2).replace('.', ',')} ${p.per}</b></div>
+        <div><span>RENOVACIÓN</span><b>${plan === 'season' ? 'Fin de temporada' : 'Mensual'}</b></div>
+      </div>
+      <form id="ckForm" novalidate>
+        <div class="fld"><label for="ckMail">EMAIL DE LA CUENTA *</label>
+          <input id="ckMail" type="email" placeholder="tu@email.gg"/>
+          <span class="ferr">Ese email no parece válido.</span></div>
+        <button class="btn btn-acc w100" type="submit"><span>PAGAR ${p.price.toFixed(2).replace('.', ',')} € (DEMO)</span></button>
+      </form>`);
+    $('#ckForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const mail = $('#ckMail');
+      if (!markBad(mail, !emailOk(mail.value))) return;
+      const btn = e.target.querySelector('button[type=submit]');
+      btnLoading(btn, true, 'PAGO SEGURO (DEMO)…');
+      setTimeout(() => {
+        passOwned = true; closeModal();
+        const nj = $('#navJoin');
+        nj.classList.add('owned');
+        nj.innerHTML = '<span>PASS ACTIVO</span><i data-lucide="check-circle-2" class="ic"></i>';
+        icons();
+        toast('VANTS PASS activo. Puntos x2 y prioridad desde ya. ¡Bienvenido!');
+      }, 1150);
+    });
+  });
+})();
+
+/* ---------- Ranking ---------- */
+(function ranking() {
+  const max = Math.max(...RANKING.map(r => r.pts));
+  $('#rankBody').innerHTML = RANKING.map(r => {
+    const ini = r.name.slice(0, 2).toUpperCase();
+    const d = r.delta > 0 ? `<span class="r-delta up"><i data-lucide="arrow-up-right" class="ic"></i>${r.delta}</span>`
+            : r.delta < 0 ? `<span class="r-delta dn"><i data-lucide="arrow-down-right" class="ic"></i>${-r.delta}</span>`
+            : `<span class="r-delta eq"><i data-lucide="minus" class="ic"></i>0</span>`;
+    return `
+    <div class="r-row ${r.pos === 1 ? 'first' : ''}" style="--gc:${r.color}">
+      <span class="r-pos">${String(r.pos).padStart(2,'0')}</span>
+      <span style="display:flex;gap:14px;align-items:center;min-width:0">
+        <span class="r-ava">${ini}</span>
+        <span class="r-id" style="min-width:0"><b>${r.name}</b><i>${r.team} · ${r.game}</i></span>
+      </span>
+      <span class="r-form">${[...r.form].map(c => `<span class="${c === 'W' ? 'w' : 'l'}"></span>`).join('')}</span>
+      <span class="r-pts"><span class="rp-bar"><span data-w="${Math.round(r.pts / max * 100)}"></span></span>
+        <b data-count="${r.pts}">0</b></span>
+      <span style="font-family:var(--fm);font-size:.72rem;color:var(--mut);text-align:right">${r.w}–${r.l}</span>
+      ${d}
+    </div>`;
+  }).join('');
+  icons();
+  // anima barras y contadores al entrar en pantalla
+  new IntersectionObserver((en, ob) => {
+    if (!en[0].isIntersecting) return;
+    ob.disconnect();
+    $$('#rankBody .rp-bar span').forEach((s, i) => setTimeout(() => s.style.width = s.dataset.w + '%', i * 90));
+    $$('#rankBody [data-count]').forEach(countUp);
+  }, { threshold:.25 }).observe($('#rankBody'));
+})();
+
+/* ---------- Contadores animados ---------- */
+function countUp(el) {
+  const target = +el.dataset.count, pre = el.dataset.prefix || '', t0 = performance.now();
+  const dur = REDUCED ? 1 : 1300;
+  (function f(now) {
+    const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+    el.textContent = pre + Math.round(target * e).toLocaleString('es-ES');
+    if (t < 1) requestAnimationFrame(f);
+  })(t0);
+}
+new IntersectionObserver((en, ob) => {
+  if (!en[0].isIntersecting) return;
+  ob.disconnect();
+  $$('#heroStats [data-count]').forEach((el, i) => setTimeout(() => countUp(el), i * 130));
+}, { threshold:.4 }).observe($('#heroStats'));
+
+/* ---------- Reveal on scroll ---------- */
+(function reveal() {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+  }, { threshold:.12 });
+  $$('[data-reveal]').forEach(el => io.observe(el));
+})();
+
+/* ---------- Botones magnéticos ---------- */
+if (matchMedia('(pointer:fine)').matches && !REDUCED) {
+  $$('[data-magnetic]').forEach(el => {
+    el.style.transition = 'transform .18s ease-out, background .25s, color .25s, border-color .25s';
+    el.addEventListener('mousemove', e => {
+      const r = el.getBoundingClientRect();
+      el.style.transform = `translate(${(e.clientX - r.left - r.width/2) * .22}px, ${(e.clientY - r.top - r.height/2) * .32}px)`;
+    });
+    el.addEventListener('mouseleave', () => el.style.transform = '');
+  });
+}
+
+/* ---------- Parallax sutil del hero ---------- */
+if (matchMedia('(pointer:fine)').matches && !REDUCED) {
+  const par = document.querySelector('.hero-par');
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  $('.hero').addEventListener('mousemove', e => {
+    tx = (e.clientX / innerWidth - .5); ty = (e.clientY / innerHeight - .5);
+  });
+  (function f() {
+    cx += (tx - cx) * .06; cy += (ty - cy) * .06;
+    par.style.transform = `translate(${cx * -14}px, ${cy * -9}px)`;
+    requestAnimationFrame(f);
+  })();
+}
+
+/* ---------- Newsletter + enlaces de información ---------- */
+ $('#nlForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const m = $('#nlMail');
+  if (!emailOk(m.value)) return toast('Ese email no parece válido. Revísalo.', 'warn');
+  toast(`Apuntado a la bolsa de pregonas. Te escribimos a ${m.value.trim()} cada lunes.`);
+  m.value = '';
+});
+const INFO = {
+  discord:  'Nuestro Discord abre con la Temporada 04. Estamos puliendo los brackets en directo.',
+  arbitros: 'El equipo arbitral de VANTS está formado por jugadores verificados de cada arena.',
+  reglas:   'El reglamento completo anti-cheat y de conducta se publica antes del primer torneo.',
+  patrocinio:'¿Marca interesada? Patrocina una arena: tu logo en brackets, streams y premios.',
+  terminos: 'Términos de servicio — documento legal en redacción para el lanzamiento.',
+  privacidad:'Política de privacidad — documento legal en redacción para el lanzamiento.',
+  cookies:  'Solo cookies técnicas: esta demo no rastrea nada.',
+};
+document.addEventListener('click', e => {
+  const s = e.target.closest('[data-social]');
+  if (s) { e.preventDefault(); toast('Canales en construcción — síguenos en el lanzamiento de la Temporada 04.', 'warn'); return; }
+  const i = e.target.closest('[data-info]');
+  if (i) { e.preventDefault(); toast(INFO[i.dataset.info]); }
+});
+
+/* arranque de iconos */
+icons();
+</script>
 </body>
 </html>
