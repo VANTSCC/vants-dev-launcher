@@ -92,11 +92,11 @@ const DATA={
  valorant:{
   title:'ASCENSIÓN<br><span class="out">SERIES</span> <span class="acc">S4</span>',short:'ASCENSIÓN SERIES S4',
   sub:'El circuito competitivo abierto de LATAM. Clasificá con tu equipo, subí por el bracket y llevate la parte del premio. Matchmaking por skill, anti-cheat obligatorio y servidores 128 tick.',
-  extraCol:'ACS',live:{a:'KRÜ ASCEND',b:'LEVIATÁN PRIME',ta:'KRÜ',tb:'LVP',ev:'ASCENSIÓN SERIES · CUARTOS · MAPA: HAVEN',map:'Haven'},
+  extraCol:'ACS',live:{a:'KRÜ ASCEND',b:'FURIA RIFT',ta:'KRÜ',tb:'FUR',ev:'ASCENSIÓN SERIES · SEMIFINAL · MAPA: HAVEN',map:'Haven'},
   mapPool:['Haven','Bind','Lotus','Split','Sunset','Icebox','Ascent'],
   hows:['Eliminación','Defusa','Planta detonada','Tiempo agotado'],
   matches:[
-    {t:'18:30',status:'live',a:'KRÜ ASCEND',b:'LEVIATÁN PRIME',sa:9,sb:7,map:'Haven',ev:'Ascensión Series · Cuartos'},
+    {t:'21:00',status:'live',a:'KRÜ ASCEND',b:'FURIA RIFT',sa:9,sb:7,map:'Haven',ev:'Ascensión Series · Semifinal'},
     {t:'16:10',status:'final',a:'LOUD NOVA',b:'9Z NUCLEUS',sa:13,sb:5,map:'Bind',ev:'Ascensión Series · Cuartos'},
     {t:'15:00',status:'final',a:'FURIA RIFT',b:'MIBR ECHO',sa:10,sb:13,map:'Lotus',ev:'Ascensión Series · Cuartos'},
     {t:'13:40',status:'final',a:'LEVIATÁN PRIME',b:'VELOCITY 9',sa:13,sb:11,map:'Sunset',ev:'Ascensión Series · Ronda de 16'},
@@ -121,17 +121,20 @@ const DATA={
     {id:'v4',day:'05',mon:'MAY',name:'SCRIM CUP · FINDE #12',tags:['BO3','AMISTOSO+'],tier:'FREE',prize:250,slots:32,filled:9,fee:0}],
   bracket:{quarters:[{a:'KRÜ ASCEND',b:'TARSA FIVE',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'LOUD NOVA',b:'9Z NUCLEUS',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'LEVIATÁN PRIME',b:'VELOCITY 9',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'FURIA RIFT',b:'MIBR ECHO',sa:2,sb:1,meta:'BO3 · COMPLETADO'}],
     semis:[{a:'KRÜ ASCEND',b:'FURIA RIFT',sa:null,sb:null,meta:'HOY · 21:00'},{a:'LOUD NOVA',b:'LEVIATÁN PRIME',sa:null,sb:null,meta:'HOY · 23:30'}],
-    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'}},
+    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'},
+    lb1:[{a:'9Z NUCLEUS',b:'TARSA FIVE',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'MIBR ECHO',b:'VELOCITY 9',sa:2,sb:1,meta:'BO3 · COMPLETADO'}],
+    lb2:[{a:null,b:'9Z NUCLEUS',meta:'TRAS SEMIS · BO3'},{a:null,b:'MIBR ECHO',meta:'TRAS SEMIS · BO3'}],
+    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO3'}},
   ticker:['VANTS GAMES — TEMPORADA 4 · $25,000 EN PREMIOS','INSCRIPCIONES ABIERTAS: ASCENSIÓN SERIES S4','ZAYER (SOCIO VANTS) ESTÁ EN DIRECTO EN TWITCH','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','SUBÍ TU RANGO VANTS RANKED GANANDO SERIES']
  },
  cs2:{
   title:'STRATOS<br><span class="out">MAJOR</span> <span class="acc">S4</span>',short:'STRATOS MAJOR S4',
   sub:'El circuito de Counter-Strike 2 con los mejores equipos de la región. Brackets en vivo, MR12, servidores dedicados y revisión de demos ante cualquier sospecha.',
-  extraCol:'HS %',live:{a:'BESTIA ALFA',b:'ROWZONE',ta:'BST',tb:'RWZ',ev:'STRATOS MAJOR · CUARTOS · MAPA: MIRAGE',map:'Mirage'},
+  extraCol:'HS %',live:{a:'BESTIA ALFA',b:'9Z CIRCUIT',ta:'BST',tb:'9Z',ev:'STRATOS MAJOR · SEMIFINAL · MAPA: MIRAGE',map:'Mirage'},
   mapPool:['Mirage','Inferno','Nuke','Ancient','Anubis','Vertigo','Dust II'],
   hows:['Eliminación','Defusa','Explosión','Tiempo agotado'],
   matches:[
-    {t:'18:30',status:'live',a:'BESTIA ALFA',b:'ROWZONE',sa:10,sb:8,map:'Mirage',ev:'Stratos Major · Cuartos'},
+    {t:'21:00',status:'live',a:'BESTIA ALFA',b:'9Z CIRCUIT',sa:10,sb:8,map:'Mirage',ev:'Stratos Major · Semifinal'},
     {t:'16:10',status:'final',a:'9Z CIRCUIT',b:'HORIZON FIVE',sa:13,sb:4,map:'Inferno',ev:'Stratos Major · Cuartos'},
     {t:'15:00',status:'final',a:'SHARKS APEX',b:'PAMPA SIX',sa:11,sb:13,map:'Nuke',ev:'Stratos Major · Cuartos'},
     {t:'13:40',status:'final',a:'ROWZONE',b:'DINAMO SUR',sa:13,sb:9,map:'Ancient',ev:'Stratos Major · Ronda de 16'},
@@ -156,7 +159,10 @@ const DATA={
     {id:'c4',day:'05',mon:'MAY',name:'WINGMAN CUP · FINDE',tags:['BO3','2V2'],tier:'FREE',prize:250,slots:32,filled:17,fee:0}],
   bracket:{quarters:[{a:'BESTIA ALFA',b:'LAVA JAGUARS',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'9Z CIRCUIT',b:'HORIZON FIVE',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'SHARKS APEX',b:'PAMPA SIX',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'ROWZONE',b:'DINAMO SUR',sa:2,sb:0,meta:'BO3 · COMPLETADO'}],
     semis:[{a:'BESTIA ALFA',b:'9Z CIRCUIT',sa:null,sb:null,meta:'HOY · 21:00'},{a:'SHARKS APEX',b:'ROWZONE',sa:null,sb:null,meta:'HOY · 23:30'}],
-    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'}},
+    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'},
+    lb1:[{a:'HORIZON FIVE',b:'LAVA JAGUARS',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'PAMPA SIX',b:'DINAMO SUR',sa:2,sb:0,meta:'BO3 · COMPLETADO'}],
+    lb2:[{a:null,b:'HORIZON FIVE',meta:'TRAS SEMIS · BO3'},{a:null,b:'PAMPA SIX',meta:'TRAS SEMIS · BO3'}],
+    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO3'}},
   ticker:['VANTS GAMES — TEMPORADA 4 · $25,000 EN PREMIOS','INSCRIPCIONES ABIERTAS: STRATOS MAJOR S4','MORBO (CREADOR) ESTÁ EN DIRECTO EN TWITCH','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','SUBÍ TU RANGO VANTS RANKED GANANDO SERIES']
  }
 };
@@ -347,25 +353,36 @@ function renderLbBody(){
  $('#lbSearch').addEventListener('input',e=>{state.search=e.target.value;renderLbBody();});
 
 /* ================= BRACKET ================= */
-function bMatch(m,i){
+function bMatch(m,r,i){
   if(!m.a&&!m.b)return '<div class="b-match" style="cursor:default"><div class="b-tbd">POR DEFINIR</div><div class="b-meta">'+m.meta+'</div></div>';
+  const head='<div class="b-match" data-r="'+r+'" data-i="'+i+'">';
+  if(!m.a||!m.b){const t=m.a||m.b;return head+'<div class="b-tbd">'+(m.a?t:'POR DEFINIR')+'</div><div class="b-tbd">'+(m.b?t:'POR DEFINIR')+'</div><div class="b-meta">'+m.meta+'</div></div>';}
   const hasScore=m.sa!=null;
   const row=(n,sc,w,l,s)=>'<div class="b-team'+(w?' win':'')+(l?' lose':'')+'"><span class="bt-name"><span class="bt-seed">#'+s+'</span>'+n+'</span><span class="bt-score">'+(hasScore?sc:'—')+'</span></div>';
-  return '<div class="b-match"'+(hasScore?' data-q="'+i+'"':'')+'>'
+  return head
     +row(m.a,m.sa,hasScore&&m.sa>m.sb,hasScore&&m.sa<m.sb,1)
     +row(m.b,m.sb,hasScore&&m.sb>m.sa,hasScore&&m.sb<m.sa,2)
     +'<div class="b-meta">'+m.meta+'</div></div>';
 }
 function renderBracket(){
   const b=D().bracket;
-  $('#bracketGrid').innerHTML='<div class="round"><p class="r-title">CUARTOS DE FINAL</p>'+b.quarters.map((m,i)=>bMatch(m,i)).join('')+'</div>'
-    +'<div class="round"><p class="r-title">SEMIFINALES</p>'+b.semis.map(m=>bMatch(m,-1)).join('')+'</div>'
-    +'<div class="round"><p class="r-title">GRAN FINAL</p>'+bMatch(b.final,-1)+'</div>';
+  const up='<div class="round"><p class="r-title">CUARTOS DE FINAL</p>'+b.quarters.map((m,i)=>bMatch(m,'q',i)).join('')+'</div>'
+    +'<div class="round"><p class="r-title">SEMIFINALES</p>'+b.semis.map((m,i)=>bMatch(m,'s',i)).join('')+'</div>'
+    +'<div class="round"><p class="r-title">GRAN FINAL</p>'+bMatch(b.final,'f',0)+'</div>';
+  const lo='<div class="round"><p class="r-title">INFERIORES · RONDA 1</p>'+b.lb1.map((m,i)=>bMatch(m,'l1',i)).join('')+'</div>'
+    +'<div class="round"><p class="r-title">INFERIORES · RONDA 2</p>'+b.lb2.map((m,i)=>bMatch(m,'l2',i)).join('')+'</div>'
+    +'<div class="round"><p class="r-title">FINAL INFERIOR</p>'+bMatch(b.lbf,'lf',0)+'</div>';
+  $('#bracketGrid').innerHTML='<div class="bracket-rounds">'+up+'</div>'
+    +'<p class="brk-sep">LLAVES INFERIORES · el perdedor cruza aqui y pelea la revancha</p>'
+    +'<div class="bracket-rounds">'+lo+'</div>';
 }
  $('#bracketGrid').addEventListener('click',e=>{
-  const el=e.target.closest('.b-match[data-q]');if(!el)return;
-  const m=D().bracket.quarters[+el.dataset.q];
-  openMatchDetail({status:'final',a:m.a,b:m.b,sa:m.sa,sb:m.sb,map:D().mapPool[+el.dataset.q%D().mapPool.length],ev:D().short+' · Cuartos de final'});
+  const el=e.target.closest('.b-match[data-r]');if(!el)return;
+  const b=D().bracket,r=el.dataset.r,i=+el.dataset.i;
+  const m=r==='q'?b.quarters[i]:r==='s'?b.semis[i]:r==='l1'?b.lb1[i]:r==='l2'?b.lb2[i]:r==='lf'?b.lbf:b.final;
+  if(!m)return;
+  const rName={q:'Cuartos de final',s:'Semifinal',f:'Gran final',l1:'Llaves inferiores · R1',l2:'Llaves inferiores · R2',lf:'Final de llaves inferiores'}[r]||'Bracket';
+  openMatchDetail({status:m.sa!=null?'final':'up',a:m.a,b:m.b,sa:m.sa,sb:m.sb,map:D().mapPool[i%D().mapPool.length],ev:D().short+' · '+rName});
 });
 
 /* ================= TORNEOS ================= */
