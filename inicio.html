@@ -1,77 +1,607 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VANTS — Plataforma competitiva de esports: ranked, torneos y ligas</title>
-  <meta name="description" content="VANTCALL Esports: ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Entra gratis con Google, Discord, Steam o correo.">
-  <link rel="canonical" href="https://feispla.github.io/Vants/inicio.html">
-  <meta name="robots" content="index, follow">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="VANTS">
-  <meta property="og:title" content="VANTS — Plataforma competitiva de esports: ranked, torneos y ligas">
-  <meta property="og:description" content="VANTCALL Esports: ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Entra gratis con Google, Discord, Steam o correo.">
-  <meta property="og:url" content="https://feispla.github.io/Vants/inicio.html">
-  <meta property="og:image" content="https://feispla.github.io/Vants/assets/brand/og-vants.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="VANTS — Plataforma competitiva de esports: ranked, torneos y ligas">
-  <meta name="twitter:description" content="VANTCALL Esports: ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Entra gratis con Google, Discord, Steam o correo.">
-  <meta name="theme-color" content="#0b131b">
-  <link rel="icon" type="image/svg+xml" href="./assets/brand/favicon.svg">
-  <link rel="stylesheet" href="./base.css">
-  <link rel="stylesheet" href="./style.css">
-  <script type="application/ld+json">
-  {
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "VANTS",
-  "description": "VANTCALL Esports: ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Entra gratis con Google, Discord, Steam o correo.",
-  "url": "https://feispla.github.io/Vants/inicio.html",
-  "isPartOf": {
-    "@type": "WebSite",
-    "name": "VANTS",
-    "url": "https://feispla.github.io/Vants/"
-  }
+<!--
+  inicio.html — VANTS
+  Página autocontenida (CSS y JS inline, sin dependencias locales).
+  Los enlaces apuntan a las páginas existentes del repo.
+  Colores de marca: cambia --acc en :root (ahora rojo VALORANT #FF4655).
+-->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VANTS — Inicio</title>
+<meta name="description" content="VANTS: torneos online de CS2, VALORANT y LoL con FACEIT conectado, ranking de temporada y premios en metálico."/>
+<meta name="theme-color" content="#0B0B0C"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%230B0B0C'/%3E%3Cpath d='M8 10 L24 40 L40 10' fill='none' stroke='%23FF4655' stroke-width='6'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0B0C; --bg2:#101013; --bg3:#141418;
+  --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+  --ink:#F2F1EC; --mut:#A9A9A1;
+  --acc:#FF4655;              /* ← color de marca (prueba también #C9FF2E) */
+  --cs2:#F0A33C; --val:#FF4655; --lol:#D0A85C;
+  --fd:'Anton','Arial Black',sans-serif; --fb:'Archivo',sans-serif; --fm:'JetBrains Mono',monospace;
 }
-  </script>
-  <style>
-    .seo-body { max-width: 760px; margin: 0 auto; padding: 96px 24px 64px; }
-    .seo-body h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 16px 0 12px; }
-    .seo-kicker { font-size: .8rem; letter-spacing: .2em; opacity: .7; text-transform: uppercase; }
-    .seo-lead { font-size: 1.15rem; opacity: .85; margin-bottom: 40px; }
-    .seo-body h2 { margin: 32px 0 8px; font-size: 1.3rem; }
-    .seo-body p { opacity: .8; line-height: 1.7; }
-    .seo-cta { margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap; }
-    .seo-cta a { padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; }
-    .seo-cta .btn-primary { background: #ff4655; color: #fff; }
-    .seo-cta .btn-secondary { border: 1px solid rgba(255,255,255,.25); color: inherit; }
-    .seo-app-link { position: fixed; bottom: 16px; right: 16px; background: #ff4655; color: #fff; padding: 10px 18px; border-radius: 999px; text-decoration: none; font-size: .85rem; font-weight: 600; z-index: 50; }
-  </style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;scroll-padding-top:92px}
+body{background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:16px;line-height:1.55;overflow-x:hidden}
+body.lock{overflow:hidden}
+::selection{background:var(--acc);color:#fff}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+img{display:block}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.ic{width:1em;height:1em;stroke-width:2;flex:none}
+.skip{position:absolute;left:-999px;top:8px;z-index:2000;background:var(--acc);color:#fff;padding:10px 16px;font-family:var(--fm);font-size:.75rem}
+.skip:focus{left:8px}
+
+/* grano */
+body::after{content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* cursor */
+.cur-dot,.cur-ring{display:none;position:fixed;top:0;left:0;z-index:9000;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%)}
+.cur-dot{width:6px;height:6px;background:var(--acc)}
+.cur-ring{width:34px;height:34px;border:1px solid rgba(255,255,255,.35);transition:width .25s,height .25s,border-color .25s}
+.cur-ring.hot{width:56px;height:56px;border-color:var(--acc)}
+@media(pointer:fine){body.cursor-on{cursor:none}body.cursor-on a,body.cursor-on button{cursor:none}.cur-dot,.cur-ring{display:block}}
+
+/* loader */
+#loader{position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:transform .7s cubic-bezier(.76,0,.24,1)}
+#loader.done{transform:translateY(-100%)}
+.ld-mark{width:52px;height:52px;color:var(--ink)}
+.ld-mark path{stroke-dasharray:90;stroke-dashoffset:90;animation:draw 1s cubic-bezier(.6,0,.2,1) forwards}
+.ld-mark path.p2{stroke-dasharray:60;stroke-dashoffset:60;animation-delay:.15s}
+@keyframes draw{to{stroke-dashoffset:0}}
+.ld-word{font-family:var(--fd);font-size:2rem;letter-spacing:.14em;overflow:hidden}
+.ld-word span{display:inline-block;transform:translateY(110%);animation:up .7s .3s cubic-bezier(.19,1,.22,1) forwards}
+@keyframes up{to{transform:none}}
+.ld-bar{width:min(220px,60vw);height:2px;background:var(--line)}
+.ld-bar span{display:block;height:100%;width:0;background:var(--acc)}
+
+/* nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:900;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,56px);border-bottom:1px solid transparent;transition:background .35s,border-color .35s}
+.nav.scrolled{background:rgba(11,11,12,.85);backdrop-filter:blur(14px);border-color:var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--fd);font-size:1.5rem;letter-spacing:.1em}
+.brand svg{width:22px;height:22px}
+.brand b{color:var(--acc)}
+.nav-links{display:flex;gap:30px}
+.nav-links a{font-family:var(--fm);font-size:.72rem;letter-spacing:.2em;color:var(--mut);position:relative;padding:6px 0;transition:color .25s}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--acc);transform:scaleX(0);transform-origin:right;transition:transform .35s cubic-bezier(.19,1,.22,1)}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after{transform:scaleX(1);transform-origin:left}
+.nav-links a.act{color:var(--ink)}
+.nav-links a.act::before{content:"";position:absolute;left:-10px;top:50%;width:5px;height:5px;background:var(--acc);transform:translateY(-50%)}
+.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--fm);font-size:.75rem;font-weight:700;letter-spacing:.16em;padding:14px 24px;border:1px solid transparent;transition:background .25s,color .25s,border-color .25s,transform .2s ease-out;white-space:nowrap}
+.btn .ic{width:15px;height:15px;transition:transform .3s}
+.btn:hover .ic{transform:translate(3px,-3px)}
+.btn-acc{background:var(--acc);color:#fff}
+.btn-acc:hover{background:var(--ink);color:#0B0B0C}
+.btn-ghost{border-color:var(--line2)}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+.btn-nav{padding:11px 20px}
+.burger{display:none;width:42px;height:42px;align-items:center;justify-content:center;border:1px solid var(--line2)}
+.burger .ic{width:20px;height:20px}
+.mnav{position:fixed;inset:0;z-index:850;background:var(--bg);display:flex;flex-direction:column;justify-content:center;padding:0 8vw;visibility:hidden;opacity:0;transition:opacity .35s,visibility .35s}
+.mnav.on{visibility:visible;opacity:1}
+.mnav a{font-family:var(--fd);font-size:clamp(2.2rem,9vw,3.6rem);border-bottom:1px solid var(--line);padding:14px 0;display:flex;justify-content:space-between;align-items:center;transform:translateY(24px);opacity:0;transition:transform .5s cubic-bezier(.19,1,.22,1),opacity .5s,color .2s}
+.mnav a i{font-style:normal;font-family:var(--fm);font-size:.75rem;color:var(--acc)}
+.mnav.on a{transform:none;opacity:1}
+.mnav a:hover{color:var(--acc)}
+
+/* hero */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;overflow:hidden}
+#arenaCv{position:absolute;inset:0;width:100%;height:100%}
+.hero-inner{position:relative;z-index:2;max-width:1360px;width:100%;margin:0 auto;padding:130px clamp(20px,4vw,56px) 0;flex:1;display:flex;flex-direction:column}
+.hero-par{will-change:transform}
+.h-kick{font-family:var(--fm);font-size:.72rem;letter-spacing:.3em;color:var(--mut);display:flex;align-items:center;gap:14px}
+.h-kick::before{content:"";width:36px;height:1px;background:var(--acc)}
+.h-title{font-family:var(--fd);font-weight:400;font-size:clamp(4rem,13vw,11rem);line-height:.94;margin:26px 0 34px;text-transform:uppercase}
+.hl{display:block;overflow:hidden}
+.hl>span{display:block;transform:translateY(112%);transition:transform 1s cubic-bezier(.19,1,.22,1)}
+.hl:nth-child(2)>span{transition-delay:.08s}.hl:nth-child(3)>span{transition-delay:.16s}
+body.loaded .hl>span{transform:none}
+.outl{color:transparent;-webkit-text-stroke:2px var(--ink)}
+.h-title .dot{font-style:normal;color:var(--acc)}
+.h-sub{max-width:540px;color:var(--mut);font-size:1.02rem}
+.h-sub b{color:var(--ink);font-weight:600}
+.h-ctas{display:flex;gap:14px;margin-top:30px;flex-wrap:wrap}
+.h-fade{opacity:0;transform:translateY(22px);transition:opacity .9s ease,transform .9s cubic-bezier(.19,1,.22,1)}
+body.loaded .h-fade{opacity:1;transform:none}
+body.loaded .d1{transition-delay:.25s}body.loaded .d2{transition-delay:.4s}
+.h-stats{margin-top:auto;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+.hs{padding:22px 26px 30px 0;border-right:1px solid var(--line)}
+.hs:last-child{border-right:0}
+.hs b{display:block;font-family:var(--fd);font-weight:400;font-size:clamp(1.7rem,3.4vw,2.6rem);color:var(--acc)}
+.hs span{font-family:var(--fm);font-size:.62rem;letter-spacing:.24em;color:var(--mut)}
+/* ticker */
+.ticker{position:relative;z-index:2;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg)}
+.ticker-label{position:absolute;left:0;top:0;bottom:0;z-index:2;display:flex;align-items:center;gap:8px;padding:0 18px;background:var(--acc);color:#fff;font-family:var(--fm);font-weight:700;font-size:.68rem;letter-spacing:.22em}
+.dotl{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.ticker-track{display:flex;width:max-content;animation:tick 34s linear infinite;padding-left:150px}
+.ticker:hover .ticker-track{animation-play-state:paused}
+@keyframes tick{to{transform:translateX(-50%)}}
+.tk{display:flex;align-items:center;font-family:var(--fm);font-size:.78rem;letter-spacing:.08em;color:var(--mut);white-space:nowrap;padding:14px 0}
+.tk b{color:var(--ink);font-weight:500}
+.tk-sep{color:var(--acc);margin:0 22px}
+
+/* secciones */
+section{border-top:1px solid var(--line)}
+.wrap{max-width:1360px;margin:0 auto;padding:clamp(76px,11vh,120px) clamp(20px,4vw,56px)}
+.sec-head{margin-bottom:clamp(40px,6vh,60px)}
+.sec-num{font-family:var(--fm);font-size:.72rem;letter-spacing:.3em;color:var(--acc)}
+.sec-title{font-family:var(--fd);font-weight:400;font-size:clamp(2.4rem,6vw,4.4rem);line-height:1;text-transform:uppercase;margin-top:10px}
+.sec-note{color:var(--mut);max-width:560px;margin-top:12px}
+[data-reveal]{opacity:0;transform:translateY(30px);transition:opacity .85s ease,transform .85s cubic-bezier(.19,1,.22,1)}
+[data-reveal].in{opacity:1;transform:none}
+
+/* arenas (vídeos) */
+.arenas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.a-card{background:var(--bg2);border:1px solid var(--line);overflow:hidden;transition:transform .35s cubic-bezier(.19,1,.22,1),border-color .35s}
+.a-card:hover{transform:translateY(-6px);border-color:var(--line2)}
+.a-bar{height:4px}
+.a-body{padding:20px 20px 24px}
+.a-body h3{font-family:var(--fd);font-weight:400;font-size:1.5rem;text-transform:uppercase;letter-spacing:.02em}
+.a-body p{color:var(--mut);font-size:.88rem;margin:10px 0 14px}
+.a-meta{font-family:var(--fm);font-size:.64rem;letter-spacing:.18em;color:var(--mut)}
+.a-meta b{color:var(--ink);font-weight:500}
+.a-video{position:relative;aspect-ratio:16/9;background:var(--bg3);overflow:hidden}
+.vfacade{position:absolute;inset:0;width:100%;display:block;text-align:left}
+.vfacade img{width:100%;height:100%;object-fit:cover;filter:saturate(.92) contrast(1.05);transition:transform .6s cubic-bezier(.19,1,.22,1)}
+.vfacade:hover img{transform:scale(1.045)}
+.vf-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;transition:transform .3s}
+.vf-play svg{width:22px;height:22px;fill:#fff;margin-left:3px}
+.vfacade:hover .vf-play{transform:translate(-50%,-50%) scale(1.12)}
+.vf-tag{position:absolute;left:12px;bottom:10px;font-family:var(--fm);font-size:.58rem;letter-spacing:.22em;background:rgba(11,11,12,.78);padding:6px 9px;color:var(--ink)}
+.vfacade.nofill{display:flex;align-items:center;justify-content:center}
+.vf-fallback{display:flex;flex-direction:column;gap:6px;align-items:center;color:var(--mut);font-family:var(--fm);font-size:.62rem;letter-spacing:.24em}
+.vf-fallback b{font-family:var(--fd);font-weight:400;font-size:2rem;color:transparent;-webkit-text-stroke:1px var(--line2)}
+.vfacade.playing{cursor:default}
+.vfacade iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+/* torneos */
+.t-row{border-top:1px solid var(--line)}
+.t-row:last-of-type{border-bottom:1px solid var(--line)}
+.t-main{width:100%;display:grid;grid-template-columns:96px 1fr 120px 100px 200px;gap:18px;align-items:center;text-align:left;padding:22px 8px;transition:background .3s,padding-left .3s}
+.t-main:hover{background:var(--bg2);padding-left:20px}
+.t-date b{display:block;font-family:var(--fd);font-weight:400;font-size:1.1rem}
+.t-date i{font-style:normal;font-family:var(--fm);font-size:.6rem;letter-spacing:.14em;color:var(--mut)}
+.t-name{font-family:var(--fd);font-weight:400;font-size:clamp(1.2rem,2.4vw,1.7rem);text-transform:uppercase;transition:transform .3s}
+.t-main:hover .t-name{transform:translateX(6px)}
+.t-game{font-family:var(--fm);font-size:.6rem;letter-spacing:.18em;border:1px solid var(--gc);color:var(--gc);text-align:center;padding:7px 0}
+.t-prize{font-family:var(--fd);font-weight:400;font-size:1.3rem;color:var(--acc)}
+.ts-txt{font-family:var(--fm);font-size:.62rem;letter-spacing:.12em;color:var(--mut);display:block;margin-bottom:6px}
+.ts-txt b{color:var(--acc);font-weight:700}
+.ts-bar{display:block;height:4px;background:var(--bg3)}
+.ts-bar span{display:block;height:100%;width:0;background:var(--acc);transition:width 1s cubic-bezier(.19,1,.22,1)}
+.t-cta{margin-top:30px;display:flex;justify-content:center}
+
+/* VIP */
+.vip{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(30px,4vw,60px);align-items:start}
+.vip-title{font-family:var(--fd);font-weight:400;font-size:clamp(2.4rem,5.5vw,4.4rem);line-height:1;text-transform:uppercase}
+.vip-title em{font-style:normal;color:transparent;-webkit-text-stroke:2px var(--acc)}
+.vip-sub{color:var(--mut);max-width:500px;margin:16px 0 26px}
+.perks{list-style:none}
+.perks li{display:flex;gap:16px;align-items:center;padding:15px 4px;border-top:1px solid var(--line);font-size:.94rem}
+.perks li:last-child{border-bottom:1px solid var(--line)}
+.pk{flex:none;width:36px;height:36px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--acc)}
+.pk .ic{width:16px;height:16px}
+.price-box{background:var(--acc);color:#fff;padding:clamp(26px,3vw,40px);display:flex;flex-direction:column;gap:18px}
+.pb-price{display:flex;align-items:baseline;gap:8px}
+.pb-price b{font-family:var(--fd);font-weight:400;font-size:clamp(3.4rem,5vw,5rem);line-height:1}
+.pb-price span{font-family:var(--fm);font-size:.8rem;font-weight:700}
+.pb-note{font-family:var(--fm);font-size:.68rem;letter-spacing:.06em}
+.btn-dark{background:#0B0B0C;color:var(--acc);justify-content:center}
+.btn-dark:hover{background:var(--ink);color:#0B0B0C}
+.pb-legal{font-family:var(--fm);font-size:.58rem;letter-spacing:.1em;color:rgba(255,255,255,.75)}
+
+/* footer */
+footer{border-top:1px solid var(--line);overflow:hidden}
+.ft{display:grid;grid-template-columns:1.3fr .7fr .7fr;gap:40px;padding:clamp(50px,7vh,76px) 0}
+.ft h4{font-family:var(--fm);font-size:.62rem;letter-spacing:.28em;color:var(--mut);margin-bottom:16px;font-weight:500}
+.ft-col a{display:block;color:var(--mut);font-size:.9rem;padding:5px 0;transition:color .25s,transform .25s}
+.ft-col a:hover{color:var(--acc);transform:translateX(4px)}
+.ft-brand p{color:var(--mut);font-size:.9rem;max-width:300px;margin:12px 0 18px}
+.ft-giant{font-family:var(--fd);font-weight:400;font-size:clamp(6rem,22vw,20rem);line-height:.78;text-align:center;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.14);user-select:none;transition:color .6s,-webkit-text-stroke .6s}
+.ft-giant:hover{color:var(--acc);-webkit-text-stroke:0}
+.ft-legal{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding:20px 0;font-family:var(--fm);font-size:.62rem;letter-spacing:.16em;color:var(--mut)}
+.ft-legal div{display:flex;gap:22px}
+.ft-legal a:hover{color:var(--acc)}
+
+@media(max-width:1080px){
+  .nav-links{display:none}.burger{display:flex}
+  .arenas-grid{grid-template-columns:1fr}
+  .vip{grid-template-columns:1fr}
+}
+@media(max-width:920px){
+  .t-main{grid-template-columns:1fr 1fr;grid-template-areas:"date tag" "name name" "prize slots";row-gap:10px}
+  .t-date{grid-area:date}.t-game{grid-area:tag}.t-name{grid-area:name}.t-prize{grid-area:prize}.ts-txt,.ts-bar-wrap{grid-area:slots}
+  .h-stats{grid-template-columns:1fr 1fr}
+  .hs:nth-child(2){border-right:0}.hs{border-bottom:1px solid var(--line);padding-bottom:18px}
+  .ft{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){.ft{grid-template-columns:1fr}.btn-nav{display:none}}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
 </head>
-<body>
-  <main class="seo-body">
-    <div class="seo-kicker">BETA ABIERTA · VALORANT · CS2 · LOL</div>
-    <h1>VANT<span class="hero-accent">CALL</span></h1>
-    <p class="seo-lead">La liga competitiva de la comunidad: ranked con MMR real, torneos con premios y un bot de Discord conectado a tu perfil.</p>
-    <h2>Qué es VANTS</h2>
-    <p>VANTS es una plataforma competitiva de esports donde juegas partidas ranked con MMR real, compites en torneos con premios y sigues el calendario de eventos de VALORANT, Counter-Strike 2 y League of Legends.</p>
-    <h2>Ranked con MMR</h2>
-    <p>Ocho niveles de rango (Hierro a Escarlata), ganas VP por victoria, MVP y clutches. Cada temporada conservas el 30% del VP acumulado.</p>
-    <h2>Torneos con premios</h2>
-    <p>VANT Open para todos, Pro Series para miembros PRO y Elite Invitational para ELITE. Inscríbete en la web o con el bot de Discord.</p>
-    <h2>Bot de Discord</h2>
-    <p>Tu perfil queda conectado al bot VANTS: inscripciones, resultados y MMR se sincronizan en vivo con el servidor oficial.</p>
-    <div class="seo-cta">
-      <a href="./#/registro" class="btn-primary">JUGAR GRATIS</a>
-      <a href="./#/torneos" class="btn-secondary">VER TORNEOS</a>
+<body class="lock">
+<a class="skip" href="#main">Saltar al contenido</a>
+<div class="cur-dot" aria-hidden="true"></div>
+<div class="cur-ring" aria-hidden="true"></div>
+
+<div id="loader" aria-hidden="true">
+  <svg class="ld-mark" viewBox="0 0 48 48" fill="none">
+    <path class="p1" d="M6 8 L24 40 L42 8" stroke="currentColor" stroke-width="4.5"/>
+    <path class="p2" d="M15 8 L24 24 L33 8" stroke="#FF4655" stroke-width="4.5"/>
+  </svg>
+  <div class="ld-word"><span>VANTS</span></div>
+  <div class="ld-bar"><span id="ldFill"></span></div>
+</div>
+
+<header class="nav" id="nav">
+  <a class="brand" href="inicio.html" aria-label="VANTS inicio">
+    <svg viewBox="0 0 48 48" fill="none"><path d="M6 8 L24 40 L42 8" stroke="currentColor" stroke-width="5"/><path d="M15 8 L24 24 L33 8" stroke="#FF4655" stroke-width="5"/></svg>
+    VANT<b>S</b>
+  </a>
+  <nav class="nav-links" aria-label="Principal">
+    <a href="inicio.html" class="act">INICIO</a>
+    <a href="torneos.html">TORNEOS</a>
+    <a href="calendario.html">CALENDARIO</a>
+    <a href="jugadores.html">JUGADORES</a>
+    <a href="ranked.html">RANKED</a>
+  </nav>
+  <div class="nav-right">
+    <a href="precios.html" class="btn btn-acc btn-nav"><span>HAZTE VIP</span>
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></a>
+    <button class="burger" id="burger" aria-label="Abrir menú">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="mnav" id="mnav">
+  <a href="inicio.html" style="transition-delay:.05s">INICIO<i>01</i></a>
+  <a href="torneos.html" style="transition-delay:.12s">TORNEOS<i>02</i></a>
+  <a href="calendario.html" style="transition-delay:.19s">CALENDARIO<i>03</i></a>
+  <a href="jugadores.html" style="transition-delay:.26s">JUGADORES<i>04</i></a>
+  <a href="ranked.html" style="transition-delay:.33s">RANKED<i>05</i></a>
+  <a href="precios.html" style="transition-delay:.40s">VIP<i>06</i></a>
+</div>
+
+<main id="main">
+
+  <!-- HERO -->
+  <section class="hero" style="border-top:0">
+    <canvas id="arenaCv" aria-hidden="true"></canvas>
+    <div class="hero-inner">
+      <div class="hero-par">
+        <p class="h-kick h-fade">TORNEOS AMATEUR · TEMPORADA 04 · EU-WEST</p>
+        <h1 class="h-title">
+          <span class="hl"><span>JUEGA.</span></span>
+          <span class="hl"><span class="outl">GANA.</span></span>
+          <span class="hl"><span>COBRA<i class="dot">.</i></span></span>
+        </h1>
+        <div class="h-sub h-fade d1">
+          <p>Torneos online de <b>CS2</b>, <b>VALORANT</b> y <b>LoL</b> con tu perfil de <b>FACEIT</b> conectado, ranking de temporada y <b>premios en metálico cada semana</b>.</p>
+          <div class="h-ctas">
+            <a href="torneos.html" class="btn btn-acc"><span>INSCRÍBETE EN UN TORNEO</span>
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+            <a href="ranked.html" class="btn btn-ghost"><span>EXPLORA EL RANKED</span>
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+          </div>
+        </div>
+      </div>
+      <div class="h-stats h-fade d2" id="heroStats">
+        <div class="hs"><b data-count="12450" data-prefix="€">€0</b><span>PREMIOS REPARTIDOS</span></div>
+        <div class="hs"><b data-count="38">0</b><span>TORNEOS JUGADOS</span></div>
+        <div class="hs"><b data-count="1204">0</b><span>JUGADORES REGISTRADOS</span></div>
+        <div class="hs"><b data-count="3">0</b><span>ARENAS ACTIVAS</span></div>
+      </div>
     </div>
-  </main>
-  <a class="seo-app-link" href="./#/inicio">Abrir en la app VANTS →</a>
-  <script>
-    // Usuarios reales con JS van directo a la app (SPA). Bots y sin-JS leen el contenido estático.
-    if (location.search.indexOf('noapp') === -1 && !/bot|crawl|spider|slurp|facebookexternal|whatsapp|twitterbot/i.test(navigator.userAgent)) {
-      location.replace('./#/inicio');
-    }
-  </script>
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-label"><span class="dotl"></span>EN VIVO</div>
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+  </section>
+
+  <!-- ARENAS / VÍDEOS -->
+  <section id="arenas">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="sec-num">01 / ARENAS</span>
+        <h2 class="sec-title">Elige tu arena</h2>
+        <p class="sec-note">Tres juegos, una temporada. Haz clic en cualquier vídeo para ver el tráiler oficial.</p>
+      </div>
+      <div class="arenas-grid">
+        <!-- Cambia data-video por el ID del vídeo de YouTube (lo que va tras watch?v=) -->
+        <article class="a-card" data-reveal>
+          <span class="a-bar" style="background:var(--cs2)"></span>
+          <div class="a-video">
+            <button class="vfacade" type="button" data-video="ed-QS1Piaa8" data-title="Counter-Strike 2" aria-label="Reproducir tráiler de Counter-Strike 2">
+              <img alt="Tráiler de Counter-Strike 2" src="https://i.ytimg.com/vi/ed-QS1Piaa8/maxresdefault.jpg"/>
+              <span class="vf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+              <span class="vf-tag">TRÁILER · CS2</span>
+            </button>
+          </div>
+          <div class="a-body">
+            <h3>Counter-Strike 2</h3>
+            <p>Precisión y economía de rondas. Servidores 128 tick y formato MR12.</p>
+            <p class="a-meta">PRÓXIMO EVENTO · <b>12 SEP · 19:00</b></p>
+          </div>
+        </article>
+        <article class="a-card" data-reveal style="transition-delay:.08s">
+          <span class="a-bar" style="background:var(--val)"></span>
+          <div class="a-video">
+            <button class="vfacade" type="button" data-video="e_E9W2vsRbQ" data-title="Valorant" aria-label="Reproducir tráiler de Valorant">
+              <img alt="Tráiler de Valorant" src="https://i.ytimg.com/vi/e_E9W2vsRbQ/maxresdefault.jpg"/>
+              <span class="vf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+              <span class="vf-tag">TRÁILER · VALORANT</span>
+            </button>
+          </div>
+          <div class="a-body">
+            <h3>Valorant</h3>
+            <p>Habilidades y clutches. Doble eliminación con árbitro y anti-cheat.</p>
+            <p class="a-meta">PRÓXIMO EVENTO · <b>14 SEP · 20:00</b></p>
+          </div>
+        </article>
+        <article class="a-card" data-reveal style="transition-delay:.16s">
+          <span class="a-bar" style="background:var(--lol)"></span>
+          <div class="a-video">
+            <button class="vfacade" type="button" data-video="aR-KAldshAE" data-title="League of Legends" aria-label="Reproducir tráiler de League of Legends">
+              <img alt="Tráiler de League of Legends" src="https://i.ytimg.com/vi/aR-KAldshAE/maxresdefault.jpg"/>
+              <span class="vf-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+              <span class="vf-tag">TRÁILER · LOL</span>
+            </button>
+          </div>
+          <div class="a-body">
+            <h3>League of Legends</h3>
+            <p>Macro y sinergia. Liga regular con pick &amp; ban hacia los playoffs.</p>
+            <p class="a-meta">PRÓXIMO EVENTO · <b>16 SEP · 21:00</b></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TORNEOS -->
+  <section id="torneos">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="sec-num">02 / TORNEOS</span>
+        <h2 class="sec-title">Próximos torneos</h2>
+        <p class="sec-note">Vista rápida de los próximos brackets. Ficha completa, formato y reglas en la página de torneos.</p>
+      </div>
+      <div id="tourList" data-reveal style="transition-delay:.1s"></div>
+      <div class="t-cta" data-reveal>
+        <a href="torneos.html" class="btn btn-acc"><span>VER TODOS LOS TORNEOS</span>
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIP -->
+  <section id="vip">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <span class="sec-num">03 / VIP</span>
+        <h2 class="sec-title">VANTS VIP</h2>
+      </div>
+      <div class="vip">
+        <div data-reveal>
+          <h3 class="vip-title">Compite como un pro.<br/><em>Cobra como uno.</em></h3>
+          <p class="vip-sub">El VIP desbloquea todo el ecosistema competitivo: prioridad en los brackets, puntos dobles y caché por victoria en las ligas semanales.</p>
+          <ul class="perks">
+            <li><span class="pk"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span><b>Inscripción prioritaria</b> — reserva plaza 48h antes</span></li>
+            <li><span class="pk"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span><b>Puntos de temporada x2</b> — escala más rápido en el ranking</span></li>
+            <li><span class="pk"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span><b>Caché por victoria</b> — gana en las ligas semanales</span></li>
+            <li><span class="pk"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span><b>Insignia VIP verificada</b> — visible en brackets y perfil</span></li>
+          </ul>
+        </div>
+        <div class="price-box" data-reveal style="transition-delay:.12s">
+          <div class="pb-price"><b>7,99</b><span>€ / mes</span></div>
+          <p class="pb-note">Cancela cuando quieras · todos los beneficios desde el primer día</p>
+          <a href="precios.html" class="btn btn-dark"><span>VER PLANES</span>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+          <p class="pb-legal">Todos los planes incluyen las tres arenas y acceso al ranking.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap" style="padding-bottom:0">
+      <div class="ft">
+        <div class="ft-brand">
+          <a class="brand" href="inicio.html"><svg viewBox="0 0 48 48" fill="none" style="width:22px;height:22px"><path d="M6 8 L24 40 L42 8" stroke="currentColor" stroke-width="5"/><path d="M15 8 L24 24 L33 8" stroke="#FF4655" stroke-width="5"/></svg>VANT<b>S</b></a>
+          <p>La liga amateur donde nacen los nombres. CS2, VALORANT y LoL cada semana con premios reales.</p>
+        </div>
+        <div class="ft-col">
+          <h4>PLATAFORMA</h4>
+          <a href="torneos.html">Torneos</a><a href="calendario.html">Calendario</a><a href="jugadores.html">Jugadores</a><a href="ranked.html">Ranked</a><a href="precios.html">VIP</a>
+        </div>
+        <div class="ft-col">
+          <h4>LEGAL</h4>
+          <a href="terminos.html">Términos</a><a href="privacidad.html">Privacidad</a>
+        </div>
+      </div>
+      <div class="ft-giant" aria-hidden="true">VANTS</div>
+      <div class="ft-legal">
+        <span>© <span id="year">2025</span> VANTS</span>
+        <div><a href="terminos.html">TÉRMINOS</a><a href="privacidad.html">PRIVACIDAD</a></div>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* loader */
+(function(){
+  const fill=$('#ldFill'),box=$('#loader');
+  const finish=()=>{box.classList.add('done');document.body.classList.remove('lock');document.body.classList.add('loaded');setTimeout(()=>box.remove(),800)};
+  if(REDUCED)return finish();
+  let p=0;(function s(){p=Math.min(100,p+4+Math.random()*10);fill.style.width=p+'%';
+    p<100?setTimeout(s,50):setTimeout(finish,250)})();
+})();
+
+/* cursor */
+(function(){
+  if(!matchMedia('(pointer:fine)').matches)return;
+  document.body.classList.add('cursor-on');
+  const d=$('.cur-dot'),r=$('.cur-ring');let mx=0,my=0,rx=0,ry=0;
+  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+  (function l(){rx+=(mx-rx)*.16;ry+=(my-ry)*.16;
+    d.style.transform=`translate(${mx}px,${my}px) translate(-50%,-50%)`;
+    r.style.transform=`translate(${rx}px,${ry}px) translate(-50%,-50%)`;requestAnimationFrame(l)})();
+  addEventListener('mouseover',e=>r.classList.toggle('hot',!!e.target.closest('a,button')));
+})();
+
+/* nav */
+const nav=$('#nav'),mnav=$('#mnav');
+addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>40),{passive:true});
+ $('#burger').addEventListener('click',()=>{const on=mnav.classList.toggle('on');document.body.classList.toggle('lock',on)});
+mnav.addEventListener('click',e=>{if(e.target.closest('a')){mnav.classList.remove('on');document.body.classList.remove('lock')}});
+
+/* canvas: bracket animado */
+(function(){
+  const cv=$('#arenaCv'),ctx=cv.getContext('2d');
+  let W=0,H=0,nodes=[],edges=[],pulses=[],crosses=[],t0=performance.now(),vis=true;
+  const mouse={x:-9999,y:-9999},ACC=getComputedStyle(document.documentElement).getPropertyValue('--acc').trim();
+  function bez(a,b,t){const c1x=a.x+(b.x-a.x)*.45,c2x=a.x+(b.x-a.x)*.55,u=1-t;
+    return{x:u*u*u*a.x+3*u*u*t*c1x+3*u*t*t*c2x+t*t*t*b.x,
+           y:u*u*u*a.y+3*u*u*t*c1y+3*u*t*t*c2y+t*t*t*b.y}}
+  function build(){
+    const dpr=Math.min(devicePixelRatio||1,2);
+    W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+    const small=W<860,x0=small?W*.08:W*.46,x1=small?W*.92:W*.93,top=H*.16,avail=H*.62,cols=5;
+    nodes=[];edges=[];
+    for(let c=0;c<cols;c++){const n=Math.pow(2,cols-1-c),x=x0+(x1-x0)*(c/(cols-1)),
+      gap=Math.min(avail/n,H*.72/n);
+      for(let k=0;k<n;k++)nodes.push({c,x,y:top+avail/2+(k-(n-1)/2)*gap,flash:0})}
+    for(let c=0;c<cols-1;c++){
+      const cur=nodes.filter(n=>n.c===c).sort((a,b)=>a.y-b.y),
+            nxt=nodes.filter(n=>n.c===c+1).sort((a,b)=>a.y-b.y);
+      cur.forEach((n,k)=>{const m=nxt[Math.floor(k/2)],pts=[];
+        for(let s=0;s<=14;s++)pts.push(bez(n,m,s/14));
+        const len=pts.slice(1).reduce((a,p,j)=>a+Math.hypot(p.x-pts[j].x,p.y-pts[j].y),0);
+        edges.push({a:n,b:m,pts,len,delay:.12*c+Math.random()*.5})})}
+    crosses=[];const st=110;
+    for(let x=st;x<W;x+=st)for(let y=st;y<H;y+=st)crosses.push({x,y});
+  }
+  setInterval(()=>{if(vis&&!REDUCED&&edges.length)pulses.push({e:edges[Math.floor(Math.random()*edges.length)],t:0})},620);
+  function draw(now){
+    requestAnimationFrame(draw);if(!vis)return;
+    ctx.clearRect(0,0,W,H);const T=(now-t0)/1000;
+    ctx.strokeStyle='rgba(255,255,255,.055)';ctx.lineWidth=1;
+    crosses.forEach(c=>{ctx.beginPath();ctx.moveTo(c.x-4,c.y);ctx.lineTo(c.x+4,c.y);
+      ctx.moveTo(c.x,c.y-4);ctx.lineTo(c.x,c.y+4);ctx.stroke()});
+    edges.forEach(e=>{
+      const t=Math.max(0,Math.min(1,(T-e.delay)/.9));if(t<=0)return;
+      const m=e.pts[7],d=Math.hypot(mouse.x-m.x,mouse.y-m.y),hot=d<120?1-d/120:0;
+      ctx.setLineDash([e.len]);ctx.lineDashOffset=e.len*(1-t);
+      ctx.strokeStyle=hot>0?ACC:'rgba(255,255,255,.14)';
+      ctx.globalAlpha=hot>0?.25+hot*.7:1;ctx.lineWidth=hot>0?1.4:1;
+      ctx.beginPath();ctx.moveTo(e.pts[0].x,e.pts[0].y);
+      e.pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();
+      ctx.globalAlpha=1;ctx.setLineDash([])});
+    nodes.forEach(n=>{n.flash=Math.max(0,n.flash-.03);
+      ctx.beginPath();ctx.arc(n.x,n.y,2.4,0,7);ctx.fillStyle='rgba(255,255,255,.5)';ctx.fill();
+      if(n.flash>0){ctx.beginPath();ctx.arc(n.x,n.y,4+(1-n.flash)*9,0,7);
+        ctx.strokeStyle=ACC;ctx.globalAlpha=n.flash*.8;ctx.stroke();ctx.globalAlpha=1}});
+    const fin=nodes[nodes.length-1];
+    if(fin){const r=9+Math.sin(now/380)*3;
+      ctx.beginPath();ctx.arc(fin.x,fin.y,r,0,7);ctx.strokeStyle=ACC;ctx.globalAlpha=.55;ctx.stroke();ctx.globalAlpha=1;
+      ctx.beginPath();ctx.arc(fin.x,fin.y,3.4,0,7);ctx.fillStyle=ACC;ctx.fill()}
+    pulses=pulses.filter(p=>p.t<1);
+    pulses.forEach(p=>{p.t+=.022;const i=Math.min(14,Math.floor(p.t*14)),pt=p.e.pts[i];
+      ctx.beginPath();ctx.arc(pt.x,pt.y,2.2,0,7);ctx.fillStyle=ACC;ctx.fill();
+      for(let s=1;s<=4;s++){const j=i-s;if(j<0)break;ctx.globalAlpha=.5-s*.11;
+        ctx.beginPath();ctx.arc(p.e.pts[j].x,p.e.pts[j].y,1.6,0,7);ctx.fill()}
+      ctx.globalAlpha=1;if(p.t>.97)p.e.b.flash=1});
+  }
+  cv.parentElement.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect();
+    mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top});
+  cv.parentElement.addEventListener('mouseleave',()=>{mouse.x=-9999;mouse.y=-9999});
+  new IntersectionObserver(en=>vis=en[0].isIntersecting).observe(cv.parentElement);
+  addEventListener('resize',build);build();requestAnimationFrame(draw);
+})();
+
+/* ticker */
+(function(){
+  const items=['<b>NOVA9 13–9 KOMBAT</b> · VOLTAJE CUP · CS2','<b>VERSA 2–1 ONYX</b> · RAYO MASTERS · VALORANT',
+    '<b>kRySt4L ACE 1v4</b> · CLUTCH NIGHT · CS2','<b>ARDENT 18–2 HEX</b> · LIGA S7 · LOL',
+    '<b>+€12.450</b> REPARTIDOS ESTA TEMPORADA','INSCRIPCIONES ABIERTAS · <b>ASCENSIÓN OPEN</b>'];
+  const half=items.map(t=>`<span class="tk">${t}<span class="tk-sep">//</span></span>`).join('');
+  $('#tickerTrack').innerHTML=`<div style="display:flex">${half}</div><div style="display:flex">${half}</div>`;
+})();
+
+/* torneos (vista previa — edita los datos aquí) */
+const TOURNAMENTS=[
+  {date:'12 SEP',time:'19:00',name:'Voltaje Cup #12',game:'CS2',color:'var(--cs2)',prize:400,taken:24,total:32},
+  {date:'14 SEP',time:'20:00',name:'Rayo Masters #6',game:'VALORANT',color:'var(--val)',prize:250,taken:16,total:16},
+  {date:'21 SEP',time:'18:00',name:'Ascensión Open',game:'VALORANT',color:'var(--val)',prize:600,taken:41,total:64},
+];
+(function(){
+  $('#tourList').innerHTML=TOURNAMENTS.map(t=>{
+    const full=t.taken>=t.total,pct=Math.round(t.taken/t.total*100);
+    return`<article class="t-row">
+      <div class="t-main">
+        <span class="t-date"><b>${t.date}</b><i>${t.time} CEST</i></span>
+        <span class="t-name">${t.name}</span>
+        <span class="t-game" style="--gc:${t.color}">${t.game}</span>
+        <span class="t-prize">€${t.prize.toLocaleString('es-ES')}</span>
+        <span class="ts-bar-wrap"><span class="ts-txt">${t.taken}/${t.total} plazas${full?' · <b>COMPLETO</b>':''}</span>
+        <span class="ts-bar"><span data-w="${pct}"></span></span></span>
+      </div></article>`}).join('');
+  new IntersectionObserver((en,ob)=>{if(!en[0].isIntersecting)return;ob.disconnect();
+    $$('#tourList .ts-bar span').forEach((s,i)=>setTimeout(()=>s.style.width=s.dataset.w+'%',i*120))},
+    {threshold:.3}).observe($('#tourList'));
+})();
+
+/* vídeos: miniatura → hq → póster propio → iframe al hacer clic */
+ $$('.vfacade').forEach(b=>{
+  const img=b.querySelector('img');let step=0;
+  img.onerror=()=>{step++;
+    if(step===1)img.src=`https://i.ytimg.com/vi/${b.dataset.video}/hqdefault.jpg`;
+    else if(step===2){img.remove();b.classList.add('nofill');
+      b.insertAdjacentHTML('beforeend',`<span class="vf-fallback"><b>${b.dataset.title}</b>TRÁILER NO DISPONIBLE OFFLINE</span>`)}};
+  b.addEventListener('click',()=>{
+    if(b.classList.contains('playing'))return;
+    b.classList.add('playing');
+    b.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.video}?autoplay=1&rel=0&modestbranding=1"
+      title="Tráiler de ${b.dataset.title}" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`});
+});
+
+/* contadores */
+function countUp(el){const target=+el.dataset.count,pre=el.dataset.prefix||'',t0=performance.now(),dur=REDUCED?1:1300;
+  (function f(now){const t=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-t,3);
+    el.textContent=pre+Math.round(target*e).toLocaleString('es-ES');if(t<1)requestAnimationFrame(f)})(t0)}
+new IntersectionObserver((en,ob)=>{if(!en[0].isIntersecting)return;ob.disconnect();
+  $$('#heroStats [data-count]').forEach((el,i)=>setTimeout(()=>countUp(el),i*130))},{threshold:.4}).observe($('#heroStats'));
+
+/* reveal */
+(function(){const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+  $$('[data-reveal]').forEach(el=>io.observe(el))})();
+
+/* parallax hero */
+if(matchMedia('(pointer:fine)').matches&&!REDUCED){
+  const par=$('.hero-par');let tx=0,ty=0,cx=0,cy=0;
+  $('.hero').addEventListener('mousemove',e=>{tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5});
+  (function f(){cx+=(tx-cx)*.06;cy+=(ty-cy)*.06;
+    par.style.transform=`translate(${cx*-14}px,${cy*-9}px)`;requestAnimationFrame(f)})()}
+
+ $('#year').textContent=new Date().getFullYear();
+</script>
 </body>
 </html>
