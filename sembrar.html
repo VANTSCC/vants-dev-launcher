@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Herramienta de siembra — VANTS (admin)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3C/svg%3E">
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+<script src="./assets/js/auth0-config.js?v=14"></script>
+<style>
+:root{--bg:#0A0A0C;--acc:#FF0D2E;--ink:#EDEDE7;--mut:#93939D;--dim:#5C5C66;--line:#222228;--panel:#131317;--grn:#3EE6A0;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);padding:40px 24px;max-width:860px;margin:0 auto}
+h1{font-size:20px;letter-spacing:.04em;margin:0 0 6px}
+.k{font:700 10px/1 var(--mono);letter-spacing:.28em;color:var(--acc);text-transform:uppercase}
+p{color:var(--mut);font-size:12px;line-height:1.7}
+.row{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);padding:10px 14px;margin:6px 0;font-size:12px}
+.row b{color:var(--ink)}
+.tag{font:700 8px/1 var(--mono);letter-spacing:.1em;color:var(--acc);border:1px solid var(--acc);padding:3px 6px}
+.btn{display:inline-block;background:var(--acc);color:#fff;border:0;font:700 13px/1 var(--mono);letter-spacing:.08em;padding:16px 26px;cursor:pointer;margin-top:18px}
+.btn:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.5;cursor:wait}
+.ok{color:var(--grn)} .err{color:var(--acc)}
+#estado{margin-top:22px;font-size:12px;line-height:1.8;white-space:pre-wrap}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+  <p class="k">/// Herramienta admin — siembra de datos reales</p>
+  <h1>Sembrar torneos en Neon</h1>
+  <p>Inserta 6 torneos VANTS reales en la tabla <b>tournaments</b> de tu base de datos, usando <b>tu sesión</b> de Auth0. La web los mostrará automáticamente como <b style="color:var(--grn)">DATOS EN VIVO · NEON</b>.</p>
+  <div id="lista"></div>
+  <button class="btn" id="btn" disabled>SEMbrar TORNEOS EN NEON</button>
+  <div id="estado">Comprobando sesión…</div>
+<script>
+(function () {
+  'use strict';
+  var TORNEOS = [
+    { name: 'Ascensión Series S4 · Etapa 4', slug: 'ascension-series-s4-etapa-4', status: 'inscripcion', tier: 'pro',  starts_at: '2026-10-26T21:00:00Z', max_participants: 48, current_participants: 12, prize_pool: 25000 },
+    { name: 'Open Ladder Nocturna #88',      slug: 'open-ladder-nocturna-88',      status: 'inscripcion', tier: 'open', starts_at: '2026-10-15T23:00:00Z', max_participants: 64, current_participants: 51, prize_pool: 500 },
+    { name: 'Copa LATAM Invitational',       slug: 'copa-latam-invitational',      status: 'inscripcion', tier: 'pro',  starts_at: '2026-11-02T21:00:00Z', max_participants: 16, current_participants: 5,  prize_pool: 10000 },
+    { name: 'Scrim Cup Finde #12',           slug: 'scrim-cup-finde-12',           status: 'inscripcion', tier: 'open', starts_at: '2026-10-18T18:00:00Z', max_participants: 32, current_participants: 9,  prize_pool: 250 },
+    { name: 'Stratos Major S4 · CS2',        slug: 'stratos-major-s4',             status: 'inscripcion', tier: 'pro',  starts_at: '2026-10-28T21:00:00Z', max_participants: 48, current_participants: 18, prize_pool: 15000 },
+    { name: 'VANT Open Sundown',             slug: 'vant-open-sundown',            status: 'inscripcion', tier: 'open', starts_at: '2026-10-21T22:00:00Z', max_participants: 64, current_participants: 23, prize_pool: 750 },
+  ];
+  var $ = function (s) { return document.querySelector(s); };
+  function log(msg, cls) {
+    var el = document.getElementById('estado');
+    el.innerHTML += '<div class="' + (cls || '') + '">' + msg + '</div>';
+  }
+
+  window.addEventListener('load', async function () {
+    if (!window.VantAuth0) { log('auth0-config no disponible', 'err'); return; }
+    try { await window.VantAuth0.initAuth0(); } catch (e) { log('Auth0 no inició: ' + e, 'err'); return; }
+    var A0 = window.VantAuth0.client;
+    // retorno del login (esta pagina también es callback válido: misma carpeta)
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.get('code') && q.get('state')) {
+        await A0.handleRedirectCallback();
+        history.replaceState({}, '', location.pathname);
+      }
+    } catch (e) {}
+    var user = null;
+    try { user = await A0.getUser(); } catch (e) {}
+
+    // listar torneos en pantalla
+    $('#lista').innerHTML = TORNEOS.map(function (t) {
+      return '<div class="row"><span class="tag">' + t.tier.toUpperCase() + '</span><b>' + t.name + '</b><span>' +
+        t.current_participants + '/' + t.max_participants + ' · $' + t.prize_pool.toLocaleString('en-US') + '</span></div>';
+    }).join('');
+
+    if (!user) {
+      var btn = $('#btn');
+      btn.disabled = false;
+      btn.textContent = 'INICIAR SESIÓN PARA SEMBRAR';
+      log('No hay sesión. Pulsa el botón para entrar (Google, Discord, Kick o correo) y al volver podrás sembrar.');
+      btn.onclick = function () {
+        A0.loginWithRedirect({ authorizationParams: { redirect_uri: location.origin + location.pathname, scope: 'openid profile email' } });
+      };
+      return;
+    }
+
+    log('Sesión activa: <b class="ok">' + String(user.name || user.email).slice(0, 40) + '</b>');
+    var btn2 = $('#btn');
+    btn2.disabled = false;
+    btn2.onclick = async function () {
+      btn2.disabled = true;
+      btn2.textContent = 'SEMBrando…';
+      try {
+        var token = await window.VantAuth0.getToken();
+        var res = await fetch('https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1/tournaments', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+          body: JSON.stringify(TORNEOS),
+        });
+        if (res.ok) {
+          log('<span class="ok">✓ INSERTADO EN NEON — ' + TORNEOS.length + ' torneos reales guardados</span>', 'ok');
+          log('Abre <a href="/">la web</a> y mira la sección TORNEOS: chip <b style="color:var(--grn)">DATOS EN VIVO · NEON</b>.');
+          btn2.textContent = 'LISTO ✓';
+        } else {
+          var err = await res.json().catch(function () { return { message: res.statusText }; });
+          log('<span class="err">✗ La base rechazó la escritura (HTTP ' + res.status + '): ' + (err.message || '') + '</span>', 'err');
+          log('Si es un error de permisos (RLS), tu usuario necesita rol admin en la base. Plan B: pega docs/seed-torneos.sql en el SQL Editor de Neon.');
+          btn2.disabled = false;
+        }
+      } catch (e) {
+        log('<span class="err">✗ ' + e + '</span>', 'err');
+        btn2.disabled = false;
+      }
+    };
+  });
+})();
+</script>
+</body>
+</html>
