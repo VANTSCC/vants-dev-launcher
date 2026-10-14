@@ -1,0 +1,72 @@
+name: "Neon · migraciones de la base real"
+
+# Aplica las migraciones SQL idempotentes de db/migrations/ contra la rama
+# br-sweet-shape-b42xhogj del proyecto Neon square-surf-41242074 (base neondb).
+#
+# Requiere 1 secreto:  NEON_API_KEY  (https://console.neon.tech → Account → API keys)
+#   Settings → Secrets and variables → Actions → New repository secret
+#
+# Se ejecuta: manualmente (Run workflow) o al cambiar db/migrations/*.sql
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "db/migrations/*.sql"
+      - ".github/workflows/neon-migrate.yml"
+
+concurrency:
+  group: neon-migrate
+  cancel-in-progress: false
+
+jobs:
+  migrar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Comprobar secreto NEON_API_KEY
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          if [ -z "$NEON_API_KEY" ]; then
+            echo "::error::Falta el secreto NEON_API_KEY. Créalo en https://console.neon.tech/app/settings/api-keys y añádelo en Settings → Secrets and variables → Actions → New repository secret."
+            exit 1
+          fi
+
+      - name: Install Neon CLI
+        run: npm install -g neon@latest
+
+      - name: Resolver cadena de conexión (Neon CLI)
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          neon --version
+          CS=$(neonctl connection-string br-sweet-shape-b42xhogj \
+            --project-id square-surf-41242074 \
+            --database neondb)
+          if [ -z "$CS" ]; then
+            echo "::error::Neon CLI no devolvió cadena de conexión. Diagnóstico:"
+            neonctl projects list || true
+            neonctl branches list --project-id square-surf-41242074 || true
+            exit 1
+          fi
+          echo "::add-mask::$CS"
+          echo "NEON_CS=$CS" >> "$GITHUB_ENV"
+          echo "✅ Cadena de conexión resuelta (oculta en el log)"
+
+      - name: Aplicar migraciones (idempotentes)
+        run: |
+          psql --version
+          set -e
+          for f in db/migrations/*.sql; do
+            echo "════════ ▶ $f ════════"
+            psql "$NEON_CS" -v ON_ERROR_STOP=1 -f "$f"
+          done
+          echo "✅ Migraciones aplicadas"
+
+      - name: Resumen de la base (tablas y filas)
+        if: always() && env.NEON_CS != ''
+        run: |
+          psql "$NEON_CS" -c "SELECT relname AS tabla, n_live_tup AS filas_aprox FROM pg_stat_user_tables WHERE schemaname = 'public' ORDER BY relname;" || true
