@@ -25,6 +25,8 @@ from commands.comunidad import (
 )
 from utils.health import start_health_server
 from utils.db import execute, fetch_all, fetch_one
+from alerts import start_alerts
+from supervisor import start_supervisor
 
 
 def required_env(name: str) -> str:
@@ -465,8 +467,11 @@ async def recordatorio_cmd(interaction: discord.Interaction, mensaje: str, minut
 async def on_ready() -> None:
     await start_health_server()
     await tree.sync(guild=GUILD)
+    start_alerts(client)
+    start_supervisor(client)
     print(f"✅ vantcall conectado como {client.user}")
     print(f"📋 Comandos registrados en guild {GUILD_ID}")
+    print(f"🛡️ Supervisor de la web activo → DM {os.getenv('SUPERVISOR_DM_ID') or '1532612429295521930'}")
 
 
 client.run(TOKEN)

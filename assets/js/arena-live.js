@@ -20,11 +20,19 @@
     if (q.get('code') && q.get('state')) {
       await A0.handleRedirectCallback();
       history.replaceState({}, '', location.pathname + location.hash);
+      try {
+        var uLogin = null;
+        try { uLogin = await A0.getUser(); } catch (eU1) {}
+        if (window.VantsSupervisor) window.VantsSupervisor.event('LOGIN_OK', { user: (uLogin && (uLogin.email || uLogin.name)) || null });
+      } catch (eS1) {}
     } else if (q.get('error')) {
       if (typeof toast === 'function') { try { toast('Login no disponible: revisa las conexiones de Auth0 (' + q.get('error') + ')', 'info'); } catch (e2) {} }
       history.replaceState({}, '', location.pathname + location.hash);
+      if (window.VantsSupervisor) window.VantsSupervisor.event('LOGIN_FAILED', { motivo: String(q.get('error') || '').slice(0, 120), detalle: String(q.get('error_description') || '').slice(0, 200) });
     }
-  } catch (e) {}
+  } catch (e) {
+    if (window.VantsSupervisor) window.VantsSupervisor.event('LOGIN_FAILED', { motivo: 'callback_exception', detalle: String((e && e.message) || e).slice(0, 200) });
+  }
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});

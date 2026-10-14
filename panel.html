@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
 <script src="./assets/js/auth0-config.js?v=14"></script>
+<script src="./assets/js/vants-supervisor.js?v=1"></script>
 <style>
 :root{--bg:#0A0A0C;--bg2:#0D0D10;--panel:#131317;--line:#222228;--line2:#303039;--ink:#EDEDE7;--mut:#93939D;--dim:#5C5C66;--acc:#FF0D2E;--grn:#3EE6A0;--cy:#4CC9F0;--gold:#F5C044;--mono:'JetBrains Mono',monospace;--sans:'Archivo',system-ui,sans-serif}
 *{box-sizing:border-box}
@@ -214,11 +215,24 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
     if (!A0) return;
     try {
       var q = new URLSearchParams(location.search);
-      if (q.get('code') && q.get('state')) { await A0.handleRedirectCallback(); history.replaceState({}, '', location.pathname); }
-    } catch (e) {}
+      if (q.get('code') && q.get('state')) {
+        await A0.handleRedirectCallback();
+        history.replaceState({}, '', location.pathname);
+        try {
+          var uPanel = null;
+          try { uPanel = await A0.getUser(); } catch (eU2) {}
+          if (window.VantsSupervisor) window.VantsSupervisor.event('LOGIN_OK', { user: (uPanel && (uPanel.email || uPanel.name)) || null, origen: 'panel' });
+        } catch (eS2) {}
+      } else if (q.get('error')) {
+        if (window.VantsSupervisor) window.VantsSupervisor.event('LOGIN_FAILED', { motivo: String(q.get('error') || '').slice(0, 120), detalle: String(q.get('error_description') || '').slice(0, 200), origen: 'panel' });
+      }
+    } catch (e) {
+      if (window.VantsSupervisor) window.VantsSupervisor.event('LOGIN_FAILED', { motivo: 'callback_exception', detalle: String((e && e.message) || e).slice(0, 200), origen: 'panel' });
+    }
 
     var user = null;
     try { user = await A0.getUser(); } catch (e) {}
+    if (user && window.VantsSupervisor) window.VantsSupervisor.event('LOGIN_OK', { user: String(user.email || user.name || 'admin').slice(0, 120), origen: 'panel_sesion' });
 
     refreshDbCards();
     refreshJugadores();
