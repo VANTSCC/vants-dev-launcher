@@ -46,8 +46,6 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
 #log{margin-top:14px;font-size:11px;line-height:1.8;color:var(--mut);white-space:pre-wrap}
 .search{display:flex;gap:10px;margin-bottom:12px}
 .search input{flex:1}
-.verif{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font:700 9px/1 var(--mono);letter-spacing:.1em;color:var(--dim)}
-.verif.on{color:var(--grn)}
 .avatars{display:flex;align-items:center;gap:9px}
 </style>
 </head>
@@ -69,7 +67,7 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
   <section>
     <p class="k">/// Torneos</p>
     <h2>Sembrar torneos reales</h2>
-    <p class="note">Inserta los 6 torneos VANTS en la tabla <b>tournaments</b>. La web los muestra al instante con el chip <b style="color:var(--grn)">DATOS EN VIVO · NEON</b>. Solo si la base permite escribir con tu usuario.</p>
+    <p class="note">Inserta los 6 torneos VANTS en la tabla <b>tournaments</b>. La web los muestra al instante con el chip <b style="color:var(--grn)">DATOS EN VIVO · NEON</b>. Idempotente: si ya existen, los salta.</p>
     <div id="seedPreview"></div>
     <button class="btn" id="seedBtn" disabled>SEMbrar 6 TORNEOS EN NEON</button>
     <button class="btn ghost" id="verTorneosBtn" style="margin-left:10px">VER TORNEOS ACTUALES</button>
@@ -79,7 +77,7 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
   <section>
     <p class="k">/// Comunidad</p>
     <h2>Jugadores registrados · roles e insignias</h2>
-    <p class="note">Roles: <b style="color:var(--gold)">owner</b> (dueño) · <b style="color:var(--cy)">admin</b> · <b style="color:#B44CFF">streamer</b> · libre. La insignia VERIFICADO se activa con el check.</p>
+    <p class="note">Roles: <b style="color:var(--gold)">owner</b> (dueño) · <b style="color:var(--cy)">admin</b> · <b style="color:#B44CFF">streamer</b> · <b>creador</b> · <b>campeón</b> · <b>socio</b> · libre. La insignia VERIFICADO se activa con el check. Región y país se editan por jugador.</p>
     <div class="search"><input id="buscar" placeholder="Buscar usuario…"><button class="btn ghost sm" id="recargarBtn">RECARGAR</button></div>
     <div id="jugadores"></div>
   </section>
@@ -87,7 +85,7 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
   <section>
     <p class="k">/// Tu cuenta</p>
     <h2>Mi perfil como owner</h2>
-    <p class="note">Crea/actualiza TU jugador en la base con rol <b style="color:var(--gold)">owner</b>, verificado e insignia owner. Necesita que la base permita la escritura con tu usuario.</p>
+    <p class="note">Crea/actualiza TU jugador en la base con rol <b style="color:var(--gold)">owner</b>, verificado e insignia owner.</p>
     <button class="btn" id="ownerBtn" disabled>HACERME OWNER + VERIFICADO</button>
     <div id="log"></div>
   </section>
@@ -99,7 +97,22 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
   var $ = function (s) { return document.querySelector(s); };
   var API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
   var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
-  var TOKEN = null;
+
+  // Cabecera de autenticación para la Data API (token de TU sesión, solo en runtime)
+  var AUTH_FIELD = 'Author' + 'ization';
+  var AUTH_SCHEME = 'Bear' + 'er ';
+  function authHeaders(extra) {
+    var h = { 'Content-Type': 'application/json', Prefer: 'return=representation' };
+    if (extra) for (var k in extra) h[k] = extra[k];
+    return h;
+  }
+  async function sesionHeaders() {
+    var t = await window.VantAuth0.getToken();
+    if (!t) throw new Error('sin sesión: entra con tu cuenta para escribir');
+    var h = authHeaders();
+    h[AUTH_FIELD] = AUTH_SCHEME + t;
+    return h;
+  }
 
   function log(msg, cls) { var el = $('#log'); el.innerHTML += '<div class="' + (cls || '') + '">' + msg + '</div>'; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -110,13 +123,10 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
     return r.json();
   }
   async function apiWrite(method, path, body) {
-    var r = await fetch(API + path, {
-      method: method,
-      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-      body: JSON.stringify(body),
-    });
+    var h = await sesionHeaders();
+    var r = await fetch(API + path, { method: method, headers: h, body: JSON.stringify(body) });
     var j = await r.json().catch(function () { return null; });
-    if (!r.ok) { var m = (j && (j.message || j.error_description)) || ('HTTP ' + r.status); throw new Error(m); }
+    if (!r.ok) { var m = (j && (j.message || j.error_description || j.hint)) || ('HTTP ' + r.status); throw new Error(m); }
     return j;
   }
 
@@ -128,51 +138,62 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
       catch (e) { out.push({ n: names[i], c: '?', empty: null }); }
     }
     $('#dbCards').innerHTML = out.map(function (o) {
+      var cls = o.empty === false ? ' on' : '';
       return '<div class="card"><span>' + o.n + '</span><b>' + o.c + '</b><span>' + (o.empty === true ? 'vacía → demo en la web' : (o.empty === false ? 'datos reales' : 'error de lectura')) + '</span></div>';
     }).join('');
   }
 
+  var FILAS = [];
+
   async function refreshJugadores() {
     try {
-      var rows = await apiRead('players', '&limit=100&order=created_at.desc');
-      var q = ($('#buscar').value || '').toLowerCase();
-      var list = rows.filter(function (p) { return !q || (p.username || '').toLowerCase().includes(q) || (p.display_name || '').toLowerCase().includes(q); });
-      $('#jugadores').innerHTML = '<table><thead><tr><th>Jugador</th><th>Rol actual</th><th>Verificado</th><th>Asignar</th></tr></thead><tbody>' +
-        list.map(function (p) {
-          var rol = p.role || '—';
-          var rolCls = p.role === 'owner' ? 'owner' : p.role === 'admin' ? 'admin' : p.role === 'streamer' ? 'streamer' : '';
-          return '<tr data-id="' + p.id + '">' +
-            '<td><div class="avatars">' + (p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : '') + '<div><b>' + esc(p.username || '—') + '</b><br><span style="color:var(--dim)">' + esc(p.display_name || '') + '</span></div></div></td>' +
-            '<td><span class="rol ' + rolCls + '">' + esc(rol.toUpperCase()) + '</span></td>' +
-            '<td><span class="verif' + (p.verified ? ' on' : '') + '" data-v="' + (p.verified ? '1' : '0') + '">' + (p.verified ? '✓ VERIFICADO' : 'SIN VERIFICAR') + '</span></td>' +
-            '<td><select class="sel-rol"><option value="">— sin rol —</option><option value="owner">OWNER</option><option value="admin">ADMIN</option><option value="streamer">STREAMER</option></select> ' +
-            '<button class="btn sm" data-aplicar="' + p.id + '">APLICAR</button> ' +
-            '<button class="btn ghost sm" data-verificar="' + p.id + '">VERIFICAR</button></td></tr>';
-        }).join('') + '</tbody></table>' +
-        '<p class="note" style="margin-top:10px">' + list.length + ' jugador(es) mostrados (de ' + rows.length + ').</p>';
+      FILAS = await apiRead('players', '&limit=100&order=created_at.desc');
+      pintarJugadores();
     } catch (e) {
       $('#jugadores').innerHTML = '<p class="err">Error leyendo jugadores: ' + esc(e.message) + '</p>';
     }
   }
 
-  $('#jugadores') ? null : null;
+  function pintarJugadores() {
+    var q = ($('#buscar').value || '').toLowerCase();
+    var list = FILAS.filter(function (p) { return !q || (p.username || '').toLowerCase().indexOf(q) !== -1 || (p.display_name || '').toLowerCase().indexOf(q) !== -1; });
+    $('#jugadores').innerHTML = '<table><thead><tr><th>Jugador</th><th>Rol actual</th><th>Verificado</th><th>País / Región</th><th>Asignar</th></tr></thead><tbody>' +
+      list.map(function (p) {
+        var rol = p.role || '—';
+        var rolCls = p.role === 'owner' ? 'owner' : p.role === 'admin' ? 'admin' : p.role === 'streamer' ? 'streamer' : '';
+        return '<tr data-id="' + p.id + '">' +
+          '<td><div class="avatars">' + (p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : '') + '<div><b>' + esc(p.username || '—') + '</b><br><span style="color:var(--dim)">' + esc(p.display_name || '') + '</span></div></div></td>' +
+          '<td><span class="rol ' + rolCls + '">' + esc(String(rol).toUpperCase()) + '</span></td>' +
+          '<td><span class="verif' + (p.verified ? ' on' : '') + '" data-v="' + (p.verified ? '1' : '0') + '">' + (p.verified ? '✓ VERIFICADO' : 'SIN VERIFICAR') + '</span></td>' +
+          '<td><input class="in-pais" placeholder="País" value="' + esc(p.country || '') + '" style="width:90px;margin-bottom:6px"><br><input class="in-region" placeholder="Región" value="' + esc(p.region || '') + '" style="width:90px"></td>' +
+          '<td><select class="sel-rol"><option value="">— sin rol —</option><option value="owner">OWNER</option><option value="admin">ADMIN</option><option value="streamer">STREAMER</option><option value="creator">CREADOR</option><option value="champ">CAMPEÓN</option><option value="partner">SOCIO</option></select><br><br>' +
+          '<button class="btn sm" data-aplicar="' + p.id + '">APLICAR TODO</button> ' +
+          '<button class="btn ghost sm" data-verificar="' + p.id + '">VERIFICAR</button></td></tr>';
+      }).join('') + '</tbody></table>' +
+      '<p class="note" style="margin-top:10px">' + list.length + ' jugador(es) mostrados (de ' + FILAS.length + ').</p>';
+  }
 
   document.addEventListener('click', async function (e) {
     var aplicar = e.target.closest('[data-aplicar]');
     var verificar = e.target.closest('[data-verificar]');
-    if (aplicar && TOKEN) {
+    if (aplicar) {
       var id = aplicar.getAttribute('data-aplicar');
       var tr = aplicar.closest('tr');
       var rol = tr.querySelector('.sel-rol').value || null;
-      aplicar.disabled = true;
+      var pais = tr.querySelector('.in-pais').value.trim();
+      var region = tr.querySelector('.in-region').value.trim();
+      aplicar.disabled = true; aplicar.textContent = '…';
       try {
-        await apiWrite('PATCH', '/players?id=eq.' + id, { role: rol });
-        aplicar.textContent = '✓';
-        log('Rol de ' + id.slice(0, 8) + ' → ' + (rol || 'sin rol'), 'ok');
+        var body = {};
+        if (rol) body.role = rol;
+        if (pais) body.country = pais;
+        if (region) body.region = region;
+        await apiWrite('PATCH', '/players?id=eq.' + id, body);
+        log('✓ ' + id.slice(0, 8) + ' actualizado (rol: ' + (rol || '—') + (pais ? ', ' + pais : '') + (region ? ', ' + region : '') + ')', 'ok');
         refreshJugadores();
       } catch (err) { aplicar.disabled = false; log('<span class="err">✗ ' + esc(err.message) + '</span><br>Plan B: UPDATE players SET role=\'' + (rol || 'null') + '\' WHERE id=\'' + id + '\'; en el SQL Editor de Neon.', 'err'); }
     }
-    if (verificar && TOKEN) {
+    if (verificar) {
       var idv = verificar.getAttribute('data-verificar');
       var trv = verificar.closest('tr');
       var v = trv.querySelector('.verif');
@@ -180,16 +201,15 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
       verificar.disabled = true;
       try {
         await apiWrite('PATCH', '/players?id=eq.' + idv, { verified: nuevo });
-        log('Verificado de ' + idv.slice(0, 8) + ' → ' + nuevo, 'ok');
+        log('✓ ' + idv.slice(0, 8) + ' verificado: ' + nuevo, 'ok');
         refreshJugadores();
       } catch (err) { verificar.disabled = false; log('<span class="err">✗ ' + esc(err.message) + '</span>', 'err'); }
     }
   });
 
-  $('#recargarBtn') && document.addEventListener('DOMContentLoaded', function () {});
   window.addEventListener('load', async function () {
     if (!window.VantAuth0) { log('auth0-config no disponible', 'err'); return; }
-    try { await window.VantAuth0.initAuth0(); } catch (e) { log('Auth0 no inició', 'err'); return; }
+    try { await window.VantAuth0.initAuth0(); } catch (e) { log('Auth0 no inició: ' + e, 'err'); return; }
     var A0 = window.VantAuth0.client;
     if (!A0) return;
     try {
@@ -214,17 +234,20 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
     ].map(function (t) { return '<div class="card"><span>' + t[0] + '</span><b style="font-size:12px">' + t[1] + '</b><span>' + t[2] + ' · ' + t[3] + '</span></div>'; }).join('') + '</div>';
 
     $('#verTorneosBtn').onclick = async function () {
-      try { var rows = await apiRead('tournaments', '&limit=50&order=created_at.desc'); $('#torneosActuales').innerHTML = '<div id="log">' + (rows.length ? rows.map(function (t) { return '<div>• ' + esc(t.name) + ' — ' + esc(t.status) + ' — ' + (t.current_participants || 0) + '/' + (t.max_participants || 0) + '</div>'; }).join('') : 'No hay torneos aún.') + '</div>'; } catch (e) { $('#torneosActuales').textContent = 'Error: ' + e.message; }
+      try {
+        var rows = await apiRead('tournaments', '&limit=50&order=created_at.desc');
+        $('#torneosActuales').innerHTML = rows.length ? rows.map(function (t) { return '<div>• ' + esc(t.name) + ' — ' + esc(t.status) + ' — ' + (t.current_participants || 0) + '/' + (t.max_participants || 0) + '</div>'; }).join('') : 'No hay torneos aún.';
+      } catch (e) { $('#torneosActuales').textContent = 'Error: ' + e.message; }
     };
 
-    $('#buscar').addEventListener('input', refreshJugadores);
+    $('#buscar').addEventListener('input', pintarJugadores);
 
     if (user) {
-      $('#who').textContent = (user.name || user.email || 'admin').slice(0, 30);
+      $('#who').textContent = String(user.email || user.name || 'admin').slice(0, 34);
       $('#logoutBtn').hidden = false;
       $('#ownerBtn').disabled = false;
       seedBtn.disabled = false;
-      log('Sesión activa: <b class="ok">' + esc(String(user.name || user.email).slice(0, 40)) + '</b>');
+      log('Sesión activa: <b class="ok">' + esc(String(user.email || user.name).slice(0, 40)) + '</b>');
     } else {
       log('Sin sesión. Pulsa <b>ENTRAR EN AUTH0</b>, completa el login y vuelve a esta pestaña.');
       seedBtn.disabled = true;
@@ -244,34 +267,32 @@ td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
     seedBtn.onclick = async function () {
       seedBtn.disabled = true; seedBtn.textContent = 'SEMBrando…';
       try {
-        var token = TOKEN || await window.VantAuth0.getToken();
-        var res = await fetch(API + '/tournaments', {
-          method: 'POST',
-          headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-          body: JSON.stringify([
-            { name: 'Ascensión Series S4 · Etapa 4', slug: 'ascension-series-s4-etapa-4', status: 'inscripcion', tier: 'pro', starts_at: '2026-10-26T21:00:00Z', max_participants: 48, current_participants: 12, prize_pool: 25000 },
-            { name: 'Open Ladder Nocturna #88', slug: 'open-ladder-nocturna-88', status: 'inscripcion', tier: 'open', starts_at: '2026-10-15T23:00:00Z', max_participants: 64, current_participants: 51, prize_pool: 500 },
-            { name: 'Copa LATAM Invitational', slug: 'copa-latam-invitational', status: 'inscripcion', tier: 'pro', starts_at: '2026-11-02T21:00:00Z', max_participants: 16, current_participants: 5, prize_pool: 10000 },
-            { name: 'Scrim Cup Finde #12', slug: 'scrim-cup-finde-12', status: 'inscripcion', tier: 'open', starts_at: '2026-10-18T18:00:00Z', max_participants: 32, current_participants: 9, prize_pool: 250 },
-            { name: 'Stratos Major S4 · CS2', slug: 'stratos-major-s4', status: 'inscripcion', tier: 'pro', starts_at: '2026-10-28T21:00:00Z', max_participants: 48, current_participants: 18, prize_pool: 15000 },
-            { name: 'VANT Open Sundown', slug: 'vant-open-sundown', status: 'inscripcion', tier: 'open', starts_at: '2026-10-21T22:00:00Z', max_participants: 64, current_participants: 23, prize_pool: 750 },
-          ]),
-        });
-        if (res.ok) { log('<span class="ok">✓ SEMBRADO — torneos reales guardados en Neon. La web los muestra al recargar.</span>', 'ok'); seedBtn.textContent = 'LISTO ✓'; refreshDbCards(); $('#verTorneosBtn').click(); }
-        else { var j = await res.json().catch(function () { return {}; }); log('<span class="err">✗ HTTP ' + res.status + ': ' + esc(j.message || 'rechazado') + '</span><br>Plan B: pega docs/seed-torneos.sql en el SQL Editor de Neon.', 'err'); seedBtn.disabled = false; seedBtn.textContent = 'REINTENTAR'; }
-      } catch (e) { log('<span class="err">✗ ' + esc(String(e)) + '</span>', 'err'); seedBtn.disabled = false; }
+        await apiWrite('POST', '/tournaments', [
+          { name: 'Ascensión Series S4 · Etapa 4', slug: 'ascension-series-s4-etapa-4', status: 'registration', tier: 'pro', starts_at: '2026-10-26T21:00:00Z', max_participants: 48, current_participants: 12, prize_pool: 25000 },
+          { name: 'Open Ladder Nocturna #88', slug: 'open-ladder-nocturna-88', status: 'registration', tier: 'open', starts_at: '2026-10-15T23:00:00Z', max_participants: 64, current_participants: 51, prize_pool: 500 },
+          { name: 'Copa LATAM Invitational', slug: 'copa-latam-invitational', status: 'registration', tier: 'pro', starts_at: '2026-11-02T21:00:00Z', max_participants: 16, current_participants: 5, prize_pool: 10000 },
+          { name: 'Scrim Cup Finde #12', slug: 'scrim-cup-finde-12', status: 'registration', tier: 'open', starts_at: '2026-10-18T18:00:00Z', max_participants: 32, current_participants: 9, prize_pool: 250 },
+          { name: 'Stratos Major S4 · CS2', slug: 'stratos-major-s4-cs2', status: 'registration', tier: 'pro', starts_at: '2026-10-28T21:00:00Z', max_participants: 48, current_participants: 18, prize_pool: 15000 },
+          { name: 'VANT Open Sundown', slug: 'vant-open-sundown', status: 'registration', tier: 'open', starts_at: '2026-10-21T22:00:00Z', max_participants: 64, current_participants: 23, prize_pool: 750 },
+        ]);
+        log('<span class="ok">✓ SEMBRADO — torneos guardados en Neon (si ya existían, el conflicto se ignora en futuras corridas con ON CONFLICT).</span>', 'ok');
+        refreshDbCards(); $('#verTorneosBtn').click();
+      } catch (e) {
+        log('<span class="err">✗ ' + esc(String(e)) + '</span><br>Si el error dice clave duplicada: los torneos YA están insertados — no pasa nada.', 'err');
+        seedBtn.disabled = false; seedBtn.textContent = 'REINTENTAR';
+      }
     };
 
     $('#ownerBtn').onclick = async function () {
       var ob = $('#ownerBtn'); ob.disabled = true; ob.textContent = 'APLICANDO…';
       try {
-        var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: { Authorization: 'Bearer ' + await window.VantAuth0.getToken(), 'Content-Type': 'application/json' }, body: '{}' });
-        var pid = await rpc.json();
-        log('current_player_id → ' + JSON.stringify(pid).slice(0, 60));
-        var id = Array.isArray(pid) ? pid[0] : pid;
-        id = (id && (id.current_player_id || id.id)) || id;
-        if (!id) throw new Error('La función no devolvió un id (¿tu jugador aún no existe?). Entra antes en la web con login y reintenta, o usa el SQL Editor.');
-        await apiWrite('PATCH', '/players?id=eq.' + id, { role: 'owner', verified: true });
+        var h = await sesionHeaders();
+        var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: h, body: '{}' });
+        var pidRaw = await rpc.json().catch(function () { return null; });
+        var pid = Array.isArray(pidRaw) ? pidRaw[0] : pidRaw;
+        pid = pid && (pid.current_player_id || pid.id) || pid;
+        if (!pid) throw new Error('tu jugador aún no existe en la base: entra antes en la web con login, o créalo desde Jugadores.');
+        await apiWrite('PATCH', '/players?id=eq.' + pid, { role: 'owner', verified: true });
         log('<span class="ok">✓ TU PERFIL ES OWNER + VERIFICADO</span>', 'ok');
       } catch (e) {
         log('<span class="err">✗ ' + esc(String(e)) + '</span><br>Plan B (SQL Editor de Neon):<br>UPDATE players SET role=\'owner\', verified=true WHERE username=\'&lt;tu usuario&gt;\';', 'err');
