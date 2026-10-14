@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANEL ADMIN — VANTS GAMES</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+<script src="./assets/js/auth0-config.js?v=14"></script>
+<style>
+:root{--bg:#0A0A0C;--bg2:#0D0D10;--panel:#131317;--line:#222228;--line2:#303039;--ink:#EDEDE7;--mut:#93939D;--dim:#5C5C66;--acc:#FF0D2E;--grn:#3EE6A0;--cy:#4CC9F0;--gold:#F5C044;--mono:'JetBrains Mono',monospace;--sans:'Archivo',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);margin:0;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 24px 80px}
+header{border-bottom:1px solid var(--line);background:rgba(10,10,12,.9);position:sticky;top:0;z-index:5}
+.h-in{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px}
+.h-in img{width:34px;height:34px}
+.h-title{font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.06em}
+.h-title small{display:block;font:700 8px/1 var(--mono);letter-spacing:.4em;color:var(--dim);margin-top:3px}
+.h-right{margin-left:auto;display:flex;align-items:center;gap:10px;font:600 11px/1 var(--mono)}
+.who{color:var(--mut)}
+.k{font:700 10px/1 var(--mono);letter-spacing:.28em;color:var(--acc);text-transform:uppercase}
+h2{font-family:var(--mono);font-size:15px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin:38px 0 14px;padding-top:22px;border-top:1px solid var(--line)}
+section p.note{color:var(--mut);font-size:12px;line-height:1.7;margin:0 0 14px}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 9px/1 var(--mono);letter-spacing:.14em;padding:5px 9px;border:1px solid var(--line2);color:var(--mut)}
+.chip.on{color:var(--grn);border-color:var(--grn)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);padding:16px}
+.card b{display:block;font-family:var(--mono);font-size:22px;margin-top:4px}
+.card span{font:600 9px/1.6 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+button{font-family:var(--mono);cursor:pointer}
+.btn{background:var(--acc);color:#fff;border:0;font:700 12px/1 var(--mono);letter-spacing:.08em;padding:14px 22px}
+.btn.ghost{background:none;border:1px solid var(--line2);color:var(--ink)}
+.btn.sm{padding:8px 12px;font-size:10px}
+.btn:hover{filter:brightness(1.15)}
+.btn:disabled{opacity:.45;cursor:wait}
+input,select{background:var(--bg2);border:1px solid var(--line2);color:var(--ink);font:500 12px/1 var(--mono);padding:11px 12px;outline:none}
+input:focus,select:focus{border-color:var(--acc)}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{font:700 9px/1 var(--mono);letter-spacing:.14em;color:var(--dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line2);text-transform:uppercase}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+td img{width:26px;height:26px;border-radius:50%;object-fit:cover}
+.rol{font:700 9px/1 var(--mono);letter-spacing:.1em;padding:3px 7px;border:1px solid var(--line2);color:var(--mut)}
+.rol.admin{color:var(--cy);border-color:var(--cy)} .rol.owner{color:var(--gold);border-color:var(--gold)} .rol.streamer{color:#B44CFF;border-color:#B44CFF}
+.ok{color:var(--grn)} .err{color:var(--acc)}
+#log{margin-top:14px;font-size:11px;line-height:1.8;color:var(--mut);white-space:pre-wrap}
+.search{display:flex;gap:10px;margin-bottom:12px}
+.search input{flex:1}
+.verif{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font:700 9px/1 var(--mono);letter-spacing:.1em;color:var(--dim)}
+.verif.on{color:var(--grn)}
+.avatars{display:flex;align-items:center;gap:9px}
+</style>
+</head>
+<body>
+<header><div class="h-in">
+  <img src="./assets/brand/vants-mark.svg" alt="VANTS">
+  <div class="h-title">PANEL ADMIN — VANTS GAMES<small>CONTROL DE DATOS · NEON + AUTH0</small></div>
+  <div class="h-right"><span class="who" id="who">sin sesión</span><button class="btn ghost sm" id="logoutBtn" hidden>CERRAR SESIÓN</button></div>
+</div></header>
+
+<div class="wrap">
+  <section>
+    <p class="k">/// Estado</p>
+    <h2>Base de datos</h2>
+    <p class="note">Lecturas directas de Neon (proxy público). Las escrituras usan tu sesión de Auth0 y las reglas de seguridad de la base.</p>
+    <div class="grid" id="dbCards"></div>
+  </section>
+
+  <section>
+    <p class="k">/// Torneos</p>
+    <h2>Sembrar torneos reales</h2>
+    <p class="note">Inserta los 6 torneos VANTS en la tabla <b>tournaments</b>. La web los muestra al instante con el chip <b style="color:var(--grn)">DATOS EN VIVO · NEON</b>. Solo si la base permite escribir con tu usuario.</p>
+    <div id="seedPreview"></div>
+    <button class="btn" id="seedBtn" disabled>SEMbrar 6 TORNEOS EN NEON</button>
+    <button class="btn ghost" id="verTorneosBtn" style="margin-left:10px">VER TORNEOS ACTUALES</button>
+    <div id="torneosActuales"></div>
+  </section>
+
+  <section>
+    <p class="k">/// Comunidad</p>
+    <h2>Jugadores registrados · roles e insignias</h2>
+    <p class="note">Roles: <b style="color:var(--gold)">owner</b> (dueño) · <b style="color:var(--cy)">admin</b> · <b style="color:#B44CFF">streamer</b> · libre. La insignia VERIFICADO se activa con el check.</p>
+    <div class="search"><input id="buscar" placeholder="Buscar usuario…"><button class="btn ghost sm" id="recargarBtn">RECARGAR</button></div>
+    <div id="jugadores"></div>
+  </section>
+
+  <section>
+    <p class="k">/// Tu cuenta</p>
+    <h2>Mi perfil como owner</h2>
+    <p class="note">Crea/actualiza TU jugador en la base con rol <b style="color:var(--gold)">owner</b>, verificado e insignia owner. Necesita que la base permita la escritura con tu usuario.</p>
+    <button class="btn" id="ownerBtn" disabled>HACERME OWNER + VERIFICADO</button>
+    <div id="log"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
+  var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+  var TOKEN = null;
+
+  function log(msg, cls) { var el = $('#log'); el.innerHTML += '<div class="' + (cls || '') + '">' + msg + '</div>'; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  async function apiRead(table, qs) {
+    var r = await fetch(PROXY + '?table=' + table + (qs || ''), { headers: { Accept: 'application/json' } });
+    if (!r.ok) throw new Error(table + ': HTTP ' + r.status);
+    return r.json();
+  }
+  async function apiWrite(method, path, body) {
+    var r = await fetch(API + path, {
+      method: method,
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(body),
+    });
+    var j = await r.json().catch(function () { return null; });
+    if (!r.ok) { var m = (j && (j.message || j.error_description)) || ('HTTP ' + r.status); throw new Error(m); }
+    return j;
+  }
+
+  async function refreshDbCards() {
+    var out = [];
+    var names = ['players', 'tournaments', 'tournament_entries', 'seasons'];
+    for (var i = 0; i < names.length; i++) {
+      try { var rows = await apiRead(names[i], '&limit=1000'); out.push({ n: names[i], c: rows.length, empty: rows.length === 0 }); }
+      catch (e) { out.push({ n: names[i], c: '?', empty: null }); }
+    }
+    $('#dbCards').innerHTML = out.map(function (o) {
+      return '<div class="card"><span>' + o.n + '</span><b>' + o.c + '</b><span>' + (o.empty === true ? 'vacía → demo en la web' : (o.empty === false ? 'datos reales' : 'error de lectura')) + '</span></div>';
+    }).join('');
+  }
+
+  async function refreshJugadores() {
+    try {
+      var rows = await apiRead('players', '&limit=100&order=created_at.desc');
+      var q = ($('#buscar').value || '').toLowerCase();
+      var list = rows.filter(function (p) { return !q || (p.username || '').toLowerCase().includes(q) || (p.display_name || '').toLowerCase().includes(q); });
+      $('#jugadores').innerHTML = '<table><thead><tr><th>Jugador</th><th>Rol actual</th><th>Verificado</th><th>Asignar</th></tr></thead><tbody>' +
+        list.map(function (p) {
+          var rol = p.role || '—';
+          var rolCls = p.role === 'owner' ? 'owner' : p.role === 'admin' ? 'admin' : p.role === 'streamer' ? 'streamer' : '';
+          return '<tr data-id="' + p.id + '">' +
+            '<td><div class="avatars">' + (p.avatar_url ? '<img src="' + esc(p.avatar_url) + '" alt="">' : '') + '<div><b>' + esc(p.username || '—') + '</b><br><span style="color:var(--dim)">' + esc(p.display_name || '') + '</span></div></div></td>' +
+            '<td><span class="rol ' + rolCls + '">' + esc(rol.toUpperCase()) + '</span></td>' +
+            '<td><span class="verif' + (p.verified ? ' on' : '') + '" data-v="' + (p.verified ? '1' : '0') + '">' + (p.verified ? '✓ VERIFICADO' : 'SIN VERIFICAR') + '</span></td>' +
+            '<td><select class="sel-rol"><option value="">— sin rol —</option><option value="owner">OWNER</option><option value="admin">ADMIN</option><option value="streamer">STREAMER</option></select> ' +
+            '<button class="btn sm" data-aplicar="' + p.id + '">APLICAR</button> ' +
+            '<button class="btn ghost sm" data-verificar="' + p.id + '">VERIFICAR</button></td></tr>';
+        }).join('') + '</tbody></table>' +
+        '<p class="note" style="margin-top:10px">' + list.length + ' jugador(es) mostrados (de ' + rows.length + ').</p>';
+    } catch (e) {
+      $('#jugadores').innerHTML = '<p class="err">Error leyendo jugadores: ' + esc(e.message) + '</p>';
+    }
+  }
+
+  $('#jugadores') ? null : null;
+
+  document.addEventListener('click', async function (e) {
+    var aplicar = e.target.closest('[data-aplicar]');
+    var verificar = e.target.closest('[data-verificar]');
+    if (aplicar && TOKEN) {
+      var id = aplicar.getAttribute('data-aplicar');
+      var tr = aplicar.closest('tr');
+      var rol = tr.querySelector('.sel-rol').value || null;
+      aplicar.disabled = true;
+      try {
+        await apiWrite('PATCH', '/players?id=eq.' + id, { role: rol });
+        aplicar.textContent = '✓';
+        log('Rol de ' + id.slice(0, 8) + ' → ' + (rol || 'sin rol'), 'ok');
+        refreshJugadores();
+      } catch (err) { aplicar.disabled = false; log('<span class="err">✗ ' + esc(err.message) + '</span><br>Plan B: UPDATE players SET role=\'' + (rol || 'null') + '\' WHERE id=\'' + id + '\'; en el SQL Editor de Neon.', 'err'); }
+    }
+    if (verificar && TOKEN) {
+      var idv = verificar.getAttribute('data-verificar');
+      var trv = verificar.closest('tr');
+      var v = trv.querySelector('.verif');
+      var nuevo = v.getAttribute('data-v') !== '1';
+      verificar.disabled = true;
+      try {
+        await apiWrite('PATCH', '/players?id=eq.' + idv, { verified: nuevo });
+        log('Verificado de ' + idv.slice(0, 8) + ' → ' + nuevo, 'ok');
+        refreshJugadores();
+      } catch (err) { verificar.disabled = false; log('<span class="err">✗ ' + esc(err.message) + '</span>', 'err'); }
+    }
+  });
+
+  $('#recargarBtn') && document.addEventListener('DOMContentLoaded', function () {});
+  window.addEventListener('load', async function () {
+    if (!window.VantAuth0) { log('auth0-config no disponible', 'err'); return; }
+    try { await window.VantAuth0.initAuth0(); } catch (e) { log('Auth0 no inició', 'err'); return; }
+    var A0 = window.VantAuth0.client;
+    if (!A0) return;
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.get('code') && q.get('state')) { await A0.handleRedirectCallback(); history.replaceState({}, '', location.pathname); }
+    } catch (e) {}
+
+    var user = null;
+    try { user = await A0.getUser(); } catch (e) {}
+
+    refreshDbCards();
+    refreshJugadores();
+
+    var seedBtn = $('#seedBtn');
+    $('#seedPreview').innerHTML = '<div class="grid">' + [
+      ['PRO', 'Ascensión Series S4 · Etapa 4', '12/48', '$25,000'],
+      ['OPEN', 'Open Ladder Nocturna #88', '51/64', '$500'],
+      ['PRO', 'Copa LATAM Invitational', '5/16', '$10,000'],
+      ['OPEN', 'Scrim Cup Finde #12', '9/32', '$250'],
+      ['PRO', 'Stratos Major S4 · CS2', '18/48', '$15,000'],
+      ['OPEN', 'VANT Open Sundown', '23/64', '$750'],
+    ].map(function (t) { return '<div class="card"><span>' + t[0] + '</span><b style="font-size:12px">' + t[1] + '</b><span>' + t[2] + ' · ' + t[3] + '</span></div>'; }).join('') + '</div>';
+
+    $('#verTorneosBtn').onclick = async function () {
+      try { var rows = await apiRead('tournaments', '&limit=50&order=created_at.desc'); $('#torneosActuales').innerHTML = '<div id="log">' + (rows.length ? rows.map(function (t) { return '<div>• ' + esc(t.name) + ' — ' + esc(t.status) + ' — ' + (t.current_participants || 0) + '/' + (t.max_participants || 0) + '</div>'; }).join('') : 'No hay torneos aún.') + '</div>'; } catch (e) { $('#torneosActuales').textContent = 'Error: ' + e.message; }
+    };
+
+    $('#buscar').addEventListener('input', refreshJugadores);
+
+    if (user) {
+      $('#who').textContent = (user.name || user.email || 'admin').slice(0, 30);
+      $('#logoutBtn').hidden = false;
+      $('#ownerBtn').disabled = false;
+      seedBtn.disabled = false;
+      log('Sesión activa: <b class="ok">' + esc(String(user.name || user.email).slice(0, 40)) + '</b>');
+    } else {
+      log('Sin sesión. Pulsa <b>ENTRAR EN AUTH0</b>, completa el login y vuelve a esta pestaña.');
+      seedBtn.disabled = true;
+      seedBtn.textContent = 'REQUIERE SESIÓN';
+      var lb = document.createElement('button');
+      lb.className = 'btn'; lb.textContent = 'ENTRAR EN AUTH0';
+      lb.onclick = function () {
+        A0.loginWithRedirect({ authorizationParams: { redirect_uri: 'https://feispla.github.io/Vants/', scope: 'openid profile email' } });
+      };
+      $('#log').before(lb);
+    }
+
+    $('#logoutBtn').onclick = function () {
+      A0.logout({ logoutParams: { returnTo: 'https://feispla.github.io/Vants/' } });
+    };
+
+    seedBtn.onclick = async function () {
+      seedBtn.disabled = true; seedBtn.textContent = 'SEMBrando…';
+      try {
+        var token = TOKEN || await window.VantAuth0.getToken();
+        var res = await fetch(API + '/tournaments', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          body: JSON.stringify([
+            { name: 'Ascensión Series S4 · Etapa 4', slug: 'ascension-series-s4-etapa-4', status: 'inscripcion', tier: 'pro', starts_at: '2026-10-26T21:00:00Z', max_participants: 48, current_participants: 12, prize_pool: 25000 },
+            { name: 'Open Ladder Nocturna #88', slug: 'open-ladder-nocturna-88', status: 'inscripcion', tier: 'open', starts_at: '2026-10-15T23:00:00Z', max_participants: 64, current_participants: 51, prize_pool: 500 },
+            { name: 'Copa LATAM Invitational', slug: 'copa-latam-invitational', status: 'inscripcion', tier: 'pro', starts_at: '2026-11-02T21:00:00Z', max_participants: 16, current_participants: 5, prize_pool: 10000 },
+            { name: 'Scrim Cup Finde #12', slug: 'scrim-cup-finde-12', status: 'inscripcion', tier: 'open', starts_at: '2026-10-18T18:00:00Z', max_participants: 32, current_participants: 9, prize_pool: 250 },
+            { name: 'Stratos Major S4 · CS2', slug: 'stratos-major-s4', status: 'inscripcion', tier: 'pro', starts_at: '2026-10-28T21:00:00Z', max_participants: 48, current_participants: 18, prize_pool: 15000 },
+            { name: 'VANT Open Sundown', slug: 'vant-open-sundown', status: 'inscripcion', tier: 'open', starts_at: '2026-10-21T22:00:00Z', max_participants: 64, current_participants: 23, prize_pool: 750 },
+          ]),
+        });
+        if (res.ok) { log('<span class="ok">✓ SEMBRADO — torneos reales guardados en Neon. La web los muestra al recargar.</span>', 'ok'); seedBtn.textContent = 'LISTO ✓'; refreshDbCards(); $('#verTorneosBtn').click(); }
+        else { var j = await res.json().catch(function () { return {}; }); log('<span class="err">✗ HTTP ' + res.status + ': ' + esc(j.message || 'rechazado') + '</span><br>Plan B: pega docs/seed-torneos.sql en el SQL Editor de Neon.', 'err'); seedBtn.disabled = false; seedBtn.textContent = 'REINTENTAR'; }
+      } catch (e) { log('<span class="err">✗ ' + esc(String(e)) + '</span>', 'err'); seedBtn.disabled = false; }
+    };
+
+    $('#ownerBtn').onclick = async function () {
+      var ob = $('#ownerBtn'); ob.disabled = true; ob.textContent = 'APLICANDO…';
+      try {
+        var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: { Authorization: 'Bearer ' + await window.VantAuth0.getToken(), 'Content-Type': 'application/json' }, body: '{}' });
+        var pid = await rpc.json();
+        log('current_player_id → ' + JSON.stringify(pid).slice(0, 60));
+        var id = Array.isArray(pid) ? pid[0] : pid;
+        id = (id && (id.current_player_id || id.id)) || id;
+        if (!id) throw new Error('La función no devolvió un id (¿tu jugador aún no existe?). Entra antes en la web con login y reintenta, o usa el SQL Editor.');
+        await apiWrite('PATCH', '/players?id=eq.' + id, { role: 'owner', verified: true });
+        log('<span class="ok">✓ TU PERFIL ES OWNER + VERIFICADO</span>', 'ok');
+      } catch (e) {
+        log('<span class="err">✗ ' + esc(String(e)) + '</span><br>Plan B (SQL Editor de Neon):<br>UPDATE players SET role=\'owner\', verified=true WHERE username=\'&lt;tu usuario&gt;\';', 'err');
+      }
+      ob.disabled = false; ob.textContent = 'HACERME OWNER + VERIFICADO';
+    };
+  });
+})();
+</script>
+</body>
+</html>

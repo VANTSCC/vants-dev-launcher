@@ -728,3 +728,6 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
 .brk-sep{margin:38px 0 24px;display:flex;align-items:center;gap:14px;font:700 10px/1 var(--mono);letter-spacing:.2em;color:var(--dim);text-transform:uppercase;text-align:center}
 .brk-sep::before,.brk-sep::after{content:'';height:1px;background:var(--line2);flex:1}
 @media(max-width:960px){.bracket-rounds{grid-template-columns:1fr;gap:30px}.bracket-rounds .b-match::after{display:none}}
+
+/* ===== panel admin ===== */
+.acc-btn[hidden]{display:none}

@@ -56,7 +56,10 @@ const BADGES={
   verified:{label:'VERIFICADO',icon:'badge-check',color:'#4CC9F0'},
   creator:{label:'CREADOR',icon:'play',color:'#B44CFF'},
   partner:{label:'SOCIO VANTS',icon:'gem',color:'#F5C044'},
-  champ:{label:'CAMPEÓN',icon:'trophy',color:'#F5C044'}
+  champ:{label:'CAMPEÓN',icon:'trophy',color:'#F5C044'},
+  streamer:{label:'STREAMER',icon:'radio',color:'#9146FF'},
+  admin:{label:'ADMIN',icon:'shield-check',color:'#4CC9F0'},
+  owner:{label:'OWNER',icon:'crown',color:'#FFD700'}
 };
 const badgeChip=(k,big)=>{const b=BADGES[k];return '<span class="bchip'+(big?' big':'')+'" style="--bc:'+b.color+'" title="'+b.label+'"><i data-lucide="'+b.icon+'"></i>'+b.label+'</span>';};
 const badgeDots=arr=>(arr||[]).map(k=>'<span class="bdot" style="--bc:'+BADGES[k].color+'" title="'+BADGES[k].label+'"><i data-lucide="'+BADGES[k].icon+'"></i></span>').join('');
@@ -683,9 +686,9 @@ function openPlanCheckout(plan){
   $('#payBtn').onclick=e=>processPay(e.currentTarget,()=>activatePlan(plan));
 }
 function activatePlan(plan){
-  if(plan==='pro'){state.isPro=true;addBadge('pro');successBadge('VANTS PRO','Tu insignia PRO quedó emitida y es visible en tu perfil, brackets y rankings.','pro');}
-  else{state.isPro=true;addBadge('pro');addBadge('creator');
-    successBadge('VANTS CREATOR','Insignia CREADOR activa. Cuando transmitás en Twitch, Kick o YouTube, tu cartel EN DIRECTO aparece en la sala de jugadores.','creator');}
+  if(plan==='pro'){state.isPro=true;addBadge('pro');addBadge('streamer');successBadge('VANTS PRO','Tu insignia PRO quedó emitida y es visible en tu perfil, brackets y rankings. Incluye la insignia STREAMER.','pro');}
+  else{state.isPro=true;addBadge('pro');addBadge('creator');addBadge('streamer');
+    successBadge('VANTS CREATOR','Insignia CREADOR activa. Cuando transmitás en Twitch, Kick o YouTube, tu cartel EN DIRECTO aparece en la sala de jugadores. Incluye la insignia STREAMER.','creator');}
   document.body.classList.add('has-plan');
   const pb=$('#proBadge');pb.innerHTML='<i data-lucide="'+(plan==='creator'?'play':'zap')+'"></i>'+(plan==='creator'?'CREATOR':'PRO');
   renderLbHead();renderLbBody();renderAccount();icons();

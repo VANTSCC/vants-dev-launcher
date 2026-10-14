@@ -59,6 +59,7 @@
 
   if (user) {
     if (loginBtn) loginBtn.hidden = true;
+    if (accBtn) accBtn.hidden = false;
     var nm = String(user.name || user.nickname || user.email || 'JUGADOR').split('@')[0].toUpperCase();
     var ava = document.getElementById('accAva');
     var accName = document.getElementById('accName');
@@ -68,6 +69,7 @@
     if (dot) dot.style.display = '';
     if (typeof toast === 'function') { try { toast('Sesión iniciada como ' + nm); } catch (e) {} }
   } else if (loginBtn && !esArchivo) {
+    if (accBtn) accBtn.hidden = true;
     loginBtn.hidden = false;
     loginBtn.addEventListener('click', function () {
       loginBtn.disabled = true;
