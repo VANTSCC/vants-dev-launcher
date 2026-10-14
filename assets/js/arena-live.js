@@ -1,4 +1,4 @@
-/* VANTS GAMES — capa viva v7: login Auth0 + perfil real + banner editable + pase persistido en Neon */
+/* VANTS GAMES — capa viva v8: login Auth0 + perfil real + banner editable + pase persistido en Neon + retorno de pagos Stripe */
 (async function () {
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
@@ -55,6 +55,21 @@
       if (linked && typeof toast === 'function') { try { toast('Cuenta conectada y verificada en Neon'); } catch (e5) {} }
       else if (lerr && typeof toast === 'function') { try { toast('No se pudo conectar la cuenta (' + decodeURIComponent(lerr) + ')', 'info'); } catch (e5) {} }
       if (typeof linksCargar === 'function') { try { linksCargar(); } catch (e5) {} }
+    }
+  } catch (e) {}
+
+  /* volver del Checkout de Stripe (?paid=plan / ?paid=cancel) */
+  try {
+    var qp = new URLSearchParams(location.search);
+    var pagado = qp.get('paid');
+    if (pagado) {
+      history.replaceState({}, '', location.pathname + location.hash);
+      if (pagado !== 'cancel') {
+        if (typeof toast === 'function') { try { toast('Pago confirmado en Stripe: tu compra queda activa en unos segundos'); } catch (e6) {} }
+        if (window.VantsSupervisor) window.VantsSupervisor.event('CHECKOUT_RETURN', { plan: String(pagado).slice(0, 40) });
+      } else if (typeof toast === 'function') {
+        try { toast('Pago cancelado: no se realizó ningún cargo', 'info'); } catch (e6) {}
+      }
     }
   } catch (e) {}
 
