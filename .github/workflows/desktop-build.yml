@@ -64,5 +64,5 @@ jobs:
           tagName: desktop-v__VERSION__-build${{ github.run_number }}
           releaseName: 'VANTS Desktop v__VERSION__ (build ${{ github.run_number }})'
           releaseBody: 'Instaladores de VANTS para Windows, macOS y Linux. Se actualiza sola con la web.'
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
