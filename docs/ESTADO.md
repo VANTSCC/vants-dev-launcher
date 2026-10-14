@@ -34,6 +34,13 @@
 - Cambio de juego, bracket doble eliminación con llaves inferiores (12 partidos, todas las rondas clicables), ranking con orden/buscador, pase con reclamo/XP, membresías simuladas, inscripción, perfil, film, ticker — 0 errores
 - Panel admin: estado BD, siembra de 6 torneos, jugadores con rol/verificado, mi perfil owner (fix de TOKEN aplicado por el usuario vía find-replace)
 
+## Verificaciones visuales (registro — las capturas originales rotan del contexto)
+- preview/inicio.png: home-deluxe de la app vieja renderizando (nav 01-07, hero JUEGA GANA COBRA) — pre-deploy
+- preview/login.png: en su momento mostraba error de conexiones; HOY verificado en vivo: Google/Discord/Kick + correo
+- preview/arena-*.png: arena verificada (film, hero ASCENSIÓN SERIES S4, torneos 4 demo, pase 12, rail 4, consentimiento Discord demo)
+- preview/pase-*.png: pase 12 columnas, nivel 7, XP 1.780/2.000, 5 reclamables, modal Título: RETADOR
+- 0 errores de página en todas las verificaciones (registro completo en commits)
+
 ## Pendientes
 1. Correr el INSERT de torneos en Neon (bloque SQL listo arriba/en chat) → chip DATOS EN VIVO
 2. Insignias/roles reales: panel los escribe en players.role/verified (si RLS lo permite; plan B SQL)
