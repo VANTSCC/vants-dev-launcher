@@ -3,10 +3,12 @@ name: "Neon · migraciones de la base real"
 # Aplica las migraciones SQL idempotentes de db/migrations/ contra la rama
 # br-sweet-shape-b42xhogj del proyecto Neon square-surf-41242074 (base neondb).
 #
-# Requiere 1 secreto:  NEON_API_KEY  (https://console.neon.tech → Account → API keys)
+# Requiere 1 secreto:  NEON_API_KEY  (https://console.neon.tech/app/settings/api-keys)
 #   Settings → Secrets and variables → Actions → New repository secret
 #
 # Se ejecuta: manualmente (Run workflow) o al cambiar db/migrations/*.sql
+# Nota: la clave se inyecta como variable de entorno NK (desde el almacén de
+# secretos de Actions) y se pasa al CLI con --api-key; nunca va en el archivo.
 
 on:
   workflow_dispatch:
@@ -22,15 +24,15 @@ concurrency:
 jobs:
   migrar:
     runs-on: ubuntu-latest
+    env:
+      NK: ${{ secrets.NEON_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Comprobar secreto NEON_API_KEY
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      - name: Comprobar acceso a Neon
         run: |
-          if [ -z "$NEON_API_KEY" ]; then
+          if [ -z "$NK" ]; then
             echo "::error::Falta el secreto NEON_API_KEY. Créalo en https://console.neon.tech/app/settings/api-keys y añádelo en Settings → Secrets and variables → Actions → New repository secret."
             exit 1
           fi
@@ -39,17 +41,21 @@ jobs:
         run: npm install -g neon@latest
 
       - name: Resolver cadena de conexión (Neon CLI)
-        env:
-          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
           neon --version
-          CS=$(neonctl connection-string br-sweet-shape-b42xhogj \
+          CS=$(neon connection-string br-sweet-shape-b42xhogj \
             --project-id square-surf-41242074 \
-            --database neondb)
+            --database neondb --api-key "$NK" 2>/tmp/cs_err || true)
+          if [ -z "$CS" ]; then
+            CS=$(neon cs br-sweet-shape-b42xhogj \
+              --project-id square-surf-41242074 \
+              --database neondb --api-key "$NK" 2>/dev/null || true)
+          fi
           if [ -z "$CS" ]; then
             echo "::error::Neon CLI no devolvió cadena de conexión. Diagnóstico:"
-            neonctl projects list || true
-            neonctl branches list --project-id square-surf-41242074 || true
+            cat /tmp/cs_err 2>/dev/null || true
+            neon projects list --api-key "$NK" || true
+            neon branches list --project-id square-surf-41242074 --api-key "$NK" || true
             exit 1
           fi
           echo "::add-mask::$CS"
