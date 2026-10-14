@@ -62,3 +62,11 @@
 5. Edición país/región desde el drawer: requiere escritura con JWT (patrón bloqueado por guard del workspace; código entregado por chat)
 6. RANGO VANTS RANKED: se recalcula cuando se registran partidas reales (tablas ranked hoy vacías)
 7. Limpieza opcional: borrar tags desktop-v1.0.x en GitHub (rechazado por reglas vía git; borrar desde la web)
+
+## Releases de escritorio (14/10/2026)
+- VANTS Desktop v2.0.0: compilación 3/3 OK (Windows NSIS, macOS dmg, Linux AppImage/deb)
+- El repo tiene los RELEASES EN MODO INMUTABLE: tauri-action no puede subir assets a un release publicado (error "Cannot upload assets to an immutable release")
+- SOLUCIÓN: releaseDraft=true (borrador acepta assets; se publica con un clic) — ya aplicado en desktop-build.yml
+- Estado: borrador "VANTS Desktop v2.0.0 (build 28)" creado con instaladores, PENDIENTE de publicar en github.com/feispla/Vants/releases
+- Quedó un release vacío "desktop-v2.0.0-build27" (del intento fallido) — borrarlo a mano si molesta
+- La app carga la web en vivo (tauri.conf url = feispla.github.io/Vants) → se actualiza sola con cada push
