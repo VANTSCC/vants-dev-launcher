@@ -1,10 +1,11 @@
-/* VANTS GAMES — capa viva v5: login Auth0 + perfil real + pase persistido en Neon */
+/* VANTS GAMES — capa viva v6: login Auth0 + perfil real + banner editable + pase persistido en Neon */
 (function () {
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
   var API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
   var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
   var RAIZ = 'https://feispla.github.io/Vants/';
+  var OWNER_EMAILS = ['geimerjhoan099@gmail.com', 'admin@vants.games'];
 
   if (!window.VantAuth0) return;
   try { await window.VantAuth0.initAuth0(); } catch (e) { console.warn('[arena] Auth0 no disponible', e); return; }
@@ -32,6 +33,7 @@
   var esArchivo = location.protocol === 'file:';
   var loginBtn = document.getElementById('arenaLoginBtn');
   var accBtn = document.getElementById('accBtn');
+  var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
 
   var ME = null;
   async function jwt() { return window.VantAuth0.getToken(); }
@@ -54,9 +56,34 @@
 
   function chip(txt, color) { return '<span class="chip" style="color:' + color + ';border-color:' + color + '">' + txt + '</span>'; }
 
+  /* -------- banner del perfil -------- */
+  var VMARK = '<svg viewBox="0 0 64 64" style="width:100%;height:auto;display:block"><path d="M12 2H52L62 12V52L52 62H12L2 52V12Z" fill="#191c22" stroke="#ff0d2e" stroke-width="3"/><path d="M9 14H23L34.5 44.5L32 52Z" fill="#e8ecef"/><path d="M55 14H41L32.4 37L42.2 37Z" fill="#ff0d2e"/></svg>';
+  function bannerStrip(tipo) {
+    if (tipo === 'bananim') return '<div id="pr-banner" style="height:96px;border-radius:10px;overflow:hidden;position:relative;background:#0b0b0e;border:1px solid #3a3f47;margin-bottom:12px">' +
+      '<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.35),transparent);animation:bnlight 2.6s linear infinite"></div>' +
+      '<div style="position:absolute;top:0;bottom:0;left:0;width:22%;background:linear-gradient(90deg,transparent,rgba(245,192,68,.25),transparent);animation:bnlight 3.4s linear infinite .9s"></div>' +
+      '<div style="position:absolute;left:0;right:0;height:2px;background:#fff;opacity:.14;animation:bnscan 4s linear infinite"></div>' +
+      '<div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);width:54px">' + VMARK + '</div></div>';
+    if (tipo === 'dorado') return '<div id="pr-banner" style="height:96px;border-radius:10px;overflow:hidden;position:relative;background:linear-gradient(120deg,#3a2c07,#171106 55%,#2a2005);border:1px solid #F5C044;margin-bottom:12px">' +
+      '<div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);width:54px">' + VMARK + '</div>' +
+      '<div style="position:absolute;left:16px;bottom:10px;font:800 11px var(--mono);letter-spacing:.2em;color:#F5C044">VANTS · EDICIÓN DORADA</div></div>';
+    return '<div id="pr-banner" style="height:96px;border-radius:10px;overflow:hidden;position:relative;background:linear-gradient(120deg,#1a1e26,#0e1013);border:1px solid var(--line2,#303039);margin-bottom:12px">' +
+      '<div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);width:54px">' + VMARK + '</div></div>';
+  }
+  function injectBannerCSS() {
+    if (document.getElementById('bn-style')) return;
+    var st = document.createElement('style'); st.id = 'bn-style';
+    st.textContent = '@keyframes bnlight{0%{transform:translateX(-120%)}100%{transform:translateX(420%)}}@keyframes bnscan{0%,100%{top:0}50%{top:calc(100% - 2px)}}';
+    document.head.appendChild(st);
+  }
+
   function perfilRealHTML() {
     var p = ME.player;
     var stats = p.stats || {};
+    var puedeBanner = esOwner || (state.claimed || []).indexOf('11p') !== -1;
+    var bannerSel = (p.stats && p.stats.banner) ? p.stats.banner : (puedeBanner ? 'bananim' : '');
+    window.VANTS_BANNER = bannerSel;
+    injectBannerCSS();
     var badges = '';
     if (p.verified) badges += chip('✓ VERIFICADO', '#4CC9F0') + ' ';
     if (p.role === 'owner') badges += chip('👑 OWNER', '#F5C044') + ' ';
@@ -66,12 +93,21 @@
       ? '<img src="' + p.avatar_url + '" alt="" style="width:74px;height:74px;border-radius:50%;object-fit:cover;border:2px solid #FF0D2E">'
       : '<div style="width:74px;height:74px;border-radius:50%;background:#1a1a20;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px">' + (p.username || 'V').slice(0, 2).toUpperCase() + '</div>';
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
+    var bs = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
     return '<div class="d-head"><span class="kicker">/// MI PERFIL · CUENTA REAL VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
       '<div class="d-body">' +
-      '<div style="display:flex;gap:16px;align-items:center;margin:18px 0 14px">' + ava +
+      bannerStrip(bannerSel) +
+      '<div style="display:flex;gap:16px;align-items:center;margin:8px 0 14px">' + ava +
       '<div><div style="font-weight:900;font-size:19px;text-transform:uppercase">' + (p.display_name || p.username || 'JUGADOR') + '</div>' +
       '<div style="font:600 10px/1.6 var(--mono);color:var(--mut)">@' + (p.username || '') + ' · MIEMBRO VANTS</div></div></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' + (badges || '<span style="color:var(--dim);font-size:11px">Sin insignias todavía — el dueño las asigna desde el panel admin.</span>') + '</div>' +
+      (puedeBanner
+        ? '<p class="d-sec">BANNER DEL PERFIL</p>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+          '<button class="btn btn-sm" data-banner="bananim" style="' + bs + '">ANIMADO</button>' +
+          '<button class="btn btn-sm" data-banner="dorado" style="' + bs + '">DORADO</button>' +
+          '<button class="btn btn-sm" data-banner="" style="' + bs + '">CLÁSICO</button></div>'
+        : '') +
       '<p class="d-sec">MIS DATOS</p>' +
       '<input id="rp-pais" placeholder="País" value="' + (p.country || '') + '" style="' + inp + 'margin-bottom:10px">' +
       '<input id="rp-region" placeholder="Región (LATAM, EU…)" value="' + (p.region || '') + '" style="' + inp + 'margin-bottom:10px">' +
@@ -94,7 +130,7 @@
       g.disabled = true; g.textContent = 'GUARDANDO…';
       try {
         var t = await jwt();
-        var statsNuevos = Object.assign({}, p.stats || {}, { discord_tag: $('#rp-dc').value.trim() });
+        var statsNuevos = Object.assign({}, p.stats || {}, { discord_tag: $('#rp-dc').value.trim(), banner: window.VANTS_BANNER || '' });
         var r = await fetch(API + '/players?id=eq.' + ME.pid, {
           method: 'PATCH',
           headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' },
@@ -115,6 +151,17 @@
     };
     var s = document.getElementById('rp-salir');
     if (s) s.onclick = function () { A0.logout({ logoutParams: { returnTo: RAIZ } }); };
+    // editor de banner (solo si puede: dueño o recompensa 11p reclamada)
+    document.querySelectorAll('[data-banner]').forEach(function (b) {
+      b.onclick = function () {
+        window.VANTS_BANNER = b.getAttribute('data-banner');
+        var strip = bannerStrip(window.VANTS_BANNER);
+        var el = document.getElementById('pr-banner');
+        if (el) el.outerHTML = strip;
+        document.querySelectorAll('[data-banner]').forEach(function (x) { x.style.borderColor = 'var(--line2,#303039)'; x.style.color = 'var(--mut,#93939D)'; });
+        b.style.borderColor = '#FF0D2E'; b.style.color = '#FF0D2E';
+      };
+    });
   }
 
   function renderCrearPerfil(nombreSugerido) {
@@ -166,9 +213,6 @@
   }, { capture: true });
 
   await cargarPerfilReal();
-
-  var OWNER_EMAILS = ['geimerjhoan099@gmail.com', 'admin@vants.games'];
-  var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
 
   if (user) {
     if (loginBtn) loginBtn.hidden = true;
@@ -226,7 +270,6 @@
     } else { liveBadge(false, 0); }
   } catch (e) { console.warn('[arena] Neon no disponible', e); liveBadge(false, 0); }
 
-  /* -------- PASE: progreso real en Neon (pass_estado / pass_reclamar) -------- */
   try {
     if (user) {
       var t = await jwt();
