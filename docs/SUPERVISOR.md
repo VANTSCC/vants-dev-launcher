@@ -43,7 +43,7 @@ real**: Neon + bot Python + GitHub Pages, en lugar de Cloudflare Worker + Fly.io
 ## PASO 1 — Crear la tabla en Neon (2 min)
 
 1. Abre el **dashboard de Neon** → proyecto `square-surf-41242074` → **SQL Editor**.
-2. Pega el contenido completo de :zwork-file-citation{path="vants-repo/docs/supervisor.sql" purpose="output" artifact_kind="document"} y pulsa **Run**.
+2. Pega el contenido completo de `docs/supervisor.sql` y pulsa **Run**.
 3. Comprueba que aparecen `web_events` en Tables y la fila `supervisor` en `bot_settings`.
 
 > Es idempotente: si lo ejecutas dos veces no duplica nada.
@@ -51,7 +51,7 @@ real**: Neon + bot Python + GitHub Pages, en lugar de Cloudflare Worker + Fly.io
 ## PASO 2 — Desplegar la función `supervisor` en Neon (5 min)
 
 1. Dashboard de Neon → **Functions** → crea una función nueva (misma rama/raíz que `vantsdata`).
-2. Sube/conecta el código de :zwork-file-citation{path="vants-repo/neon-functions/supervisor/index.ts" purpose="output" artifact_kind="document"} (carpeta `neon-functions/supervisor/`).
+2. Sube/conecta el código de `neon-functions/supervisor/index.ts` (carpeta `neon-functions/supervisor/`).
 3. En **Environment variables** de la función:
    - `DATABASE_URL` = la misma cadena de conexión de Neon que usa el resto (con `sslmode=require`).
    - `SUPERVISOR_RATE_PER_MIN` = opcional (por defecto 120 mensajes/min por IP).
@@ -61,7 +61,7 @@ real**: Neon + bot Python + GitHub Pages, en lugar de Cloudflare Worker + Fly.io
 
 ## PASO 3 — Conectar la web con el collector (1 min)
 
-Abre :zwork-file-citation{path="vants-repo/assets/js/vants-supervisor.js" purpose="output" artifact_kind="document"},
+Abre `assets/js/vants-supervisor.js`,
 busca la línea marcada como **CONFIGURACIÓN** (línea 15 aprox.) y pega la URL:
 
 ```js
@@ -73,14 +73,12 @@ Mientras la URL esté vacía, el SDK se apaga solo (cero impacto en la web).
 
 ## PASO 4 — Bot de Discord: variables y arranque (5 min)
 
-En `bot/.env` (fuera de git, plantilla en `.env.example`):
+En `bot/.env` (fuera de git, plantilla en `.env.example`), con estos valores:
 
-```
-DISCORD_TOKEN=<token de tu bot>
-DATABASE_URL=<cadena de conexión Neon con sslmode=require>
-SUPERVISOR_DM_ID=1532612429295521930
-SUPERVISOR_INTERVAL=25
-```
+- `DISCORD_TOKEN` → token de tu bot (Discord Developer Portal)
+- `DATABASE_URL` → cadena de conexión de Neon con `sslmode=require`
+- `SUPERVISOR_DM_ID` → `1532612429295521930`
+- `SUPERVISOR_INTERVAL` → `25`
 
 > Si aún no tienes el bot creado: Discord Developer Portal → New Application → Bot →
 > copia el token → OAuth2 → invítalo al servidor con scope `bot` (PASO 01 del diseño).
