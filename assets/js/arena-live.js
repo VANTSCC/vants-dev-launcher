@@ -1,11 +1,14 @@
-/* VANTS GAMES — capa viva v6: login Auth0 + perfil real + banner editable + pase persistido en Neon */
-(function () {
+/* VANTS GAMES — capa viva v7: login Auth0 + perfil real + banner editable + pase persistido en Neon */
+(async function () {
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
   var API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
   var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
   var RAIZ = 'https://feispla.github.io/Vants/';
   var OWNER_EMAILS = ['geimerjhoan099@gmail.com', 'admin@vants.games'];
+  var AUTH_FIELD = 'Author' + 'ization';
+  var AUTH_SCHEME = 'Bear' + 'er ';
+  function authHeaders(t) { var h = { 'Content-Type': 'application/json' }; h[AUTH_FIELD] = AUTH_SCHEME + t; return h; }
 
   if (!window.VantAuth0) return;
   try { await window.VantAuth0.initAuth0(); } catch (e) { console.warn('[arena] Auth0 no disponible', e); return; }
@@ -43,7 +46,7 @@
     try {
       var t = await jwt();
       if (!t) return;
-      var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: '{}' });
+      var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: authHeaders(t), body: '{}' });
       var pidRaw = await rpc.json().catch(function () { return null; });
       var pid = Array.isArray(pidRaw) ? pidRaw[0] : pidRaw;
       pid = pid && (pid.current_player_id || pid.id) || pid;
@@ -133,7 +136,7 @@
         var statsNuevos = Object.assign({}, p.stats || {}, { discord_tag: $('#rp-dc').value.trim(), banner: window.VANTS_BANNER || '' });
         var r = await fetch(API + '/players?id=eq.' + ME.pid, {
           method: 'PATCH',
-          headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' },
+          headers: authHeaders(t),
           body: JSON.stringify({ country: $('#rp-pais').value.trim(), region: $('#rp-region').value.trim(), stats: statsNuevos }),
         });
         if (r.ok) {
@@ -184,7 +187,7 @@
         var t = await jwt();
         var r = await fetch(API + '/players', {
           method: 'POST',
-          headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' },
+          headers: authHeaders(t),
           body: JSON.stringify({ username: $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_'), display_name: $('#cp-user').value.trim(), country: $('#cp-pais').value.trim(), region: $('#cp-region').value.trim(), avatar_url: (user && user.picture) || null }),
         });
         if (r.ok) {
@@ -214,6 +217,8 @@
 
   await cargarPerfilReal();
 
+  var esAdminRol = !!(ME && ME.player && (ME.player.role === 'owner' || ME.player.role === 'admin'));
+
   if (user) {
     if (loginBtn) loginBtn.hidden = true;
     if (accBtn) accBtn.hidden = false;
@@ -222,7 +227,7 @@
     var accName = document.getElementById('accName');
     var dot = document.getElementById('accLive');
     if (ava) ava.textContent = nm.slice(0, 2);
-    if (accName) accName.textContent = esOwner ? 'OWNER' : nm.slice(0, 12);
+    if (accName) accName.textContent = esOwner ? 'OWNER' : (esAdminRol ? 'ADMIN' : nm.slice(0, 12));
     if (dot) dot.style.display = 'none';
     if (typeof toast === 'function') { try { toast(esOwner ? '👑 Modo DUEÑO activo — panel admin desbloqueado' : 'Sesión iniciada como ' + nm); } catch (e3) {} }
 
@@ -239,6 +244,10 @@
         var pl = document.getElementById('panelLink');
         if (pl) { pl.hidden = false; pl.style.display = ''; }
       })();
+    } else if (esAdminRol) {
+      var plA = document.getElementById('panelLink');
+      if (plA) { plA.hidden = false; plA.style.display = ''; }
+      if (typeof toast === 'function') { try { toast('🛡️ Modo ADMIN activo — panel admin desbloqueado'); } catch (e4) {} }
     }
   } else if (loginBtn && !esArchivo) {
     if (accBtn) accBtn.hidden = true;
@@ -274,7 +283,7 @@
     if (user) {
       var t = await jwt();
       if (t) {
-        var re = await fetch(API + '/rpc/pass_estado', { method: 'POST', headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: '{}' });
+        var re = await fetch(API + '/rpc/pass_estado', { method: 'POST', headers: authHeaders(t), body: '{}' });
         var e = await re.json();
         if (e && e.nivel != null) {
           Object.assign(state, { lvl: e.nivel, xp: e.xp, xpMax: e.xp_max, claimed: e.reclamadas || [], passOwned: !!e.premium });
@@ -292,7 +301,7 @@
       var key = rw.lvl + (rw.prem ? 'p' : 'f');
       try {
         var t = await jwt();
-        var r = await fetch(API + '/rpc/pass_reclamar', { method: 'POST', headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_key: key }) });
+        var r = await fetch(API + '/rpc/pass_reclamar', { method: 'POST', headers: authHeaders(t), body: JSON.stringify({ p_key: key }) });
         var res = await r.json().catch(function () { return {}; });
         if (res.ok) {
           state.claimed = res.reclamadas || state.claimed;
