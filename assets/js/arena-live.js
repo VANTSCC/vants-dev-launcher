@@ -61,7 +61,20 @@
       if (!pid) return;
       var pr = await fetch(PROXY + '?table=players&id=eq.' + pid + '&limit=1', { headers: { Accept: 'application/json' } });
       var rows = await pr.json();
-      ME = { pid: pid, player: (rows && rows[0]) || null };
+      ME = { pid: pid, player: (rows && rows[0]) || null, extra: {} };
+      try {
+        var sp = await fetch(PROXY + '?table=season_player_stats&player_id=eq.' + pid + '&limit=1', { headers: { Accept: 'application/json' } });
+        var spRows = await sp.json().catch(function () { return null; });
+        ME.extra.sps = (Array.isArray(spRows) && spRows[0]) || null;
+      } catch (e2) {}
+      try {
+        var tGa = await jwt();
+        if (tGa) {
+          var ga = await fetch(API + '/user_game_accounts?select=game,handle,verified', { headers: authHeaders(tGa) });
+          var gaRows = await ga.json().catch(function () { return []; });
+          ME.extra.accounts = Array.isArray(gaRows) ? gaRows : [];
+        }
+      } catch (e3) {}
     } catch (e) { console.warn('[arena] perfil real no disponible', e); }
   }
 
@@ -88,6 +101,100 @@
     document.head.appendChild(st);
   }
 
+  /* -------- RANGO VANTS RANKED (real) -------- */
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  }
+
+  function rangoRealHTML(p) {
+    var linea = '<p class="d-sec">RANGO VANTS RANKED</p>';
+    var sps = (ME.extra && ME.extra.sps) || null;
+    var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
+      : (sps && typeof sps.rank === 'number' && sps.rank >= 0.5 && sps.rank <= 2 ? sps.rank : null);
+    var mmr = (sps && sps.mmr != null) ? sps.mmr : null;
+    var wl = (sps && sps.wins != null) ? (sps.wins + 'V · ' + (sps.losses || 0) + 'D · ') : '';
+    var sin = linea + '<div class="pf-rank" style="--rc:#5C5C66;opacity:.85">' + rankSVG('fundicion', 64) +
+      '<div class="info"><b>SIN RANGO</b><small>' + wl + 'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>' +
+      '<div class="rr-bar"><i style="width:0%"></i></div></div>' +
+      '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>';
+    try {
+      if (raw == null || typeof RANKS === 'undefined') return sin;
+      var k = rankFor(raw);
+      var s = subFor(k, raw) || 'APEX';
+      var rc = RANKS[k];
+      var i = TIER_ORDER.indexOf(k);
+      var hi = TIER_ORDER[i - 1] ? RANKS[TIER_ORDER[i - 1]].lo : (RANKS[k].lo + 1);
+      var f = Math.max(0, Math.min(100, ((raw - RANKS[k].lo) / (hi - RANKS[k].lo)) * 100));
+      return linea + '<div class="pf-rank" style="--rc:' + rc.c1 + '">' + rankSVG(k, 64) +
+        '<div class="info"><b>' + rc.name + ' ' + s + '</b><small>' + wl + 'TEMPORADA ACTIVA</small>' +
+        '<div class="rr-bar"><i style="width:' + f.toFixed(0) + '%;background:' + rc.c1 + '"></i></div></div>' +
+        '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>';
+    } catch (eR) { return sin; }
+  }
+
+  /* -------- CUENTAS CONECTADAS (real) -------- */
+  var DISCORD_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.8 13.8 0 0 0-.64 1.28 18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.64-1.28c-1.71.29-3.37.8-4.93 1.51A20.3 20.3 0 0 0 .1 18.06a19.9 19.9 0 0 0 6.07 3.03c.49-.66.93-1.37 1.3-2.1a12.9 12.9 0 0 1-2.05-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.16 0c.16.13.33.26.5.38-.65.39-1.34.72-2.05.98.37.73.81 1.44 1.3 2.1a19.8 19.8 0 0 0 6.07-3.03 20.2 20.2 0 0 0-2.58-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Zm7.96 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Z"/></svg>';
+
+  function filaDiscordReal(handle) {
+    var conectado = !!handle;
+    return '<div class="plat-row' + (conectado ? '' : ' off') + '" style="--pc:#5865F2">' +
+      '<span class="plat-ic" style="--plc:#5865F2">' + DISCORD_SVG + '</span>' +
+      '<div class="plat-info"><b>DISCORD</b><small>RED SOCIAL · ' + (conectado ? escHtml(handle) : 'NO CONECTADA') + '</small></div>' +
+      (conectado
+        ? '<span class="plat-state"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>CONECTADO</span>'
+        : '<span class="mono" style="font:600 9px/1 var(--mono);color:var(--dim)">—</span>') +
+      '</div>';
+  }
+
+  function cuentasRealHTML(p) {
+    var stats = p.stats || {};
+    var acc = (ME.extra && ME.extra.accounts) || [];
+    var porJuego = {};
+    acc.forEach(function (a) { if (a && a.game) porJuego[a.game] = a; });
+    var handles = {
+      discord: stats.discord_tag || null,
+      twitch: p.twitch_channel || null,
+      kick: p.kick_channel || null,
+      youtube: stats.youtube || null,
+      tiktok: stats.tiktok || null,
+      x: stats.x || null,
+      riot: (porJuego.riot && porJuego.riot.handle) || stats.riot || p.summoner_name || null,
+      steam: (porJuego.steam && porJuego.steam.handle) || stats.steam || null,
+      faceit: (porJuego.faceit && porJuego.faceit.handle) || stats.faceit || null,
+    };
+    var lineas = filaDiscordReal(handles.discord);
+    var keys = ['twitch', 'kick', 'youtube', 'tiktok', 'x', 'riot', 'steam', 'faceit'];
+    try {
+      lineas += keys.map(function (k) { return platRow(k, handles[k] ? escHtml(handles[k]) : null, false); }).join('');
+    } catch (eP) {
+      lineas += keys.map(function (k) {
+        return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line,#222);font:600 10px var(--mono)"><span style="color:var(--ink)">' + k.toUpperCase() + '</span><span style="color:' + (handles[k] ? 'var(--grn,#3EE6A0)' : 'var(--dim)') + '">' + (handles[k] ? '✓ ' + escHtml(handles[k]) : '— NO CONECTADA') + '</span></div>';
+      }).join('');
+    }
+    return '<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">' + lineas + '</div>';
+  }
+
+  /* -------- TRANSMISIÓN ACTIVA (real) -------- */
+  function transmisionRealHTML(p) {
+    var canales = [];
+    try {
+      if (p.twitch_channel) canales.push({ k: 'twitch', h: String(p.twitch_channel).replace(/[^A-Za-z0-9_\-.]/g, ''), url: 'https://www.twitch.tv/' + String(p.twitch_channel).replace(/[^A-Za-z0-9_\-]/g, '') });
+      if (p.kick_channel) canales.push({ k: 'kick', h: String(p.kick_channel).replace(/[^A-Za-z0-9_\-.]/g, ''), url: 'https://kick.com/' + String(p.kick_channel).replace(/[^A-Za-z0-9_\-]/g, '') });
+    } catch (eC) { return ''; }
+    if (!canales.length) return '';
+    var c = canales[0];
+    try {
+      return '<p class="d-sec">TRANSMISIÓN ACTIVA</p>' +
+        '<div class="rail-card" style="--plc:' + PLAT[c.k].c + '">' +
+        '<div class="rc-top">' + platIc(c.k) +
+        '<div class="rc-info"><div class="rc-name">' + escHtml((p.display_name || p.username || 'JUGADOR').toUpperCase()) + '</div>' +
+        '<p class="rc-title">Canal vinculado · ' + escHtml(c.h) + '</p></div></div>' +
+        '<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>' + PLAT[c.k].n + '</b></span>' +
+        '<a class="rc-game" href="' + c.url + '" target="_blank" rel="noopener" style="color:var(--ink,#EDEDE7);text-decoration:none">VER STREAM</a></div></div>' +
+        (canales.length > 1 ? '<div style="font:500 9.5px/1.6 var(--mono);color:var(--dim);margin-top:6px">También en ' + canales.slice(1).map(function (x) { return PLAT[x.k].n + ': ' + escHtml(x.h); }).join(' · ') + '</div>' : '');
+    } catch (eT) { return ''; }
+  }
+
   function perfilRealHTML() {
     var p = ME.player;
     var stats = p.stats || {};
@@ -112,6 +219,9 @@
       '<div><div style="font-weight:900;font-size:19px;text-transform:uppercase">' + (p.display_name || p.username || 'JUGADOR') + '</div>' +
       '<div style="font:600 10px/1.6 var(--mono);color:var(--mut)">@' + (p.username || '') + ' · MIEMBRO VANTS</div></div></div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' + (badges || '<span style="color:var(--dim);font-size:11px">Sin insignias todavía — el dueño las asigna desde el panel admin.</span>') + '</div>' +
+      rangoRealHTML(p) +
+      cuentasRealHTML(p) +
+      transmisionRealHTML(p) +
       (puedeBanner
         ? '<p class="d-sec">BANNER DEL PERFIL</p>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
