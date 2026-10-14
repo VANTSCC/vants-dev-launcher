@@ -57,6 +57,11 @@
   var loginBtn = document.getElementById('arenaLoginBtn');
   var accBtn = document.getElementById('accBtn');
 
+  // ---------- DUEÑO / ADMIN (cuentas del propietario) ----------
+  var OWNER_EMAILS = ['geimerjhoan099@gmail.com', 'admin@vants.games'];
+  var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
+  var chip = function (txt, color) { return '<span class="chip" style="color:' + color + ';border-color:' + color + '">' + txt + '</span>'; };
+
   if (user) {
     if (loginBtn) loginBtn.hidden = true;
     if (accBtn) accBtn.hidden = false;
@@ -65,9 +70,24 @@
     var accName = document.getElementById('accName');
     var dot = document.getElementById('accLive');
     if (ava) ava.textContent = nm.slice(0, 2);
-    if (accName) accName.textContent = nm.slice(0, 12);
-    if (dot) dot.style.display = '';
-    if (typeof toast === 'function') { try { toast('Sesión iniciada como ' + nm); } catch (e) {} }
+    if (accName) accName.textContent = esOwner ? 'OWNER' : nm.slice(0, 12);
+    if (dot) dot.style.display = 'none';
+    if (typeof toast === 'function') { try { toast(esOwner ? '👑 Modo DUEÑO activo — panel admin desbloqueado' : 'Sesión iniciada como ' + nm); } catch (e) {} }
+
+    if (esOwner) {
+      (async function () {
+        try {
+          var pr = await fetch(PROXY + '?table=players&username=eq.geimerpedroza&limit=1', { headers: { Accept: 'application/json' } });
+          var rows = await pr.json();
+          window.VANTS_ME = { pid: rows && rows[0] ? rows[0].id : null, player: (rows && rows[0]) || null, owner: true };
+        } catch (e) { window.VANTS_ME = { pid: null, player: null, owner: true }; }
+        try {
+          if (typeof state !== 'undefined') { state.passOwned = true; state.isPro = true; if (typeof renderPass === 'function') renderPass(); }
+        } catch (e) {}
+        var pl = document.getElementById('panelLink');
+        if (pl) { pl.hidden = false; pl.style.display = ''; }
+      })();
+    }
   } else if (loginBtn && !esArchivo) {
     if (accBtn) accBtn.hidden = true;
     loginBtn.hidden = false;
@@ -85,7 +105,32 @@
     });
   }
 
-  /* ---------------- 2) Neon: torneos reales ---------------- */
+  // Drawer del dueño: perfil real + colección completa del pase + panel
+  if (accBtn) accBtn.addEventListener('click', function (e) {
+    if (!esOwner) return;
+    e.stopImmediatePropagation();
+    var me = (window.VANTS_ME || {}).player || { username: 'geimerpedroza', display_name: 'Jhoan Pedroza', country: '', region: 'LATAM', verified: true };
+    var insig = chip('👑 OWNER', '#F5C044') + ' ' + chip('🛡 ADMIN', '#4CC9F0') + ' ' + chip('STREAMER', '#9146FF') + ' ' + chip('✓ VERIFICADO', '#4CC9F0');
+    var cos = (typeof PASS_REWARDS !== 'undefined' && typeof ART !== 'undefined') ? PASS_REWARDS.map(function (rw, i) {
+      return '<div style="display:flex;gap:10px;align-items:center;background:var(--panel,#131317);border:1px solid var(--line,#222228);padding:8px 10px;margin:5px 0"><span style="width:44px;height:44px;flex:none;display:block">' + ART[rw.art]('own' + i, rw) + '</span><div><b style="font-size:11px">' + rw.name + '</b><br><span style="font-size:9px;color:var(--dim)">' + rw.type + ' · NIVEL ' + rw.lvl + '</span></div></div>';
+    }).join('') : '';
+    openDrawer('<div class="d-head"><span class="kicker">/// MI PERFIL · DUEÑO DE VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
+      '<div class="d-body">' +
+      '<div style="display:flex;gap:14px;align-items:center;margin:16px 0">' +
+      '<div style="width:70px;height:70px;border-radius:50%;background:#1a1a20;border:2px solid #F5C044;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px">' + String(me.username || 'O').slice(0, 2).toUpperCase() + '</div>' +
+      '<div><div style="font-weight:900;font-size:18px;text-transform:uppercase">' + (me.display_name || me.username || 'DUEÑO') + '</div><div style="font:600 10px/1.6 var(--mono);color:var(--gold)">@' + (me.username || '') + ' · PROPIETARIO</div></div></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' + insig + '</div>' +
+      '<p class="d-sec">PASE COMPETITIVO · COLECCIÓN COMPLETA (DUEÑO)</p>' + cos +
+      '<p class="d-sec">PAÍS Y REGIÓN</p>' +
+      '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">' + ((me.country || '—') + ' · ' + (me.region || '—')) + '<br><span style="color:var(--dim)">Edición de datos: panel admin o SQL Editor.</span></div>' +
+      '<div style="display:flex;gap:10px;margin-top:18px">' +
+      '<a class="btn btn-sm" href="./panel.html" style="flex:1;justify-content:center;background:#FF0D2E;color:#fff;text-decoration:none;font:700 10px var(--mono);padding:11px;text-align:center;cursor:pointer;border:0;letter-spacing:.08em">ABRIR PANEL ADMIN</a>' +
+      '<button class="btn btn-ghost btn-sm" id="ow-salir" style="flex:1;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer">CERRAR SESIÓN</button></div>' +
+      '</div>');
+    if (window.lucide) lucide.createIcons();
+    var s = document.getElementById('ow-salir');
+    if (s) s.onclick = function () { A0.logout({ logoutParams: { returnTo: RAIZ } }); };
+  }, { capture: true });
   var DB = window.VantDB;
   if (!DB) return;
 
