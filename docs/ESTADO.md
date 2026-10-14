@@ -70,3 +70,9 @@
 - Estado: borrador "VANTS Desktop v2.0.0 (build 28)" creado con instaladores, PENDIENTE de publicar en github.com/feispla/Vants/releases
 - Quedó un release vacío "desktop-v2.0.0-build27" (del intento fallido) — borrarlo a mano si molesta
 - La app carga la web en vivo (tauri.conf url = feispla.github.io/Vants) → se actualiza sola con cada push
+
+## Banner de perfil editable (v6 de arena-live — ENTREGADO POR CHAT, pendiente de pegar por el dueño)
+- Al abrir MI PERFIL con sesión: franja de banner arriba del avatar
+- Dueño (geimerjhoan099/admin@vants.games) o haber reclamado 11p (Banner animado) = puede EDITARLO: variantes ANIMADO (barras de luz + scanline) / DORADO / CLASICO
+- Se guarda en players.stats.banner (jsonb) con el botón GUARDAR MIS DATOS
+- Las capturas de insignias (PRO/VERIFICADO/CAMPEÓN/CREADOR/SOCIO chips octogonales; DC tag azul #8ea1ff) informaron el diseño — ya implementado
