@@ -18,7 +18,7 @@
 - Autenticación Data API: JWKS de Auth0 (vants.eu.auth0.com/.well-known/jwks.json)
 - Neon Auth (Better Auth gestionado): ep-autumn-scene-b4opu2ip.neonauth.c-6.../neondb/auth — 2 usuarios con rol Administración (FEIS geimerjhoan099@gmail.com, @vantsadmin admin@vants.games)
 - Tablas CON datos: players (4: geimerpedroza, forgpower3, andacredito50/Fenix, feistv), profiles, ranked_rules
-- Tablas VACÍAS: tournaments, seasons, tournament_entries, season_player_stats, leaderboard
+- tournaments: 6 torneos REALES insertados (registration/upcoming, sin duplicados tras limpieza) - la web muestra DATOS EN VIVO - NEON\n- Tablas aún VACÍAS: seasons, tournament_entries, season_player_stats, leaderboard
 - teams / team_members: existen, 403 sin sesión (protegidas)
 - players: columnas id, username, display_name, slug, name, game, role, rating, stats(jsonb), trend, team_id, avatar_url, region, country, main_game, summoner_name, verified, kick_channel, twitch_channel, created_at, updated_at
 - CONSTRAINT tournaments_status_check — ESTADOS PERMITIDOS: draft, registration, open, in_progress, live, upcoming, closed, completed, cancelled
@@ -55,7 +55,7 @@
 - Datos clave NO visuales: estados válidos tournaments = draft/registration/open/in_progress/live/upcoming/closed/completed/cancelled · jugador dueño = geimerpedroza · OWNER_EMAILS = geimerjhoan099@gmail.com, admin@vants.games
 
 ## Pendientes
-1. Correr el INSERT de torneos en Neon (bloque SQL listo arriba/en chat) → chip DATOS EN VIVO
+1. ✅ HECHO: torneos reales en Neon e integrados en la web (chip verde)
 2. Insignias/roles reales: panel los escribe en players.role/verified (si RLS lo permite; plan B SQL)
 3. Sincronizar cuentas conectadas (Discord/Twitch OAuth reales) — requiere claves en vants-server
 4. Better Auth dashboard: requiere servidor Better Auth propio (vants-server + plugin dash) — Base URL del servidor, base path /api/auth

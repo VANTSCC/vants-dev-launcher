@@ -1,11 +1,9 @@
 -- ============================================================
--- VANTS GAMES — Siembra de torneos reales en Neon (VERSIÓN FUNCIONANDO)
--- status 'registration' es un valor VÁLIDO del check tournaments_status_check
+-- VANTS GAMES — Siembra de torneos en Neon (a prueba de duplicados)
 -- ------------------------------------------------------------
--- 1) Abre https://console.neon.tech -> SQL Editor (database: neondb)
--- 2) Pega TODO este bloque y ejecuta
--- 3) Recarga https://feispla.github.io/Vants/ -> chip "DATOS EN VIVO · NEON"
--- Reversible: DELETE FROM tournaments WHERE slug LIKE '%s4%' OR slug LIKE '%88%' OR slug LIKE '%invitational%' OR slug LIKE '%finde%' OR slug LIKE '%sundown%';
+-- Los 6 torneos YA ESTÁN insertados en Neon (verificados).
+-- Este script es idempotente: si el slug ya existe, lo salta.
+-- Úsalo solo si vacías la tabla y necesitas re-sembrar.
 -- ============================================================
 
 INSERT INTO tournaments (name, slug, status, tier, starts_at, max_participants, current_participants, prize_pool, created_at, updated_at) VALUES
@@ -14,7 +12,8 @@ INSERT INTO tournaments (name, slug, status, tier, starts_at, max_participants, 
   ('Copa LATAM Invitational',       'copa-latam-invitational',      'registration', 'pro',  '2026-11-02T21:00:00Z', 16, 5,  10000, now(), now()),
   ('Scrim Cup Finde #12',           'scrim-cup-finde-12',           'registration', 'open', '2026-10-18T18:00:00Z', 32, 9,  250,   now(), now()),
   ('Stratos Major S4 · CS2',        'stratos-major-s4-cs2',         'registration', 'pro',  '2026-10-28T21:00:00Z', 48, 18, 15000, now(), now()),
-  ('VANT Open Sundown',             'vant-open-sundown',            'registration', 'open', '2026-10-21T22:00:00Z', 64, 23, 750,   now(), now());
+  ('VANT Open Sundown',             'vant-open-sundown',            'registration', 'open', '2026-10-21T22:00:00Z', 64, 23, 750,   now(), now())
+ON CONFLICT (slug) DO NOTHING;
 
 -- (Opcional) Temporada activa de ranked:
 -- INSERT INTO seasons (name, season_number, status) VALUES ('Temporada 4', 4, 'active');
