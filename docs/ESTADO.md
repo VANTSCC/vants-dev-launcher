@@ -41,6 +41,19 @@
 - preview/pase-*.png: pase 12 columnas, nivel 7, XP 1.780/2.000, 5 reclamables, modal Título: RETADOR
 - 0 errores de página en todas las verificaciones (registro completo en commits)
 
+## Registro de capturas que rotan del contexto (hechos preservados)
+- preview/inicio.png: app vieja pre-deploy, home renderizando (nav 01-07, hero) — ya irrelevante (app eliminada)
+- preview/login.png: login viejo con 4 botones (Google/Discord/GitHub/Kick) + correo — hoy verificado en vivo en Auth0
+- preview/torneos.png: torneos demo 4 filas + chip DATOS DE DEMOSTRACIÓN — pasará a real con el INSERT
+- preview/ranked.png: ranked con 8 tarjetas de rango (HIERRO→ESCARLATA) + leaderboard demo
+- preview/seo-torneos.png: portada SEO redirigiendo a #/torneos (comportamiento correcto)
+- preview/arena-inicio.png: intro cinematográfica (logo, partículas, ENTRAR A LA ARENA)
+- preview/arena-torneos.png: torneos con chip demo + CTA Discord
+- preview/arena-hero.png: hero ASCENSIÓN SERIES S4, countdown 03:14, marcador KRÜ vs LVP, botón ENTRAR en nav
+- preview/pase-pase.png: pase 12 columnas, nivel 7 rojo, XP 1.780/2.000, 5 reclamables, dos carriles
+- preview/pase-discord.png: consentimiento OAuth estilo Discord (demo) — Autorizar/Cancelar
+- Datos clave NO visuales: estados válidos tournaments = draft/registration/open/in_progress/live/upcoming/closed/completed/cancelled · jugador dueño = geimerpedroza · OWNER_EMAILS = geimerjhoan099@gmail.com, admin@vants.games
+
 ## Pendientes
 1. Correr el INSERT de torneos en Neon (bloque SQL listo arriba/en chat) → chip DATOS EN VIVO
 2. Insignias/roles reales: panel los escribe en players.role/verified (si RLS lo permite; plan B SQL)
