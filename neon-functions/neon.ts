@@ -14,5 +14,9 @@ export default defineConfig({
       name: "Discord Notify (notificaciones a Discord)",
       source: "./discord-notify/index.ts",
     },
+    linker: {
+      name: "Linker (conectores OAuth de cuentas: Twitch, Kick, YouTube, TikTok, X, Riot, Steam, FACEIT)",
+      source: "./linker/index.ts",
+    },
   },
 });

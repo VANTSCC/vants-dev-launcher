@@ -746,13 +746,17 @@ function renderProfileGrid(){
 
 /* ================= DRAWER DE PERFIL ================= */
 function platRow(k,handle,own){
-  const p=PLAT[k],connected=!!handle;
+  const p=PLAT[k];
+  const rl=(own&&window.VANTS_LINKS&&window.VANTS_LINKS[k])||null;
+  const h=rl?rl.handle:handle;
+  const connected=!!h;
+  const estado=rl&&!rl.verified?'CONECTADO · MANUAL':'CONECTADO';
   return '<div class="plat-row'+(connected?'':' off')+'" style="--pc:'+p.c+'">'
     +platIc(k)
-    +'<div class="plat-info"><b>'+p.n+'</b><small>'+(p.k==='game'?'CUENTA DE JUEGO':'RED SOCIAL')+' · '+(connected?handle:'NO CONECTADA')+'</small></div>'
+    +'<div class="plat-info"><b>'+p.n+'</b><small>'+(p.k==='game'?'CUENTA DE JUEGO':'RED SOCIAL')+' · '+(connected?h:'NO CONECTADA')+'</small></div>'
     +(connected
       ?(own?'<button class="plat-x" onclick="disconnect(\''+k+'\')" title="Desconectar"><i data-lucide="x"></i></button>':'')
-        +'<span class="plat-state">'+SVG_CHECK.replace('<svg','<svg width="12" height="12"')+'CONECTADO</span>'
+        +'<span class="plat-state">'+SVG_CHECK.replace('<svg','<svg width="12" height="12"')+estado+'</span>'
       :(own?'<button class="plat-connect" onclick="connect(\''+k+'\')">CONECTAR</button>':'<span class="mono" style="font:600 9px/1 var(--mono);color:var(--dim)">—</span>'))
     +'</div>';
 }
@@ -979,19 +983,112 @@ window.syncDiscord=function(){
   setTimeout(()=>{me.avatar=discordAvatar(me.name);meSave();renderAccount();openProfile('me');toast('Foto y nombre sincronizados desde Discord');},1000);
 };
 
-/* conectar / desconectar (Discord tiene flujo propio) */
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-window.connect=function(k){
+/* ================= CONECTORES DE CUENTAS (Auth0 + Neon + linker OAuth) =================
+   Identidad: JWT de Auth0 · Guardado: tabla vants_links en Neon · OAuth real: Neon Function "linker".
+   Sin claves de una red, CONECTAR ofrece vinculo manual (queda en Neon con etiqueta MANUAL). */
+window.VANTS_LINKS={};
+const LINKER=()=>((window.VantAuth0&&window.VantAuth0.LINKER_BASE)||'').replace(/\/$/,'');
+const LINKS_API='https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
+
+async function linksCargar(){
+  const A=window.VantAuth0;
+  if(!A||!A.client)return window.VANTS_LINKS;
+  try{
+    const u=await A.client.getUser();
+    if(!u||!u.sub)return window.VANTS_LINKS;
+    const t=await A.getToken();
+    if(!t)return window.VANTS_LINKS;
+    const r=await fetch(LINKS_API+'/vants_links?auth0_sub=eq.'+encodeURIComponent(u.sub)+'&select=*',{headers:{Accept:'application/json',Authorization:'Bearer '+t}});
+    const filas=r.ok?await r.json():[];
+    const mapa={};
+    (filas||[]).forEach(f=>{mapa[f.platform]=f;});
+    window.VANTS_LINKS=mapa;
+  }catch(e){/* sin Neon: siguen los handles demo */}
+  return window.VANTS_LINKS;
+}
+window.linksCargar=linksCargar;
+
+async function playerPidActual(){
+  try{
+    const A=window.VantAuth0;const t=await A.getToken();
+    const r=await fetch(LINKS_API+'/rpc/current_player_id',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:'{}'});
+    let pj=await r.json();
+    pj=Array.isArray(pj)?pj[0]:pj;
+    return (pj&&(pj.current_player_id||pj.id))||null;
+  }catch(e){return null;}
+}
+
+function openLoginModal(k){
+  openModal('<div class="lk">'
+    +'<div class="lk-head">'+platIc(k)+'<div><b>Para conectar '+PLAT[k].n+'</b><span>Necesitás tu sesión de VANTS activa</span></div></div>'
+    +'<p class="lk-note">El vínculo se guarda en tu cuenta (tabla vants_links en Neon) con tu sesión de Auth0. Iniciá sesión y volvé a intentar.</p>'
+    +'<div class="dc-actions"><button class="dc-btn ghost" id="lkCancel">Después</button><button class="dc-btn" id="lkGo">INICIAR SESIÓN</button></div></div>');
+  $('#lkCancel').onclick=closeModal;
+  $('#lkGo').onclick=()=>{closeModal();const lb=document.getElementById('arenaLoginBtn');if(lb)lb.click();else toast('Ingresá con el botón INGRESAR de la navegación','info');};
+}
+
+function openLinkManual(k,sub){
+  openModal('<div class="lk">'
+    +'<div class="lk-head">'+platIc(k)+'<div><b>Conectar '+PLAT[k].n+'</b><span>Se guarda en tu cuenta VANTS (Neon)</span></div></div>'
+    +'<p class="lk-note">El OAuth de '+PLAT[k].n+' todavía no tiene claves en el servidor (Neon → Functions → linker). Podés vincularla ahora: queda con etiqueta MANUAL y pasa a verificada cuando se carguen las claves.</p>'
+    +'<input id="lkHandle" maxlength="40" placeholder="Tu usuario en '+PLAT[k].n+' (p. ej. @mynick)">'
+    +'<div class="dc-actions"><button class="dc-btn ghost" id="lkCancel">Cancelar</button><button class="dc-btn" id="lkSave">VINCULAR</button></div>'
+    +'<div id="lkMsg" class="lk-msg"></div></div>');
+  $('#lkCancel').onclick=closeModal;
+  $('#lkSave').onclick=async e=>{
+    const b=e.currentTarget;
+    const h=$('#lkHandle').value.trim().replace(/["'<>\\]/g,'');
+    const msg=$('#lkMsg');
+    if(!h){msg.textContent='Escribí tu usuario de '+PLAT[k].n;return;}
+    b.disabled=true;b.textContent='GUARDANDO…';
+    try{
+      const pid=await playerPidActual();
+      const {error}=await VantDB.from('vants_links').upsert({auth0_sub:sub,player_id:pid,platform:k,handle:h,verified:false},{onConflict:'auth0_sub,platform'});
+      if(error)throw error;
+      window.VANTS_LINKS[k]={auth0_sub:sub,player_id:pid,platform:k,handle:h,verified:false};
+      closeModal();toast(PLAT[k].n+' vinculado (manual): '+h);
+      openProfile('me');
+    }catch(err){
+      b.disabled=false;b.textContent='VINCULAR';
+      msg.textContent='Neon rechazó el guardado ('+((err&&err.message)||err)+'). Corré docs/migracion-links.sql en el SQL Editor de Neon.';
+    }
+  };
+}
+
+window.connect=async k=>{
   if(k==='discord'){openDiscordOAuth();return;}
+  const A=window.VantAuth0;
+  let sub=null,tok=null;
+  if(A&&A.client){try{const u=await A.client.getUser();sub=u&&u.sub;tok=sub?await A.getToken():null;}catch(e){}}
+  if(!tok){openLoginModal(k);return;}
   toast('Conectando '+PLAT[k].n+'…','info');
-  setTimeout(()=>{
-    const h=k==='riot'?me.name.toUpperCase()+'#VNTS':k==='steam'?'STEAM:7656'+Math.floor(Math.random()*1e6):'@'+me.name.toLowerCase().replace(/\s/g,'');
-    if(PLAT[k].k==='game')me.game[k]=h;else me.socials[k]=h;
-    meSave();toast(PLAT[k].n+' conectado: '+h);openProfile('me');
-  },900);
+  const lb=LINKER();
+  if(lb){
+    try{
+      const r=await fetch(lb+'/api/link/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({platform:k,return_to:location.origin+location.pathname})});
+      const d=await r.json().catch(()=>null);
+      if(d&&d.url){sessionStorage.setItem('vants_linking',k);location.href=d.url;return;}
+      if(d&&d.error==='falta_clave')toast(PLAT[k].n+': falta la clave '+d.env+' en Neon (Functions → linker). Usá el vínculo manual por ahora.','info');
+      else if(d&&d.error==='sin_sesion'){openLoginModal(k);return;}
+    }catch(e){/* sin linker: cae al vínculo manual */}
+  }
+  openLinkManual(k,sub);
 };
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-window.disconnect=function(k){delete me.socials[k];delete me.game[k];meSave();toast('Cuenta desconectada: '+PLAT[k].n,'info');openProfile('me');};
+
+window.disconnect=async k=>{
+  delete me.socials[k];delete me.game[k];
+  const A=window.VantAuth0;
+  if(A&&A.client){
+    try{
+      const u=await A.client.getUser();
+      if(u&&u.sub){
+        const {error}=await VantDB.from('vants_links').delete().eq('auth0_sub',u.sub).eq('platform',k);
+        if(!error)delete window.VANTS_LINKS[k];
+      }
+    }catch(e){/* el handle demo ya se borró arriba */}
+  }
+  meSave();toast('Cuenta desconectada: '+PLAT[k].n,'info');openProfile('me');
+};
 
 /* nav con foto */
 function renderAccount(){
@@ -1063,6 +1160,10 @@ function openProfile(id){
   const fb=$('#followBtn');
   if(fb)fb.onclick=()=>{fb.innerHTML=SVG_CHECK+'SIGUIENDO';fb.disabled=true;toast('Ahora seguís a '+p.name);};
   icons();
+  if(own&&typeof linksCargar==='function')linksCargar().then(()=>{
+    const pl=document.querySelector('#drawer .plat-list');
+    if(pl&&$('#drawer').classList.contains('show')){pl.innerHTML=allKeys.map(k=>platRow(k,getH(k),own)).join('');icons();}
+  });
 }
 
 /* aplicar perfil guardado */

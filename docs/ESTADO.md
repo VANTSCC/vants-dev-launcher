@@ -36,6 +36,17 @@
 - docs/migracion-pase.sql: pass_progreso + pass_recompensas + pass_estado() + pass_reclamar() (validación servidor; premium auto owner/admin; defaults nivel 7 · 1.780/2.000)
 - arena-live v5/v6 (subido por el dueño, commit "Update arena-live.js"): pass_estado carga progreso; claimReward → pass_reclamar; perfil real con país/región/DC y banner
 
+## Conectores de cuentas (14/10)
+- Cuentas conectadas reales: tabla `vants_links` (sub Auth0 + plataforma + handle + verified) y
+  Neon Function `linker` (OAuth real: Twitch, Kick, YouTube, TikTok, X, Riot, Steam OpenID, FACEIT).
+- SQL pendiente de correr: `docs/migracion-links.sql` · función pendiente de crear en Neon
+  (código en `neon-functions/linker/`) · pegar su URL en `LINKER_BASE` (auth0-config.js).
+- Sin claves de una red, CONECTAR ofrece vínculo manual guardado en Neon (etiqueta MANUAL);
+  Discord conserva su flujo demo propio. Receta por red: docs/CONFIGURACION.md sección 6.
+- FIX preexistente corregido: arena-live.js tenía `await` a nivel superior dentro de una IIFE
+  NO async → el navegador rechazaba el archivo entero (login, pase y perfil real no corrían).
+  Ahora es `(async function () {`. node --check verde en arena.js / arena-live.js / auth0-config.js.
+
 ## Pendientes
 1. Normalizar los 6 torneos (bloque DELETE+INSERT limpio entregado en chat) — slugs/estados en español romperán enlaces y sembrarían duplicados futuros
 2. Insignias/roles: ya gestionables desde panel (si RLS rechaza → SQL plan B que el panel muestra)

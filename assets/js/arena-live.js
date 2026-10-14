@@ -46,6 +46,18 @@
   var accBtn = document.getElementById('accBtn');
   var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
 
+  /* volver del OAuth del linker (?linked=plataforma / ?linkerr=motivo) */
+  try {
+    var ql = new URLSearchParams(location.search);
+    var linked = ql.get('linked'); var lerr = ql.get('linkerr');
+    if (linked || lerr) {
+      history.replaceState({}, '', location.pathname + location.hash);
+      if (linked && typeof toast === 'function') { try { toast('Cuenta conectada y verificada en Neon'); } catch (e5) {} }
+      else if (lerr && typeof toast === 'function') { try { toast('No se pudo conectar la cuenta (' + decodeURIComponent(lerr) + ')', 'info'); } catch (e5) {} }
+      if (typeof linksCargar === 'function') { try { linksCargar(); } catch (e5) {} }
+    }
+  } catch (e) {}
+
   var ME = null;
   async function jwt() { return window.VantAuth0.getToken(); }
 
@@ -165,7 +177,7 @@
     var lineas = filaDiscordReal(handles.discord);
     var keys = ['twitch', 'kick', 'youtube', 'tiktok', 'x', 'riot', 'steam', 'faceit'];
     try {
-      lineas += keys.map(function (k) { return platRow(k, handles[k] ? escHtml(handles[k]) : null, false); }).join('');
+      lineas += keys.map(function (k) { return platRow(k, handles[k] ? escHtml(handles[k]) : null, !handles[k]); }).join('');
     } catch (eP) {
       lineas += keys.map(function (k) {
         return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line,#222);font:600 10px var(--mono)"><span style="color:var(--ink)">' + k.toUpperCase() + '</span><span style="color:' + (handles[k] ? 'var(--grn,#3EE6A0)' : 'var(--dim)') + '">' + (handles[k] ? '✓ ' + escHtml(handles[k]) : '— NO CONECTADA') + '</span></div>';
@@ -241,7 +253,8 @@
       '</div>';
   }
 
-  function renderPerfilReal() {
+  async function renderPerfilReal() {
+    if (typeof linksCargar === 'function') { try { await linksCargar(); } catch (eL) {} }
     openDrawer(perfilRealHTML());
     if (window.lucide) lucide.createIcons();
     var p = ME.player;

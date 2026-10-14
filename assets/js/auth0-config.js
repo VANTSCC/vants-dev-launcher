@@ -16,6 +16,11 @@ const NEON_DATA_API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aw
 // Neon Data API exige siempre un JWT; sin sesión las lecturas pasan por esta función.
 const PUBLIC_PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
 
+// --- Linker (conectores OAuth de cuentas: Twitch/Kick/YouTube/TikTok/X/Riot/Steam/FACEIT) ---
+// URL pública de la Neon Function "linker" (Neon → Functions → linker → pestaña URL).
+// Mientras esté vacía, CONECTAR ofrece el vínculo manual guardado en Neon.
+const LINKER_BASE = '';
+
 let auth0Client = null;
 let currentToken = null;
 
@@ -288,4 +293,4 @@ const DB = {
 };
 
 window.VantDB = DB;
-window.VantAuth0 = { initAuth0, getToken, get client() { return auth0Client; } };
+window.VantAuth0 = { initAuth0, getToken, LINKER_BASE, get client() { return auth0Client; } };

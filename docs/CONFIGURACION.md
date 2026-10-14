@@ -86,3 +86,70 @@ El bot (`bot/`) usa `bot/.env.example` como plantilla: copiar a `bot/.env`
 2. Auth0 → Application VANTS: pegar las Allowed Callback/Web/Logout URLs de arriba.
 3. Neon → Functions: rellenar las variables de entorno de la tabla.
 4. Probar login en `https://feispla.github.io/Vants/` con cada proveedor.
+5. Conectores de cuentas: correr `docs/migracion-links.sql` en el SQL Editor, crear la función
+   `linker` (código en `neon-functions/linker/index.ts`) y pegar su URL en `LINKER_BASE`
+   (`assets/js/auth0-config.js`). Detalle completo en la sección 6.
+
+---
+
+## 6) Conectores de cuentas (linker OAuth — Twitch, Kick, YouTube, TikTok, X, Riot, Steam, FACEIT)
+
+En **Mi perfil → Cuentas conectadas**, cada fila tiene CONECTAR. El flujo real es:
+
+1. **Auth0** identifica al jugador (el vínculo se guarda con el `sub` de su JWT).
+2. **Neon** guarda el vínculo en la tabla `vants_links` (1 fila por jugador y plataforma,
+   columna `verified`). La función OAuth corre como Neon Function **`linker`**.
+3. **GitHub Pages** sirve la web; cada push a `main` publica el cambio.
+
+El botón **CONECTAR** intenta el OAuth real de la red; si esa red todavía no tiene claves
+en el servidor, ofrece **vínculo manual** (el jugador escribe su usuario y queda en Neon con
+etiqueta `CONECTADO · MANUAL`; pasa a verificado cuando el OAuth lo confirme).
+
+### 6.1) Pasos para dejarlo andando
+
+1. **SQL Editor de Neon**: ejecutar `docs/migracion-links.sql` (crea `vants_links`,
+   `vants_link_states` y la función `current_auth0_sub()`; RLS: lectura pública,
+   escritura solo del dueño).
+2. **Neon → Functions → crear función `linker`** y pegar el contenido de
+   `neon-functions/linker/index.ts`. Variables de entorno obligatorias:
+
+   | Variable | Valor |
+   |---|---|
+   | `DATABASE_URL` | cadena de conexión de Neon (la misma de las otras funciones) |
+   | `AUTH0_DOMAIN` | `vants.eu.auth0.com` |
+   | `AUTH0_AUDIENCE` | `https://api.vants.app` |
+   | `AUTH0_CLIENT_ID` | `oaOmNizh7HrASWfmfM29bN284IMJvqPG` |
+   | `VANTS_SITE_URL` | `https://feispla.github.io/Vants` |
+   | `LINKER_URL` | **la URL pública de la propia función** (la muestra Neon al crearla; se usa como `redirect_uri`) |
+
+3. **Pegar la URL de la función** en `LINKER_BASE` (`assets/js/auth0-config.js`) y subir a `main`.
+4. **Por cada red** (solo si querés OAuth real en esa red): crear la app en su portal de
+   developers, registrar como **callback** exactamente `<LINKER_URL>/api/link/callback`,
+   y cargar sus claves como variables de entorno de la función `linker`:
+
+   | Red | Variables de la función | Portal donde se crea la app |
+   |---|---|---|
+   | Twitch | `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` | dev.twitch.tv/console |
+   | Kick | `KICK_CLIENT_ID`, `KICK_CLIENT_SECRET` | kick.com/developers (pide aprobación) |
+   | YouTube | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | console.cloud.google.com (habilitar YouTube Data API v3, crear cliente OAuth "Web") |
+   | TikTok | `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` | developers.tiktok.com (Login Kit) |
+   | X | `X_CLIENT_ID`, `X_CLIENT_SECRET` | developer.x.com → User authentication settings (OAuth 2.0, Web App, PKCE) |
+   | Riot | `RIOT_CLIENT_ID`, `RIOT_CLIENT_SECRET` | developer.riotgames.com (RSO) |
+   | Steam | `STEAM_API_KEY` (opcional; OpenID no usa client) | steamcommunity.com/dev/apikey |
+   | FACEIT | `FACEIT_CLIENT_ID`, `FACEIT_CLIENT_SECRET` | faceit.com/developers (pide aprobación del scope) |
+
+   Mientras falte una clave, el diagnóstico lo dice exacto: abrir `<LINKER_URL>/` en el
+   navegador y muestra por red `ok` o `falta <VARIABLE>`.
+
+### 6.2) Detalles del flujo (por si hay que depurar)
+
+- `POST <LINKER_URL>/api/link/start` con `Authorization: Bearer <JWT Auth0>` y
+  `{platform, return_to}` → valida el JWT contra el JWKS del tenant, guarda un estado de
+  un solo uso (15 min) en `vants_link_states` y responde `{url}` de autorización
+  (con PKCE S256 donde la red lo soporta).
+- La red vuelve a `<LINKER_URL>/api/link/callback?code&state` → la función intercambia el
+  código, consulta el perfil real (handle, id, avatar), hace upsert verificado en
+  `vants_links` y redirige a `https://feispla.github.io/Vants/?linked=<red>`.
+- Steam usa OpenID 2.0 clásico: no necesita client, y `STEAM_API_KEY` solo agrega el nick real.
+- Desconectar borra la fila en Neon (la web llama a la Data API con el JWT del jugador;
+  RLS solo permite borrar la fila propia).

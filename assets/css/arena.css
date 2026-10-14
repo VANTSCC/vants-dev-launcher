@@ -731,3 +731,16 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
 
 /* ===== panel admin ===== */
 .acc-btn[hidden]{display:none}
+
+
+/* ===== conectores de cuentas (linker) ===== */
+.lk{background:#141419;border:1px solid #26262e;padding:24px;max-width:430px}
+.lk-head{display:flex;gap:14px;align-items:center;margin-bottom:16px}
+.lk-head .plat-ic{width:40px;height:40px;flex:none}
+.lk-head b{display:block;font:800 16px/1.2 var(--sans);color:var(--text,#EDEDE7)}
+.lk-head span{font:500 11px/1.5 var(--sans);color:var(--mut,#9a9aa3)}
+.lk input{width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--text,#EDEDE7);padding:12px;font:500 12px var(--mono);margin-bottom:14px;outline:none}
+.lk input:focus{border-color:var(--accent,#FF0D2E)}
+.lk-note{font:500 10.5px/1.7 var(--mono);color:var(--mut,#9a9aa3);margin-bottom:14px}
+.lk-msg{font:500 10.5px/1.6 var(--mono);color:#ff6b7a;margin-top:12px}
+.plat-manual{font:700 8px/1 var(--mono);letter-spacing:.08em;color:#f5c044;border:1px solid rgba(245,192,68,.35);padding:3px 5px;margin-left:6px;white-space:nowrap}
