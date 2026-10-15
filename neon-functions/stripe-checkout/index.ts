@@ -197,6 +197,7 @@ export default async function handler(req: Request): Promise<Response> {
   // Diagnostico: que claves hay / faltan (abrir la URL de la funcion en el navegador)
   if (ruta === '' || ruta === '/') {
     const estado: Record<string, string> = {
+      _version: 'v7-rk-live',
       _stripe_secret_key: STRIPE_SECRET_KEY
         ? /^(sk|rk)_live_/.test(STRIPE_SECRET_KEY) ? 'ok (live, sk/rk)' : 'cargada pero NO es live (revisar modo)'
         : 'falta STRIPE_SECRET_KEY (clave live sk_live_ o rk_live_ con permiso Checkout Sessions: Write)',
