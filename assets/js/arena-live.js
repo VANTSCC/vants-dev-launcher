@@ -44,7 +44,10 @@
   var esArchivo = location.protocol === 'file:';
   var loginBtn = document.getElementById('arenaLoginBtn');
   var accBtn = document.getElementById('accBtn');
-  var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
+  var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1)
+    || !!(user && String(user.name || user.nickname || '').toLowerCase() === 'geimerpedroza');
+  /* identidad de sesión expuesta para ajustes de cuenta y PATCHes */
+  window.VANTS_AUTH = { sub: (user && user.sub) || null, email: (user && user.email) || null, playerId: null, isOwner: esOwner };
 
   /* volver del OAuth del linker (?linked=plataforma / ?linkerr=motivo) */
   try {
@@ -81,10 +84,38 @@
     try {
       var t = await jwt();
       if (!t) return;
-      var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: authHeaders(t), body: '{}' });
-      var pidRaw = await rpc.json().catch(function () { return null; });
-      var pid = Array.isArray(pidRaw) ? pidRaw[0] : pidRaw;
-      pid = pid && (pid.current_player_id || pid.id) || pid;
+      /* 1) vía oficial: RPC current_player_id (definida en db/migrations/05-current-player.sql) */
+      var pid = null;
+      try {
+        var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: authHeaders(t), body: '{}' });
+        var pidRaw = await rpc.json().catch(function () { return null; });
+        var pidTmp = Array.isArray(pidRaw) ? pidRaw[0] : pidRaw;
+        pid = (pidTmp && (pidTmp.current_player_id || pidTmp.id)) || pidTmp || null;
+      } catch (eRpc) {}
+      /* 2) respaldos por identidad Auth0: auth0_sub → vants_links → email */
+      if (!pid && user) {
+        try {
+          if (user.sub) {
+            var rp = await fetch(API + '/players?auth0_sub=eq.' + encodeURIComponent(user.sub) + '&select=id&limit=1', { headers: authHeaders(t) });
+            var rpr = await rp.json().catch(function () { return []; });
+            if (Array.isArray(rpr) && rpr[0]) pid = rpr[0].id;
+          }
+        } catch (eS) {}
+        if (!pid && user.sub) {
+          try {
+            var vl = await fetch(API + '/vants_links?auth0_sub=eq.' + encodeURIComponent(user.sub) + '&select=player_id&order=connected_at.desc&limit=1', { headers: authHeaders(t) });
+            var vlr = await vl.json().catch(function () { return []; });
+            if (Array.isArray(vlr) && vlr[0] && vlr[0].player_id) pid = vlr[0].player_id;
+          } catch (eV) {}
+        }
+        if (!pid && user.email) {
+          try {
+            var pe = await fetch(API + '/players?email=eq.' + encodeURIComponent(user.email) + '&select=id&limit=1', { headers: authHeaders(t) });
+            var per = await pe.json().catch(function () { return []; });
+            if (Array.isArray(per) && per[0]) pid = per[0].id;
+          } catch (eE) {}
+        }
+      }
       if (!pid) return;
       var pr = await fetch(PROXY + '?table=players&id=eq.' + pid + '&limit=1', { headers: { Accept: 'application/json' } });
       var rows = await pr.json();
@@ -234,6 +265,13 @@
     if (p.role === 'owner') badges += chip('👑 OWNER', '#F5C044') + ' ';
     if (p.role === 'admin') badges += chip('🛡 ADMIN', '#4CC9F0') + ' ';
     if (p.role === 'streamer') badges += chip('STREAMER', '#9146FF') + ' ';
+    if (p.role === 'creator') badges += chip('CREADOR', '#FF0D2E') + ' ';
+    if (p.role === 'partner') badges += chip('SOCIO', '#F5C044') + ' ';
+    /* privilegios de dueño: insignias completas + plan superior gratis */
+    if (esOwner) {
+      badges += chip('👑 OWNER', '#F5C044') + ' ' + chip('CREADOR', '#FF0D2E') + ' ' + chip('SOCIO', '#F5C044') + ' ';
+      badges += chip('VANTS PRO · INCLUIDO', '#4CC9F0') + ' ';
+    }
     var ava = p.avatar_url
       ? '<img src="' + p.avatar_url + '" alt="" style="width:74px;height:74px;border-radius:50%;object-fit:cover;border:2px solid #FF0D2E">'
       : '<div style="width:74px;height:74px;border-radius:50%;background:#1a1a20;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px">' + (p.username || 'V').slice(0, 2).toUpperCase() + '</div>';
@@ -264,7 +302,8 @@
       '<div id="rp-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
       '<p class="d-sec">CUENTA</p>' +
       '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">Rol en VANTS: <b style="color:var(--ink)">' + (p.role ? p.role.toUpperCase() : 'JUGADOR') + '</b><br>Verificado: <b style="color:' + (p.verified ? 'var(--grn)' : 'var(--dim)') + '">' + (p.verified ? 'SÍ' : 'NO') + '</b><br>Correo: ' + (user.email || '—') + '</div>' +
-      '<button class="btn btn-ghost btn-sm" id="rp-salir" style="margin-top:18px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">CERRAR SESIÓN</button>' +
+      '<button class="btn btn-ghost btn-sm" id="rp-ajustes" style="margin-top:14px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button>' +
+      '<button class="btn btn-ghost btn-sm" id="rp-salir" style="margin-top:8px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">CERRAR SESIÓN</button>' +
       '</div>';
   }
 
@@ -300,6 +339,8 @@
     };
     var s = document.getElementById('rp-salir');
     if (s) s.onclick = function () { A0.logout({ logoutParams: { returnTo: RAIZ } }); };
+    var aj = document.getElementById('rp-ajustes');
+    if (aj) aj.onclick = function () { closeDrawer(); if (window.openAjustesCuenta) window.openAjustesCuenta(); };
     // editor de banner (solo si puede: dueño o recompensa 11p reclamada)
     document.querySelectorAll('[data-banner]').forEach(function (b) {
       b.onclick = function () {
@@ -331,17 +372,34 @@
       c.disabled = true; c.textContent = 'CREANDO…';
       try {
         var t = await jwt();
+        /* la creación viaja con la identidad Auth0 para que Neon la ligue a la sesión */
         var r = await fetch(API + '/players', {
           method: 'POST',
           headers: authHeaders(t),
-          body: JSON.stringify({ username: $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_'), display_name: $('#cp-user').value.trim(), country: $('#cp-pais').value.trim(), region: $('#cp-region').value.trim(), avatar_url: (user && user.picture) || null }),
+          body: JSON.stringify({ username: $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_'), display_name: $('#cp-user').value.trim(), country: $('#cp-pais').value.trim(), region: $('#cp-region').value.trim(), avatar_url: (user && user.picture) || null, auth0_sub: (user && user.sub) || null, email: (user && user.email) || null }),
         });
-        if (r.ok) {
+        var listo = r.ok;
+        if (!listo && (r.status === 409 || r.status === 400)) {
+          /* nick ya existía: intentar ADOPTAR ese perfil ligándolo a esta identidad */
+          try {
+            var nick = $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_');
+            var ex = await fetch(API + '/players?username=eq.' + encodeURIComponent(nick) + '&select=id,auth0_sub&limit=1', { headers: authHeaders(t) });
+            var exRows = await ex.json().catch(function () { return []; });
+            if (Array.isArray(exRows) && exRows[0] && !exRows[0].auth0_sub) {
+              var up = await fetch(API + '/players?id=eq.' + exRows[0].id, {
+                method: 'PATCH', headers: authHeaders(t),
+                body: JSON.stringify({ auth0_sub: (user && user.sub) || null, email: (user && user.email) || null }),
+              });
+              if (up.ok) listo = true;
+            }
+          } catch (eAd) {}
+        }
+        if (listo) {
           if (msg) msg.innerHTML = '<span class="ok">✓ Perfil creado. Cargando…</span>';
           await cargarPerfilReal();
           if (ME && ME.player) renderPerfilReal();
         } else {
-          var j = await r.json().catch(function () { return {}; });
+          var j = r.ok ? {} : await r.json().catch(function () { return {}; });
           if (msg) msg.textContent = 'La base rechazó la creación (HTTP ' + r.status + '): ' + (j.message || '') + '\nPlan B: crea el jugador en el SQL Editor de Neon.';
           c.disabled = false; c.textContent = 'REINTENTAR';
         }
@@ -362,6 +420,8 @@
   }, { capture: true });
 
   await cargarPerfilReal();
+
+  if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (ME && ME.pid) || null;
 
   var esAdminRol = !!(ME && ME.player && (ME.player.role === 'owner' || ME.player.role === 'admin'));
 
@@ -384,6 +444,9 @@
           var rows = await pr.json();
           window.VANTS_ME = { pid: rows && rows[0] ? rows[0].id : null, player: (rows && rows[0]) || null, owner: true };
         } catch (e) { window.VANTS_ME = { pid: null, player: null, owner: true }; }
+        try { if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (window.VANTS_ME && window.VANTS_ME.pid) || null; } catch (eVA) {}
+        /* activa plan VANTS PRO gratis + insignias OWNER/CREADOR/SOCIO (motor en arena.js) */
+        try { if (window.vantsOwnerActivate) window.vantsOwnerActivate(); } catch (eVO) {}
         try {
           if (typeof state !== 'undefined') { state.passOwned = true; state.isPro = true; if (typeof renderPass === 'function') renderPass(); }
         } catch (e) {}
