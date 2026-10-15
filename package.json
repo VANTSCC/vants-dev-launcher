@@ -1,0 +1,8 @@
+{
+  "name": "vants-neon-functions",
+  "private": true,
+  "description": "Dependencias para bundlear las Neon Functions (neon functions deploy)",
+  "dependencies": {
+    "pg": "^8.16.0"
+  }
+}
