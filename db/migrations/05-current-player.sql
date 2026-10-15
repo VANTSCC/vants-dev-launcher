@@ -143,9 +143,23 @@ BEGIN
 END $$;
 
 -- ---------- 6) Grants ----------
-GRANT EXECUTE ON FUNCTION current_player_id() TO authenticated, anon, PUBLIC;
-GRANT EXECUTE ON FUNCTION current_auth0_sub()  TO authenticated, anon, PUBLIC;
-GRANT SELECT, INSERT, UPDATE ON TABLE players TO authenticated;
+-- Neon no tiene necesariamente los roles anon/authenticated (son de Supabase):
+-- se concede por rol con captura de undefined_object, como en 04-vants-links.sql.
+DO $$
+DECLARE r text;
+BEGIN
+  FOREACH r IN ARRAY ARRAY['anon','authenticated','authenticator'] LOOP
+    BEGIN
+      EXECUTE format('GRANT EXECUTE ON FUNCTION current_player_id() TO %I', r);
+      EXECUTE format('GRANT EXECUTE ON FUNCTION current_auth0_sub() TO %I', r);
+      EXECUTE format('GRANT SELECT, INSERT, UPDATE ON TABLE players TO %I', r);
+    EXCEPTION WHEN undefined_object THEN NULL;
+    END;
+  END LOOP;
+  GRANT EXECUTE ON FUNCTION current_player_id() TO PUBLIC;
+  GRANT EXECUTE ON FUNCTION current_auth0_sub() TO PUBLIC;
+  GRANT SELECT ON TABLE players TO PUBLIC;
+END $$;
 
 -- Fin: con esto /rpc/current_player_id responde, crear perfil
 -- queda ligado a la sesión de Auth0 y el perfil correcto se
