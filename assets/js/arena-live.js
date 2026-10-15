@@ -341,6 +341,7 @@
       rangoRealHTML(p) +
       cuentasRealHTML(p) +
       transmisionRealHTML(p) +
+      '<div id="rp-series"></div>' +
       (puedeBanner
         ? '<p class="d-sec">BANNER DEL PERFIL</p>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
@@ -361,11 +362,131 @@
       '</div>';
   }
 
+  /* -------- VANTS RANKED · SERIES (motor Elo real, migración 07) --------
+     Reportás una serie contra un rival real, el rival la confirma y la
+     base aplica el Elo: rating, RR y wins/losses quedan en Neon. */
+  var SERIE_ERRORES = {
+    sin_sesion: 'Iniciá sesión para jugar ranked',
+    rival_no_encontrado: 'No encontramos ese nick en la sala de jugadores',
+    mismo_jugador: 'No podés reportar una serie contra vos mismo',
+    rival_sin_sesion: 'Ese jugador nunca inició sesión: no podría confirmar la serie',
+    serie_ya_pendiente: 'Ya hay una serie pendiente con ese rival',
+    enfriamiento: 'Enfriamiento: esperá 15 minutos para otra serie contra el mismo rival',
+    solo_el_rival: 'Solo el rival puede confirmar esta serie',
+    estado_invalido: 'Esa serie ya no está pendiente'
+  };
+  var serieResultado = null; /* true = gané · false = perdí */
+
+  async function rpcRanked(nombre, args) {
+    var t = await jwt();
+    if (!t) return { ok: false, error: 'sin_sesion' };
+    var r = await fetch(API + '/rpc/' + nombre, { method: 'POST', headers: authHeaders(t), body: JSON.stringify(args || {}) });
+    var d = await r.json().catch(function () { return null; });
+    if (Array.isArray(d)) d = d[0];
+    return d || { ok: false, error: 'error_de_red' };
+  }
+
+  async function cargarSeriesReal() {
+    var host = document.getElementById('rp-series');
+    if (!host) return;
+    var d = null;
+    try { d = await rpcRanked('mis_series'); } catch (eS) { d = null; }
+    if (!d || !d.ok) { host.innerHTML = ''; return; }
+    var inp2 = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
+    var bs2 = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
+    var html = '<p class="d-sec">VANTS RANKED · SERIES</p>';
+    var pc = d.por_confirmar || [];
+    if (pc.length) {
+      html += '<div style="border:1px solid rgba(255,13,46,.45);background:rgba(255,13,46,.05);padding:12px;margin-bottom:12px">';
+      pc.forEach(function (s) {
+        html += '<div style="font:500 11px/1.7 var(--mono);color:var(--mut);margin-bottom:6px"><b style="color:var(--ink)">' + escHtml(s.rival || 'JUGADOR') + '</b> reportó que ' + (s.gano_retador ? 'GANÓ' : 'PERDIÓ') + ' la serie contra vos' + (s.mapa ? ' · ' + escHtml(s.mapa) : '') + '</div>'
+          + '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">'
+          + '<button class="btn btn-sm" data-sconf="' + s.serie + '" style="flex:1;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 10px var(--mono);padding:10px;cursor:pointer;letter-spacing:.06em">CONFIRMAR RESULTADO</button>'
+          + '<button class="btn btn-sm" data-srej="' + s.serie + '" style="' + bs2 + '">RECHAZAR</button></div>';
+      });
+      html += '</div>';
+    }
+    html += '<input id="sr-rival" placeholder="Nick del rival (como aparece en su perfil)" style="' + inp2 + 'margin-bottom:8px">'
+      + '<div style="display:flex;gap:8px;margin-bottom:8px">'
+      + '<input id="sr-mapa" placeholder="Mapa (opcional)" maxlength="30" style="' + inp2 + ';flex:1"></div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:10px">'
+      + '<button class="btn btn-sm" id="sr-gane" style="flex:1;justify-content:center;' + bs2 + '">GANÉ</button>'
+      + '<button class="btn btn-sm" id="sr-perdi" style="flex:1;justify-content:center;' + bs2 + '">PERDÍ</button></div>'
+      + '<button class="btn btn-sm" id="sr-reportar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">REPORTAR SERIE</button>'
+      + '<div id="sr-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:8px;white-space:pre-wrap"></div>';
+    var rec = (d.recientes || []).filter(function (s) { return s.estado === 'confirmada'; });
+    if (rec.length) {
+      html += '<p class="d-sec">ÚLTIMAS SERIES</p>';
+      rec.forEach(function (s) {
+        var delta = (s.mmr_despues != null && s.mmr_antes != null) ? Math.round(s.mmr_despues - s.mmr_antes) : null;
+        html += '<div style="display:flex;justify-content:space-between;gap:8px;font:500 10.5px/1.7 var(--mono);color:var(--mut);border-bottom:1px solid var(--line,#222);padding:6px 0">'
+          + '<span>' + (s.gane ? '<b style="color:var(--grn,#3EE6A0)">VICTORIA</b>' : '<b style="color:#FF0D2E">DERROTA</b>') + ' vs ' + escHtml(s.rival || '—') + (s.mapa ? ' · ' + escHtml(s.mapa) : '') + '</span>'
+          + '<span style="color:' + (delta > 0 ? 'var(--grn,#3EE6A0)' : (delta < 0 ? '#FF0D2E' : 'var(--dim)')) + '">' + (delta == null ? '' : (delta > 0 ? '+' : '') + delta + ' RR') + '</span></div>';
+      });
+    }
+    host.innerHTML = html;
+
+    var bG = document.getElementById('sr-gane'), bP = document.getElementById('sr-perdi');
+    function pintarRes() {
+      if (bG) { bG.style.borderColor = serieResultado === true ? '#FF0D2E' : 'var(--line2,#303039)'; bG.style.color = serieResultado === true ? '#FF0D2E' : 'var(--mut,#93939D)'; }
+      if (bP) { bP.style.borderColor = serieResultado === false ? '#FF0D2E' : 'var(--line2,#303039)'; bP.style.color = serieResultado === false ? '#FF0D2E' : 'var(--mut,#93939D)'; }
+    }
+    if (bG) bG.onclick = function () { serieResultado = true; pintarRes(); };
+    if (bP) bP.onclick = function () { serieResultado = false; pintarRes(); };
+
+    var bR = document.getElementById('sr-reportar');
+    if (bR) bR.onclick = async function () {
+      var rival = ((document.getElementById('sr-rival') || {}).value || '');
+      var mapa = ((document.getElementById('sr-mapa') || {}).value || '');
+      var msg = document.getElementById('sr-msg');
+      if (serieResultado === null) { if (msg) msg.textContent = 'Marcá si ganaste o perdiste la serie'; return; }
+      if (!rival.trim()) { if (msg) msg.textContent = 'Escribí el nick del rival'; return; }
+      bR.disabled = true; bR.textContent = 'REPORTANDO…';
+      var res = await rpcRanked('reportar_serie', { p_rival: rival.trim(), p_gano: serieResultado, p_mapa: mapa.trim() });
+      bR.disabled = false; bR.textContent = 'REPORTAR SERIE';
+      if (res && res.ok) {
+        if (typeof toast === 'function') { try { toast('Serie reportada: tu rival debe confirmarla para mover el RR'); } catch (eT) {} }
+        renderPerfilReal();
+      } else if (msg) {
+        msg.textContent = SERIE_ERRORES[res.error] || ('No se pudo reportar: ' + (res.error || 'error'));
+      }
+    };
+
+    host.querySelectorAll('[data-sconf]').forEach(function (b) {
+      b.onclick = async function () {
+        b.disabled = true; b.textContent = 'CONFIRMANDO…';
+        var res = await rpcRanked('confirmar_serie', { p_serie: b.getAttribute('data-sconf') });
+        if (res && res.ok) {
+          if (typeof toast === 'function') { try { toast('Serie confirmada: rating actualizado'); } catch (eT2) {} }
+          try { if (typeof window.vantsRecargarJugadores === 'function') window.vantsRecargarJugadores(); } catch (eR) {}
+          renderPerfilReal();
+        } else {
+          b.disabled = false; b.textContent = 'CONFIRMAR RESULTADO';
+          if (typeof toast === 'function') { try { toast(SERIE_ERRORES[res.error] || 'No se pudo confirmar', 'info'); } catch (eT3) {} }
+        }
+      };
+    });
+    host.querySelectorAll('[data-srej]').forEach(function (b) {
+      b.onclick = async function () {
+        b.disabled = true;
+        var res = await rpcRanked('rechazar_serie', { p_serie: b.getAttribute('data-srej') });
+        if (res && res.ok) {
+          if (typeof toast === 'function') { try { toast('Serie rechazada', 'info'); } catch (eT4) {} }
+          renderPerfilReal();
+        } else {
+          b.disabled = false;
+          if (typeof toast === 'function') { try { toast(SERIE_ERRORES[res.error] || 'No se pudo rechazar', 'info'); } catch (eT5) {} }
+        }
+      };
+    });
+  }
+
   async function renderPerfilReal() {
     if (typeof linksCargar === 'function') { try { await linksCargar(); } catch (eL) {} }
     revisarOwnerDiscord();
     openDrawer(perfilRealHTML());
     if (window.lucide) lucide.createIcons();
+    cargarSeriesReal();
     var p = ME.player;
     var msg = document.getElementById('rp-msg');
     var g = document.getElementById('rp-guardar');

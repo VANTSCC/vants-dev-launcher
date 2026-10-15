@@ -465,15 +465,61 @@ const COLS=[
   {key:'x',label:'ACS',num:true,dynamic:true},
   {key:'impact',label:'IMPACTO',num:true,pro:true},{key:'clutch',label:'CLUTCH',num:true,pro:true}];
 function renderLbHead(){
-  $('#lbHead').innerHTML='<tr>'+COLS.map(c=>{
+  const reales=usandoJugadoresReales();
+  const cols=reales?REAL_COLS:COLS;
+  const eff=reales&&!cols.some(c=>c.key===state.sort.key)?'mmr':state.sort.key;
+  $('#lbHead').innerHTML='<tr>'+cols.map(c=>{
     const label=(c.dynamic?D().extraCol:c.label)+(c.pro?' <span class="lock"><i data-lucide="lock"></i>PRO</span>':'');
-    const on=state.sort.key===c.key,arrow=on?(state.sort.dir===-1?'▾':'▴'):'';
+    const on=eff===c.key,arrow=on?(state.sort.dir===-1?'▾':'▴'):'';
     if(['pos','name','rank','team'].includes(c.key))return '<th><button disabled style="cursor:default;opacity:.8">'+label+'</button></th>';
     return '<th'+(c.num?' class="num"':'')+'><button data-key="'+c.key+'" class="'+(on?'on':'')+'">'+label+arrow+'</button></th>';}).join('')+'</tr>';
   icons();
 }
+/* columnas del ranking REAL (perfiles nacidos de un inicio de sesión) */
+const REAL_COLS=[
+  {key:'pos',label:'#'},{key:'name',label:'JUGADOR'},
+  {key:'rank',label:'RANGO'},{key:'team',label:'PAÍS · REGIÓN'},
+  {key:'rating',label:'RATING',num:true},{key:'mmr',label:'RR',num:true},
+  {key:'games',label:'PARTIDOS',num:true},{key:'wins',label:'V',num:true},
+  {key:'losses',label:'D',num:true},{key:'wr',label:'WINRATE',num:true},
+  {key:'kd',label:'K/D',num:true}];
+const usandoJugadoresReales=()=>(window.VANTS_PLAYERS||[]).some(p=>p&&p.id);
+function filasRealesLb(q){
+  return (window.VANTS_PLAYERS||[]).map(p=>{
+    const st=(window.VANTS_STATS||{})[p.id]||{};
+    const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((typeof st.rank==='number'&&st.rank>=.5&&st.rank<=2)?st.rank:null);
+    const wins=st.wins||0,losses=st.losses||0,games=wins+losses;
+    return {real:true,id:p.id,name:(p.display_name||p.username||'JUGADOR').toUpperCase(),username:p.username||'',
+      team:((p.country||'')+(p.region?' · '+p.region:''))||'—',
+      rating:raw||0,rank:raw||0,mmr:(st.mmr!=null)?st.mmr:0,games,wins,losses,
+      wr:games?Math.round(wins/games*100):0,kd:(st.kd!=null)?st.kd:0,
+      badges:badgesDeRol(p)};
+  }).filter(p=>!q||p.name.toLowerCase().includes(q)||(p.username||'').toLowerCase().includes(q)||(p.team||'').toLowerCase().includes(q));
+}
 function renderLbBody(){
   const q=state.search.toLowerCase();
+  if(usandoJugadoresReales()){
+    let rows=filasRealesLb(q);
+    const k=REAL_COLS.some(c=>c.key===state.sort.key)?state.sort.key:'mmr';
+    const dir=state.sort.dir;
+    rows=[...rows].sort((a,b)=>(a[k]>b[k]?1:a[k]<b[k]?-1:0)*dir);
+    $('#lbBody').innerHTML=rows.length?rows.map((p,i)=>{
+      const idx=i+1;
+      return '<tr'+(idx===1&&!q?' class="top"':'')+'>'
+        +'<td class="p-pos mono">'+String(idx).padStart(2,'0')+'</td>'
+        +'<td class="p-name">'+escHtml(p.name)+(p.badges&&p.badges.length?badgeDots(p.badges):'')+'<small>@'+escHtml(p.username||'—')+'</small></td>'
+        +'<td class="rank-cell">'+(p.rating>0?rankCell(p.rating):'<span class="mono" style="font:600 9px/1 var(--mono);color:var(--dim)">SIN RANGO</span>')+'</td>'
+        +'<td class="mono" style="color:var(--muted)">'+escHtml(p.team)+'</td>'
+        +'<td class="num mono hl">'+(p.rating>0?p.rating.toFixed(2):'—')+'</td>'
+        +'<td class="num mono">'+(p.mmr||p.mmr===0?p.mmr:'—')+'</td>'
+        +'<td class="num mono">'+p.games+'</td>'
+        +'<td class="num mono">'+p.wins+'</td>'
+        +'<td class="num mono">'+p.losses+'</td>'
+        +'<td class="num mono">'+(p.games?p.wr+'%':'—')+'</td>'
+        +'<td class="num mono">'+(p.games?(p.kd?p.kd.toFixed(2):'—'):'—')+'</td></tr>';
+    }).join(''):'<tr><td colspan="11" style="text-align:center;color:var(--dim);padding:34px">Todavía no hay jugadores rankeados: reportá tu primera serie desde tu perfil</td></tr>';
+    icons();return;
+  }
   let rows=D().players.filter(p=>!q||p.name.toLowerCase().includes(q)||p.team.toLowerCase().includes(q));
   const k=state.sort.key,dir=state.sort.dir;
   rows=[...rows].sort((a,b)=>(a[k]>b[k]?1:a[k]<b[k]?-1:0)*dir);
@@ -898,7 +944,7 @@ async function cargarJugadores(){
       const ra=(typeof a.rating==='number'&&a.rating>0)?a.rating:0,rb=(typeof b.rating==='number'&&b.rating>0)?b.rating:0;
       return rb!==ra?rb-ra:String(a.created_at||'').localeCompare(String(b.created_at||''));
     });
-    renderProfileGrid();renderRail();
+    renderProfileGrid();renderRail();renderLbHead();renderLbBody();
   }catch(e){/* sin conexión a la base: la sala queda en su último estado */}
 }
 window.vantsRecargarJugadores=cargarJugadores;
@@ -1027,6 +1073,15 @@ function openPlayerProfile(pid){
   if(acc&&!acc.hidden){acc.click();return;}
   if(lb&&!lb.hidden){lb.click();return;}
   toast('Ingresá con ENTRAR para crear tu perfil de jugador','info');
+});
+/* REPORTAR SERIE (cta de la sección RANGOS): manda al perfil real,
+   donde vive el bloque VANTS RANKED · SERIES */
+const rankedReportBtn=$('#rankedReportBtn');
+if(rankedReportBtn)rankedReportBtn.addEventListener('click',()=>{
+  const acc=$('#accBtn'),lb=$('#arenaLoginBtn');
+  if(acc&&!acc.hidden){if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();else acc.click();return;}
+  if(lb&&!lb.hidden){lb.click();return;}
+  toast('Ingresá con ENTRAR para reportar tu serie','info');
 });
 
 /* ================= DRAWER DE PERFIL ================= */
