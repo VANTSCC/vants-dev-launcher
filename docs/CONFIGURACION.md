@@ -167,7 +167,7 @@ Cargar en **Neon → Functions → `stripecheckout` → Variables de entorno**:
 
 | Variable | Valor |
 |---|---|
-| `STRIPE_SECRET_KEY` | Clave **live** `sk_live_...` (Stripe → Developers → API keys). |
+| `STRIPE_SECRET_KEY` | Clave **live** `sk_live_...` o clave restringida `rk_live_...` con permiso *Checkout Sessions: Write* (Stripe → Developers → API keys). |
 | `VANTS_SITE_URL` | `https://feispla.github.io/Vants` (para los return URLs). |
 | `AUTH0_DOMAIN` / `AUTH0_AUDIENCE` / `AUTH0_CLIENT_ID` | Los mismos del linker (si el tenant no es el que está por defecto). |
 

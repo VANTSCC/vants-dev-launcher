@@ -198,8 +198,8 @@ export default async function handler(req: Request): Promise<Response> {
   if (ruta === '' || ruta === '/') {
     const estado: Record<string, string> = {
       _stripe_secret_key: STRIPE_SECRET_KEY
-        ? STRIPE_SECRET_KEY.startsWith('sk_live_') ? 'ok (live)' : 'cargada pero NO es sk_live_ (revisar modo)'
-        : 'falta STRIPE_SECRET_KEY (clave live sk_live_...)',
+        ? /^(sk|rk)_live_/.test(STRIPE_SECRET_KEY) ? 'ok (live, sk/rk)' : 'cargada pero NO es live (revisar modo)'
+        : 'falta STRIPE_SECRET_KEY (clave live sk_live_ o rk_live_ con permiso Checkout Sessions: Write)',
       _vants_site_url: 'ok (' + APP_URL + ')',
       _tabla: 'purchases + entitlements (migracion 05-pagos.sql)',
     };

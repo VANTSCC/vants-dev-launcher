@@ -24,7 +24,7 @@ const LINKER_BASE = '';
 // --- Checkout Stripe (pagos REALES: planes, pase premium y fees de torneo) ---
 // URL pública de la Neon Function "stripe-checkout" (Neon → Functions → stripecheckout).
 // Mientras esté vacía, la web conserva el modo demostración (pagos simulados, sin cobro).
-const CHECKOUT_BASE = '';
+const CHECKOUT_BASE = 'https://br-sweet-shape-b42xhogj-stripecheckout.compute.c-6.us-east-2.aws.neon.tech';
 
 let auth0Client = null;
 let currentToken = null;
