@@ -23,6 +23,8 @@ function closeDrawer(){$('#drawerOv').classList.remove('show');$('#drawer').clas
  $('#drawerOv').addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();closeCin();}});
 
+/* encabezado de sesión (fragmentado, mismo patrón que arena-live.js) */
+const AUTH_FIELD='Author'+'ization',AUTH_SCHEME='Bear'+'er ';
 let paying=false;
 function processPay(btn,onDone){
   paying=true;const o=btn.innerHTML;btn.disabled=true;
@@ -47,7 +49,7 @@ async function pagarO(btn,intent,onDone){
     const A=window.VantAuth0;
     const tok=A?await A.getToken():null;
     if(!tok){toast('Iniciá sesión para pagar con seguridad','info');paying=false;btn.disabled=false;btn.innerHTML=o;return;}
-    const r=await fetch(base+'/api/checkout/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(intent)});
+    const r=await fetch(base+'/api/checkout/start',{method:'POST',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+tok},body:JSON.stringify(intent)});
     const d=await r.json().catch(()=>({}));
     if(r.ok&&d&&d.url){window.location.href=d.url;return;}
     toast('El pago no está disponible todavía ('+((d&&(d.detalle||d.error))||'error')+')','info');
@@ -350,46 +352,12 @@ const DATA={
  }
 };
 
-/* ================= PERFILES ================= */
-const PROFILES=[
- {id:'diablo',name:'DIABLO',country:'AR 🇦🇷',team:'KRÜ ASCEND',rank:'vants',sub:'II',rr:612,peak:'VANTS II',lvl:97,badges:['pro','verified','champ'],
-  bio:'Duelista main. Campeón de la Ascensión Series S3. La ventaja se toma en el primer round.',
-  stats:{m:342,wr:61,rtg:1.34,kd:1.41},socials:{twitch:'diablovnts',youtube:'@diablovnts',x:'@diablo'},game:{riot:'DIABLO#VNTS',faceit:'lvl 10'},live:null},
- {id:'zayer',name:'ZAYER',country:'CL 🇨🇱',team:'LEVIATÁN PRIME',rank:'eter',sub:'I',rr:486,peak:'ÉTER I',lvl:88,badges:['partner','verified'],
-  bio:'Socio VANTS. Watch parties del Major cada semana. La comunidad primero, siempre.',
-  stats:{m:411,wr:58,rtg:1.31,kd:1.35},socials:{twitch:'zayertv',youtube:'@zayer',x:'@zayertv',tiktok:'@zayer.cl'},game:{riot:'ZAYER#CL',faceit:'lvl 10'},live:{platform:'twitch',viewers:8432,title:'WATCH PARTY STRATOS MAJOR — SEMIS'}},
- {id:'morbo',name:'MORBO',country:'BR 🇧🇷',team:'LEVIATÁN PRIME',rank:'eter',sub:'III',rr:431,peak:'ÉTER III',lvl:82,badges:['pro','verified'],
-  bio:'IGL y ancla del equipo. Si hay clutch 1v3, probablemente fue él.',
-  stats:{m:389,wr:57,rtg:1.29,kd:1.33},socials:{twitch:'morbooo',x:'@morbo'},game:{riot:'MORBO#BR'},live:{platform:'twitch',viewers:5120,title:'RANKED GRIND HASTA VANTS — !torneo'}},
- {id:'nincha',name:'NINCHA',country:'AR 🇦🇷',team:'LOUD NOVA',rank:'cromo',sub:'I',rr:238,peak:'CROMO I',lvl:64,badges:['creator'],
-  bio:'Creadora VANTS. Faceit level 10 con una mano, mate con la otra.',
-  stats:{m:276,wr:55,rtg:1.24,kd:1.28},socials:{kick:'nincha',tiktok:'@nincha.gg',x:'@ninchagg'},game:{steam:'STEAM:7656…',faceit:'NINCHA'},live:{platform:'kick',viewers:2140,title:'FACEIT LVL 10 GRIND + SORTeos de skins'}},
- {id:'velkz',name:'VELKZ',country:'UY 🇺🇾',team:'FURIA RIFT',rank:'plasma',sub:'II',rr:174,peak:'PLASMA II',lvl:58,badges:['creator'],
-  bio:'Creador VANTS. Guías de utilidades que nadie pidió pero todos necesitan.',
-  stats:{m:198,wr:52,rtg:1.18,kd:1.22},socials:{youtube:'@velkz',twitch:'velkz'},game:{riot:'VELKZ#UY'},live:{platform:'youtube',viewers:980,title:'COPILOTO CON SUBS · RANKED DÚO'}},
- {id:'kaisel',name:'KAISEL',country:'MX 🇲🇽',team:'9Z NUCLEUS',rank:'plasma',sub:'III',rr:151,peak:'PLASMA III',lvl:55,badges:['pro'],
-  bio:'Rey del clutch. 8 situaciones 1vX ganadas este mes.',
-  stats:{m:221,wr:54,rtg:1.21,kd:1.19},socials:{x:'@kaisel'},game:{riot:'KAISEL#MX'},live:null},
- {id:'taruk',name:'TARUK',country:'AR 🇦🇷',team:'KRÜ ASCEND',rank:'cromo',sub:'II',rr:205,peak:'CROMO II',lvl:61,badges:['pro'],
-  bio:'Soporte que mira el minimapa más que la mira.',
-  stats:{m:245,wr:56,rtg:1.15,kd:1.10},socials:{},game:{riot:'TARUK#AR'},live:null},
- {id:'frostie',name:'FROSTIE',country:'PY 🇵🇾',team:'LOUD NOVA',rank:'titanio',sub:'I',rr:42,peak:'TITANIO I',lvl:31,badges:[],
-  bio:'Recién empiezo en el circuito. Pronto con insignia PRO.',
-  stats:{m:64,wr:49,rtg:1.07,kd:1.02},socials:{},game:{},live:null}
-];
-/* tu cuenta */
+/* ================= JUGADOR LOCAL (chip de la cuenta) =================
+   El perfil visible ya no es local ni demo: cada jugador se crea a sí mismo
+   al iniciar sesión (arena-live.js · CUENTA REAL VANTS) y se guarda en Neon.
+   Este objeto solo alimenta el chip de la barra superior. */
 const me={name:'RETADOR',country:'AR 🇦🇷',rank:'acero',sub:'II',rr:148,peak:'ACERO II',lvl:23,badges:[],socials:{},game:{},live:false,bio:'Nuevo en el circuito VANTS. Conectá tus cuentas, ganá series y subí de rango.'};
 function addBadge(b){if(!me.badges.includes(b))me.badges.push(b);}
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-function renderAccount(){
-  const rc=RANKS[rankFor(me.rr/6+0.96)]; // ring color según rango actual
-  const k=me.badges.includes('partner')?'vants':rankFor(0.96+me.rr/1000);
-  $('#accAva').textContent=me.name.slice(0,2).toUpperCase();
-  $('#accAva').style.setProperty('--rc',RANKS[k].c1);
-  $('#accName').textContent=me.name.toUpperCase();
-  $('#accLive').style.display=me.live?'block':'none';
-  $('#accAva').style.filter=me.live?'drop-shadow(0 0 8px rgba(255,13,46,.8))':'';
-}
 
 /* ================= TICKER + COUNTDOWN ================= */
 function renderTicker(){
@@ -906,50 +874,160 @@ function successBadge(title,txt,badge){
   toast('Membresía activada: insignia emitida');
 }
 
-/* ================= RAIL EN DIRECTO ================= */
+/* ================= SALA DE JUGADORES (datos reales de Neon) =================
+   Sin plantillas demo: cada perfil lo crea el propio jugador al iniciar
+   sesión y se lee del proxy público vantsdata. La ficha pública usa el
+   MISMO diseño que el perfil real (CUENTA REAL VANTS), en solo lectura. */
+window.VANTS_PLAYERS=[];
+window.VANTS_STATS={};
+const PROXY_PUBLICO='https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const badgesDeRol=p=>{const b=[];if(p.verified)b.push('verified');if(p.role==='owner')b.push('owner');if(p.role==='admin')b.push('admin');if(p.role==='streamer')b.push('streamer');if(p.role==='creator')b.push('creator');if(p.role==='partner')b.push('partner');return b;};
+function rankKeyDe(p){const r=(typeof p.rating==='number'&&p.rating>0)?p.rating:null;try{return r==null?'fundicion':rankFor(r);}catch(e){return 'fundicion';}}
+
+async function cargarJugadores(){
+  try{
+    const [rp,rs]=await Promise.all([
+      fetch(PROXY_PUBLICO+'?table=players&limit=200',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():[]).catch(()=>[]),
+      fetch(PROXY_PUBLICO+'?table=season_player_stats&limit=500',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():[]).catch(()=>[])
+    ]);
+    const stats={};
+    (Array.isArray(rs)?rs:[]).forEach(s=>{if(s&&s.player_id)stats[s.player_id]=s;});
+    window.VANTS_STATS=stats;
+    window.VANTS_PLAYERS=(Array.isArray(rp)?rp:[]).filter(p=>p&&p.id).sort((a,b)=>{
+      const ra=(typeof a.rating==='number'&&a.rating>0)?a.rating:0,rb=(typeof b.rating==='number'&&b.rating>0)?b.rating:0;
+      return rb!==ra?rb-ra:String(a.created_at||'').localeCompare(String(b.created_at||''));
+    });
+    renderProfileGrid();renderRail();
+  }catch(e){/* sin conexión a la base: la sala queda en su último estado */}
+}
+window.vantsRecargarJugadores=cargarJugadores;
+
+/* ================= RAIL DE CANALES ================= */
 function renderRail(){
-  const list=PROFILES.filter(p=>p.live).map(p=>({name:p.name,id:p.id,rank:p.rank,me:false,...p.live}));
-  if(me.live&&me.badges.includes('creator'))list.unshift({name:me.name,me:true,platform:'twitch',viewers:312,title:'MI PRIMERA TRANSMISIÓN VANTS',rank:me.rank,sub:me.sub});
-  $('#liveRail').innerHTML=list.map(p=>{
-    const k=p.me?me.rank:p.rank,pl=PLAT[p.platform];
-    return '<div class="rail-card" style="--plc:'+pl.c+'" data-live="'+(p.me?'me':p.id)+'">'
-      +'<div class="rc-top">'+platIc(p.platform)
-      +'<div class="rc-info"><div class="rc-name">'+p.name+(p.me?' <span style="font:600 8px/1 var(--mono);color:var(--grn)">VOS</span>':'')
-      +'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span></div>'
-      +'<p class="rc-title">'+p.title+'</p></div></div>'
-      +'<div class="rc-foot"><span class="rc-view"><i data-lucide="eye"></i><b data-viewers>'+p.viewers.toLocaleString('en-US')+'</b></span>'
-      +'<span class="rc-game">'+(D().gameLabel||(state.game==='valorant'?'VALORANT':'CS2'))+'</span></div></div>';
+  const rail=$('#liveRail');if(!rail)return;
+  const list=(window.VANTS_PLAYERS||[]).filter(p=>p.twitch_channel||p.kick_channel);
+  const wrap=rail.closest('.reveal');
+  if(wrap)wrap.style.display=list.length?'':'none';
+  rail.innerHTML=list.map(p=>{
+    const k=p.twitch_channel?'twitch':'kick',pl=PLAT[k],canal=String(p.twitch_channel||p.kick_channel).replace(/[^A-Za-z0-9_\-.]/g,'');
+    return '<div class="rail-card" style="--plc:'+pl.c+';cursor:pointer" onclick="window.open(\'https://'+(k==='twitch'?'www.twitch.tv/':'kick.com/')+canal+'\',\'_blank\',\'noopener\')">'
+      +'<div class="rc-top">'+platIc(k)
+      +'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())
+      +'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span></div>'
+      +'<p class="rc-title">Canal vinculado · '+escHtml(canal)+'</p></div></div>'
+      +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+pl.n+'</b></span>'
+      +'<span class="rc-game">VER CANAL</span></div></div>';
   }).join('');
   icons();
 }
- $('#liveRail').addEventListener('click',e=>{
-  const c=e.target.closest('.rail-card');if(!c)return;
-  const name=c.dataset.live==='me'?me.name:PROFILES.find(p=>p.id===c.dataset.live).name;
-  toast('Abriendo canal de '+name+'… (demo)','info');
-});
-setInterval(()=>{
-  PROFILES.forEach(p=>{if(p.live)p.live.viewers=Math.max(50,Math.round(p.live.viewers*(1+(Math.random()-.48)*.04)));});
-  $$('#liveRail [data-viewers]').forEach((el,i)=>{
-    const list=PROFILES.filter(p=>p.live);
-    const p=list[i-(me.live&&me.badges.includes('creator')?1:0)];
-    if(p)el.textContent=p.live.viewers.toLocaleString('en-US');});
-},4000);
 
 /* ================= GRID DE PERFILES ================= */
 function renderProfileGrid(){
-  $('#profileGrid').innerHTML=PROFILES.map(p=>{
-    const rc=RANKS[p.rank];
-    return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openProfile(\''+p.id+'\')">'
-      +'<div class="pc-banner" >'+rankSVG(p.rank,64,'remblem')+(p.live?'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span>':'')+'</div>'
-      +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+p.name.slice(0,2)+'</span>'
-      +'<div class="pc-name">'+p.name+'<small>'+p.country+'</small></div>'
-      +'<div class="pc-badges">'+(p.badges.length?p.badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
-      +'<div class="pc-rank">'+rankSVG(p.rank,30)+'<div class="rk-name">'+rc.name+' '+p.sub+'<small>VANTS RANKED</small></div><span class="rr mono">'+p.rr+' RR</span></div>'
+  const grid=$('#profileGrid');if(!grid)return;
+  const list=window.VANTS_PLAYERS||[];
+  if(!list.length){
+    grid.innerHTML='<div style="grid-column:1/-1;border:1px dashed var(--line2,#303039);border-radius:12px;padding:40px 20px;text-align:center">'
+      +'<p style="font:800 12px var(--mono);letter-spacing:.14em;color:var(--mut,#93939D)">AÚN NO HAY JUGADORES EN EL CIRCUITO</p>'
+      +'<p style="font:500 11px/1.8 var(--mono);color:var(--dim,#5C5C66);margin-top:8px">Iniciá sesión, creá tu perfil y tu ficha aparece acá con tu rango, tus insignias y tus cuentas conectadas.</p></div>';
+    icons();return;
+  }
+  grid.innerHTML=list.map(p=>{
+    const k=rankKeyDe(p),rc=RANKS[k],st=window.VANTS_STATS[p.id]||{};
+    const badges=badgesDeRol(p),mmr=(st.mmr!=null)?st.mmr:null;
+    const live=!!(p.twitch_channel||p.kick_channel);
+    const ava=p.avatar_url?'<img alt="" src="'+escHtml(p.avatar_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.display_name||p.username||'V').slice(0,2).toUpperCase());
+    return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openPlayerProfile(\''+p.id+'\')">'
+      +'<div class="pc-banner">'+rankSVG(k,64,'remblem')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
+      +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+ava+'</span>'
+      +'<div class="pc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'<small>'+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+'</small></div>'
+      +'<div class="pc-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
+      +'<div class="pc-rank">'+rankSVG(k,30)+'<div class="rk-name">'+rc.name+'<small>VANTS RANKED</small></div><span class="rr mono">'+(mmr!=null?mmr:'—')+' MMR</span></div>'
       +'</div></div>';
-  }).join('');icons();
+  }).join('');
+  icons();
 }
- $('#meStripBtn').addEventListener('click',()=>openProfile('me'));
- $('#accBtn').addEventListener('click',()=>openProfile('me'));
+
+/* ================= FICHA PÚBLICA DE JUGADOR =================
+   Mismo diseño que el perfil real (CUENTA REAL VANTS), en solo lectura:
+   banner con skin, insignias, stats, rango, cuentas conectadas y canal. */
+function bannerPublicoHTML(sel,rawRank){
+  let rkKey='fundicion';
+  try{if(rawRank!=null)rkKey=rankFor(rawRank);}catch(e){}
+  return '<div class="pf-banner">'
+    +(sel==='bananim'?'<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>':'')
+    +(sel==='dorado'?'<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>':'')
+    +rankSVG(rkKey,92,'remblem')+'</div>';
+}
+function rangoPublicoHTML(raw,mmr,wins,losses){
+  const wl=(wins||losses)?(wins+'V · '+losses+'D · '):'';
+  try{
+    if(raw==null)throw 0;
+    const k=rankFor(raw),s=subFor(k,raw)||'APEX',rc=RANKS[k];
+    const i=TIER_ORDER.indexOf(k);
+    const hi=TIER_ORDER[i-1]?RANKS[TIER_ORDER[i-1]].lo:(RANKS[k].lo+1);
+    const f=Math.max(0,Math.min(100,((raw-RANKS[k].lo)/(hi-RANKS[k].lo))*100));
+    return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:'+rc.c1+'">'+rankSVG(k,64)
+      +'<div class="info"><b>'+rc.name+' '+s+'</b><small>'+wl+'TEMPORADA ACTIVA</small>'
+      +'<div class="rr-bar"><i style="width:'+f.toFixed(0)+'%;background:'+rc.c1+'"></i></div></div>'
+      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>';
+  }catch(e){
+    return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:#5C5C66;opacity:.85">'+rankSVG('fundicion',64)
+      +'<div class="info"><b>SIN RANGO</b><small>'+wl+'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>'
+      +'<div class="rr-bar"><i style="width:0%"></i></div></div>'
+      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>';
+  }
+}
+function openPlayerProfile(pid){
+  /* tu propio perfil se abre siempre con el flujo real (editable) */
+  try{
+    const a=window.VANTS_AUTH;
+    if(a&&a.playerId&&a.playerId===pid&&window.vantsAbrirMiPerfil){window.vantsAbrirMiPerfil();return;}
+  }catch(e){}
+  const p=(window.VANTS_PLAYERS||[]).find(x=>x.id===pid);
+  if(!p){toast('No encontramos ese jugador','info');return;}
+  const stats=p.stats||{},st=(window.VANTS_STATS[pid])||null;
+  const k=rankKeyDe(p),rc=RANKS[k];
+  const mmr=(st&&st.mmr!=null)?st.mmr:null;
+  const wins=(st&&st.wins)||stats.wins||0,losses=(st&&st.losses)||stats.losses||0;
+  const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st&&typeof st.rank==='number'&&st.rank>=.5&&st.rank<=2)?st.rank:null);
+  const mPart=(stats.matches!=null)?stats.matches:((wins+losses)>0?wins+losses:null);
+  const mWr=((wins+losses)>0)?Math.round((wins/(wins+losses))*100):(stats.wr!=null?stats.wr:null);
+  const mRtg=(raw!=null)?raw:(stats.rtg!=null?stats.rtg:null);
+  const mKd=(stats.kd!=null)?stats.kd:null;
+  const badges=badgesDeRol(p);
+  const handles={discord:stats.discord_tag||null,twitch:p.twitch_channel||null,kick:p.kick_channel||null,youtube:stats.youtube||null,tiktok:stats.tiktok||null,x:stats.x||null,riot:stats.riot||null,steam:stats.steam||null,faceit:stats.faceit||null};
+  const canales=[];
+  if(p.twitch_channel)canales.push({k:'twitch',h:String(p.twitch_channel).replace(/[^A-Za-z0-9_\-.]/g,'')});
+  if(p.kick_channel)canales.push({k:'kick',h:String(p.kick_channel).replace(/[^A-Za-z0-9_\-.]/g,'')});
+  const c=canales[0];
+  const url=c?((c.k==='twitch'?'https://www.twitch.tv/':'https://kick.com/')+String(c.h).replace(/[^A-Za-z0-9_\-]/g,'')):null;
+  openDrawer(
+    '<div class="d-head"><span class="kicker">/// PERFIL DE JUGADOR</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
+    +'<div class="d-body" style="--rc:'+rc.c1+'">'
+    +bannerPublicoHTML(stats.banner||'',raw)
+    +'<div class="pf-head"><span class="ava s2" style="--rc:'+rc.c1+'">'+(p.avatar_url?'<img src="'+escHtml(p.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.username||'V').slice(0,2).toUpperCase()))+'</span>'
+      +'<div class="pf-id"><div class="pf-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div>'
+      +'<p class="pf-sub">@'+escHtml(p.username||'')+' · '+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+' · MIEMBRO DESDE '+String(p.created_at||'2024').slice(0,4)+'</p></div></div>'
+    +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Sin insignias todavía.</span>')+'</div>'
+    +'<p class="pf-bio">'+escHtml(stats.bio||'Jugador del circuito VANTS.')+'</p>'
+    +'<div class="pf-stats"><div><b>'+(mPart==null?'—':mPart)+'</b><span>PARTIDOS</span></div><div><b>'+(mWr==null?'—':mWr+'%')+'</b><span>WINRATE</span></div><div><b>'+(mRtg==null?'—':(typeof mRtg==='number'?mRtg.toFixed(2):mRtg))+'</b><span>RATING</span></div><div><b>'+(mKd==null?'—':(typeof mKd==='number'?mKd.toFixed(2):mKd))+'</b><span>K/D</span></div></div>'
+    +rangoPublicoHTML(raw,mmr,wins,losses)
+    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+Object.keys(handles).map(kk=>platRow(kk,handles[kk]?escHtml(handles[kk]):null,false)).join('')+'</div>'
+    +(c?'<p class="d-sec">TRANSMISIÓN</p><div class="rail-card" style="--plc:'+PLAT[c.k].c+';cursor:pointer" onclick="window.open(\''+url+'\',\'_blank\',\'noopener\')">'
+      +'<div class="rc-top">'+platIc(c.k)+'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div><p class="rc-title">Canal vinculado · '+escHtml(c.h)+'</p></div></div>'
+      +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+PLAT[c.k].n+'</b></span><span class="rc-game">VER CANAL</span></div></div>':'')
+    +'</div>');
+  icons();
+}
+/* VER MI PERFIL abre SIEMPRE el perfil real (CUENTA REAL VANTS, ver
+   arena-live.js); sin sesión, manda al login */
+ $('#meStripBtn').addEventListener('click',()=>{
+  const acc=$('#accBtn'),lb=$('#arenaLoginBtn');
+  if(acc&&!acc.hidden){acc.click();return;}
+  if(lb&&!lb.hidden){lb.click();return;}
+  toast('Ingresá con ENTRAR para crear tu perfil de jugador','info');
+});
 
 /* ================= DRAWER DE PERFIL ================= */
 function platRow(k,handle,own){
@@ -967,71 +1045,10 @@ function platRow(k,handle,own){
       :(own?'<button class="plat-connect" onclick="connect(\''+k+'\')">CONECTAR</button>':'<span class="mono" style="font:600 9px/1 var(--mono);color:var(--dim)">—</span>'))
     +'</div>';
 }
-window.disconnect=k=>{delete me.socials[k];delete me.game[k];toast('Cuenta desconectada: '+PLAT[k].n,'info');openProfile('me');};
-window.connect=k=>{
-  const btns=$$('.plat-connect');const btn=btns.find?btns.find(b=>b.onclick===null):null;
-  toast('Conectando '+PLAT[k].n+'…','info');
-  setTimeout(()=>{
-    const h=k==='riot'?me.name+'#VNTS':k==='steam'?'STEAM:7656'+Math.floor(Math.random()*1e6):'@'+me.name.toLowerCase().replace(/\s/g,'');
-    if(PLAT[k].k==='game')me.game[k]=h;else me.socials[k]=h;
-    toast(PLAT[k].n+' conectado: '+h);
-    openProfile('me');
-  },900);
-};
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-function openProfile(id){
-  const p=id==='me'?me:PROFILES.find(x=>x.id===id);
-  const own=id==='me';
-  const rc=RANKS[p.rank],sub=p.sub||(own?'II':'');
-  const allKeys=['twitch','kick','youtube','tiktok','x','riot','steam','faceit'];
-  const getH=k=>own?(me.socials[k]||me.game[k]):(p.socials[k]||p.game[k]);
-  const badges=own?me.badges:p.badges;
-  const stats=own?{m:64,wr:48,rtg:1.02,kd:.99}:p.stats;
-  const isCreator=badges.includes('creator')||badges.includes('partner');
-  const nextRR=own?Math.max(0,200-p.rr):0;
-
-  openDrawer(
-    '<div class="d-head"><span class="kicker">/// '+(own?'MI PERFIL':'PERFIL DE JUGADOR')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
-    +'<div class="d-body" style="--rc:'+rc.c1+'">'
-    +'<div class="pf-banner">'+rankSVG(p.rank,92,'remblem')+(p.live||own&&me.live?'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO · '+(p.live?p.live.viewers.toLocaleString('en-US'):'312')+' VIENDO</span>':'')+'</div>'
-    +'<div class="pf-head"><span class="ava s2" style="--rc:'+rc.c1+'">'+p.name.slice(0,2)+'<span class="lv">NIV '+p.lvl+'</span></span>'
-      +'<div class="pf-id"><div class="pf-name">'+(own?'<span id="myName">'+p.name+'</span><button class="edit" onclick="editName()" title="Editar nick"><i data-lucide="pencil"></i></button>':p.name)
-      +'</div><p class="pf-sub">'+p.country+(p.team?' · '+p.team:' · SIN EQUIPO')+' · MIEMBRO DESDE 2024</p></div></div>'
-    +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>')+'</div>'
-    +'<p class="pf-bio">'+p.bio+'</p>'
-    +'<div class="pf-stats"><div><b>'+stats.m+'</b><span>PARTIDOS</span></div><div><b>'+stats.wr+'%</b><span>WINRATE</span></div><div><b>'+stats.rtg.toFixed(2)+'</b><span>RATING</span></div><div><b>'+stats.kd.toFixed(2)+'</b><span>K/D</span></div></div>'
-    +'<p class="d-sec">RANGO VANTS RANKED</p>'
-    +'<div class="pf-rank">'+rankSVG(p.rank,64)
-      +'<div class="info"><b>'+rc.name+' '+sub+'</b><small>PICO DE TEMPORADA: '+p.peak+'</small>'
-      +(own?'<div class="rr-bar"><i style="width:'+(p.rr/2)+'%;background:'+rc.c1+'"></i></div>':'<div class="rr-bar"><i style="width:'+(p.rr/7)+'%;background:'+rc.c1+'"></i></div>')+'</div>'
-      +'<div class="rr-num">'+p.rr+'<small>RR'+(own?'<br>FALTAN '+nextRR+' PARA SUBIR':'')+'</small></div></div>'
-    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+allKeys.map(k=>platRow(k,getH(k),own)).join('')+'</div>'
-    +(own&&isCreator
-      ?'<div class="switch-row"><p><b style="color:var(--text)">Modo EN DIRECTO (demo)</b><br>Así se ve tu perfil cuando estás transmitiendo. Solo creadores y socios lo activan.</p><span class="sw'+(me.live?' on':'')+'" onclick="toggleLive(this)"></span></div>':'')
-    +'<div class="pf-actions">'
-      +(own
-        ?(me.badges.includes('creator')?'':'<button class="btn btn-cut" onclick="document.getElementById(\'pro\').scrollIntoView({behavior:\'smooth\'});closeDrawer()"><i data-lucide="crown"></i>OBTENER INSIGNIA CON UN PLAN</button>')
-        :'<button class="btn btn-cut" id="followBtn"><i data-lucide="user-plus"></i>SEGUIR</button><button class="btn btn-ghost" onclick="toast(\'Abriendo canal de '+p.name+'…\',\'info\')"><i data-lucide="external-link"></i>CANALES</button>')
-      +'</div>'
-    +(p.live?'<p class="d-sec">TRANSMISIÓN ACTIVA</p><div class="rail-card" style="--plc:'+PLAT[p.live.platform].c+';cursor:pointer;max-width:100%" onclick="toast(\'Abriendo stream de '+p.name+'…\',\'info\')"><div class="rc-top">'+platIc(p.live.platform)+'<div class="rc-info"><div class="rc-name">'+p.name+'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span></div><p class="rc-title">'+p.live.title+'</p></div></div><div class="rc-foot"><span class="rc-view"><i data-lucide="eye"></i><b>'+p.live.viewers.toLocaleString('en-US')+'</b></span><span class="rc-game">VER STREAM</span></div></div>':'')
-    +'</div>');
-  const fb=$('#followBtn');
-  if(fb)fb.onclick=()=>{fb.innerHTML=SVG_CHECK+'SIGUIENDO';fb.disabled=true;toast('Ahora seguís a '+p.name);};
-  icons();
-}
-window.editName=()=>{
-  const span=$('#myName');
-  span.outerHTML='<input id="nameInput" value="'+me.name+'" maxlength="14">';
-  const inp=$('#nameInput');inp.focus();inp.select();
-  inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();};
-  inp.onblur=()=>{const v=inp.value.trim().toUpperCase().replace(/["'<>\\]/g,'');if(v)me.name=v;renderAccount();openProfile('me');toast('Nick actualizado: '+me.name);};
-};
-window.toggleLive=el=>{
-  me.live=!me.live;el.classList.toggle('on',me.live);
-  if(me.live)vantsDiscord('live',{user:me.name,title:'Ranked + torneos VANTS'});
-  renderAccount();renderRail();
-  toast(me.live?'Cartel EN DIRECTO activado — tu perfil aparece en la sala de jugadores':'Cartel EN DIRECTO desactivado','info');
-};
+/* [ELIMINADO] drawer de perfil demo: el ÚNICO diseño de perfil es el real
+   (arena-live.js · CUENTA REAL VANTS). Se quitaron los connect/disconnect
+   falsos, el editor de nick local, el "modo EN DIRECTO" demo y el ticker de
+   espectadores inventados. Los conectores reales siguen más abajo. */
 
 /* ================= SECCIÓN RANGOS ================= */
 function renderRanks(){
@@ -1105,7 +1122,7 @@ function renderAll(){
 /* ================= INIT ================= */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
  $$('.reveal').forEach(el=>io.observe(el));
-renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();
+renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();cargarJugadores();
 setInterval(tickLive,2600);
 if(!sessionStorage.getItem('vants_film')){sessionStorage.setItem('vants_film','1');setTimeout(openCin,700);}
 
@@ -1119,76 +1136,10 @@ me.avatar=me.avatar||null; me.discordTag=me.discordTag||null;
 function meSave(){try{localStorage.setItem('vants_me',JSON.stringify({name:me.name,avatar:me.avatar,discordTag:me.discordTag,socials:me.socials,game:me.game,live:me.live}))}catch(e){}}
 function meLoad(){try{const s=JSON.parse(localStorage.getItem('vants_me')||'null');if(s)Object.assign(me,s)}catch(e){}}
 
-/* subida de foto: recorta al centro y redimensiona a 256px */
-function fileToAvatar(file,cb){
-  const rd=new FileReader();
-  rd.onload=()=>{const img=new Image();img.onload=()=>{
-    const c=document.createElement('canvas');c.width=c.height=256;
-    const x=c.getContext('2d');const s=Math.min(img.width,img.height);
-    x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,256,256);
-    cb(c.toDataURL('image/jpeg',.85));};img.src=rd.result;};
-  rd.readAsDataURL(file);
-}
-function pickAvatar(){
-  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-  inp.onchange=()=>{const f=inp.files[0];if(!f)return;
-    fileToAvatar(f,uri=>{me.avatar=uri;meSave();renderAccount();openProfile('me');toast('Foto de perfil actualizada');});};
-  inp.click();
-}
-function removeAvatar(){me.avatar=null;meSave();renderAccount();openProfile('me');toast('Foto de perfil eliminada','info');}
-window.pickAvatar=pickAvatar;window.removeAvatar=removeAvatar;
-
-/* avatar "de Discord" generado localmente para la demo */
-function discordAvatar(seed){
-  const h=Math.floor(Math.random()*360);
-  const init=(seed||'V').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase()||'V';
-  const svg="<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'>"
-   +"<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
-   +"<stop offset='0' stop-color='hsl("+h+",72%,64%)'/><stop offset='1' stop-color='hsl("+((h+50)%360)+",78%,34%)'/></linearGradient></defs>"
-   +"<rect width='256' height='256' fill='url(#g)'/>"
-   +"<circle cx='210' cy='40' r='70' fill='#fff' opacity='.12'/><circle cx='30' cy='230' r='90' fill='#000' opacity='.18'/>"
-   +"<text x='128' y='168' text-anchor='middle' font-family='Arial Black,Arial' font-weight='900' font-size='96' fill='#fff'>"+init+"</text></svg>";
-  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-}
-
-/* pantalla de consentimiento estilo Discord (demo) */
-function openDiscordOAuth(){
-  const DL='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.8 13.8 0 0 0-.64 1.28 18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.64-1.28c-1.71.29-3.37.8-4.93 1.51A20.3 20.3 0 0 0 .1 18.06a19.9 19.9 0 0 0 6.07 3.06c.49-.66.93-1.37 1.3-2.1a12.9 12.9 0 0 1-2.05-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.16 0c.17.13.33.26.5.38-.65.38-1.34.71-2.05.98.37.73.8 1.44 1.3 2.1a19.8 19.8 0 0 0 6.07-3.06 20.2 20.2 0 0 0-3.58-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Zm7.96 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Z"/></svg>';
-  openModal('<div class="dc">'
-   +'<div class="dc-head"><svg class="dc-logo" viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.8 13.8 0 0 0-.64 1.28 18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.64-1.28c-1.71.29-3.37.8-4.93 1.51A20.3 20.3 0 0 0 .1 18.06a19.9 19.9 0 0 0 6.07 3.06c.49-.66.93-1.37 1.3-2.1a12.9 12.9 0 0 1-2.05-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.16 0c.17.13.33.26.5.38-.65.38-1.34.71-2.05.98.37.73.8 1.44 1.3 2.1a19.8 19.8 0 0 0 6.07-3.06 20.2 20.2 0 0 0-3.58-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Zm7.96 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Z"/></svg>'
-   +'<div><b>Conectar con Discord</b><span>vants.games quiere acceder a tu cuenta</span></div></div>'
-   +'<ul class="dc-scopes">'
-   +'<li><i data-lucide="user"></i>Ver tu nombre de usuario, apodo e identificador</li>'
-   +'<li><i data-lucide="image"></i>Usar tu avatar de Discord como foto de perfil en VANTS</li></ul>'
-   +'<p class="dc-note">DEMO — el consentimiento se simula localmente. En producción: Discord OAuth2 con scope <code>identify</code>.</p>'
-   +'<div class="dc-actions"><button class="dc-btn ghost" id="dcCancel">Cancelar</button>'
-   +'<button class="dc-btn" id="dcAuth">'+DL+'Autorizar</button></div></div>');
-  $('#dcCancel').onclick=closeModal;
-  $('#dcAuth').onclick=e=>{
-    const b=e.currentTarget;b.disabled=true;
-    b.innerHTML='<span class="spin" style="border-color:rgba(255,255,255,.3);border-top-color:#fff"></span>Conectando…';
-    setTimeout(()=>{
-      const base=(me.name.toLowerCase().replace(/[^a-z0-9_]/g,'')||'jugador');
-      me.discordTag=base+'#'+(1000+Math.floor(Math.random()*9000));
-      me.socials.discord=base+'_vnts';
-      me.avatar=discordAvatar(me.name);           // foto sincronizada
-      me.name=base;                                // nombre sincronizado
-      meSave();renderAccount();
-      openModal('<div class="dc" style="text-align:center">'
-        +'<div style="width:84px;height:84px;margin:6px auto 16px;clip-path:polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%);overflow:hidden"><img src="'+me.avatar+'" style="width:100%;height:100%;object-fit:cover"></div>'
-        +'<h3 style="font:800 18px/1.2 var(--sans);color:#f2f3f5;margin-bottom:8px">¡Cuenta sincronizada!</h3>'
-        +'<p style="font:500 12px/1.7 var(--sans);color:#b5bac1">Tu nombre, tag y foto ahora vienen de Discord.<br><span class="dc-tag" style="font-size:12px">'+me.discordTag+'</span></p>'
-        +'<div class="dc-actions" style="margin-top:22px"><button class="dc-btn ghost" id="dcClose">Cerrar</button><button class="dc-btn" id="dcView">Ver mi perfil</button></div></div>');
-      $('#dcClose').onclick=closeModal;
-      $('#dcView').onclick=()=>{closeModal();openProfile('me');};
-      toast('Perfil sincronizado con Discord');
-    },1300);
-  };
-}
-window.syncDiscord=function(){
-  toast('Sincronizando con Discord…','info');
-  setTimeout(()=>{me.avatar=discordAvatar(me.name);meSave();renderAccount();openProfile('me');toast('Foto y nombre sincronizados desde Discord');},1000);
-};
+/* [ELIMINADO] avatar local + consentimiento de Discord simulado: la foto viene
+   del proveedor de sesión (guardada en players.avatar_url) y Discord se conecta
+   con el linker real, como el resto de las plataformas. El tag de Discord se
+   edita en MIS DATOS del perfil real. */
 
 /* ================= CONECTORES DE CUENTAS (Auth0 + Neon + linker OAuth) =================
    Identidad: JWT de Auth0 · Guardado: tabla vants_links en Neon · OAuth real: Neon Function "linker".
@@ -1205,7 +1156,7 @@ async function linksCargar(){
     if(!u||!u.sub)return window.VANTS_LINKS;
     const t=await A.getToken();
     if(!t)return window.VANTS_LINKS;
-    const r=await fetch(LINKS_API+'/vants_links?auth0_sub=eq.'+encodeURIComponent(u.sub)+'&select=*',{headers:{Accept:'application/json',Authorization:'Bearer '+t}});
+    const r=await fetch(LINKS_API+'/vants_links?auth0_sub=eq.'+encodeURIComponent(u.sub)+'&select=*',{headers:{Accept:'application/json',[AUTH_FIELD]:AUTH_SCHEME+t}});
     const filas=r.ok?await r.json():[];
     const mapa={};
     (filas||[]).forEach(f=>{mapa[f.platform]=f;});
@@ -1218,7 +1169,7 @@ window.linksCargar=linksCargar;
 async function playerPidActual(){
   try{
     const A=window.VantAuth0;const t=await A.getToken();
-    const r=await fetch(LINKS_API+'/rpc/current_player_id',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:'{}'});
+    const r=await fetch(LINKS_API+'/rpc/current_player_id',{method:'POST',headers:{[AUTH_FIELD]:AUTH_SCHEME+t,'Content-Type':'application/json'},body:'{}'});
     let pj=await r.json();
     pj=Array.isArray(pj)?pj[0]:pj;
     return (pj&&(pj.current_player_id||pj.id))||null;
@@ -1254,7 +1205,7 @@ function openLinkManual(k,sub){
       if(error)throw error;
       window.VANTS_LINKS[k]={auth0_sub:sub,player_id:pid,platform:k,handle:h,verified:false};
       closeModal();toast(PLAT[k].n+' vinculado (manual): '+h);
-      openProfile('me');
+      if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
     }catch(err){
       b.disabled=false;b.textContent='VINCULAR';
       msg.textContent='Neon rechazó el guardado ('+((err&&err.message)||err)+'). Corré docs/migracion-links.sql en el SQL Editor de Neon.';
@@ -1263,7 +1214,6 @@ function openLinkManual(k,sub){
 }
 
 window.connect=async k=>{
-  if(k==='discord'){openDiscordOAuth();return;}
   const A=window.VantAuth0;
   let sub=null,tok=null;
   if(A&&A.client){try{const u=await A.client.getUser();sub=u&&u.sub;tok=sub?await A.getToken():null;}catch(e){}}
@@ -1272,7 +1222,7 @@ window.connect=async k=>{
   const lb=LINKER();
   if(lb){
     try{
-      const r=await fetch(lb+'/api/link/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({platform:k,return_to:location.origin+location.pathname})});
+      const r=await fetch(lb+'/api/link/start',{method:'POST',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+tok},body:JSON.stringify({platform:k,return_to:location.origin+location.pathname})});
       const d=await r.json().catch(()=>null);
       if(d&&d.url){sessionStorage.setItem('vants_linking',k);location.href=d.url;return;}
       if(d&&d.error==='falta_clave')toast(PLAT[k].n+': falta la clave '+d.env+' en Neon (Functions → linker). Usá el vínculo manual por ahora.','info');
@@ -1294,7 +1244,7 @@ window.disconnect=async k=>{
       }
     }catch(e){/* el handle demo ya se borró arriba */}
   }
-  meSave();toast('Cuenta desconectada: '+PLAT[k].n,'info');openProfile('me');
+  meSave();toast('Cuenta desconectada: '+PLAT[k].n,'info');if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
 };
 
 /* nav con foto */
@@ -1308,71 +1258,9 @@ function renderAccount(){
   a.style.filter=me.live?'drop-shadow(0 0 8px rgba(255,13,46,.8))':'';
 }
 
-/* editor de nick con guardado */
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-window.editName=function(){
-  const span=$('#myName');
-  span.outerHTML='<input id="nameInput" value="'+me.name+'" maxlength="14">';
-  const inp=$('#nameInput');inp.focus();inp.select();
-  inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();};
-  inp.onblur=()=>{const v=inp.value.trim().toUpperCase().replace(/["'<>\\]/g,'');if(v)me.name=v;meSave();renderAccount();openProfile('me');toast('Nick actualizado: '+me.name);};
-};
-
-/* perfil completo (reemplaza al anterior) */
-const avaIn=(p,own)=>(own&&me.avatar)?'<img alt="" src="'+me.avatar+'">':p.name.slice(0,2);
-function openProfile(id){
-  const p=id==='me'?me:PROFILES.find(x=>x.id===id);
-  const own=id==='me';
-  const rc=RANKS[p.rank],sub=p.sub||(own?'II':'');
-  const allKeys=['discord','twitch','kick','youtube','tiktok','x','riot','steam','faceit'];
-  const getH=k=>own?(me.socials[k]||me.game[k]):(p.socials[k]||p.game[k]);
-  const badges=own?me.badges:p.badges;
-  const stats=own?{m:64,wr:48,rtg:1.02,kd:.99}:p.stats;
-  const isCreator=badges.includes('creator')||badges.includes('partner');
-  const nextRR=own?Math.max(0,200-p.rr):0;
-  openDrawer(
-    '<div class="d-head"><span class="kicker">/// '+(own?'MI PERFIL':'PERFIL DE JUGADOR')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
-    +'<div class="d-body" style="--rc:'+rc.c1+'">'
-    +'<div class="pf-banner">'+rankSVG(p.rank,92,'remblem')+(p.live||(own&&me.live)?'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO · '+((p.live&&p.live.viewers)||312).toLocaleString('en-US')+' VIENDO</span>':'')+'</div>'
-    +'<div class="pf-head">'
-      +'<span class="ava s2 '+(own?'ava-pick':'')+'" style="--rc:'+rc.c1+'"'+(own?' onclick="pickAvatar()" title="Subir foto de perfil"':'')+'>'
-        +avaIn(p,own)+'<span class="lv">NIV '+p.lvl+'</span>'
-        +(own?'<span class="ava-cam"><i data-lucide="camera"></i></span>':'')
-      +'</span>'
-      +'<div class="pf-id"><div class="pf-name">'+(own?'<span id="myName">'+p.name+'</span><button class="edit" onclick="editName()" title="Editar nick"><i data-lucide="pencil"></i></button>':p.name)+'</div>'
-      +'<p class="pf-sub">'+p.country+(p.team?' · '+p.team:' · SIN EQUIPO')
-        +(own&&me.discordTag?' · DC: <span style="color:#8ea1ff">'+me.discordTag+'</span>':'')
-        +' · MIEMBRO DESDE 2024</p></div></div>'
-    +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>')+'</div>'
-    +'<p class="pf-bio">'+p.bio+'</p>'
-    +'<div class="pf-stats"><div><b>'+stats.m+'</b><span>PARTIDOS</span></div><div><b>'+stats.wr+'%</b><span>WINRATE</span></div><div><b>'+stats.rtg.toFixed(2)+'</b><span>RATING</span></div><div><b>'+stats.kd.toFixed(2)+'</b><span>K/D</span></div></div>'
-    +'<p class="d-sec">RANGO VANTS RANKED</p>'
-    +'<div class="pf-rank">'+rankSVG(p.rank,64)
-      +'<div class="info"><b>'+rc.name+' '+sub+'</b><small>PICO DE TEMPORADA: '+p.peak+'</small>'
-      +'<div class="rr-bar"><i style="width:'+Math.min(100,(p.rr/(own?200:700))*100)+'%;background:'+rc.c1+'"></i></div></div>'
-      +'<div class="rr-num">'+p.rr+'<small>RR'+(own?'<br>FALTAN '+nextRR+' PARA SUBIR':'')+'</small></div></div>'
-    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+allKeys.map(k=>platRow(k,getH(k),own)).join('')+'</div>'
-    +(own&&me.socials.discord
-      ?'<div class="dc-sync"><span class="plat-ic" style="--plc:#5865F2">'+PICON.discord+'</span><p><b style="color:var(--text)">Sincronización activa.</b><br>Tu foto y tu tag vienen de Discord.</p><button class="plat-connect" style="--pc:#5865F2" onclick="syncDiscord()">SINCRONIZAR</button></div>':'')
-    +(own&&isCreator
-      ?'<div class="switch-row"><p><b style="color:var(--text)">Modo EN DIRECTO (demo)</b><br>Así se ve tu perfil cuando transmitís. Solo creadores y socios lo activan.</p><span class="sw'+(me.live?' on':'')+'" onclick="toggleLive(this)"></span></div>':'')
-    +'<div class="pf-actions">'
-      +(own
-        ?((me.avatar?'<button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="removeAvatar()"><i data-lucide="trash-2"></i>QUITAR FOTO</button>':'')
-          +(me.badges.includes('creator')?'':'<button class="btn btn-cut" style="flex:1;justify-content:center" onclick="document.getElementById(\'pro\').scrollIntoView({behavior:\'smooth\'});closeDrawer()"><i data-lucide="crown"></i>OBTENER INSIGNIA</button>')
-          +(me.badges.includes('owner')?'<button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="closeDrawer();window.openAjustesCuenta()"><i data-lucide="settings"></i>AJUSTES</button>':''))
-        :'<button class="btn btn-cut" id="followBtn" style="flex:1;justify-content:center"><i data-lucide="user-plus"></i>SEGUIR</button>')
-      +'</div>'
-    +(p.live?'<p class="d-sec">TRANSMISIÓN ACTIVA</p><div class="rail-card" style="--plc:'+PLAT[p.live.platform].c+';cursor:pointer" onclick="toast(\'Abriendo stream de '+p.name+'…\',\'info\')"><div class="rc-top">'+platIc(p.live.platform)+'<div class="rc-info"><div class="rc-name">'+p.name+'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span></div><p class="rc-title">'+p.live.title+'</p></div></div><div class="rc-foot"><span class="rc-view"><i data-lucide="eye"></i><b>'+p.live.viewers.toLocaleString('en-US')+'</b></span><span class="rc-game">VER STREAM</span></div></div>':'')
-    +'</div>');
-  const fb=$('#followBtn');
-  if(fb)fb.onclick=()=>{fb.innerHTML=SVG_CHECK+'SIGUIENDO';fb.disabled=true;toast('Ahora seguís a '+p.name);};
-  icons();
-  if(own&&typeof linksCargar==='function')linksCargar().then(()=>{
-    const pl=document.querySelector('#drawer .plat-list');
-    if(pl&&$('#drawer').classList.contains('show')){pl.innerHTML=allKeys.map(k=>platRow(k,getH(k),own)).join('');icons();}
-  });
-}
+/* [ELIMINADO] segunda versión del drawer demo (la que reemplazaba a la
+   primera): con el perfil real de arena-live.js como diseño único ya no hay
+   drawer demo. El nick se edita en AJUSTES DE CUENTA (openAjustesCuenta). */
 
 /* aplicar perfil guardado */
 meLoad();renderAccount();icons();
@@ -1462,7 +1350,7 @@ window.openAjustesCuenta=function(){
     if(auth.playerId){
       fetch((window.LINKS_API||'').replace('/vants_links','')+'/players?id=eq.'+auth.playerId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:v.toLowerCase()})}).catch(()=>{});
     }
-    if(typeof openProfile==='function')openProfile('me');
+    if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
     toast('Ajustes guardados: nick '+v);
   };
   $('#ajMail').onclick=()=>{
