@@ -129,7 +129,7 @@ BEGIN
     CREATE POLICY players_crear_propio ON players
       FOR INSERT WITH CHECK (
         current_auth0_sub() IS NOT NULL
-        AND (NEW.auth0_sub = current_auth0_sub() OR NEW.auth0_sub IS NULL)
+        AND (auth0_sub = current_auth0_sub() OR auth0_sub IS NULL)
       );
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='players' AND policyname='players_editar_propio') THEN
