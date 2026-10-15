@@ -153,3 +153,74 @@ etiqueta `CONECTADO · MANUAL`; pasa a verificado cuando el OAuth lo confirme).
 - Steam usa OpenID 2.0 clásico: no necesita client, y `STEAM_API_KEY` solo agrega el nick real.
 - Desconectar borra la fila en Neon (la web llama a la Data API con el JWT del jugador;
   RLS solo permite borrar la fila propia).
+
+## 7) Pagos reales con Stripe (modo live)
+
+La web vende **VANTS PRO** (4,99 €/mes · 39,99 €/año), **VANTS CREATOR**
+(9,99 €/mes · 79,99 €/año), el **Pase Premium S4** (7,99 € pago único) y el
+**fee de inscripción** de torneos. Todo se cobra en EUR con impuestos incluidos
+(`tax_behavior=inclusive`) en la cuenta live `acct_1UHFf4EamHVhBbtr` (VANT, ES).
+
+### 7.1) Variables de entorno en Neon
+
+Cargar en **Neon → Functions → `stripecheckout` → Variables de entorno**:
+
+| Variable | Valor |
+|---|---|
+| `STRIPE_SECRET_KEY` | Clave **live** `sk_live_...` (Stripe → Developers → API keys). |
+| `DATABASE_URL` | La misma cadena con pooler que usan las demás funciones. |
+| `VANTS_SITE_URL` | `https://feispla.github.io/Vants` (para los return URLs). |
+| `AUTH0_DOMAIN` / `AUTH0_AUDIENCE` / `AUTH0_CLIENT_ID` | Los mismos del linker (si el tenant no es el que está por defecto). |
+
+Los IDs de precio live ya están dentro de `stripe-checkout/index.ts` y se pueden
+sobreescribir con `STRIPE_PRICE_PRO_MO`, `STRIPE_PRICE_PRO_YR`,
+`STRIPE_PRICE_CREATOR_MO`, `STRIPE_PRICE_CREATOR_YR` y `STRIPE_PRICE_PASE`.
+
+Y en **Neon → Functions → `stripewebhook`**:
+
+| Variable | Valor |
+|---|---|
+| `STRIPE_WEBHOOK_SECRET` | El `whsec_...` del endpoint (paso 7.2). Sin él la función **rechaza todo** (fail closed). |
+| `DATABASE_URL` | La misma cadena con pooler. |
+
+### 7.2) Endpoint de webhook en Stripe
+
+1. Stripe Dashboard → **Developers → Webhooks → Add endpoint**.
+2. URL del endpoint: la URL pública de la función `stripewebhook` (Neon →
+   Functions → stripewebhook → pestaña URL). Se puede dejar la raíz: la función
+   solo atiende `POST`.
+3. Eventos a suscribir: `checkout.session.completed`, `invoice.paid`,
+   `customer.subscription.deleted`.
+4. Copiar el **Signing secret** (`whsec_...`) → variable `STRIPE_WEBHOOK_SECRET`.
+
+### 7.3) Migración de base de datos
+
+Ejecutar **`db/migrations/05-pagos.sql`** en el SQL Editor de Neon (es
+idempotente): crea `purchases` (historial de pagos) y `entitlements` (lo que
+cada jugador tiene activo), con RLS — la web solo puede leer los
+entitlements propios vía Data API. El webhook escribe con la conexión directa
+de la función (rol dueño, ignora RLS).
+
+### 7.4) Cómo activar el modo real en la web
+
+En `assets/js/auth0-config.js` poner la URL pública de la función de checkout:
+
+```js
+const CHECKOUT_BASE = 'https://<host-de-la-funcion-stripecheckout>';
+```
+
+- Mientras esté vacía: los pagos quedan en modo demostración (simulación
+  original de `processPay`, sin cobro) — nada se rompe.
+- Cuando se pone: los botones PAGAR / SUSCRIBIRME / DESBLOQUEAR abren el
+  Checkout hosted de Stripe con el JWT de Auth0 (`client_reference_id` = sub),
+  y el alta del plan la confirma el webhook (no el retorno a la web).
+
+### 7.5) Verificación
+
+- Abrir `<URL-de-stripecheckout>/` en el navegador: el diagnóstico dice qué
+  variables faltan y si la clave es `sk_live_`.
+- Probar un pago real pequeño (Pase S4, 7,99 €) y verificar en Stripe →
+  Payments que aparece, y en Neon que la fila de `purchases` y el
+  `entitlements` activo se crearon (`SELECT * FROM entitlements ORDER BY created_at DESC LIMIT 5;`).
+- En Stripe → Webhooks verificar que el endpoint responde `200` y revisar
+  "Latest attempts" ante cualquier fallo.

@@ -30,6 +30,30 @@ function processPay(btn,onDone){
   setTimeout(()=>{btn.innerHTML=SVG_CHECK+'PAGO APROBADO';
     setTimeout(()=>{paying=false;closeModal();onDone();},900);},1500);
 }
+/* ================= PAGO REAL (Stripe Checkout) =================
+   Si CHECKOUT_BASE está configurada (auth0-config.js), los botones de pago
+   abren el Checkout REAL de Stripe vía la función Neon "stripe-checkout"
+   con el JWT de Auth0; el alta del plan llega por el webhook de Stripe.
+   Si no está configurada, se conserva la simulación de arriba (demo). */
+function notaPago(tipo){
+  if(window.VantPay&&window.VantPay.base)return tipo==='sub'?'Renovación automática · pago seguro con Stripe':'Pago seguro con Stripe · tarjeta, Klarna y más';
+  return tipo==='sub'?'Renovación automática · simulado, sin cargo real':(tipo==='pase'?'Pago único · simulado, sin cargo real':'Pago seguro simulado · sin cargo real');}
+async function pagarO(btn,intent,onDone){
+  const base=window.VantPay&&window.VantPay.base;
+  if(!base){processPay(btn,onDone);return;}
+  paying=true;const o=btn.innerHTML;btn.disabled=true;
+  btn.innerHTML='<span class="spin"></span>ABRIENDO PAGO SEGURO…';
+  try{
+    const A=window.VantAuth0;
+    const tok=A?await A.getToken():null;
+    if(!tok){toast('Iniciá sesión para pagar con seguridad','info');paying=false;btn.disabled=false;btn.innerHTML=o;return;}
+    const r=await fetch(base+'/api/checkout/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(intent)});
+    const d=await r.json().catch(()=>({}));
+    if(r.ok&&d&&d.url){window.location.href=d.url;return;}
+    toast('El pago no está disponible todavía ('+((d&&(d.detalle||d.error))||'error')+')','info');
+    paying=false;btn.disabled=false;btn.innerHTML=o;
+  }catch(e){toast('No se pudo abrir el pago seguro','info');paying=false;btn.disabled=false;btn.innerHTML=o;}
+}
 
 /* ================= PLATAFORMAS ================= */
 const PICON={
@@ -434,9 +458,9 @@ function openPayStep(t,team,tag){
     +'<div class="mc-sum"><span>Reembolso hasta 48 h antes</span><span style="color:var(--accent)">INCLUIDO</span></div>'
     +'<div class="mc-total"><span>TOTAL HOY</span><b>'+money(t.fee)+'</b></div>'
     +'<button class="btn btn-cut" id="payBtn"><i data-lucide="credit-card"></i>PAGAR '+money(t.fee)+'</button>'
-    +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">Pago seguro simulado · sin cargo real</p></div>');
+    +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">'+notaPago()+'</p></div>');
   $('#mClose').onclick=closeModal;
-  $('#payBtn').onclick=e=>processPay(e.currentTarget,()=>finishEnroll(t,team,tag));
+  $('#payBtn').onclick=e=>pagarO(e.currentTarget,{plan:'fee',fee_cents:Math.round(t.fee*100),name:t.name},()=>finishEnroll(t,team,tag));
 }
 function finishEnroll(t,team,tag){
   state.entered[t.id]=true;
@@ -641,9 +665,9 @@ function openPassCheckout(after){
   +'<div class="mc-sum"><span>Charm dorado, banner animado y placa S4</span><span style="color:var(--accent)">INCLUIDO</span></div>'
   +'<div class="mc-total"><span>TOTAL HOY</span><b>$7.99</b></div>'
   +'<button class="btn btn-cut" id="payBtn"><i data-lucide="credit-card"></i>DESBLOQUEAR · $7.99</button>'
-  +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">Pago único · simulado, sin cargo real</p></div>');
+  +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">'+notaPago('pase')+'</p></div>');
  $('#mClose').onclick=closeModal;
- $('#payBtn').onclick=e=>processPay(e.currentTarget,()=>{
+ $('#payBtn').onclick=e=>pagarO(e.currentTarget,{plan:'pase'},()=>{
   state.passOwned=true;passSave();renderPass();
   toast('Pase Premium S4 activado — pista premium desbloqueada');
   if(after)after();
@@ -681,9 +705,9 @@ function openPlanCheckout(plan){
     +'<div class="mc-sum"><span>Cancelación</span><span>CUANDO QUIERAS</span></div>'
     +'<div class="mc-total"><span>TOTAL HOY</span><b>'+money(amount)+'</b></div>'
     +'<button class="btn btn-cut" id="payBtn"><i data-lucide="credit-card"></i>SUSCRIBIRME · '+money(amount)+'</button>'
-    +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">Renovación automática · simulado, sin cargo real</p></div>');
+    +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">'+notaPago('sub')+'</p></div>');
   $('#mClose').onclick=closeModal;
-  $('#payBtn').onclick=e=>processPay(e.currentTarget,()=>activatePlan(plan));
+  $('#payBtn').onclick=e=>pagarO(e.currentTarget,{plan,period:state.period},()=>activatePlan(plan));
 }
 function activatePlan(plan){
   if(plan==='pro'){state.isPro=true;addBadge('pro');addBadge('streamer');successBadge('VANTS PRO','Tu insignia PRO quedó emitida y es visible en tu perfil, brackets y rankings. Incluye la insignia STREAMER.','pro');}

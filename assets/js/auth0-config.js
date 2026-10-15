@@ -21,6 +21,11 @@ const PUBLIC_PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-e
 // Mientras esté vacía, CONECTAR ofrece el vínculo manual guardado en Neon.
 const LINKER_BASE = '';
 
+// --- Checkout Stripe (pagos REALES: planes, pase premium y fees de torneo) ---
+// URL pública de la Neon Function "stripe-checkout" (Neon → Functions → stripecheckout).
+// Mientras esté vacía, la web conserva el modo demostración (pagos simulados, sin cobro).
+const CHECKOUT_BASE = '';
+
 let auth0Client = null;
 let currentToken = null;
 
@@ -293,4 +298,25 @@ const DB = {
 };
 
 window.VantDB = DB;
-window.VantAuth0 = { initAuth0, getToken, LINKER_BASE, get client() { return auth0Client; } };
+window.VantAuth0 = { initAuth0, getToken, LINKER_BASE, CHECKOUT_BASE, get client() { return auth0Client; } };
+// Interruptor de pagos reales para arena.js: con base configurada, los botones
+// PAGAR/SUSCRIBIRME abren el Checkout de Stripe; vacía, quedan en modo demostración.
+window.VantPay = { base: CHECKOUT_BASE };
+
+// El pie de página debe reflejar siempre el modo de pagos real. Si CHECKOUT_BASE
+// no está configurada, restaura el aviso de demostración (se ejecuta siempre,
+// con o sin sesión, y en cualquier página que tenga el footer).
+(function () {
+  try {
+    var real = !!(window.VantPay && window.VantPay.base);
+    var spans = document.querySelectorAll('.f-bottom span');
+    for (var i = 0; i < spans.length; i++) {
+      var s = spans[i];
+      if (real && s.textContent.indexOf('pagos son simulados') !== -1) {
+        s.textContent = 'Pagos seguros procesados por Stripe · Tarjeta, Klarna, Link y más.';
+      } else if (!real && s.textContent.indexOf('Stripe') !== -1) {
+        s.textContent = 'Demo de producto: los pagos son simulados, no se realiza ningún cobro real.';
+      }
+    }
+  } catch (e) {}
+})();
