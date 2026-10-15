@@ -459,6 +459,8 @@
         if (res && res.ok) {
           if (typeof toast === 'function') { try { toast('Serie confirmada: rating actualizado'); } catch (eT2) {} }
           try { if (typeof window.vantsRecargarJugadores === 'function') window.vantsRecargarJugadores(); } catch (eR) {}
+          await cargarPerfilReal();
+          if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (ME && ME.pid) || null;
           renderPerfilReal();
         } else {
           b.disabled = false; b.textContent = 'CONFIRMAR RESULTADO';
@@ -479,6 +481,7 @@
         }
       };
     });
+    pintarRes();
   }
 
   async function renderPerfilReal() {
