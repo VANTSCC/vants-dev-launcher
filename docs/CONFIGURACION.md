@@ -168,9 +168,11 @@ Cargar en **Neon → Functions → `stripecheckout` → Variables de entorno**:
 | Variable | Valor |
 |---|---|
 | `STRIPE_SECRET_KEY` | Clave **live** `sk_live_...` (Stripe → Developers → API keys). |
-| `DATABASE_URL` | La misma cadena con pooler que usan las demás funciones. |
 | `VANTS_SITE_URL` | `https://feispla.github.io/Vants` (para los return URLs). |
 | `AUTH0_DOMAIN` / `AUTH0_AUDIENCE` / `AUTH0_CLIENT_ID` | Los mismos del linker (si el tenant no es el que está por defecto). |
+
+> `DATABASE_URL` **no hay que configurarla**: Neon la inyecta automáticamente en
+> toda función desplegada en una rama con Postgres (igual que `DATABASE_URL_UNPOOLED`).
 
 Los IDs de precio live ya están dentro de `stripe-checkout/index.ts` y se pueden
 sobreescribir con `STRIPE_PRICE_PRO_MO`, `STRIPE_PRICE_PRO_YR`,
@@ -181,7 +183,11 @@ Y en **Neon → Functions → `stripewebhook`**:
 | Variable | Valor |
 |---|---|
 | `STRIPE_WEBHOOK_SECRET` | El `whsec_...` del endpoint (paso 7.2). Sin él la función **rechaza todo** (fail closed). |
-| `DATABASE_URL` | La misma cadena con pooler. |
+
+> `DATABASE_URL` tampoco hace falta aquí (inyectada por Neon). Las variables se
+> pueden cargar desde el dashboard (Functions → Variables de entorno) o por CLI:
+> `neon deploy --env STRIPE_WEBHOOK_SECRET=whsec_...` (se fusionan con las ya
+> existentes; una deploy no borra variables previas).
 
 ### 7.2) Endpoint de webhook en Stripe
 
@@ -195,11 +201,12 @@ Y en **Neon → Functions → `stripewebhook`**:
 
 ### 7.3) Migración de base de datos
 
-Ejecutar **`db/migrations/05-pagos.sql`** en el SQL Editor de Neon (es
-idempotente): crea `purchases` (historial de pagos) y `entitlements` (lo que
-cada jugador tiene activo), con RLS — la web solo puede leer los
-entitlements propios vía Data API. El webhook escribe con la conexión directa
-de la función (rol dueño, ignora RLS).
+**Ya aplicada** (14-10-2026): el workflow `neon-migrate` aplicó
+`db/migrations/05-pagos.sql` automáticamente al hacer push — crea `purchases`
+(historial de pagos) y `entitlements` (lo que cada jugador tiene activo), con
+RLS — la web solo puede leer los entitlements propios vía Data API. El webhook
+escribe con la `DATABASE_URL` inyectada (rol dueño, ignora RLS). Idempotente:
+se puede reaplicar sin efecto.
 
 ### 7.4) Cómo activar el modo real en la web
 
