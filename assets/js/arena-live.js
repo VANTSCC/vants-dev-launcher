@@ -357,6 +357,7 @@
       cuentasRealHTML(p) +
       transmisionRealHTML(p) +
       '<div id="rp-series"></div>' +
+      '<div id="rp-faceit"></div>' +
       (puedeBanner
         ? '<p class="d-sec">BANNER DEL PERFIL</p>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
@@ -499,12 +500,40 @@
     pintarRes();
   }
 
+  /* -------- FACEIT · ÚLTIMAS PARTIDAS (XP + rango por partida real) --------
+     Lee faceit_matches (lectura pública con RLS) y muestra las últimas
+     partidas procesadas por el cron faceit-xp.yml. */
+  async function cargarFaceitReal() {
+    var host = document.getElementById('rp-faceit');
+    if (!host || !ME || !ME.pid) return;
+    try {
+      var t = await jwt();
+      if (!t) return;
+      var r = await fetch(API + '/faceit_matches?player_id=eq.' + encodeURIComponent(ME.pid) + '&order=played_at.desc&limit=6', { headers: { Accept: 'application/json', [AUTH_FIELD]: AUTH_SCHEME + t } });
+      var rows = await r.json().catch(function () { return null; });
+      if (!Array.isArray(rows) || !rows.length) { host.innerHTML = ''; return; }
+      var html = '<p class="d-sec">FACEIT · ÚLTIMAS PARTIDAS</p>';
+      html += rows.map(function (m) {
+        var xp = m.xp_awarded || 0;
+        var res = m.result === 'win'
+          ? '<b style="color:var(--grn,#3EE6A0)">VICTORIA</b>'
+          : (m.result === 'draw' ? '<b style="color:var(--gold,#F5C044)">EMPATE</b>' : '<b style="color:#FF0D2E">DERROTA</b>');
+        var fecha = m.played_at ? String(m.played_at).slice(0, 10) : '';
+        return '<div style="display:flex;justify-content:space-between;gap:8px;font:500 10.5px/1.7 var(--mono);color:var(--mut);border-bottom:1px solid var(--line,#222);padding:6px 0">'
+          + '<span>' + res + ' <span style="color:var(--dim)">' + String(m.game || 'cs2').toUpperCase() + ' · ' + escHtml(fecha) + '</span></span>'
+          + '<span style="color:' + (xp > 0 ? 'var(--grn,#3EE6A0)' : 'var(--dim)') + '">' + (xp > 0 ? '+' + xp : '+0') + ' XP</span></div>';
+      }).join('');
+      host.innerHTML = html;
+    } catch (eF) { /* sin FACEIT todavía: no se muestra nada */ }
+  }
+
   async function renderPerfilReal() {
     if (typeof linksCargar === 'function') { try { await linksCargar(); } catch (eL) {} }
     revisarOwnerDiscord();
     openDrawer(perfilRealHTML());
     if (window.lucide) lucide.createIcons();
     cargarSeriesReal();
+    cargarFaceitReal();
     var p = ME.player;
     var msg = document.getElementById('rp-msg');
     var g = document.getElementById('rp-guardar');
