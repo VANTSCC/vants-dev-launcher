@@ -201,7 +201,7 @@
     var xpExtra = xpFaceitHTML(p.xp);
     var sps = (ME.extra && ME.extra.sps) || null;
     var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
-      : (sps && typeof sps.rank === 'number' && sps.rank >= 0.5 && sps.rank <= 2 ? sps.rank : null);
+      : (sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2 ? parseFloat(sps.rank) : null);
     var mmr = (sps && sps.mmr != null) ? sps.mmr : null;
     var wl = (sps && sps.wins != null) ? (sps.wins + 'V · ' + (sps.losses || 0) + 'D · ') : '';
     var sin = linea + '<div class="pf-rank" style="--rc:#5C5C66;opacity:.85">' + rankSVG('fundicion', 64) +
@@ -307,7 +307,7 @@
     /* rango real con el MISMO motor del demo (RANKS/rankFor/subFor) */
     var sps = (ME.extra && ME.extra.sps) || null;
     var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
-      : (sps && typeof sps.rank === 'number' && sps.rank >= 0.5 && sps.rank <= 2 ? sps.rank : null);
+      : (sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2 ? parseFloat(sps.rank) : null);
     var rk = 'fundicion', rc = RANKS.fundicion;
     try {
       if (raw != null && typeof RANKS !== 'undefined') rc = RANKS[rankFor(raw)];
@@ -569,7 +569,7 @@
       b.onclick = function () {
         window.VANTS_BANNER = b.getAttribute('data-banner');
         var rawRank = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
-          : (((ME.extra && ME.extra.sps) && typeof ME.extra.sps.rank === 'number') ? ME.extra.sps.rank : null);
+          : (((ME.extra && ME.extra.sps) && ME.extra.sps.rank != null && !isNaN(parseFloat(ME.extra.sps.rank))) ? parseFloat(ME.extra.sps.rank) : null);
         var pf = document.getElementById('pf-banner-real');
         if (pf) pf.outerHTML = pfBannerHTML(window.VANTS_BANNER, rawRank);
         if (window.lucide) lucide.createIcons();

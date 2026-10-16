@@ -1,21 +1,19 @@
 -- ============================================================
 -- 12-players-rating-tipo.sql
--- Normaliza tipos de las tablas creadas a mano en Neon para que el
--- motor de ranking/XP funcione con números reales:
---   · players.rating            integer → double precision
---     (la escala de la web es 0.5–2.0 con decimales: 0.95 ACERO … 1.30 VANTS)
---   · season_player_stats.rank  text    → double precision
---     (espejo del rating que lee la web; la tabla estaba vacía, sin riesgo)
---   · faceit_stats_delta(): season_id era uuid y estaba declarado int
--- Idempotente: los ALTER ya aplicados no hacen nada y la función es
--- CREATE OR REPLACE.
+-- Normaliza tipos de las tablas creadas a mano en Neon para el motor
+-- de ranking/XP:
+--   · players.rating: integer → double precision (escala 0.5–2.0 con
+--     decimales: 0.95 ACERO … 1.30 VANTS). Sin vistas dependientes ✓
+--   · season_player_stats.rank: NO se altera — la vista leaderboard del
+--     bot depende de ella; faceit_stats_delta escribe el espejo como texto.
+--   · red de seguridad en season_player_stats (tabla creada a mano):
+--     id con default, columnas derivadas sin NOT NULL.
+--   · faceit_stats_delta(): season_id es uuid (estaba declarado int).
+-- Idempotente.
 -- ============================================================
 
 ALTER TABLE players ALTER COLUMN rating TYPE double precision USING rating::double precision;
-ALTER TABLE season_player_stats ALTER COLUMN rank TYPE double precision USING NULLIF(btrim(rank), '')::double precision;
 
--- Red de seguridad para la tabla creada a mano: el INSERT del motor falla si
--- id no tiene default o alguna columna derivada quedó NOT NULL.
 ALTER TABLE season_player_stats ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE season_player_stats ALTER COLUMN rank DROP NOT NULL;
 ALTER TABLE season_player_stats ALTER COLUMN mmr DROP NOT NULL;
@@ -47,9 +45,10 @@ BEGIN
     UPDATE season_player_stats SET losses = coalesce(losses, 0) + 1 WHERE player_id = p_player_id;
   END IF;
 
-  -- rank y mmr espejo del rating: la web los lee de acá
+  -- rank y mmr espejo del rating: la web los lee de acá.
+  -- rank es text (depende de la vista leaderboard): se guarda como texto.
   UPDATE season_player_stats
-  SET rank = p_nuevo_rating, mmr = round(p_nuevo_rating * 100)
+  SET rank = p_nuevo_rating::text, mmr = round(p_nuevo_rating * 100)
   WHERE player_id = p_player_id;
 END;
 $$;

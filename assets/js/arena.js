@@ -487,7 +487,7 @@ const usandoJugadoresReales=()=>(window.VANTS_PLAYERS||[]).some(p=>p&&p.id);
 function filasRealesLb(q){
   return (window.VANTS_PLAYERS||[]).map(p=>{
     const st=(window.VANTS_STATS||{})[p.id]||{};
-    const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((typeof st.rank==='number'&&st.rank>=.5&&st.rank<=2)?st.rank:null);
+    const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st.rank!=null&&st.rank!==''&&!isNaN(parseFloat(st.rank))&&parseFloat(st.rank)>=.5&&parseFloat(st.rank)<=2)?parseFloat(st.rank):null);
     const wins=st.wins||0,losses=st.losses||0,games=wins+losses;
     return {real:true,id:p.id,name:(p.display_name||p.username||'JUGADOR').toUpperCase(),username:p.username||'',
       team:((p.country||'')+(p.region?' · '+p.region:''))||'—',
@@ -1048,7 +1048,7 @@ function openPlayerProfile(pid){
   const k=rankKeyDe(p),rc=RANKS[k];
   const mmr=(st&&st.mmr!=null)?st.mmr:null;
   const wins=(st&&st.wins)||stats.wins||0,losses=(st&&st.losses)||stats.losses||0;
-  const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st&&typeof st.rank==='number'&&st.rank>=.5&&st.rank<=2)?st.rank:null);
+  const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st&&st.rank!=null&&st.rank!==''&&!isNaN(parseFloat(st.rank))&&parseFloat(st.rank)>=.5&&parseFloat(st.rank)<=2)?parseFloat(st.rank):null);
   const mPart=(stats.matches!=null)?stats.matches:((wins+losses)>0?wins+losses:null);
   const mWr=((wins+losses)>0)?Math.round((wins/(wins+losses))*100):(stats.wr!=null?stats.wr:null);
   const mRtg=(raw!=null)?raw:(stats.rtg!=null?stats.rtg:null);
