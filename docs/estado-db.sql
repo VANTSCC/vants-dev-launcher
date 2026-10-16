@@ -33,6 +33,11 @@ BEGIN
   EXCEPTION WHEN undefined_table THEN v := jsonb_set(v, '{vants_links_faceit}', 'null'::jsonb);
   END;
 
+  BEGIN
+    v := jsonb_set(v, '{perfil_dueno}', (SELECT coalesce(jsonb_agg(j), 'null'::jsonb) FROM (SELECT jsonb_build_object('username', username, 'xp', xp, 'rating', round(rating::numeric, 3)) j FROM players WHERE lower(coalesce(email, '')) = 'geimerjhoan099@gmail.com' LIMIT 1) s));
+  EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{perfil_dueno}', 'null'::jsonb);
+  END;
+
   CREATE TEMP TABLE estado_salida (j jsonb);
   INSERT INTO estado_salida VALUES (v);
 END $$;
