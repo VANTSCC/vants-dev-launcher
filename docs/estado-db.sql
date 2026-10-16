@@ -1,0 +1,40 @@
+-- ============================================================
+-- estado-db.sql — lo ejecuta el workflow neon-migrate.yml para publicar
+-- estado-db.json en la rama estado-db (verificación del estado real de
+-- la base sin exponer credenciales).
+-- psql -At -f docs/estado-db.sql  →  una línea JSON
+-- ============================================================
+
+DO $$
+DECLARE v jsonb;
+BEGIN
+  v := jsonb_build_object('generado', to_char(now() AT TIME ZONE 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
+  v := jsonb_set(v, '{tablas}', (SELECT coalesce(jsonb_object_agg(relname, n_live_tup), '{}'::jsonb) FROM pg_stat_user_tables WHERE schemaname = 'public'));
+
+  BEGIN
+    v := jsonb_set(v, '{faceit_matches_recientes}', (SELECT coalesce(jsonb_agg(j), '[]'::jsonb) FROM (SELECT jsonb_build_object('match_id', faceit_match_id, 'resultado', result, 'xp', xp_awarded, 'jugado', played_at) j FROM faceit_matches ORDER BY played_at DESC LIMIT 10) s));
+  EXCEPTION WHEN undefined_table THEN v := jsonb_set(v, '{faceit_matches_recientes}', 'null'::jsonb);
+  END;
+
+  BEGIN
+    v := jsonb_set(v, '{faceit_webhook_events}', jsonb_build_object(
+      'filas', (SELECT count(*) FROM faceit_webhook_events),
+      'ultimos', (SELECT coalesce(jsonb_agg(j), '[]'::jsonb) FROM (SELECT jsonb_build_object('tipo', event_type, 'fecha', created_at, 'muestra', left(payload::text, 500)) j FROM faceit_webhook_events ORDER BY created_at DESC LIMIT 6) s)));
+  EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{faceit_webhook_events}', 'null'::jsonb);
+  END;
+
+  BEGIN
+    v := jsonb_set(v, '{players_con_xp}', (SELECT count(*) FROM players WHERE xp > 0));
+  EXCEPTION WHEN undefined_column THEN v := jsonb_set(v, '{players_con_xp}', 'null'::jsonb);
+  END;
+
+  BEGIN
+    v := jsonb_set(v, '{vants_links_faceit}', (SELECT count(*) FROM vants_links WHERE platform = 'faceit'));
+  EXCEPTION WHEN undefined_table THEN v := jsonb_set(v, '{vants_links_faceit}', 'null'::jsonb);
+  END;
+
+  CREATE TEMP TABLE estado_salida (j jsonb);
+  INSERT INTO estado_salida VALUES (v);
+END $$;
+
+SELECT j FROM estado_salida;
