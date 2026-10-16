@@ -38,6 +38,14 @@ BEGIN
   EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{perfil_dueno}', 'null'::jsonb);
   END;
 
+  BEGIN
+    v := jsonb_set(v, '{esquema}', (SELECT coalesce(jsonb_object_agg(t || '.' || c, tipo), '{}'::jsonb) FROM (
+      SELECT table_name t, column_name c, data_type tipo FROM information_schema.columns
+      WHERE table_name IN ('players', 'season_player_stats', 'vants_links', 'faceit_webhook_events', 'faceit_matches')
+    ) s));
+  EXCEPTION WHEN OTHERS THEN v := jsonb_set(v, '{esquema}', 'null'::jsonb);
+  END;
+
   CREATE TEMP TABLE estado_salida (j jsonb);
   INSERT INTO estado_salida VALUES (v);
 END $$;
