@@ -225,7 +225,7 @@ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_season int;
+  v_season uuid; /* seasons.id es uuid en la base real */
   v_wins int;
   v_losses int;
   v_row boolean;
@@ -250,10 +250,11 @@ BEGIN
     VALUES (p_pid, v_season, CASE WHEN p_gano THEN 1 ELSE 0 END, CASE WHEN p_gano THEN 0 ELSE 1 END);
   END IF;
 
-  /* rank y mmr siempre espejo del rating: la web los lee de acá */
+  /* rank y mmr siempre espejo del rating: la web los lee de acá
+     (rank es text y mmr integer en la base real — casts explícitos) */
   UPDATE season_player_stats
-  SET rank = p_nuevo_rating,
-      mmr = round(p_nuevo_rating * 100)
+  SET rank = p_nuevo_rating::text,
+      mmr = round(p_nuevo_rating * 100)::int
   WHERE player_id = p_pid;
 END;
 $$;

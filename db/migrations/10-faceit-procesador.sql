@@ -16,6 +16,13 @@
 -- Juegos soportados: cs2 (y csgo se normaliza a cs2) y valorant.
 -- ============================================================
 
+-- ---------- 0) tipos reales de la base ----------
+-- seasons.id es uuid (la base real) y players.rating guardaba floats en un
+-- integer (0.95 → 1): se normaliza rating a double precision. rank de
+-- season_player_stats es text — los SET llevan cast explícito.
+ALTER TABLE players ALTER COLUMN rating TYPE double precision;
+ALTER TABLE players ALTER COLUMN rating SET DEFAULT NULL;
+
 -- ---------- 1) stats de temporada tras una partida (con soporte empate) ----------
 CREATE OR REPLACE FUNCTION faceit_stats_delta(p_player_id uuid, p_result text, p_nuevo_rating double precision)
 RETURNS void
@@ -23,7 +30,7 @@ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_season int;
+  v_season uuid;
   v_row boolean;
 BEGIN
   BEGIN
@@ -44,7 +51,7 @@ BEGIN
 
   -- rank y mmr espejo del rating: la web los lee de acá
   UPDATE season_player_stats
-  SET rank = p_nuevo_rating, mmr = round(p_nuevo_rating * 100)
+  SET rank = p_nuevo_rating::text, mmr = round(p_nuevo_rating * 100)::int
   WHERE player_id = p_player_id;
 END;
 $$;

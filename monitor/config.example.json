@@ -1,0 +1,8 @@
+{
+  "webhookUrl": "",
+  "site": "https://feispla.github.io/Vants/",
+  "proxy": "https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/",
+  "slowMs": 4000,
+  "certWarnDays": 14,
+  "timeoutMs": 15000
+}

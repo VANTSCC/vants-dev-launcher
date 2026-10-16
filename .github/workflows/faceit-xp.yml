@@ -54,3 +54,12 @@ jobs:
       - name: Procesar partidas FACEIT pendientes
         run: |
           psql "$NEON_CS" -v ON_ERROR_STOP=1 -At -c "SELECT faceit_procesar_eventos();"
+
+      # Respaldo del webhook: sondea la Data API v4 y registra partidas que
+      # el webhook no alcanzó a entregar (idempotente por faceit_match_id).
+      - name: Sondear historial FACEIT (respaldo del webhook)
+        if: ${{ secrets.FACEIT_API_KEY != '' }}
+        env:
+          FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
+          FACEIT_DISCORD_WEBHOOK: ${{ secrets.FACEIT_DISCORD_WEBHOOK }}
+        run: node scripts/faceit-xp.mjs
