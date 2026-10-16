@@ -87,7 +87,7 @@ jobs:
         if: always() && env.NEON_CS != ''
         run: |
           set +e
-          psql "$NEON_CS" -At -f docs/estado-db.sql > estado-db.json 2> estado-db-error.txt
+          psql "$NEON_CS" -qAt -f docs/estado-db.sql > estado-db.json 2> estado-db-error.txt
           CODIGO=$?
           echo "codigo psql: $CODIGO"
           echo "--- stderr ---"
