@@ -182,8 +182,23 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
 
+  /* -------- EXPERIENCIA FACEIT (migración 08: players.xp) -------- */
+  function xpFaceitHTML(xp) {
+    xp = (typeof xp === 'number' && xp > 0) ? xp : 0;
+    if (!xp) return '';
+    var nivel = 1 + Math.floor(xp / 500);
+    var en = xp % 500;
+    var f = Math.min(100, (en / 500) * 100);
+    return '<p class="d-sec">EXPERIENCIA FACEIT</p>' +
+      '<div class="pf-rank" style="--rc:#FF5500">' +
+      '<div class="info"><b>NIVEL ' + nivel + '</b><small>' + xp + ' XP TOTAL · ' + en + '/500 PARA EL NIVEL ' + (nivel + 1) + '</small>' +
+      '<div class="rr-bar"><i style="width:' + f.toFixed(0) + '%;background:#FF5500"></i></div></div>' +
+      '<div class="rr-num">' + nivel + '<small>NIVEL</small></div></div>';
+  }
+
   function rangoRealHTML(p) {
     var linea = '<p class="d-sec">RANGO VANTS RANKED</p>';
+    var xpExtra = xpFaceitHTML(p.xp);
     var sps = (ME.extra && ME.extra.sps) || null;
     var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
       : (sps && typeof sps.rank === 'number' && sps.rank >= 0.5 && sps.rank <= 2 ? sps.rank : null);
@@ -192,7 +207,7 @@
     var sin = linea + '<div class="pf-rank" style="--rc:#5C5C66;opacity:.85">' + rankSVG('fundicion', 64) +
       '<div class="info"><b>SIN RANGO</b><small>' + wl + 'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>' +
       '<div class="rr-bar"><i style="width:0%"></i></div></div>' +
-      '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>';
+      '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>' + xpExtra;
     try {
       if (raw == null || typeof RANKS === 'undefined') return sin;
       var k = rankFor(raw);
@@ -204,7 +219,7 @@
       return linea + '<div class="pf-rank" style="--rc:' + rc.c1 + '">' + rankSVG(k, 64) +
         '<div class="info"><b>' + rc.name + ' ' + s + '</b><small>' + wl + 'TEMPORADA ACTIVA</small>' +
         '<div class="rr-bar"><i style="width:' + f.toFixed(0) + '%;background:' + rc.c1 + '"></i></div></div>' +
-        '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>';
+        '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>' + xpExtra;
     } catch (eR) { return sin; }
   }
 

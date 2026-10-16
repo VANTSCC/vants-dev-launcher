@@ -1005,7 +1005,8 @@ function bannerPublicoHTML(sel,rawRank){
     +(sel==='dorado'?'<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>':'')
     +rankSVG(rkKey,92,'remblem')+'</div>';
 }
-function rangoPublicoHTML(raw,mmr,wins,losses){
+function rangoPublicoHTML(raw,mmr,wins,losses,xp){
+  const xpExtra=xpFaceitHTML(xp);
   const wl=(wins||losses)?(wins+'V · '+losses+'D · '):'';
   try{
     if(raw==null)throw 0;
@@ -1016,13 +1017,24 @@ function rangoPublicoHTML(raw,mmr,wins,losses){
     return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:'+rc.c1+'">'+rankSVG(k,64)
       +'<div class="info"><b>'+rc.name+' '+s+'</b><small>'+wl+'TEMPORADA ACTIVA</small>'
       +'<div class="rr-bar"><i style="width:'+f.toFixed(0)+'%;background:'+rc.c1+'"></i></div></div>'
-      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>';
+      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>'+xpExtra;
   }catch(e){
     return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:#5C5C66;opacity:.85">'+rankSVG('fundicion',64)
       +'<div class="info"><b>SIN RANGO</b><small>'+wl+'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>'
       +'<div class="rr-bar"><i style="width:0%"></i></div></div>'
-      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>';
+      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>'+xpExtra;
   }
+}
+/* EXPERIENCIA FACEIT (migración 08: players.xp): +100 por victoria,
+   +25 por empate; nivel = 1 + floor(xp/500). Marca FACEIT #FF5500. */
+function xpFaceitHTML(xp){
+  xp=(typeof xp==='number'&&xp>0)?xp:0;
+  if(!xp)return '';
+  const nivel=1+Math.floor(xp/500),en=xp%500,f=Math.min(100,en/5);
+  return '<p class="d-sec">EXPERIENCIA FACEIT</p><div class="pf-rank" style="--rc:#FF5500">'
+    +'<div class="info"><b>NIVEL '+nivel+'</b><small>'+xp+' XP TOTAL · '+en+'/500 PARA EL NIVEL '+(nivel+1)+'</small>'
+    +'<div class="rr-bar"><i style="width:'+f.toFixed(0)+'%;background:#FF5500"></i></div></div>'
+    +'<div class="rr-num">'+nivel+'<small>NIVEL</small></div></div>';
 }
 function openPlayerProfile(pid){
   /* tu propio perfil se abre siempre con el flujo real (editable) */
@@ -1058,7 +1070,7 @@ function openPlayerProfile(pid){
     +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Sin insignias todavía.</span>')+'</div>'
     +'<p class="pf-bio">'+escHtml(stats.bio||'Jugador del circuito VANTS.')+'</p>'
     +'<div class="pf-stats"><div><b>'+(mPart==null?'—':mPart)+'</b><span>PARTIDOS</span></div><div><b>'+(mWr==null?'—':mWr+'%')+'</b><span>WINRATE</span></div><div><b>'+(mRtg==null?'—':(typeof mRtg==='number'?mRtg.toFixed(2):mRtg))+'</b><span>RATING</span></div><div><b>'+(mKd==null?'—':(typeof mKd==='number'?mKd.toFixed(2):mKd))+'</b><span>K/D</span></div></div>'
-    +rangoPublicoHTML(raw,mmr,wins,losses)
+    +rangoPublicoHTML(raw,mmr,wins,losses,p.xp)
     +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+Object.keys(handles).map(kk=>platRow(kk,handles[kk]?escHtml(handles[kk]):null,false)).join('')+'</div>'
     +(c?'<p class="d-sec">TRANSMISIÓN</p><div class="rail-card" style="--plc:'+PLAT[c.k].c+';cursor:pointer" onclick="window.open(\''+url+'\',\'_blank\',\'noopener\')">'
       +'<div class="rc-top">'+platIc(c.k)+'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div><p class="rc-title">Canal vinculado · '+escHtml(c.h)+'</p></div></div>'
