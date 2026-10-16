@@ -24,12 +24,12 @@ BEGIN
   END;
 
   BEGIN
-    v := jsonb_set(v, '{players_con_xp}', (SELECT count(*) FROM players WHERE xp > 0));
+    v := jsonb_set(v, '{players_con_xp}', to_jsonb((SELECT count(*) FROM players WHERE xp > 0)));
   EXCEPTION WHEN undefined_column THEN v := jsonb_set(v, '{players_con_xp}', 'null'::jsonb);
   END;
 
   BEGIN
-    v := jsonb_set(v, '{vants_links_faceit}', (SELECT count(*) FROM vants_links WHERE platform = 'faceit'));
+    v := jsonb_set(v, '{vants_links_faceit}', to_jsonb((SELECT count(*) FROM vants_links WHERE platform = 'faceit')));
   EXCEPTION WHEN undefined_table THEN v := jsonb_set(v, '{vants_links_faceit}', 'null'::jsonb);
   END;
 
