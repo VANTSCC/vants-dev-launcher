@@ -21,6 +21,11 @@ concurrency:
   group: neon-migrate
   cancel-in-progress: false
 
+# Para publicar estado-db.json en la rama estado-db (verificación del
+# estado real de la base sin exponer credenciales)
+permissions:
+  contents: write
+
 jobs:
   migrar:
     runs-on: ubuntu-latest
@@ -76,3 +81,44 @@ jobs:
         if: always() && env.NEON_CS != ''
         run: |
           psql "$NEON_CS" -c "SELECT relname AS tabla, n_live_tup AS filas_aprox FROM pg_stat_user_tables WHERE schemaname = 'public' ORDER BY relname;" || true
+
+      - name: Estado de la base → rama estado-db (verificación legible)
+        if: always() && env.NEON_CS != ''
+        run: |
+          set +e
+          cat > /tmp/estado.sql <<'EOSQL'
+          DO $$
+          DECLARE v jsonb;
+          BEGIN
+            v := jsonb_build_object('generado', to_char(now() AT TIME ZONE 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
+            v := jsonb_set(v, '{tablas}', (SELECT coalesce(jsonb_object_agg(relname, n_live_tup), '{}'::jsonb) FROM pg_stat_user_tables WHERE schemaname = 'public'));
+            BEGIN
+              v := jsonb_set(v, '{faceit_matches_recientes}', (SELECT coalesce(jsonb_agg(j), '[]'::jsonb) FROM (SELECT jsonb_build_object('match_id', faceit_match_id, 'resultado', result, 'xp', xp_awarded, 'jugado', played_at) j FROM faceit_matches ORDER BY played_at DESC LIMIT 10) s));
+            EXCEPTION WHEN undefined_table THEN v := jsonb_set(v, '{faceit_matches_recientes}', 'null'::jsonb);
+            END;
+            BEGIN
+              v := jsonb_set(v, '{faceit_webhook_events}', jsonb_build_object(
+                'filas', (SELECT count(*) FROM faceit_webhook_events),
+                'ultimos', (SELECT coalesce(jsonb_agg(j), '[]'::jsonb) FROM (SELECT jsonb_build_object('tipo', event_type, 'fecha', created_at, 'muestra', left(payload::text, 500)) j FROM faceit_webhook_events ORDER BY created_at DESC LIMIT 6) s)));
+            EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{faceit_webhook_events}', 'null'::jsonb);
+            END;
+            BEGIN
+              v := jsonb_set(v, '{players_con_xp}', (SELECT count(*) FROM players WHERE xp > 0));
+            EXCEPTION WHEN undefined_column THEN v := jsonb_set(v, '{players_con_xp}', 'null'::jsonb);
+            END;
+            CREATE TEMP TABLE estado_salida (j jsonb);
+            INSERT INTO estado_salida VALUES (v);
+          END $$;
+          SELECT j FROM estado_salida;
+          EOSQL
+          psql "$NEON_CS" -At -f /tmp/estado.sql > estado-db.json 2>/tmp/estado_err.txt
+          if [ ! -s estado-db.json ]; then
+            echo '{"error": "no se pudo leer la base"}' > estado-db.json
+            echo "::warning::estado-db: $(cat /tmp/estado_err.txt)"
+          fi
+          git config user.name "vants-estado-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -B estado-db
+          git add -f estado-db.json
+          git commit -m "Estado de la base (automatico)" || echo "sin cambios en el estado"
+          git push -f origin estado-db || echo "::warning::no se pudo publicar la rama estado-db"
