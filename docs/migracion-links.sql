@@ -68,6 +68,11 @@ BEGIN
   BEGIN GRANT SELECT ON vants_links TO public; EXCEPTION WHEN undefined_object THEN NULL; END;
 END $$;
 
+-- Red de seguridad (igual que db/migrations/04-vants-links.sql): el grant
+-- amplio elimina el "permission denied" aunque el rol del Data API cambie;
+-- RLS (policies por sub de Auth0) sigue siendo la puerta real.
+GRANT SELECT, INSERT, UPDATE, DELETE ON vants_links TO PUBLIC;
+
 -- 2) Estados OAuth de un solo uso (los escribe/lee solo la función "linker"
 --    con su conexión directa; sin políticas a propósito: el Data API no la toca)
 CREATE TABLE IF NOT EXISTS vants_link_states (

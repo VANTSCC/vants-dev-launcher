@@ -53,6 +53,7 @@ type Plataforma = {
   clientKeyParam?: 'client_id' | 'client_key';
   pkce?: boolean;
   basicAuth?: boolean;
+  secretOptional?: boolean;
   nota?: string;
   perfil: (accessToken: string) => Promise<Perfil>;
 };
@@ -148,8 +149,9 @@ const PLATAFORMAS: Record<string, Plataforma> = {
     authorize: 'https://accounts.faceit.com/accounts/authorize',
     token: 'https://api.faceit.com/auth/v1/oauth/token',
     scope: 'openid email profile',
-    clientIdEnv: 'FACEIT_CLIENT_ID', secretEnv: 'FACEIT_CLIENT_SECRET', basicAuth: true,
-    nota: 'FACEIT: crear la app en faceit.com/developers y pedir la aprobacion del scope',
+    clientIdEnv: 'FACEIT_CLIENT_ID', secretEnv: 'FACEIT_CLIENT_SECRET',
+    pkce: true, secretOptional: true,
+    nota: 'FACEIT: app "Authorization Code with PKCE" en faceit.com/developers — la app pública no lleva client_secret; registrar LINKER_URL+/api/link/callback como redirect_uri',
     perfil: async (t) => {
       const r = await fetch('https://api.faceit.com/auth/v1/resources/userinfo', { headers: { Authorization: 'Bearer ' + t } });
       const d = await j(r);
@@ -166,7 +168,8 @@ function claves(plat: string): { ok: boolean; env?: string; nota?: string } {
   const p = PLATAFORMAS[plat];
   if (!p) return plat === 'steam' ? { ok: true } : { ok: false, env: '(desconocida)' };
   if (!process.env[p.clientIdEnv]) return { ok: false, env: p.clientIdEnv, nota: p.nota };
-  if (!process.env[p.secretEnv]) return { ok: false, env: p.secretEnv, nota: p.nota };
+  // PKCE público (p. ej. FACEIT): el client_secret no existe y no hace falta.
+  if (!p.secretOptional && !process.env[p.secretEnv]) return { ok: false, env: p.secretEnv, nota: p.nota };
   return { ok: true };
 }
 
@@ -266,21 +269,23 @@ async function playerIdDeSub(sub: string): Promise<string | null> {
 }
 
 async function exchange(plat: Plataforma, plataforma: string, code: string, verifier: string | null): Promise<string> {
+  const secreto = process.env[plat.secretEnv] ?? '';
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
     redirect_uri: URL_API + '/api/link/callback',
     [plat.clientKeyParam ?? 'client_id']: process.env[plat.clientIdEnv] ?? '',
-    client_secret: process.env[plat.secretEnv] ?? '',
   });
+  if (secreto) body.set('client_secret', secreto);
   if (verifier) body.set('code_verifier', verifier);
   const r = await fetch(plat.token, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       Accept: 'application/json',
-      ...(plat.basicAuth
-        ? { Authorization: 'Basic ' + Buffer.from((process.env[plat.clientIdEnv] ?? '') + ':' + (process.env[plat.secretEnv] ?? '')).toString('base64') }
+      // Basic solo cuando la plataforma lo exige Y hay secreto (clientes públicos: nunca).
+      ...(plat.basicAuth && secreto
+        ? { Authorization: 'Basic ' + Buffer.from((process.env[plat.clientIdEnv] ?? '') + ':' + secreto).toString('base64') }
         : {}),
     },
     body,

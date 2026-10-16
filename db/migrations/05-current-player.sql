@@ -161,6 +161,10 @@ BEGIN
   GRANT SELECT ON TABLE players TO PUBLIC;
 END $$;
 
+-- Red de seguridad (patrón 04-vants-links): RLS de players es la puerta real;
+-- el grant amplio evita "permission denied" aunque el rol del Data API varíe.
+GRANT SELECT, INSERT, UPDATE ON TABLE players TO PUBLIC;
+
 -- Fin: con esto /rpc/current_player_id responde, crear perfil
 -- queda ligado a la sesión de Auth0 y el perfil correcto se
 -- muestra siempre. docs/migracion-pase.sql puede usar la función.

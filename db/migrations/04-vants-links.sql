@@ -68,6 +68,11 @@ BEGIN
   BEGIN GRANT SELECT ON vants_links TO public; EXCEPTION WHEN undefined_object THEN NULL; END;
 END $$;
 
+-- Red de seguridad: el Data API de Neon usa roles 'authenticated'/'anonymous'
+-- y su nombre puede variar; RLS es la puerta real (las policies exigen el sub
+-- de Auth0), el grant amplio solo elimina el "permission denied".
+GRANT SELECT, INSERT, UPDATE, DELETE ON vants_links TO PUBLIC;
+
 -- 2) Estados OAuth de un solo uso (los escribe/lee solo la función "linker"
 --    con su conexión directa; sin políticas a propósito: el Data API no la toca)
 CREATE TABLE IF NOT EXISTS vants_link_states (
