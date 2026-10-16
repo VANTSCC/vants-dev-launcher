@@ -39,8 +39,8 @@ BEGIN
   END;
 
   BEGIN
-    v := jsonb_set(v, '{esquema}', (SELECT coalesce(jsonb_object_agg(t || '.' || c, tipo), '{}'::jsonb) FROM (
-      SELECT table_name t, column_name c, data_type tipo FROM information_schema.columns
+    v := jsonb_set(v, '{esquema}', (SELECT coalesce(jsonb_object_agg(t || '.' || c, jsonb_build_object('tipo', tipo, 'nullable', nul, 'default', coalesce(def, ''))), '{}'::jsonb) FROM (
+      SELECT table_name t, column_name c, data_type tipo, is_nullable nul, column_default def FROM information_schema.columns
       WHERE table_name IN ('players', 'season_player_stats', 'vants_links', 'faceit_webhook_events', 'faceit_matches')
     ) s));
   EXCEPTION WHEN OTHERS THEN v := jsonb_set(v, '{esquema}', 'null'::jsonb);

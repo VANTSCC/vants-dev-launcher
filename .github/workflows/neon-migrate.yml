@@ -71,11 +71,18 @@ jobs:
       - name: Aplicar migraciones (idempotentes)
         run: |
           psql --version
-          set -e
+          set +e
+          FALLIDA=""
           for f in db/migrations/*.sql; do
             echo "════════ ▶ $f ════════"
-            psql "$NEON_CS" -v ON_ERROR_STOP=1 -f "$f"
+            if ! psql "$NEON_CS" -v ON_ERROR_STOP=1 -f "$f" 2> /tmp/mig_err.txt; then
+              echo "::error::MIGRACION FALLIDA: $f"
+              cat /tmp/mig_err.txt
+              FALLIDA="$f"
+              break
+            fi
           done
+          if [ -n "$FALLIDA" ]; then echo "❌ Migraciones detenidas en $FALLIDA"; exit 1; fi
           echo "✅ Migraciones aplicadas"
 
       - name: Resumen de la base (tablas y filas)
@@ -100,9 +107,10 @@ jobs:
             echo '{"error": "no se pudo leer la base"}' > estado-db.json
             echo "::warning::estado-db fallo (codigo $CODIGO)"
           fi
+          if [ -f /tmp/mig_err.txt ]; then cp /tmp/mig_err.txt migracion-error.txt; else echo "(sin errores de migracion en esta ejecucion)" > migracion-error.txt; fi
           git config user.name "vants-estado-bot"
           git config user.email "actions@users.noreply.github.com"
           git checkout -B estado-db
-          git add -f estado-db.json estado-db-error.txt
+          git add -f estado-db.json estado-db-error.txt migracion-error.txt
           git commit -m "Estado de la base (automatico)" || echo "sin cambios en el estado"
           git push -f origin estado-db || echo "::warning::no se pudo publicar la rama estado-db"

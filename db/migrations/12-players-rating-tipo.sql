@@ -14,6 +14,14 @@
 ALTER TABLE players ALTER COLUMN rating TYPE double precision USING rating::double precision;
 ALTER TABLE season_player_stats ALTER COLUMN rank TYPE double precision USING NULLIF(btrim(rank), '')::double precision;
 
+-- Red de seguridad para la tabla creada a mano: el INSERT del motor falla si
+-- id no tiene default o alguna columna derivada quedó NOT NULL.
+ALTER TABLE season_player_stats ALTER COLUMN id SET DEFAULT gen_random_uuid();
+ALTER TABLE season_player_stats ALTER COLUMN rank DROP NOT NULL;
+ALTER TABLE season_player_stats ALTER COLUMN mmr DROP NOT NULL;
+ALTER TABLE season_player_stats ALTER COLUMN season_id DROP NOT NULL;
+ALTER TABLE season_player_stats ALTER COLUMN placement_done DROP NOT NULL;
+
 CREATE OR REPLACE FUNCTION faceit_stats_delta(p_player_id uuid, p_result text, p_nuevo_rating double precision)
 RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER
