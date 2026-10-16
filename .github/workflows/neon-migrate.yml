@@ -16,6 +16,7 @@ on:
     paths:
       - "db/migrations/*.sql"
       - ".github/workflows/neon-migrate.yml"
+      - "docs/estado-db.sql"
 
 concurrency:
   group: neon-migrate
