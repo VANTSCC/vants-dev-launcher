@@ -80,19 +80,38 @@ BEGIN
     -- Cola de Discord (discord-notify la publica a 'ranked' cuando se dispare;
     -- el payload lleva todo lo que el embed necesita).
     SELECT username INTO v_username FROM players WHERE id = p_player_id;
-    -- FIX: id es PRIMARY KEY sin default (02-bot-infra): se usa el match id
-    -- de FACEIT como id del evento (idempotencia doble: PK + NOT EXISTS).
-    INSERT INTO vant_sync_events (id, event_type, payload)
-    SELECT 'faceit_' || btrim(p_faceit_match_id), 'faceit_victoria', jsonb_build_object(
-      'player', coalesce(v_username, p_player_id::text),
-      'xp', v_xp,
-      'xp_total', (SELECT xp FROM players WHERE id = p_player_id),
-      'faceit_match_id', btrim(p_faceit_match_id),
-      'result', p_result)
-    WHERE NOT EXISTS (
-      SELECT 1 FROM vant_sync_events
-      WHERE event_type = 'faceit_victoria'
-        AND payload->>'faceit_match_id' = btrim(p_faceit_match_id));
+    -- Aviso a Discord (best-effort: la tabla real tiene id bigint sin
+    -- relación con el match id de FACEIT). Adaptativo: si id tiene default
+    -- va sin id; si no, se usa un hash numérico estable del match id.
+    BEGIN
+      BEGIN
+        INSERT INTO vant_sync_events (event_type, payload)
+        SELECT 'faceit_victoria', jsonb_build_object(
+          'player', coalesce(v_username, p_player_id::text),
+          'xp', v_xp,
+          'xp_total', (SELECT xp FROM players WHERE id = p_player_id),
+          'faceit_match_id', btrim(p_faceit_match_id),
+          'result', p_result)
+        WHERE NOT EXISTS (
+          SELECT 1 FROM vant_sync_events
+          WHERE event_type = 'faceit_victoria'
+            AND payload->>'faceit_match_id' = btrim(p_faceit_match_id));
+      EXCEPTION WHEN not_null_violation THEN
+        INSERT INTO vant_sync_events (id, event_type, payload)
+        SELECT (('x' || substr(md5('faceit_' || btrim(p_faceit_match_id)), 1, 16))::bit(64)::bigint), 'faceit_victoria', jsonb_build_object(
+          'player', coalesce(v_username, p_player_id::text),
+          'xp', v_xp,
+          'xp_total', (SELECT xp FROM players WHERE id = p_player_id),
+          'faceit_match_id', btrim(p_faceit_match_id),
+          'result', p_result)
+        WHERE NOT EXISTS (
+          SELECT 1 FROM vant_sync_events
+          WHERE event_type = 'faceit_victoria'
+            AND payload->>'faceit_match_id' = btrim(p_faceit_match_id));
+      END;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE NOTICE 'aviso Discord omitido: %', SQLERRM;
+    END;
   END IF;
 
   SELECT xp INTO v_total FROM players WHERE id = p_player_id;
