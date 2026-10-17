@@ -51,4 +51,57 @@ async function handleNotify(request, env) {
         embed = buildEmbed(
           COLORS.twitch,
           '🔴 EN DIRECTO',
-          `**${data.
+          `**${data.user}** está transmitiendo:\n**${data.title}**`
+        );
+        break;
+      case 'campeon':
+        embed = buildEmbed(
+          COLORS.oro,
+          '👑 Nuevo campeón',
+          `**${data.team}** ganó **${data.tournament}**. GG!`
+        );
+        break;
+      default:
+        return json({ ok: false, error: 'Tipo de notificación desconocido' }, 400);
+    }
+
+    const discordRes = await fetch(
+      `https://discord.com/api/v10/channels/${env.CHANNEL_ID}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bot ${env.DISCORD_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ embeds: [embed] }),
+      }
+    );
+
+    if (!discordRes.ok) {
+      const error = await discordRes.text();
+      return json({ ok: false, error }, 500);
+    }
+
+    return json({ ok: true });
+  } catch (err) {
+    return json({ ok: false, error: err.message }, 500);
+  }
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    // Endpoint de notificaciones a Discord
+    if (url.pathname === '/api/discord/notify' && request.method === 'POST') {
+      return handleNotify(request, env);
+    }
+
+    // Todo lo demás: servir archivos estáticos desde public/
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
+    }
+
+    return new Response('Not found', { status: 404 });
+  },
+};
