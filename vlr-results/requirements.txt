@@ -1,0 +1,3 @@
+vlrdevapi==2.4.0
+selectolax>=0.4.7,<1
+flask
