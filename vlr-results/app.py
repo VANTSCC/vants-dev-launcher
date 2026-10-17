@@ -4,10 +4,14 @@ import threading
 from flask import Flask, jsonify, render_template_string
 import vlrdevapi
 
+ cline/np1y9pfv
 from ranked import ranked_bp
 
 app = Flask(__name__)
 app.register_blueprint(ranked_bp)
+
+app = Flask(__name__)
+main
 
 PAGE = """<!doctype html><html lang=es><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
@@ -15,8 +19,12 @@ PAGE = """<!doctype html><html lang=es><meta charset=utf-8>
 <style>body{font-family:sans-serif;background:#0f1923;color:#ece8e1;max-width:760px;margin:2rem auto;padding:0 1rem}
 .m{background:#1f2933;border-left:4px solid #ff4655;padding:.8rem 1rem;margin:.6rem 0;border-radius:4px}
 .s{display:flex;justify-content:space-between}.w{color:#7CFC98;font-weight:bold}small{color:#9aa}</style>
+cline/np1y9pfv
 <h1>Resultados de Valorant · torneos</h1>
 <nav style="margin-bottom:1rem"><a href="/ranked" style="color:#ff4655">Ranked del jugador (RR) &rarr;</a></nav>
+
+<h1>Resultados de Valorant</h1>
+main
 {% if error %}<p>Error: {{ error }}</p>{% endif %}
 {% for m in matches %}<div class=m><small>{{ m.event }} - {{ m.stage }} - {{ m.when }}</small>
 <div class=s><span class="{{ 'w' if m.w1 }}">{{ m.t1 }}</span><b>{{ m.s1 }} : {{ m.s2 }}</b><span class="{{ 'w' if m.w2 }}">{{ m.t2 }}</span></div></div>{% endfor %}</html>"""
