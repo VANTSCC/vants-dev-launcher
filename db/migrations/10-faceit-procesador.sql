@@ -17,11 +17,12 @@
 -- ============================================================
 
 -- ---------- 0) tipos reales de la base ----------
--- seasons.id es uuid (la base real) y players.rating guardaba floats en un
--- integer (0.95 → 1): se normaliza rating a double precision. rank de
--- season_player_stats es text — los SET llevan cast explícito.
-ALTER TABLE players ALTER COLUMN rating TYPE double precision;
-ALTER TABLE players ALTER COLUMN rating SET DEFAULT NULL;
+-- players.rating pasa a double precision en 12-players-rating-tipo.sql (ahí
+-- se gestiona la vista leaderboard). Aquí solo se recalcula el espejo entero
+-- de season_player_stats para no dejar basura de la escala antigua.
+UPDATE season_player_stats
+SET rank = coalesce(rank, '0.95')::numeric::text
+WHERE rank IS NOT NULL AND rank !~ '^[0-9]*\.?[0-9]+$';
 
 -- ---------- 1) stats de temporada tras una partida (con soporte empate) ----------
 CREATE OR REPLACE FUNCTION faceit_stats_delta(p_player_id uuid, p_result text, p_nuevo_rating double precision)

@@ -12,7 +12,28 @@
 -- Idempotente.
 -- ============================================================
 
-ALTER TABLE players ALTER COLUMN rating TYPE double precision USING rating::double precision;
+-- La vista leaderboard (del bot viejo, creada a mano en Neon) depende de
+-- players.rating: Postgres no permite alterar el tipo con vistas colgando.
+-- Se guarda su definición (pg_get_viewdef), se suelta, se altera y se recrea.
+DO $$
+DECLARE
+  v_tipo  text;
+  v_def   text;
+BEGIN
+  SELECT data_type INTO v_tipo
+    FROM information_schema.columns
+   WHERE table_schema = 'public' AND table_name = 'players' AND column_name = 'rating';
+
+  IF v_tipo IS NOT NULL AND v_tipo <> 'double precision' THEN
+    BEGIN
+      SELECT pg_get_viewdef('public.leaderboard'::regclass, true) INTO v_def;
+    EXCEPTION WHEN undefined_table THEN v_def := NULL; END;
+
+    IF v_def IS NOT NULL THEN EXECUTE 'DROP VIEW public.leaderboard'; END IF;
+    EXECUTE 'ALTER TABLE public.players ALTER COLUMN rating TYPE double precision USING rating::double precision';
+    IF v_def IS NOT NULL THEN EXECUTE 'CREATE VIEW public.leaderboard AS ' || v_def; END IF;
+  END IF;
+END $$;
 
 ALTER TABLE season_player_stats ALTER COLUMN id SET DEFAULT gen_random_uuid();
 ALTER TABLE season_player_stats ALTER COLUMN rank DROP NOT NULL;
