@@ -34,6 +34,11 @@ jobs:
       - name: Instalar Neon CLI
         run: npm install -g neon@latest
 
+      # esbuild (bundling de la función) necesita resolver 'pg' localmente:
+      # el package.json de la raíz lo declara para esto.
+      - name: Instalar dependencias de bundling (pg)
+        run: npm install --no-audit --no-fund
+
       - name: Desplegar linker
         run: |
           neon functions deploy linker \
