@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vants",
+  "compatibility_date": "2026-10-12",
+  "observability": {
+    "enabled": true,
+    "issues": {
+      "enabled": true
+    },
+    "traces": {
+      "enabled": true
+    }
+  },
+  "triggers": {
+    "crons": [
+      "*/30 * * * *"
+    ]
+  },
+  "assets": {
+    "directory": "./public"
+  }
+}
