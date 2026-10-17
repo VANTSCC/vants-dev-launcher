@@ -1,0 +1,24 @@
+--- a/.github/workflows/faceit-xp.yml
++++ b/.github/workflows/faceit-xp.yml
+@@ -18,6 +18,11 @@
+     runs-on: ubuntu-latest
+     env:
+       NK: ${{ secrets.NEON_API_KEY }}
++      # El contexto `secrets` NO está disponible en los `if` de los pasos:
++      # GitHub rechaza el workflow completo ("Unrecognized named-value").
++      # Se mapean a env del job para poder usarlos en la condición del paso.
++      FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
++      FACEIT_DISCORD_WEBHOOK: ${{ secrets.FACEIT_DISCORD_WEBHOOK }}
+     steps:
+       - name: Checkout
+         uses: actions/checkout@v4
+@@ -58,8 +63,5 @@
+       # Respaldo del webhook: sondea la Data API v4 y registra partidas que
+       # el webhook no alcanzó a entregar (idempotente por faceit_match_id).
+       - name: Sondear historial FACEIT (respaldo del webhook)
+-        if: ${{ secrets.FACEIT_API_KEY != '' }}
+-        env:
+-          FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
+-          FACEIT_DISCORD_WEBHOOK: ${{ secrets.FACEIT_DISCORD_WEBHOOK }}
++        if: ${{ env.FACEIT_API_KEY != '' }}
+         run: node scripts/faceit-xp.mjs
