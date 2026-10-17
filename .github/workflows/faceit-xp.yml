@@ -1,0 +1,65 @@
+name: "FACEIT · procesador de partidas (XP + rango)"
+
+# Convierte los eventos que el worker de FACEIT guarda en faceit_webhook_events
+# en XP + movimiento de rango en Neon (faceit_procesar_eventos, migración 10).
+# Corre cada 10 minutos y también a mano (Run workflow).
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: faceit-xp
+  cancel-in-progress: false
+
+jobs:
+  procesar:
+    runs-on: ubuntu-latest
+    env:
+      NK: ${{ secrets.NEON_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Comprobar acceso a Neon
+        run: |
+          if [ -z "$NK" ]; then
+            echo "::error::Falta el secreto NEON_API_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - name: Install Neon CLI
+        run: npm install -g neon@latest
+
+      - name: Resolver cadena de conexión (Neon CLI)
+        run: |
+          CS=$(neon connection-string br-sweet-shape-b42xhogj \
+            --project-id square-surf-41242074 \
+            --database neondb --api-key "$NK" 2>/tmp/cs_err || true)
+          if [ -z "$CS" ]; then
+            CS=$(neon cs br-sweet-shape-b42xhogj \
+              --project-id square-surf-41242074 \
+              --database neondb --api-key "$NK" 2>/dev/null || true)
+          fi
+          if [ -z "$CS" ]; then
+            echo "::error::Neon CLI no devolvió cadena de conexión"
+            cat /tmp/cs_err 2>/dev/null || true
+            exit 1
+          fi
+          echo "::add-mask::$CS"
+          echo "NEON_CS=$CS" >> "$GITHUB_ENV"
+          echo "✅ Cadena resuelta"
+
+      - name: Procesar partidas FACEIT pendientes
+        run: |
+          psql "$NEON_CS" -v ON_ERROR_STOP=1 -At -c "SELECT faceit_procesar_eventos();"
+
+      # Respaldo del webhook: sondea la Data API v4 y registra partidas que
+      # el webhook no alcanzó a entregar (idempotente por faceit_match_id).
+      - name: Sondear historial FACEIT (respaldo del webhook)
+        if: ${{ secrets.FACEIT_API_KEY != '' }}
+        env:
+          FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
+          FACEIT_DISCORD_WEBHOOK: ${{ secrets.FACEIT_DISCORD_WEBHOOK }}
+        run: node scripts/faceit-xp.mjs

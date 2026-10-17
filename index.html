@@ -55,7 +55,6 @@
     <div class="nav-right">
       <span class="pro-badge" id="proBadge"><i data-lucide="zap"></i>PRO</span>
       <button class="btn btn-ghost btn-sm" id="plansBtn"><i data-lucide="crown"></i>MEMBRESÍAS</button>
-      <a class="btn btn-ghost btn-sm" id="panelLink" href="./panel.html" hidden style="display:none"><i data-lucide="shield"></i>ADMIN</a>
       <button class="btn btn-ghost btn-sm" id="arenaLoginBtn" hidden><i data-lucide="log-in"></i>ENTRAR</button>
       <button class="acc-btn" id="accBtn" title="Mi perfil" hidden>
         <span class="ava s3" id="accAva">RT</span><span id="accName">RETADOR</span><span class="live-dot" id="accLive" style="display:none"></span>
@@ -130,7 +129,7 @@
       <p class="sec-note">Las insignias se emiten al verificar identidad o al suscribirte. El cartel <b>EN DIRECTO</b> se activa solo para <b>CREADORES y SOCIOS</b>.</p>
     </div>
     <div class="reveal">
-      <p class="rail-title"><span class="live-badge"><i class="dot"></i>EN DIRECTO AHORA</span> TRANSMISIONES DEL PROGRAMA DE CREADORES Y SOCIOS VANTS</p>
+      <p class="rail-title"><span class="live-badge"><i class="dot"></i>CANALES VINCULADOS</span> TRANSMISIONES DEL PROGRAMA DE CREADORES Y SOCIOS VANTS</p>
       <div class="rail" id="liveRail"></div>
     </div>
     <div class="me-strip reveal">
@@ -297,6 +296,13 @@
       <div><span class="kicker">/// VANTS RANKED</span><h2>Ocho tiers. Un solo destino.</h2></div>
       <p class="sec-note">Tu rango sube con <b>RR</b>: victoria de serie, impacto individual y consistencia. Se juega donde importa: en los torneos.</p>
     </div>
+    <div class="rank-cta reveal" id="rankedCta" style="display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);background:linear-gradient(120deg,rgba(255,13,46,.08),transparent 60%);padding:18px 20px;margin:0 0 26px">
+      <div style="max-width:640px">
+        <p style="font:800 12px var(--mono);letter-spacing:.14em;color:var(--text);margin:0 0 6px">¿CÓMO SE SUBE DE RANGO?</p>
+        <p style="font:500 11.5px/1.8 var(--mono);color:var(--mut);margin:0">Reportás el resultado de tu serie, tu rival la confirma y el Elo mueve tu rating: cada punto de RR sale de una serie confirmada. Se reporta desde tu perfil, sección SERIES.</p>
+      </div>
+      <button class="btn btn-cut" id="rankedReportBtn"><i data-lucide="swords"></i>REPORTAR SERIE</button>
+    </div>
     <div class="rankgrid reveal" id="rankGrid"></div>
     <p class="rank-foot reveal">Ganás <b>RR</b> por cada serie ganada (más si cerrás con rating alto) y perdés por derrotas o inactividad de 30 días. Los tres primeros tiers tienen sub-niveles <b>I · II · III</b>. El tier <b>VANTS</b> es el apex: solo entra el 0.4% del circuito y su emblema lleva el sello de la marca.</p>
   </div>
@@ -417,11 +423,11 @@
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="./assets/js/arena.js?v=7"></script>
+<script src="./assets/js/arena.js?v=12"></script>
 <!-- Capa viva: Auth0 (login) + Neon (torneos reales) -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
 <script src="./assets/js/vants-supervisor.js?v=1" defer></script>
-<script src="./assets/js/arena-live.js?v=10" defer></script>
+<script src="./assets/js/arena-live.js?v=18" defer></script>
 </body>
 </html>

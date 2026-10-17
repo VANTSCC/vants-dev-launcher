@@ -41,3 +41,7 @@ android/**/build/
 Thumbs.db
 .idea/
 .vscode/
+
+# Monitor local (estado y webhook privado)
+monitor/config.json
+monitor/state.json

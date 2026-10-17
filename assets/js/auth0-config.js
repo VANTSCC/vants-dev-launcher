@@ -17,9 +17,10 @@ const NEON_DATA_API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aw
 const PUBLIC_PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
 
 // --- Linker (conectores OAuth de cuentas: Twitch/Kick/YouTube/TikTok/X/Riot/Steam/FACEIT) ---
-// URL pública de la Neon Function "linker" (Neon → Functions → linker → pestaña URL).
-// Mientras esté vacía, CONECTAR ofrece el vínculo manual guardado en Neon.
-const LINKER_BASE = '';
+// URL pública de la Neon Function "linker" (desplegada por el workflow
+// "Neon · deploy de funciones"). Con FACEIT_CLIENT_ID cargado, FACEIT conecta
+// por OAuth real; las redes sin claves siguen ofreciendo vínculo MANUAL.
+const LINKER_BASE = 'https://br-sweet-shape-b42xhogj-linker.compute.c-6.us-east-2.aws.neon.tech';
 
 // --- Checkout Stripe (pagos REALES: planes, pase premium y fees de torneo) ---
 // URL pública de la Neon Function "stripe-checkout" (Neon → Functions → stripecheckout).

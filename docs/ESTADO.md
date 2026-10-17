@@ -3,7 +3,7 @@
 ## Web en vivo
 - URL: https://feispla.github.io/Vants/ (deploy por Pages, verde)
 - index.html = VANTS GAMES (arena roja/negra). No hay otra web.
-- panel.html = PANEL ADMIN (botón ADMIN en el nav, solo visible para OWNER_EMAILS)
+- panel.html = PANEL ADMIN — ELIMINADO (15/10/2026): sin administración manual de roles/insignias; los planes comprados emiten sus insignias solos al volver de Stripe y el OWNER se reconoce por email/Discord ID en arena-live.js
 - 404.html minimalista · sw.js = stub de migración
 
 ## Credenciales / cuentas (cambiar tras primer uso)

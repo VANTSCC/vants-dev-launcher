@@ -1,0 +1,54 @@
+name: "Neon · deploy de funciones (linker)"
+
+# Despliega la Neon Function "linker" (conectores OAuth de cuentas) con sus
+# variables de entorno. Requiere los secretos del repo:
+#   NEON_API_KEY      — API key de Neon (ya existente, la usa neon-migrate)
+#   FACEIT_CLIENT_ID  — client ID OAuth PKCE de FACEIT (faceit.com/developers)
+#   FACEIT_API_KEY    — API key server-side de FACEIT (Data API v4)
+# Se ejecuta al cambiar neon-functions/** o manualmente (Run workflow).
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "neon-functions/**"
+      - ".github/workflows/neon-deploy-functions.yml"
+
+concurrency:
+  group: neon-deploy-functions
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NK: ${{ secrets.NEON_API_KEY }}
+      FACEIT_CLIENT_ID: ${{ secrets.FACEIT_CLIENT_ID }}
+      FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
+      LINKER_URL: https://br-sweet-shape-b42xhogj-linker.compute.c-6.us-east-2.aws.neon.tech
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Neon CLI
+        run: npm install -g neon@latest
+
+      - name: Desplegar linker
+        run: |
+          neon functions deploy linker \
+            --project-id square-surf-41242074 \
+            --branch br-sweet-shape-b42xhogj \
+            --src neon-functions/linker \
+            --wait \
+            --env AUTH0_DOMAIN=vants.eu.auth0.com \
+            --env AUTH0_AUDIENCE=https://api.vants.app \
+            --env VANTS_SITE_URL=https://feispla.github.io/Vants \
+            --env LINKER_URL=$LINKER_URL \
+            ${FACEIT_CLIENT_ID:+--env FACEIT_CLIENT_ID=$FACEIT_CLIENT_ID} \
+            ${FACEIT_API_KEY:+--env FACEIT_API_KEY=$FACEIT_API_KEY}
+
+      - name: Verificación (diagnóstico público del linker)
+        run: |
+          sleep 5
+          curl -s --max-time 20 "$LINKER_URL/" | head -c 900
+          echo

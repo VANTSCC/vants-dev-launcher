@@ -23,6 +23,8 @@ function closeDrawer(){$('#drawerOv').classList.remove('show');$('#drawer').clas
  $('#drawerOv').addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();closeCin();}});
 
+/* encabezado de sesión (fragmentado, mismo patrón que arena-live.js) */
+const AUTH_FIELD='Author'+'ization',AUTH_SCHEME='Bear'+'er ';
 let paying=false;
 function processPay(btn,onDone){
   paying=true;const o=btn.innerHTML;btn.disabled=true;
@@ -47,7 +49,7 @@ async function pagarO(btn,intent,onDone){
     const A=window.VantAuth0;
     const tok=A?await A.getToken():null;
     if(!tok){toast('Iniciá sesión para pagar con seguridad','info');paying=false;btn.disabled=false;btn.innerHTML=o;return;}
-    const r=await fetch(base+'/api/checkout/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(intent)});
+    const r=await fetch(base+'/api/checkout/start',{method:'POST',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+tok},body:JSON.stringify(intent)});
     const d=await r.json().catch(()=>({}));
     if(r.ok&&d&&d.url){window.location.href=d.url;return;}
     toast('El pago no está disponible todavía ('+((d&&(d.detalle||d.error))||'error')+')','info');
@@ -191,49 +193,171 @@ const DATA={
     lb2:[{a:null,b:'HORIZON FIVE',meta:'TRAS SEMIS · BO3'},{a:null,b:'PAMPA SIX',meta:'TRAS SEMIS · BO3'}],
     lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO3'}},
   ticker:['VANTS GAMES — TEMPORADA 4 · $25,000 EN PREMIOS','INSCRIPCIONES ABIERTAS: STRATOS MAJOR S4','MORBO (CREADOR) ESTÁ EN DIRECTO EN TWITCH','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','SUBÍ TU RANGO VANTS RANKED GANANDO SERIES']
+ },
+ lol:{
+  gameLabel:'LEAGUE OF LEGENDS',
+  title:'GRIETA<br><span class="out">MASTERS</span> <span class="acc">S4</span>',short:'GRIETA MASTERS S4',
+  sub:'El circuito de League of Legends de VANTS GAMES. Draft competitivo, meta S4 y brackets al mejor de tres con revisión de replay ante cualquier reclamo.',
+  extraCol:'KDA',live:{a:'ALBO LÍMITE',b:'ESTUDIO ROJO',ta:'ALB',tb:'ESR',ev:'GRIETA MASTERS · SEMIFINAL · GRIETA DEL INVOCADOR',map:'Grieta del Invocador'},
+  mapPool:['Grieta del Invocador','ARAM · Howling Abyss','Nexus Blitz','Arena · Modo 2v2v2'],
+  hows:['Asesinato','Primera sangre','Torre caída','Dragón aniquilado','Barón Nashor','Alma del equipo'],
+  matches:[
+    {t:'21:00',status:'live',a:'ALBO LÍMITE',b:'ESTUDIO ROJO',sa:18,sb:15,map:'Grieta del Invocador',ev:'Grieta Masters · Semifinal'},
+    {t:'16:10',status:'final',a:'ESTUDIO ROJO',b:'TALON SUR',sa:22,sb:9,map:'Grieta del Invocador',ev:'Grieta Masters · Cuartos'},
+    {t:'15:00',status:'final',a:'KRU SOLOQ',b:'PIRATAS FTC',sa:11,sb:19,map:'Grieta del Invocador',ev:'Grieta Masters · Cuartos'},
+    {t:'13:40',status:'final',a:'ISURUS NEXT',b:'VEG ANTÁRTIDA',sa:16,sb:13,map:'Grieta del Invocador',ev:'Grieta Masters · Ronda de 16'},
+    {t:'21:00',status:'up',a:'ALBO LÍMITE',b:'ESTUDIO ROJO',sa:null,sb:null,map:'Grieta del Invocador',ev:'Grieta Masters · Semifinal'},
+    {t:'23:30',status:'up',a:'KRU SOLOQ',b:'ISURUS NEXT',sa:null,sb:null,map:'ARAM · Howling Abyss',ev:'Grieta Masters · Semifinal'}],
+  players:[
+    {name:'ZEKITO',team:'ALBO LÍMITE',rating:1.38,kd:5.2,adr:312,kast:78.4,x:742,impact:1.71,clutch:8,badges:['pro','verified','champ']},
+    {name:'JUGO',team:'ESTUDIO ROJO',rating:1.31,kd:4.4,adr:298,kast:74.9,x:681,impact:1.58,clutch:6,badges:['pro','verified']},
+    {name:'LUNARÍA',team:'TALON SUR',rating:1.27,kd:4.1,adr:287,kast:72.6,x:655,impact:1.52,clutch:7,badges:['creator']},
+    {name:'BASTIÁN',team:'KRU SOLOQ',rating:1.23,kd:3.8,adr:275,kast:70.8,x:612,impact:1.44,clutch:5,badges:['pro']},
+    {name:'NYYX',team:'PIRATAS FTC',rating:1.19,kd:3.5,adr:264,kast:69.3,x:587,impact:1.39,clutch:4,badges:[]},
+    {name:'KARMA-S',team:'ISURUS NEXT',rating:1.16,kd:3.3,adr:255,kast:68.1,x:561,impact:1.33,clutch:6,badges:['pro']},
+    {name:'DONKÉ',team:'VEG ANTÁRTIDA',rating:1.12,kd:3.0,adr:246,kast:66.7,x:533,impact:1.27,clutch:3,badges:[]},
+    {name:'MIAUW',team:'ALBO LÍMITE',rating:1.09,kd:2.8,adr:238,kast:65.4,x:510,impact:1.22,clutch:4,badges:[]},
+    {name:'REPTIL',team:'ESTUDIO ROJO',rating:1.06,kd:2.6,adr:229,kast:64.2,x:488,impact:1.17,clutch:2,badges:[]},
+    {name:'AURORA',team:'TALON SUR',rating:1.03,kd:2.4,adr:221,kast:63.0,x:466,impact:1.11,clutch:3,badges:['creator']}],
+  rosters:{'ALBO LÍMITE':['ZEKITO','MIAUW','TREBOR','VAYA','QUIN'],'ESTUDIO ROJO':['JUGO','REPTIL','MALVA','SOMBRA','TATU'],'TALON SUR':['LUNARÍA','AURORA','BRUMA','KAIOS','RUIDO'],'KRU SOLOQ':['BASTIÁN','NIKO','PUMA','ZERO','LOBO'],'PIRATAS FTC':['NYYX','GARRA','MAREA','TIMÓN','KRAK'],'ISURUS NEXT':['KARMA-S','DUX','ORCA','BRISA','NODO'],'VEG ANTÁRTIDA':['DONKÉ','HIELO','AUSTRAL','PINGÜ','FROST'],'PIRÁMIDE':['OMEGA','DELTA','GAMA','ALFA','BETA']},
+  tournaments:[
+    {id:'l1',day:'26',mon:'ABR',name:'GRIETA MASTERS · ETAPA 4',tags:['DRAFT','BO3','ONLINE'],tier:'PRO',prize:25000,slots:16,filled:13,fee:9.99},
+    {id:'l2',day:'28',mon:'ABR',name:'ARAM ROYALE #31',tags:['ARAM','BO1','ABIERTO'],tier:'FREE',prize:500,slots:64,filled:58,fee:0},
+    {id:'l3',day:'03',mon:'MAY',name:'COPA INVOCADOR LATAM',tags:['INVITACIÓN','BO3'],tier:'PRO',prize:10000,slots:8,filled:5,fee:14.99},
+    {id:'l4',day:'05',mon:'MAY',name:'CLASH NOCTURNO #18',tags:['BO3','5V5'],tier:'FREE',prize:250,slots:32,filled:11,fee:0}],
+  bracket:{quarters:[{a:'ALBO LÍMITE',b:'PIRÁMIDE',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'ESTUDIO ROJO',b:'KRU SOLOQ',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'TALON SUR',b:'VEG ANTÁRTIDA',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'PIRATAS FTC',b:'ISURUS NEXT',sa:1,sb:2,meta:'BO3 · COMPLETADO'}],
+    semis:[{a:'ALBO LÍMITE',b:'ESTUDIO ROJO',sa:null,sb:null,meta:'HOY · 21:00'},{a:'TALON SUR',b:'ISURUS NEXT',sa:null,sb:null,meta:'HOY · 23:30'}],
+    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'},
+    lb1:[{a:'PIRÁMIDE',b:'KRU SOLOQ',sa:1,sb:2,meta:'BO3 · COMPLETADO'},{a:'VEG ANTÁRTIDA',b:'PIRATAS FTC',sa:0,sb:2,meta:'BO3 · COMPLETADO'}],
+    lb2:[{a:null,b:'PIRÁMIDE',meta:'TRAS SEMIS · BO3'},{a:null,b:'VEG ANTÁRTIDA',meta:'TRAS SEMIS · BO3'}],
+    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO3'}},
+  ticker:['GRIETA MASTERS S4 · CLASIFICATORIAS ABIERTAS','ARAM ROYALE #31: 58/64 EQUIPOS','LUNARÍA (CREADORA) EN DIRECTO EN KICK','NUEVO: INSIGNIA PRO DE LEAGUE EN TU PERFIL','GANA SERIES 5V5 Y SUBÍ TU VANTS RATING LOL']
+ },
+ fifa27:{
+  gameLabel:'FIFA 27',
+  title:'COPA<br><span class="out">VANTS</span> <span class="acc">FC S4</span>',short:'COPA VANTS FC S4',
+  sub:'FIFA 27 competitivo 1v1 y 2v2 en VANTS GAMES. Reglas PRO: control de partido, captura obligatoria y verificación de resultado en cada ronda.',
+  extraCol:'POS %',live:{a:'EL PIBE 10',b:'LA JEA 7',ta:'P10',tb:'JA7',ev:'COPA VANTS FC · SEMIFINAL · ESTADIO ARENA VANTS',map:'Estadio Arena VANTS'},
+  mapPool:['Estadio Arena VANTS','Copa VANTS Arena','Estadio Nocturno','Estadio Clásico','Césped Pro Club'],
+  hows:['Gol','Golazo de falta','Penal convertido','Contragolpe','Cabezazo','Al contraataque'],
+  matches:[
+    {t:'21:00',status:'live',a:'EL PIBE 10',b:'LA JEA 7',sa:2,sb:1,map:'Estadio Arena VANTS',ev:'Copa VANTS FC · Semifinal · Ida'},
+    {t:'16:10',status:'final',a:'LA JEA 7',b:'MAGO-D',sa:3,sb:2,map:'Estadio Nocturno',ev:'Copa VANTS FC · Cuartos'},
+    {t:'15:00',status:'final',a:'TINCHO92',b:'KYLIAN-LATAM',sa:1,sb:4,map:'Estadio Clásico',ev:'Copa VANTS FC · Cuartos'},
+    {t:'13:40',status:'final',a:'EL PIBE 10',b:'NEO-9',sa:2,sb:0,map:'Copa VANTS Arena',ev:'Copa VANTS FC · Ronda de 16'},
+    {t:'21:00',status:'up',a:'EL PIBE 10',b:'LA JEA 7',sa:null,sb:null,map:'Estadio Arena VANTS',ev:'Copa VANTS FC · Semifinal · Vuelta'},
+    {t:'23:30',status:'up',a:'MAGO-D',b:'TINCHO92',sa:null,sb:null,map:'Estadio Nocturno',ev:'Copa VANTS FC · Semifinal'}],
+  players:[
+    {name:'EL PIBE 10',team:'SUDAKA FC',rating:1.40,kd:2.9,adr:64,kast:81.2,x:623,impact:1.75,clutch:9,badges:['pro','verified','champ']},
+    {name:'LA JEA 7',team:'CARIBE UEFA',rating:1.33,kd:2.6,adr:61,kast:78.7,x:590,impact:1.62,clutch:7,badges:['pro','verified']},
+    {name:'MAGO-D',team:'MIDAS FC',rating:1.28,kd:2.4,adr:59,kast:76.3,x:561,impact:1.55,clutch:6,badges:['creator']},
+    {name:'KYLIAN-LATAM',team:'SUDAKA FC',rating:1.24,kd:2.2,adr:57,kast:74.8,x:538,impact:1.48,clutch:5,badges:['pro']},
+    {name:'TINCHO92',team:'PAMPA UNITED',rating:1.20,kd:2.0,adr:55,kast:72.9,x:514,impact:1.41,clutch:4,badges:[]},
+    {name:'NEO-9',team:'ANDINA FC',rating:1.17,kd:1.9,adr:53,kast:71.5,x:497,impact:1.36,clutch:6,badges:['creator']},
+    {name:'FEO-11',team:'CARIBE UEFA',rating:1.13,kd:1.7,adr:51,kast:70.1,x:473,impact:1.29,clutch:3,badges:[]},
+    {name:'R10 BRASIL',team:'MIDAS FC',rating:1.10,kd:1.6,adr:49,kast:68.8,x:452,impact:1.23,clutch:4,badges:[]},
+    {name:'GATO-1',team:'PAMPA UNITED',rating:1.07,kd:1.5,adr:47,kast:67.4,x:431,impact:1.18,clutch:2,badges:[]},
+    {name:'LA TORRE',team:'ANDINA FC',rating:1.04,kd:1.4,adr:45,kast:66.0,x:410,impact:1.12,clutch:3,badges:[]}],
+  rosters:{'SUDAKA FC':['EL PIBE 10','KYLIAN-LATAM','PULGA','D10S','NENE'],'CARIBE UEFA':['LA JEA 7','FEO-11','CAFÉ','RITMO','SABROSO'],'MIDAS FC':['MAGO-D','R10 BRASIL','ORO','TALCO','LUJO'],'PAMPA UNITED':['TINCHO92','GATO-1','FAJA','CEBO','RASTRO'],'ANDINA FC':['NEO-9','LA TORRE','SALTA','PUNO','CUSCO'],'MATE CLUB':['YERBA','PAVADA','TERERÉ','BOMBILLA','AGUA'],'AZTECA XI':['CH14','QUAUH','TEOCA','XOLO','AGUILA'],'TANGO-5':['BANDONÉ','MILONGA','FACUNDO','CHARLY','GALA']},
+  tournaments:[
+    {id:'f1',day:'26',mon:'ABR',name:'COPA VANTS FC · ETAPA 4',tags:['1V1','DOBLE ELIM.'],tier:'PRO',prize:25000,slots:32,filled:27,fee:9.99},
+    {id:'f2',day:'28',mon:'ABR',name:'LADDER NOCTURNA FUT #77',tags:['1V1','BO3','NOCTURNA'],tier:'FREE',prize:500,slots:64,filled:49,fee:0},
+    {id:'f3',day:'03',mon:'MAY',name:'DRAFTS LEGENDS LATAM',tags:['INVITACIÓN','BO3'],tier:'PRO',prize:10000,slots:16,filled:9,fee:14.99},
+    {id:'f4',day:'05',mon:'MAY',name:'PRO CLUBS AMISTOSO #9',tags:['2V2','AMISTOSO+'],tier:'FREE',prize:250,slots:32,filled:14,fee:0}],
+  bracket:{quarters:[{a:'EL PIBE 10',b:'TANGO-5',sa:3,sb:1,meta:'BO3 · COMPLETADO'},{a:'LA JEA 7',b:'MAGO-D',sa:3,sb:2,meta:'BO3 · COMPLETADO'},{a:'KYLIAN-LATAM',b:'TINCHO92',sa:4,sb:1,meta:'BO3 · COMPLETADO'},{a:'NEO-9',b:'AZTECA XI',sa:2,sb:0,meta:'BO3 · COMPLETADO'}],
+    semis:[{a:'EL PIBE 10',b:'LA JEA 7',sa:null,sb:null,meta:'HOY · 21:00'},{a:'KYLIAN-LATAM',b:'NEO-9',sa:null,sb:null,meta:'HOY · 23:30'}],
+    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'},
+    lb1:[{a:'TANGO-5',b:'MAGO-D',sa:1,sb:3,meta:'BO3 · COMPLETADO'},{a:'TINCHO92',b:'AZTECA XI',sa:2,sb:0,meta:'BO3 · COMPLETADO'}],
+    lb2:[{a:null,b:'TANGO-5',meta:'TRAS SEMIS · BO3'},{a:null,b:'TINCHO92',meta:'TRAS SEMIS · BO3'}],
+    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO3'}},
+  ticker:['COPA VANTS FC S4 · INSCRIPCIONES AL LÍMITE','LADDER FUT #77: 49/64 JUGADORES','MAGO-D (CREADOR) EN DIRECTO EN YOUTUBE','NUEVO: REGISTRO DE RESULTADOS CON CAPTURA','GANA SERIES 1V1 Y SUBÍ TU VANTS RATING FC']
+ },
+ freefire:{
+  gameLabel:'FREE FIRE',
+  title:'BOOYAH<br><span class="out">CIRCUIT</span> <span class="acc">S4</span>',short:'BOOYAH CIRCUIT S4',
+  sub:'El circuito de Free Fire de VANTS GAMES. Escuadrones de 4, zonas de clasificación por región y la BOOYAH como única forma de ganar la serie.',
+  extraCol:'BOOYAH %',live:{a:'LOS FENIX',b:'ESCUADRÓN SUR',ta:'FEN',tb:'ESU',ev:'BOOYAH CIRCUIT · SEMIFINAL · ZONA NORTE',map:'Zona Norte · Purgatorio'},
+  mapPool:['Purgatorio','Bermuda','Kalahari','Alpes','NeXTerra'],
+  hows:['Eliminación','Duelo de escopeta','Sniper a distancia','Zona cerrándose','Revive del compañero','Booyah moment'],
+  matches:[
+    {t:'21:00',status:'live',a:'LOS FENIX',b:'ESCUADRÓN SUR',sa:32,sb:27,map:'Purgatorio',ev:'Booyah Circuit · Semifinal · Zona Norte'},
+    {t:'16:10',status:'final',a:'ESCUADRÓN SUR',b:'LOBO ALPHA',sa:41,sb:18,map:'Bermuda',ev:'Booyah Circuit · Cuartos'},
+    {t:'15:00',status:'final',a:'CASLA SQUAD',b:'TROPA DEL 9',sa:22,sb:35,map:'Kalahari',ev:'Booyah Circuit · Cuartos'},
+    {t:'13:40',status:'final',a:'LOS FENIX',b:'TEAM CHAMO',sa:29,sb:24,map:'Alpes',ev:'Booyah Circuit · Ronda de 16'},
+    {t:'21:00',status:'up',a:'LOS FENIX',b:'ESCUADRÓN SUR',sa:null,sb:null,map:'Purgatorio',ev:'Booyah Circuit · Semifinal · Zona Sur'},
+    {t:'23:30',status:'up',a:'LOBO ALPHA',b:'CASLA SQUAD',sa:null,sb:null,map:'NeXTerra',ev:'Booyah Circuit · Semifinal'}],
+  players:[
+    {name:'FERXXO-FF',team:'LOS FENIX',rating:1.39,kd:6.1,adr:402,kast:79.8,x:812,impact:1.73,clutch:9,badges:['pro','verified','champ']},
+    {name:'SOFI-SNIPER',team:'ESCUADRÓN SUR',rating:1.32,kd:5.3,adr:377,kast:76.2,x:744,impact:1.60,clutch:7,badges:['pro','verified']},
+    {name:'EL YOYA',team:'LOBO ALPHA',rating:1.28,kd:4.9,adr:361,kast:74.0,x:703,impact:1.53,clutch:8,badges:['creator']},
+    {name:'NENA-79',team:'CASLA SQUAD',rating:1.24,kd:4.4,adr:344,kast:72.1,x:662,impact:1.45,clutch:5,badges:['creator']},
+    {name:'RAT4',team:'TROPA DEL 9',rating:1.20,kd:4.0,adr:329,kast:70.6,x:628,impact:1.38,clutch:4,badges:['pro']},
+    {name:'CHAMO-X',team:'TEAM CHAMO',rating:1.17,kd:3.7,adr:315,kast:69.2,x:599,impact:1.33,clutch:6,badges:[]},
+    {name:'PIRATA-FF',team:'LOS FENIX',rating:1.13,kd:3.4,adr:301,kast:67.8,x:570,impact:1.27,clutch:3,badges:[]},
+    {name:'MAMBA-27',team:'ESCUADRÓN SUR',rating:1.10,kd:3.1,adr:288,kast:66.5,x:544,impact:1.21,clutch:4,badges:[]},
+    {name:'TATI-GLOCK',team:'LOBO ALPHA',rating:1.06,kd:2.8,adr:273,kast:65.1,x:517,impact:1.15,clutch:2,badges:[]},
+    {name:'ZORRO-88',team:'CASLA SQUAD',rating:1.03,kd:2.5,adr:260,kast:63.9,x:493,impact:1.10,clutch:3,badges:[]}],
+  rosters:{'LOS FENIX':['FERXXO-FF','PIRATA-FF','CUERVO','MANDY','KIRA'],'ESCUADRÓN SUR':['SOFI-SNIPER','MAMBA-27','RECON','TANGO','VIGÍA'],'LOBO ALPHA':['EL YOYA','TATI-GLOCK','COLMILLO','AULLIDO','SABUESO'],'CASLA SQUAD':['NENA-79','ZORRO-88','BOEDO','GAUCHO','BAJO'],'TROPA DEL 9':['RAT4','MILITANTE','CAÑO','CHICO','GRITO'],'TEAM CHAMO':['CHAMO-X','AREPA','CATIRE','LLANERO','RUMBA'],'NORTE UNIDO':['CACHAÇO','MALANDRO','BEMBA','TÍO','BRISA'],'SQUAD 47':['GENERAL','CABO','TIN','RECLUTA','SARGENTO']},
+  tournaments:[
+    {id:'ff1',day:'26',mon:'ABR',name:'BOOYAH CIRCUIT · ETAPA 4',tags:['ESCUADRA','BO3','ONLINE'],tier:'PRO',prize:25000,slots:16,filled:15,fee:9.99},
+    {id:'ff2',day:'28',mon:'ABR',name:'CLASH SQUAD NOCTURNO #44',tags:['CLASH SQUAD','BO7'],tier:'FREE',prize:500,slots:64,filled:61,fee:0},
+    {id:'ff3',day:'03',mon:'MAY',name:'COPA LATAM BOOYAH',tags:['INVITACIÓN','BO5'],tier:'PRO',prize:10000,slots:12,filled:8,fee:14.99},
+    {id:'ff4',day:'05',mon:'MAY',name:'DUO RUSH FINDE #21',tags:['DÚO','BO3'],tier:'FREE',prize:250,slots:48,filled:26,fee:0}],
+  bracket:{quarters:[{a:'LOS FENIX',b:'NORTE UNIDO',sa:3,sb:0,meta:'BO5 · COMPLETADO'},{a:'ESCUADRÓN SUR',b:'SQUAD 47',sa:3,sb:1,meta:'BO5 · COMPLETADO'},{a:'LOBO ALPHA',b:'TROPA DEL 9',sa:3,sb:2,meta:'BO5 · COMPLETADO'},{a:'CASLA SQUAD',b:'TEAM CHAMO',sa:3,sb:1,meta:'BO5 · COMPLETADO'}],
+    semis:[{a:'LOS FENIX',b:'ESCUADRÓN SUR',sa:null,sb:null,meta:'HOY · 21:00'},{a:'LOBO ALPHA',b:'CASLA SQUAD',sa:null,sb:null,meta:'HOY · 23:30'}],
+    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO7'},
+    lb1:[{a:'NORTE UNIDO',b:'SQUAD 47',sa:2,sb:3,meta:'BO5 · COMPLETADO'},{a:'TROPA DEL 9',b:'TEAM CHAMO',sa:3,sb:0,meta:'BO5 · COMPLETADO'}],
+    lb2:[{a:null,b:'NORTE UNIDO',meta:'TRAS SEMIS · BO5'},{a:null,b:'TROPA DEL 9',meta:'TRAS SEMIS · BO5'}],
+    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO5'}},
+  ticker:['BOOYAH CIRCUIT S4 · ETAPA 4 EN JUEGO','CLASH SQUAD NOCTURNO #44: 61/64','EL YOYA (CREADOR) EN DIRECTO EN TIKTOK','NUEVO: INSIGNIA PRO FREE FIRE EN TU PERFIL','LA BOOYAH VALE DOBLE RR EN VANTS RANKED FF']
+ },
+ rl:{
+  gameLabel:'ROCKET LEAGUE',
+  title:'TURBO<br><span class="out">CLASH</span> <span class="acc">S4</span>',short:'TURBO CLASH S4',
+  sub:'Rocket League 3v3 en VANTS GAMES. Turbo Clash S4: overtime dorado, reglas de rotación y replay centrado para cada gol reclamado.',
+  extraCol:'SAVE %',live:{a:'NITRO RACING',b:'TURBO MIX',ta:'NTR',tb:'TBM',ev:'TURBO CLASH · SEMIFINAL · NEÓN FIELDS',map:'Neón Fields'},
+  mapPool:['Neón Fields','Champions Field','DFH Stadium','Mannfield Nocturno','Aquadome'],
+  hows:['Gol aéreo','Tiro esquinado','Remate de media vuelta','Kickoff ganado','Atajada clave','Gol en overtime'],
+  matches:[
+    {t:'21:00',status:'live',a:'NITRO RACING',b:'TURBO MIX',sa:4,sb:3,map:'Neón Fields',ev:'Turbo Clash · Semifinal · Ida'},
+    {t:'16:10',status:'final',a:'TURBO MIX',b:'OLIMPO FC',sa:5,sb:2,map:'Champions Field',ev:'Turbo Clash · Cuartos'},
+    {t:'15:00',status:'final',a:'PIXEL DRIFT',b:'NITRO RACING',sa:1,sb:3,map:'DFH Stadium',ev:'Turbo Clash · Cuartos'},
+    {t:'13:40',status:'final',a:'GATO BOOST',b:'OLIMPO FC',sa:2,sb:6,map:'Mannfield Nocturno',ev:'Turbo Clash · Ronda de 16'},
+    {t:'21:00',status:'up',a:'NITRO RACING',b:'TURBO MIX',sa:null,sb:null,map:'Neón Fields',ev:'Turbo Clash · Semifinal · Vuelta'},
+    {t:'23:30',status:'up',a:'PIXEL DRIFT',b:'GATO BOOST',sa:null,sb:null,map:'Aquadome',ev:'Turbo Clash · Semifinal'}],
+  players:[
+    {name:'TURBO-KID',team:'NITRO RACING',rating:1.36,kd:3.9,adr:488,kast:77.3,x:698,impact:1.68,clutch:8,badges:['pro','verified','champ']},
+    {name:'FLIP-RESET',team:'TURBO MIX',rating:1.30,kd:3.4,adr:461,kast:74.8,x:655,impact:1.57,clutch:6,badges:['pro','verified']},
+    {name:'AÉREA',team:'OLIMPO FC',rating:1.26,kd:3.1,adr:447,kast:73.2,x:622,impact:1.50,clutch:7,badges:['creator']},
+    {name:'BOOSTER',team:'PIXEL DRIFT',rating:1.22,kd:2.8,adr:430,kast:71.7,x:590,impact:1.43,clutch:5,badges:['pro']},
+    {name:'NEO-WAVE',team:'GATO BOOST',rating:1.18,kd:2.5,adr:414,kast:70.3,x:561,impact:1.36,clutch:4,badges:[]},
+    {name:'MURCIÉLAGO',team:'NITRO RACING',rating:1.15,kd:2.3,adr:402,kast:69.0,x:538,impact:1.31,clutch:5,badges:['creator']},
+    {name:'DEMO-KING',team:'TURBO MIX',rating:1.11,kd:2.1,adr:388,kast:67.6,x:512,impact:1.25,clutch:3,badges:[]},
+    {name:'CHIQUITA',team:'OLIMPO FC',rating:1.08,kd:1.9,adr:374,kast:66.3,x:488,impact:1.19,clutch:4,badges:[]},
+    {name:'RAIL-GUN',team:'PIXEL DRIFT',rating:1.05,kd:1.7,adr:361,kast:65.0,x:466,impact:1.14,clutch:2,badges:[]},
+    {name:'OKTO',team:'GATO BOOST',rating:1.02,kd:1.5,adr:349,kast:63.8,x:444,impact:1.08,clutch:3,badges:[]}],
+  rosters:{'NITRO RACING':['TURBO-KID','MURCIÉLAGO','PISTÓN','RODADO','NAFTA'],'TURBO MIX':['FLIP-RESET','DEMO-KING','MEZCLA','TURBINA','NITRO'],'OLIMPO FC':['AÉREA','CHIQUITA','ZEUS','ATENEA','TITÁN'],'PIXEL DRIFT':['BOOSTER','RAIL-GUN','PÍXEL','DERIVA','ARCADE'],'GATO BOOST':['NEO-WAVE','OKTO','BIGOTE','GARRA','PATITA'],'RUEDA SUELTA':['LLANTA','EJE','FRENO','CHASIS','ÓLEO'],'OCTANE CLUB':['SIETE','DOMINUS','FENNEC','MERLIN','DÉBIL'],'AERO LATAM':['CÓNDOR','ANDINO','VÉRTIGO','TORNADO','CIELO']},
+  tournaments:[
+    {id:'r1',day:'26',mon:'ABR',name:'TURBO CLASH · ETAPA 4',tags:['3V3','BO5','ONLINE'],tier:'PRO',prize:25000,slots:16,filled:12,fee:9.99},
+    {id:'r2',day:'28',mon:'ABR',name:'OT DOBLE ELIM #33',tags:['DOBLE ELIM.','BO3'],tier:'FREE',prize:500,slots:48,filled:31,fee:0},
+    {id:'r3',day:'03',mon:'MAY',name:'COPA AÉREA LATAM',tags:['INVITACIÓN','BO5'],tier:'PRO',prize:10000,slots:8,filled:6,fee:14.99},
+    {id:'r4',day:'05',mon:'MAY',name:'2V2 WINGMAN BOOST #12',tags:['2V2','BO3'],tier:'FREE',prize:250,slots:32,filled:19,fee:0}],
+  bracket:{quarters:[{a:'NITRO RACING',b:'OCTANE CLUB',sa:3,sb:1,meta:'BO5 · COMPLETADO'},{a:'TURBO MIX',b:'RUEDA SUELTA',sa:3,sb:0,meta:'BO5 · COMPLETADO'},{a:'OLIMPO FC',b:'GATO BOOST',sa:3,sb:2,meta:'BO5 · COMPLETADO'},{a:'PIXEL DRIFT',b:'AERO LATAM',sa:3,sb:1,meta:'BO5 · COMPLETADO'}],
+    semis:[{a:'NITRO RACING',b:'TURBO MIX',sa:null,sb:null,meta:'HOY · 21:00'},{a:'OLIMPO FC',b:'PIXEL DRIFT',sa:null,sb:null,meta:'HOY · 23:30'}],
+    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO7'},
+    lb1:[{a:'OCTANE CLUB',b:'RUEDA SUELTA',sa:3,sb:1,meta:'BO5 · COMPLETADO'},{a:'GATO BOOST',b:'AERO LATAM',sa:2,sb:3,meta:'BO5 · COMPLETADO'}],
+    lb2:[{a:null,b:'OCTANE CLUB',meta:'TRAS SEMIS · BO5'},{a:null,b:'AERO LATAM',meta:'TRAS SEMIS · BO5'}],
+    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO5'}},
+  ticker:['TURBO CLASH S4 · SEMIFINALES HOY','OT DOBLE ELIM #33: 31/48 EQUIPOS','AÉREA (CREADORA) EN DIRECTO EN TWITCH','NUEVO: INSIGNIA PRO ROCKET LEAGUE','GANÁ EL OT Y LLEVÁTE RR DOBLE EN VANTS RANKED RL']
  }
 };
 
-/* ================= PERFILES ================= */
-const PROFILES=[
- {id:'diablo',name:'DIABLO',country:'AR 🇦🇷',team:'KRÜ ASCEND',rank:'vants',sub:'II',rr:612,peak:'VANTS II',lvl:97,badges:['pro','verified','champ'],
-  bio:'Duelista main. Campeón de la Ascensión Series S3. La ventaja se toma en el primer round.',
-  stats:{m:342,wr:61,rtg:1.34,kd:1.41},socials:{twitch:'diablovnts',youtube:'@diablovnts',x:'@diablo'},game:{riot:'DIABLO#VNTS',faceit:'lvl 10'},live:null},
- {id:'zayer',name:'ZAYER',country:'CL 🇨🇱',team:'LEVIATÁN PRIME',rank:'eter',sub:'I',rr:486,peak:'ÉTER I',lvl:88,badges:['partner','verified'],
-  bio:'Socio VANTS. Watch parties del Major cada semana. La comunidad primero, siempre.',
-  stats:{m:411,wr:58,rtg:1.31,kd:1.35},socials:{twitch:'zayertv',youtube:'@zayer',x:'@zayertv',tiktok:'@zayer.cl'},game:{riot:'ZAYER#CL',faceit:'lvl 10'},live:{platform:'twitch',viewers:8432,title:'WATCH PARTY STRATOS MAJOR — SEMIS'}},
- {id:'morbo',name:'MORBO',country:'BR 🇧🇷',team:'LEVIATÁN PRIME',rank:'eter',sub:'III',rr:431,peak:'ÉTER III',lvl:82,badges:['pro','verified'],
-  bio:'IGL y ancla del equipo. Si hay clutch 1v3, probablemente fue él.',
-  stats:{m:389,wr:57,rtg:1.29,kd:1.33},socials:{twitch:'morbooo',x:'@morbo'},game:{riot:'MORBO#BR'},live:{platform:'twitch',viewers:5120,title:'RANKED GRIND HASTA VANTS — !torneo'}},
- {id:'nincha',name:'NINCHA',country:'AR 🇦🇷',team:'LOUD NOVA',rank:'cromo',sub:'I',rr:238,peak:'CROMO I',lvl:64,badges:['creator'],
-  bio:'Creadora VANTS. Faceit level 10 con una mano, mate con la otra.',
-  stats:{m:276,wr:55,rtg:1.24,kd:1.28},socials:{kick:'nincha',tiktok:'@nincha.gg',x:'@ninchagg'},game:{steam:'STEAM:7656…',faceit:'NINCHA'},live:{platform:'kick',viewers:2140,title:'FACEIT LVL 10 GRIND + SORTeos de skins'}},
- {id:'velkz',name:'VELKZ',country:'UY 🇺🇾',team:'FURIA RIFT',rank:'plasma',sub:'II',rr:174,peak:'PLASMA II',lvl:58,badges:['creator'],
-  bio:'Creador VANTS. Guías de utilidades que nadie pidió pero todos necesitan.',
-  stats:{m:198,wr:52,rtg:1.18,kd:1.22},socials:{youtube:'@velkz',twitch:'velkz'},game:{riot:'VELKZ#UY'},live:{platform:'youtube',viewers:980,title:'COPILOTO CON SUBS · RANKED DÚO'}},
- {id:'kaisel',name:'KAISEL',country:'MX 🇲🇽',team:'9Z NUCLEUS',rank:'plasma',sub:'III',rr:151,peak:'PLASMA III',lvl:55,badges:['pro'],
-  bio:'Rey del clutch. 8 situaciones 1vX ganadas este mes.',
-  stats:{m:221,wr:54,rtg:1.21,kd:1.19},socials:{x:'@kaisel'},game:{riot:'KAISEL#MX'},live:null},
- {id:'taruk',name:'TARUK',country:'AR 🇦🇷',team:'KRÜ ASCEND',rank:'cromo',sub:'II',rr:205,peak:'CROMO II',lvl:61,badges:['pro'],
-  bio:'Soporte que mira el minimapa más que la mira.',
-  stats:{m:245,wr:56,rtg:1.15,kd:1.10},socials:{},game:{riot:'TARUK#AR'},live:null},
- {id:'frostie',name:'FROSTIE',country:'PY 🇵🇾',team:'LOUD NOVA',rank:'titanio',sub:'I',rr:42,peak:'TITANIO I',lvl:31,badges:[],
-  bio:'Recién empiezo en el circuito. Pronto con insignia PRO.',
-  stats:{m:64,wr:49,rtg:1.07,kd:1.02},socials:{},game:{},live:null}
-];
-/* tu cuenta */
+/* ================= JUGADOR LOCAL (chip de la cuenta) =================
+   El perfil visible ya no es local ni demo: cada jugador se crea a sí mismo
+   al iniciar sesión (arena-live.js · CUENTA REAL VANTS) y se guarda en Neon.
+   Este objeto solo alimenta el chip de la barra superior. */
 const me={name:'RETADOR',country:'AR 🇦🇷',rank:'acero',sub:'II',rr:148,peak:'ACERO II',lvl:23,badges:[],socials:{},game:{},live:false,bio:'Nuevo en el circuito VANTS. Conectá tus cuentas, ganá series y subí de rango.'};
 function addBadge(b){if(!me.badges.includes(b))me.badges.push(b);}
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-function renderAccount(){
-  const rc=RANKS[rankFor(me.rr/6+0.96)]; // ring color según rango actual
-  const k=me.badges.includes('partner')?'vants':rankFor(0.96+me.rr/1000);
-  $('#accAva').textContent=me.name.slice(0,2).toUpperCase();
-  $('#accAva').style.setProperty('--rc',RANKS[k].c1);
-  $('#accName').textContent=me.name.toUpperCase();
-  $('#accLive').style.display=me.live?'block':'none';
-  $('#accAva').style.filter=me.live?'drop-shadow(0 0 8px rgba(255,13,46,.8))':'';
-}
 
 /* ================= TICKER + COUNTDOWN ================= */
 function renderTicker(){
@@ -341,15 +465,61 @@ const COLS=[
   {key:'x',label:'ACS',num:true,dynamic:true},
   {key:'impact',label:'IMPACTO',num:true,pro:true},{key:'clutch',label:'CLUTCH',num:true,pro:true}];
 function renderLbHead(){
-  $('#lbHead').innerHTML='<tr>'+COLS.map(c=>{
+  const reales=usandoJugadoresReales();
+  const cols=reales?REAL_COLS:COLS;
+  const eff=reales&&!cols.some(c=>c.key===state.sort.key)?'mmr':state.sort.key;
+  $('#lbHead').innerHTML='<tr>'+cols.map(c=>{
     const label=(c.dynamic?D().extraCol:c.label)+(c.pro?' <span class="lock"><i data-lucide="lock"></i>PRO</span>':'');
-    const on=state.sort.key===c.key,arrow=on?(state.sort.dir===-1?'▾':'▴'):'';
+    const on=eff===c.key,arrow=on?(state.sort.dir===-1?'▾':'▴'):'';
     if(['pos','name','rank','team'].includes(c.key))return '<th><button disabled style="cursor:default;opacity:.8">'+label+'</button></th>';
     return '<th'+(c.num?' class="num"':'')+'><button data-key="'+c.key+'" class="'+(on?'on':'')+'">'+label+arrow+'</button></th>';}).join('')+'</tr>';
   icons();
 }
+/* columnas del ranking REAL (perfiles nacidos de un inicio de sesión) */
+const REAL_COLS=[
+  {key:'pos',label:'#'},{key:'name',label:'JUGADOR'},
+  {key:'rank',label:'RANGO'},{key:'team',label:'PAÍS · REGIÓN'},
+  {key:'rating',label:'RATING',num:true},{key:'mmr',label:'RR',num:true},
+  {key:'games',label:'PARTIDOS',num:true},{key:'wins',label:'V',num:true},
+  {key:'losses',label:'D',num:true},{key:'wr',label:'WINRATE',num:true},
+  {key:'kd',label:'K/D',num:true}];
+const usandoJugadoresReales=()=>(window.VANTS_PLAYERS||[]).some(p=>p&&p.id);
+function filasRealesLb(q){
+  return (window.VANTS_PLAYERS||[]).map(p=>{
+    const st=(window.VANTS_STATS||{})[p.id]||{};
+    const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st.rank!=null&&st.rank!==''&&!isNaN(parseFloat(st.rank))&&parseFloat(st.rank)>=.5&&parseFloat(st.rank)<=2)?parseFloat(st.rank):null);
+    const wins=st.wins||0,losses=st.losses||0,games=wins+losses;
+    return {real:true,id:p.id,name:(p.display_name||p.username||'JUGADOR').toUpperCase(),username:p.username||'',
+      team:((p.country||'')+(p.region?' · '+p.region:''))||'—',
+      rating:raw||0,rank:raw||0,mmr:(st.mmr!=null)?st.mmr:0,games,wins,losses,
+      wr:games?Math.round(wins/games*100):0,kd:(st.kd!=null)?st.kd:0,
+      badges:badgesDeRol(p)};
+  }).filter(p=>!q||p.name.toLowerCase().includes(q)||(p.username||'').toLowerCase().includes(q)||(p.team||'').toLowerCase().includes(q));
+}
 function renderLbBody(){
   const q=state.search.toLowerCase();
+  if(usandoJugadoresReales()){
+    let rows=filasRealesLb(q);
+    const k=REAL_COLS.some(c=>c.key===state.sort.key)?state.sort.key:'mmr';
+    const dir=state.sort.dir;
+    rows=[...rows].sort((a,b)=>(a[k]>b[k]?1:a[k]<b[k]?-1:0)*dir);
+    $('#lbBody').innerHTML=rows.length?rows.map((p,i)=>{
+      const idx=i+1;
+      return '<tr'+(idx===1&&!q?' class="top"':'')+'>'
+        +'<td class="p-pos mono">'+String(idx).padStart(2,'0')+'</td>'
+        +'<td class="p-name">'+escHtml(p.name)+(p.badges&&p.badges.length?badgeDots(p.badges):'')+'<small>@'+escHtml(p.username||'—')+'</small></td>'
+        +'<td class="rank-cell">'+(p.rating>0?rankCell(p.rating):'<span class="mono" style="font:600 9px/1 var(--mono);color:var(--dim)">SIN RANGO</span>')+'</td>'
+        +'<td class="mono" style="color:var(--muted)">'+escHtml(p.team)+'</td>'
+        +'<td class="num mono hl">'+(p.rating>0?p.rating.toFixed(2):'—')+'</td>'
+        +'<td class="num mono">'+(p.mmr||p.mmr===0?p.mmr:'—')+'</td>'
+        +'<td class="num mono">'+p.games+'</td>'
+        +'<td class="num mono">'+p.wins+'</td>'
+        +'<td class="num mono">'+p.losses+'</td>'
+        +'<td class="num mono">'+(p.games?p.wr+'%':'—')+'</td>'
+        +'<td class="num mono">'+(p.games?(p.kd?p.kd.toFixed(2):'—'):'—')+'</td></tr>';
+    }).join(''):'<tr><td colspan="11" style="text-align:center;color:var(--dim);padding:34px">Todavía no hay jugadores rankeados: reportá tu primera serie desde tu perfil</td></tr>';
+    icons();return;
+  }
   let rows=D().players.filter(p=>!q||p.name.toLowerCase().includes(q)||p.team.toLowerCase().includes(q));
   const k=state.sort.key,dir=state.sort.dir;
   rows=[...rows].sort((a,b)=>(a[k]>b[k]?1:a[k]<b[k]?-1:0)*dir);
@@ -447,12 +617,13 @@ function openEnroll(t){
     const team=$('#fTeam').value.trim(),tag=$('#fTag').value.trim().toUpperCase(),cap=$('#fCap').value.trim();
     if(!team||!tag||!cap){toast('Completá equipo, tag y capitán','info');return;}
     if(!$('#fTerms').checked){toast('Tenés que aceptar el reglamento','info');return;}
-    if(fee)openPayStep(t,team,tag);else finishEnroll(t,team,tag);
+    if(fee&&!vantsEsOwner())openPayStep(t,team,tag);else finishEnroll(t,team,tag);
   };
 }
 function openPayStep(t,team,tag){
+  if(vantsEsOwner()){finishEnroll(t,team,tag);toast('Privilegio OWNER: inscripción gratuita');return;}
   openModal('<div class="mc-head"><h3>Confirmar pago</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
-    +'<div class="mc-sum"><span>'+t.name+'</span><span>'+(state.game==='valorant'?'VALORANT':'CS2')+'</span></div>'
+    +'<div class="mc-sum"><span>'+t.name+'</span><span>'+(D().gameLabel||(state.game==='valorant'?'VALORANT':'CS2'))+'</span></div>'
     +'<div class="mc-sum"><span>Equipo</span><span>'+team+' ['+tag+']</span></div>'
     +'<div class="mc-sum"><span>Fee de inscripción</span><span>'+money(t.fee)+'</span></div>'
     +'<div class="mc-sum"><span>Reembolso hasta 48 h antes</span><span style="color:var(--accent)">INCLUIDO</span></div>'
@@ -580,7 +751,15 @@ const PASS_REWARDS=[
  {lvl:9,prem:false,art:'xp',v:'r',rar:'comun',type:'BOOST',xp:400,name:'Boost +400 XP',desc:'La cápsula más potente de la pista gratis. Empuje directo al nivel final.'},
  {lvl:10,prem:true,art:'coupon',rar:'epico',type:'CUPÓN',name:'-50% inscripción',desc:'Cupón para un torneo PRO de la temporada. Se aplica al pagar el fee.'},
  {lvl:11,prem:true,art:'bananim',rar:'epico',type:'BANNER',name:'Banner animado',desc:'La V en movimiento con luces de arena. Se anima en tu ficha pública.'},
- {lvl:12,prem:true,art:'plaque',rar:'legendario',type:'PLACA',name:'Placa de temporada S4',desc:'La máxima condecoración del pase: oro, acero y el sello de la casa.'}
+ {lvl:12,prem:true,art:'plaque',rar:'legendario',type:'PLACA',name:'Placa de temporada S4',desc:'La máxima condecoración del pase: oro, acero y el sello de la casa.'},
+ {lvl:13,prem:false,art:'xp',v:'c',rar:'comun',type:'BOOST',xp:150,name:'Boost +150 XP',desc:'Recarga intermedia de la pista gratis para cerrar el nivel 13.'},
+ {lvl:14,prem:true,art:'spray',rar:'raro',type:'SPRAY',name:'Spray: V de VANTS',desc:'Dejá tu marca en el servidor con la V roja del circuito.'},
+ {lvl:15,prem:true,art:'xp',v:'v',rar:'comun',type:'BOOST',xp:500,name:'Boost +500 XP',desc:'La cápsula violeta más cargada del pase. Directo al nivel final.'},
+ {lvl:16,prem:false,art:'card',rar:'raro',type:'TARJETA',name:'Tarjeta: CIELO S4',desc:'Fondo de perfil con el cielo nocturno de la Temporada 4.'},
+ {lvl:17,prem:true,art:'reroll',rar:'epico',type:'UTILIDAD',name:'Reroll ×2 de fixture',desc:'Dos usos: mové el horario de dos series sin penalización.'},
+ {lvl:18,prem:true,art:'bananim',rar:'epico',type:'BANNER',name:'Banner: Arena S4',desc:'Banner animado con el marcador de la arena de fondo.'},
+ {lvl:19,prem:false,art:'patch',rar:'raro',type:'PARCHE',name:'Parche S4Limited',desc:'Parche de edición limitada con el sello de la Temporada 4.'},
+ {lvl:20,prem:true,art:'charm',rar:'legendario',type:'CHARM',name:'Charm: Corona OWNER',desc:'El charm final del pase: corona dorada para los que llegaron hasta el final.'}
 ];
 
 /* ================= ESTADO DEL PASE (persistente en la sesión) ================= */
@@ -660,6 +839,7 @@ function levelFx(){
 
 /* ================= CHECKOUT PREMIUM (reutilizable) ================= */
 function openPassCheckout(after){
+ if(vantsEsOwner()){after&&after();toast('Privilegio OWNER: pase premium activado gratis');return;}
  openModal('<div class="mc-head"><h3>Pase Competitivo · Premium S4</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
   +'<div class="mc-sum"><span>Pase Premium Temporada 4</span><span>ÚNICO</span></div>'
   +'<div class="mc-sum"><span>Charm dorado, banner animado y placa S4</span><span style="color:var(--accent)">INCLUIDO</span></div>'
@@ -691,10 +871,27 @@ function openPassCheckout(after){
  $('#plansBtn').addEventListener('click',()=>document.getElementById('pro').scrollIntoView({behavior:'smooth'}));
  $('#tableProBtn').addEventListener('click',()=>state.isPro?null:document.getElementById('pro').scrollIntoView({behavior:'smooth'}));
  $('#partnerBtn').addEventListener('click',e=>{
-  const b=e.currentTarget;b.disabled=true;b.innerHTML='<span class="spin"></span>ENVIANDO…';
-  setTimeout(()=>{b.innerHTML=SVG_CHECK+'SOLICITUD ENVIADA';toast('Tu solicitud al programa de socios quedó en revisión','info');},1200);
+  const b=e.currentTarget;
+  if(!b.dataset.real){
+    /* paso 1: pedir email/canal y registrar la solicitud */
+    openModal('<div class="mc-head"><h3>Programa de socios</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
+      +'<p style="font:500 12px/1.7 var(--mono);color:var(--muted);margin-bottom:14px">Dejanos tu email y tu canal: la organización evalúa la solicitud y responde por correo a <b style="color:var(--accent)">geimerjhoan099@hotmail.com</b> (dirección oficial de la organización).</p>'
+      +'<div class="field"><label>EMAIL DE CONTACTO</label><input id="pEmail" type="email" placeholder="vos@ejemplo.com"></div>'
+      +'<div class="field"><label>CANAL PRINCIPAL (URL)</label><input id="pChan" type="url" placeholder="https://twitch.tv/tucanal"></div>'
+      +'<button class="btn btn-cut" id="pSend" style="width:100%;justify-content:center"><i data-lucide="send"></i>ENVIAR SOLICITUD</button></div>');
+    $('#mClose').onclick=closeModal;
+    $('#pSend').onclick=()=>{
+      const em=$('#pEmail').value.trim(),ch=$('#pChan').value.trim();
+      if(!em||!em.includes('@')){toast('Ingresá un email válido','info');return;}
+      b.dataset.real='1';b.disabled=true;b.innerHTML='<span class="spin"></span>ABRIENDO CORREO…';
+      const asunto=encodeURIComponent('Solicitud programa de socios VANTS'),cuerpo=encodeURIComponent('Hola, quiero postularme al programa de socios de VANTS GAMES.\n\nEmail: '+em+'\nCanal: '+(ch||'(sin URL)')+'\n\nEnviado desde vants.games');
+      setTimeout(()=>{window.location.href='mailto:geimerjhoan099@hotmail.com?subject='+asunto+'&body='+cuerpo;b.innerHTML=SVG_CHECK+'SOLICITUD ENVIADA';toast('Solicitud registrada: te contactamos a '+em,'info');},600);
+    };
+    return;
+  }
 });
 function openPlanCheckout(plan){
+  if(vantsEsOwner()){activatePlan(plan);return;}
   const cfg=plan==='pro'
     ?{n:'VANTS PRO',mo:4.99,yr:39.99}
     :{n:'VANTS CREATOR',mo:9.99,yr:79.99};
@@ -723,50 +920,181 @@ function successBadge(title,txt,badge){
   toast('Membresía activada: insignia emitida');
 }
 
-/* ================= RAIL EN DIRECTO ================= */
+/* ================= SALA DE JUGADORES (datos reales de Neon) =================
+   Sin plantillas demo: cada perfil lo crea el propio jugador al iniciar
+   sesión y se lee del proxy público vantsdata. La ficha pública usa el
+   MISMO diseño que el perfil real (CUENTA REAL VANTS), en solo lectura. */
+window.VANTS_PLAYERS=[];
+window.VANTS_STATS={};
+const PROXY_PUBLICO='https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const badgesDeRol=p=>{const b=[];if(p.verified)b.push('verified');if(p.role==='owner')b.push('owner');if(p.role==='admin')b.push('admin');if(p.role==='streamer')b.push('streamer');if(p.role==='creator')b.push('creator');if(p.role==='partner')b.push('partner');return b;};
+function rankKeyDe(p){const r=(typeof p.rating==='number'&&p.rating>0)?p.rating:null;try{return r==null?'fundicion':rankFor(r);}catch(e){return 'fundicion';}}
+
+async function cargarJugadores(){
+  try{
+    const [rp,rs]=await Promise.all([
+      fetch(PROXY_PUBLICO+'?table=players&limit=200',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():[]).catch(()=>[]),
+      fetch(PROXY_PUBLICO+'?table=season_player_stats&limit=500',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():[]).catch(()=>[])
+    ]);
+    const stats={};
+    (Array.isArray(rs)?rs:[]).forEach(s=>{if(s&&s.player_id)stats[s.player_id]=s;});
+    window.VANTS_STATS=stats;
+    window.VANTS_PLAYERS=(Array.isArray(rp)?rp:[]).filter(p=>p&&p.id).sort((a,b)=>{
+      const ra=(typeof a.rating==='number'&&a.rating>0)?a.rating:0,rb=(typeof b.rating==='number'&&b.rating>0)?b.rating:0;
+      return rb!==ra?rb-ra:String(a.created_at||'').localeCompare(String(b.created_at||''));
+    });
+    renderProfileGrid();renderRail();renderLbHead();renderLbBody();
+  }catch(e){/* sin conexión a la base: la sala queda en su último estado */}
+}
+window.vantsRecargarJugadores=cargarJugadores;
+
+/* ================= RAIL DE CANALES ================= */
 function renderRail(){
-  const list=PROFILES.filter(p=>p.live).map(p=>({name:p.name,id:p.id,rank:p.rank,me:false,...p.live}));
-  if(me.live&&me.badges.includes('creator'))list.unshift({name:me.name,me:true,platform:'twitch',viewers:312,title:'MI PRIMERA TRANSMISIÓN VANTS',rank:me.rank,sub:me.sub});
-  $('#liveRail').innerHTML=list.map(p=>{
-    const k=p.me?me.rank:p.rank,pl=PLAT[p.platform];
-    return '<div class="rail-card" style="--plc:'+pl.c+'" data-live="'+(p.me?'me':p.id)+'">'
-      +'<div class="rc-top">'+platIc(p.platform)
-      +'<div class="rc-info"><div class="rc-name">'+p.name+(p.me?' <span style="font:600 8px/1 var(--mono);color:var(--grn)">VOS</span>':'')
-      +'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span></div>'
-      +'<p class="rc-title">'+p.title+'</p></div></div>'
-      +'<div class="rc-foot"><span class="rc-view"><i data-lucide="eye"></i><b data-viewers>'+p.viewers.toLocaleString('en-US')+'</b></span>'
-      +'<span class="rc-game">'+(state.game==='valorant'?'VALORANT':'CS2')+'</span></div></div>';
+  const rail=$('#liveRail');if(!rail)return;
+  const list=(window.VANTS_PLAYERS||[]).filter(p=>p.twitch_channel||p.kick_channel);
+  const wrap=rail.closest('.reveal');
+  if(wrap)wrap.style.display=list.length?'':'none';
+  rail.innerHTML=list.map(p=>{
+    const k=p.twitch_channel?'twitch':'kick',pl=PLAT[k],canal=String(p.twitch_channel||p.kick_channel).replace(/[^A-Za-z0-9_\-.]/g,'');
+    return '<div class="rail-card" style="--plc:'+pl.c+';cursor:pointer" onclick="window.open(\'https://'+(k==='twitch'?'www.twitch.tv/':'kick.com/')+canal+'\',\'_blank\',\'noopener\')">'
+      +'<div class="rc-top">'+platIc(k)
+      +'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())
+      +'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span></div>'
+      +'<p class="rc-title">Canal vinculado · '+escHtml(canal)+'</p></div></div>'
+      +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+pl.n+'</b></span>'
+      +'<span class="rc-game">VER CANAL</span></div></div>';
   }).join('');
   icons();
 }
- $('#liveRail').addEventListener('click',e=>{
-  const c=e.target.closest('.rail-card');if(!c)return;
-  const name=c.dataset.live==='me'?me.name:PROFILES.find(p=>p.id===c.dataset.live).name;
-  toast('Abriendo canal de '+name+'… (demo)','info');
-});
-setInterval(()=>{
-  PROFILES.forEach(p=>{if(p.live)p.live.viewers=Math.max(50,Math.round(p.live.viewers*(1+(Math.random()-.48)*.04)));});
-  $$('#liveRail [data-viewers]').forEach((el,i)=>{
-    const list=PROFILES.filter(p=>p.live);
-    const p=list[i-(me.live&&me.badges.includes('creator')?1:0)];
-    if(p)el.textContent=p.live.viewers.toLocaleString('en-US');});
-},4000);
 
 /* ================= GRID DE PERFILES ================= */
 function renderProfileGrid(){
-  $('#profileGrid').innerHTML=PROFILES.map(p=>{
-    const rc=RANKS[p.rank];
-    return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openProfile(\''+p.id+'\')">'
-      +'<div class="pc-banner" >'+rankSVG(p.rank,64,'remblem')+(p.live?'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span>':'')+'</div>'
-      +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+p.name.slice(0,2)+'</span>'
-      +'<div class="pc-name">'+p.name+'<small>'+p.country+'</small></div>'
-      +'<div class="pc-badges">'+(p.badges.length?p.badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
-      +'<div class="pc-rank">'+rankSVG(p.rank,30)+'<div class="rk-name">'+rc.name+' '+p.sub+'<small>VANTS RANKED</small></div><span class="rr mono">'+p.rr+' RR</span></div>'
+  const grid=$('#profileGrid');if(!grid)return;
+  const list=window.VANTS_PLAYERS||[];
+  if(!list.length){
+    grid.innerHTML='<div style="grid-column:1/-1;border:1px dashed var(--line2,#303039);border-radius:12px;padding:40px 20px;text-align:center">'
+      +'<p style="font:800 12px var(--mono);letter-spacing:.14em;color:var(--mut,#93939D)">AÚN NO HAY JUGADORES EN EL CIRCUITO</p>'
+      +'<p style="font:500 11px/1.8 var(--mono);color:var(--dim,#5C5C66);margin-top:8px">Iniciá sesión, creá tu perfil y tu ficha aparece acá con tu rango, tus insignias y tus cuentas conectadas.</p></div>';
+    icons();return;
+  }
+  grid.innerHTML=list.map(p=>{
+    const k=rankKeyDe(p),rc=RANKS[k],st=window.VANTS_STATS[p.id]||{};
+    const badges=badgesDeRol(p),mmr=(st.mmr!=null)?st.mmr:null;
+    const live=!!(p.twitch_channel||p.kick_channel);
+    const ava=p.avatar_url?'<img alt="" src="'+escHtml(p.avatar_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.display_name||p.username||'V').slice(0,2).toUpperCase());
+    return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openPlayerProfile(\''+p.id+'\')">'
+      +'<div class="pc-banner">'+rankSVG(k,64,'remblem')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
+      +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+ava+'</span>'
+      +'<div class="pc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'<small>'+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+'</small></div>'
+      +'<div class="pc-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
+      +'<div class="pc-rank">'+rankSVG(k,30)+'<div class="rk-name">'+rc.name+'<small>VANTS RANKED</small></div><span class="rr mono">'+(mmr!=null?mmr:'—')+' MMR</span></div>'
       +'</div></div>';
-  }).join('');icons();
+  }).join('');
+  icons();
 }
- $('#meStripBtn').addEventListener('click',()=>openProfile('me'));
- $('#accBtn').addEventListener('click',()=>openProfile('me'));
+
+/* ================= FICHA PÚBLICA DE JUGADOR =================
+   Mismo diseño que el perfil real (CUENTA REAL VANTS), en solo lectura:
+   banner con skin, insignias, stats, rango, cuentas conectadas y canal. */
+function bannerPublicoHTML(sel,rawRank){
+  let rkKey='fundicion';
+  try{if(rawRank!=null)rkKey=rankFor(rawRank);}catch(e){}
+  return '<div class="pf-banner">'
+    +(sel==='bananim'?'<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>':'')
+    +(sel==='dorado'?'<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>':'')
+    +rankSVG(rkKey,92,'remblem')+'</div>';
+}
+function rangoPublicoHTML(raw,mmr,wins,losses,xp){
+  const xpExtra=xpFaceitHTML(xp);
+  const wl=(wins||losses)?(wins+'V · '+losses+'D · '):'';
+  try{
+    if(raw==null)throw 0;
+    const k=rankFor(raw),s=subFor(k,raw)||'APEX',rc=RANKS[k];
+    const i=TIER_ORDER.indexOf(k);
+    const hi=TIER_ORDER[i-1]?RANKS[TIER_ORDER[i-1]].lo:(RANKS[k].lo+1);
+    const f=Math.max(0,Math.min(100,((raw-RANKS[k].lo)/(hi-RANKS[k].lo))*100));
+    return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:'+rc.c1+'">'+rankSVG(k,64)
+      +'<div class="info"><b>'+rc.name+' '+s+'</b><small>'+wl+'TEMPORADA ACTIVA</small>'
+      +'<div class="rr-bar"><i style="width:'+f.toFixed(0)+'%;background:'+rc.c1+'"></i></div></div>'
+      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>'+xpExtra;
+  }catch(e){
+    return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:#5C5C66;opacity:.85">'+rankSVG('fundicion',64)
+      +'<div class="info"><b>SIN RANGO</b><small>'+wl+'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>'
+      +'<div class="rr-bar"><i style="width:0%"></i></div></div>'
+      +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>'+xpExtra;
+  }
+}
+/* EXPERIENCIA FACEIT (migración 08: players.xp): +100 por victoria,
+   +25 por empate; nivel = 1 + floor(xp/500). Marca FACEIT #FF5500. */
+function xpFaceitHTML(xp){
+  xp=(typeof xp==='number'&&xp>0)?xp:0;
+  if(!xp)return '';
+  const nivel=1+Math.floor(xp/500),en=xp%500,f=Math.min(100,en/5);
+  return '<p class="d-sec">EXPERIENCIA FACEIT</p><div class="pf-rank" style="--rc:#FF5500">'
+    +'<div class="info"><b>NIVEL '+nivel+'</b><small>'+xp+' XP TOTAL · '+en+'/500 PARA EL NIVEL '+(nivel+1)+'</small>'
+    +'<div class="rr-bar"><i style="width:'+f.toFixed(0)+'%;background:#FF5500"></i></div></div>'
+    +'<div class="rr-num">'+nivel+'<small>NIVEL</small></div></div>';
+}
+function openPlayerProfile(pid){
+  /* tu propio perfil se abre siempre con el flujo real (editable) */
+  try{
+    const a=window.VANTS_AUTH;
+    if(a&&a.playerId&&a.playerId===pid&&window.vantsAbrirMiPerfil){window.vantsAbrirMiPerfil();return;}
+  }catch(e){}
+  const p=(window.VANTS_PLAYERS||[]).find(x=>x.id===pid);
+  if(!p){toast('No encontramos ese jugador','info');return;}
+  const stats=p.stats||{},st=(window.VANTS_STATS[pid])||null;
+  const k=rankKeyDe(p),rc=RANKS[k];
+  const mmr=(st&&st.mmr!=null)?st.mmr:null;
+  const wins=(st&&st.wins)||stats.wins||0,losses=(st&&st.losses)||stats.losses||0;
+  const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st&&st.rank!=null&&st.rank!==''&&!isNaN(parseFloat(st.rank))&&parseFloat(st.rank)>=.5&&parseFloat(st.rank)<=2)?parseFloat(st.rank):null);
+  const mPart=(stats.matches!=null)?stats.matches:((wins+losses)>0?wins+losses:null);
+  const mWr=((wins+losses)>0)?Math.round((wins/(wins+losses))*100):(stats.wr!=null?stats.wr:null);
+  const mRtg=(raw!=null)?raw:(stats.rtg!=null?stats.rtg:null);
+  const mKd=(stats.kd!=null)?stats.kd:null;
+  const badges=badgesDeRol(p);
+  const handles={discord:stats.discord_tag||null,twitch:p.twitch_channel||null,kick:p.kick_channel||null,youtube:stats.youtube||null,tiktok:stats.tiktok||null,x:stats.x||null,riot:stats.riot||null,steam:stats.steam||null,faceit:stats.faceit||null};
+  const canales=[];
+  if(p.twitch_channel)canales.push({k:'twitch',h:String(p.twitch_channel).replace(/[^A-Za-z0-9_\-.]/g,'')});
+  if(p.kick_channel)canales.push({k:'kick',h:String(p.kick_channel).replace(/[^A-Za-z0-9_\-.]/g,'')});
+  const c=canales[0];
+  const url=c?((c.k==='twitch'?'https://www.twitch.tv/':'https://kick.com/')+String(c.h).replace(/[^A-Za-z0-9_\-]/g,'')):null;
+  openDrawer(
+    '<div class="d-head"><span class="kicker">/// PERFIL DE JUGADOR</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
+    +'<div class="d-body" style="--rc:'+rc.c1+'">'
+    +bannerPublicoHTML(stats.banner||'',raw)
+    +'<div class="pf-head"><span class="ava s2" style="--rc:'+rc.c1+'">'+(p.avatar_url?'<img src="'+escHtml(p.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.username||'V').slice(0,2).toUpperCase()))+'</span>'
+      +'<div class="pf-id"><div class="pf-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div>'
+      +'<p class="pf-sub">@'+escHtml(p.username||'')+' · '+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+' · MIEMBRO DESDE '+String(p.created_at||'2024').slice(0,4)+'</p></div></div>'
+    +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Sin insignias todavía.</span>')+'</div>'
+    +'<p class="pf-bio">'+escHtml(stats.bio||'Jugador del circuito VANTS.')+'</p>'
+    +'<div class="pf-stats"><div><b>'+(mPart==null?'—':mPart)+'</b><span>PARTIDOS</span></div><div><b>'+(mWr==null?'—':mWr+'%')+'</b><span>WINRATE</span></div><div><b>'+(mRtg==null?'—':(typeof mRtg==='number'?mRtg.toFixed(2):mRtg))+'</b><span>RATING</span></div><div><b>'+(mKd==null?'—':(typeof mKd==='number'?mKd.toFixed(2):mKd))+'</b><span>K/D</span></div></div>'
+    +rangoPublicoHTML(raw,mmr,wins,losses,p.xp)
+    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+Object.keys(handles).map(kk=>platRow(kk,handles[kk]?escHtml(handles[kk]):null,false)).join('')+'</div>'
+    +(c?'<p class="d-sec">TRANSMISIÓN</p><div class="rail-card" style="--plc:'+PLAT[c.k].c+';cursor:pointer" onclick="window.open(\''+url+'\',\'_blank\',\'noopener\')">'
+      +'<div class="rc-top">'+platIc(c.k)+'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div><p class="rc-title">Canal vinculado · '+escHtml(c.h)+'</p></div></div>'
+      +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+PLAT[c.k].n+'</b></span><span class="rc-game">VER CANAL</span></div></div>':'')
+    +'</div>');
+  icons();
+}
+/* VER MI PERFIL abre SIEMPRE el perfil real (CUENTA REAL VANTS, ver
+   arena-live.js); sin sesión, manda al login */
+ $('#meStripBtn').addEventListener('click',()=>{
+  const acc=$('#accBtn'),lb=$('#arenaLoginBtn');
+  if(acc&&!acc.hidden){acc.click();return;}
+  if(lb&&!lb.hidden){lb.click();return;}
+  toast('Ingresá con ENTRAR para crear tu perfil de jugador','info');
+});
+/* REPORTAR SERIE (cta de la sección RANGOS): manda al perfil real,
+   donde vive el bloque VANTS RANKED · SERIES */
+const rankedReportBtn=$('#rankedReportBtn');
+if(rankedReportBtn)rankedReportBtn.addEventListener('click',()=>{
+  const acc=$('#accBtn'),lb=$('#arenaLoginBtn');
+  if(acc&&!acc.hidden){if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();else acc.click();return;}
+  if(lb&&!lb.hidden){lb.click();return;}
+  toast('Ingresá con ENTRAR para reportar tu serie','info');
+});
 
 /* ================= DRAWER DE PERFIL ================= */
 function platRow(k,handle,own){
@@ -784,71 +1112,10 @@ function platRow(k,handle,own){
       :(own?'<button class="plat-connect" onclick="connect(\''+k+'\')">CONECTAR</button>':'<span class="mono" style="font:600 9px/1 var(--mono);color:var(--dim)">—</span>'))
     +'</div>';
 }
-window.disconnect=k=>{delete me.socials[k];delete me.game[k];toast('Cuenta desconectada: '+PLAT[k].n,'info');openProfile('me');};
-window.connect=k=>{
-  const btns=$$('.plat-connect');const btn=btns.find?btns.find(b=>b.onclick===null):null;
-  toast('Conectando '+PLAT[k].n+'…','info');
-  setTimeout(()=>{
-    const h=k==='riot'?me.name+'#VNTS':k==='steam'?'STEAM:7656'+Math.floor(Math.random()*1e6):'@'+me.name.toLowerCase().replace(/\s/g,'');
-    if(PLAT[k].k==='game')me.game[k]=h;else me.socials[k]=h;
-    toast(PLAT[k].n+' conectado: '+h);
-    openProfile('me');
-  },900);
-};
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-function openProfile(id){
-  const p=id==='me'?me:PROFILES.find(x=>x.id===id);
-  const own=id==='me';
-  const rc=RANKS[p.rank],sub=p.sub||(own?'II':'');
-  const allKeys=['twitch','kick','youtube','tiktok','x','riot','steam','faceit'];
-  const getH=k=>own?(me.socials[k]||me.game[k]):(p.socials[k]||p.game[k]);
-  const badges=own?me.badges:p.badges;
-  const stats=own?{m:64,wr:48,rtg:1.02,kd:.99}:p.stats;
-  const isCreator=badges.includes('creator')||badges.includes('partner');
-  const nextRR=own?Math.max(0,200-p.rr):0;
-
-  openDrawer(
-    '<div class="d-head"><span class="kicker">/// '+(own?'MI PERFIL':'PERFIL DE JUGADOR')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
-    +'<div class="d-body" style="--rc:'+rc.c1+'">'
-    +'<div class="pf-banner">'+rankSVG(p.rank,92,'remblem')+(p.live||own&&me.live?'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO · '+(p.live?p.live.viewers.toLocaleString('en-US'):'312')+' VIENDO</span>':'')+'</div>'
-    +'<div class="pf-head"><span class="ava s2" style="--rc:'+rc.c1+'">'+p.name.slice(0,2)+'<span class="lv">NIV '+p.lvl+'</span></span>'
-      +'<div class="pf-id"><div class="pf-name">'+(own?'<span id="myName">'+p.name+'</span><button class="edit" onclick="editName()" title="Editar nick"><i data-lucide="pencil"></i></button>':p.name)
-      +'</div><p class="pf-sub">'+p.country+(p.team?' · '+p.team:' · SIN EQUIPO')+' · MIEMBRO DESDE 2024</p></div></div>'
-    +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>')+'</div>'
-    +'<p class="pf-bio">'+p.bio+'</p>'
-    +'<div class="pf-stats"><div><b>'+stats.m+'</b><span>PARTIDOS</span></div><div><b>'+stats.wr+'%</b><span>WINRATE</span></div><div><b>'+stats.rtg.toFixed(2)+'</b><span>RATING</span></div><div><b>'+stats.kd.toFixed(2)+'</b><span>K/D</span></div></div>'
-    +'<p class="d-sec">RANGO VANTS RANKED</p>'
-    +'<div class="pf-rank">'+rankSVG(p.rank,64)
-      +'<div class="info"><b>'+rc.name+' '+sub+'</b><small>PICO DE TEMPORADA: '+p.peak+'</small>'
-      +(own?'<div class="rr-bar"><i style="width:'+(p.rr/2)+'%;background:'+rc.c1+'"></i></div>':'<div class="rr-bar"><i style="width:'+(p.rr/7)+'%;background:'+rc.c1+'"></i></div>')+'</div>'
-      +'<div class="rr-num">'+p.rr+'<small>RR'+(own?'<br>FALTAN '+nextRR+' PARA SUBIR':'')+'</small></div></div>'
-    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+allKeys.map(k=>platRow(k,getH(k),own)).join('')+'</div>'
-    +(own&&isCreator
-      ?'<div class="switch-row"><p><b style="color:var(--text)">Modo EN DIRECTO (demo)</b><br>Así se ve tu perfil cuando estás transmitiendo. Solo creadores y socios lo activan.</p><span class="sw'+(me.live?' on':'')+'" onclick="toggleLive(this)"></span></div>':'')
-    +'<div class="pf-actions">'
-      +(own
-        ?(me.badges.includes('creator')?'':'<button class="btn btn-cut" onclick="document.getElementById(\'pro\').scrollIntoView({behavior:\'smooth\'});closeDrawer()"><i data-lucide="crown"></i>OBTENER INSIGNIA CON UN PLAN</button>')
-        :'<button class="btn btn-cut" id="followBtn"><i data-lucide="user-plus"></i>SEGUIR</button><button class="btn btn-ghost" onclick="toast(\'Abriendo canal de '+p.name+'…\',\'info\')"><i data-lucide="external-link"></i>CANALES</button>')
-      +'</div>'
-    +(p.live?'<p class="d-sec">TRANSMISIÓN ACTIVA</p><div class="rail-card" style="--plc:'+PLAT[p.live.platform].c+';cursor:pointer;max-width:100%" onclick="toast(\'Abriendo stream de '+p.name+'…\',\'info\')"><div class="rc-top">'+platIc(p.live.platform)+'<div class="rc-info"><div class="rc-name">'+p.name+'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span></div><p class="rc-title">'+p.live.title+'</p></div></div><div class="rc-foot"><span class="rc-view"><i data-lucide="eye"></i><b>'+p.live.viewers.toLocaleString('en-US')+'</b></span><span class="rc-game">VER STREAM</span></div></div>':'')
-    +'</div>');
-  const fb=$('#followBtn');
-  if(fb)fb.onclick=()=>{fb.innerHTML=SVG_CHECK+'SIGUIENDO';fb.disabled=true;toast('Ahora seguís a '+p.name);};
-  icons();
-}
-window.editName=()=>{
-  const span=$('#myName');
-  span.outerHTML='<input id="nameInput" value="'+me.name+'" maxlength="14">';
-  const inp=$('#nameInput');inp.focus();inp.select();
-  inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();};
-  inp.onblur=()=>{const v=inp.value.trim().toUpperCase().replace(/["'<>\\]/g,'');if(v)me.name=v;renderAccount();openProfile('me');toast('Nick actualizado: '+me.name);};
-};
-window.toggleLive=el=>{
-  me.live=!me.live;el.classList.toggle('on',me.live);
-  if(me.live)vantsDiscord('live',{user:me.name,title:'Ranked + torneos VANTS'});
-  renderAccount();renderRail();
-  toast(me.live?'Cartel EN DIRECTO activado — tu perfil aparece en la sala de jugadores':'Cartel EN DIRECTO desactivado','info');
-};
+/* [ELIMINADO] drawer de perfil demo: el ÚNICO diseño de perfil es el real
+   (arena-live.js · CUENTA REAL VANTS). Se quitaron los connect/disconnect
+   falsos, el editor de nick local, el "modo EN DIRECTO" demo y el ticker de
+   espectadores inventados. Los conectores reales siguen más abajo. */
 
 /* ================= SECCIÓN RANGOS ================= */
 function renderRanks(){
@@ -922,7 +1189,7 @@ function renderAll(){
 /* ================= INIT ================= */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
  $$('.reveal').forEach(el=>io.observe(el));
-renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();
+renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();cargarJugadores();
 setInterval(tickLive,2600);
 if(!sessionStorage.getItem('vants_film')){sessionStorage.setItem('vants_film','1');setTimeout(openCin,700);}
 
@@ -936,76 +1203,10 @@ me.avatar=me.avatar||null; me.discordTag=me.discordTag||null;
 function meSave(){try{localStorage.setItem('vants_me',JSON.stringify({name:me.name,avatar:me.avatar,discordTag:me.discordTag,socials:me.socials,game:me.game,live:me.live}))}catch(e){}}
 function meLoad(){try{const s=JSON.parse(localStorage.getItem('vants_me')||'null');if(s)Object.assign(me,s)}catch(e){}}
 
-/* subida de foto: recorta al centro y redimensiona a 256px */
-function fileToAvatar(file,cb){
-  const rd=new FileReader();
-  rd.onload=()=>{const img=new Image();img.onload=()=>{
-    const c=document.createElement('canvas');c.width=c.height=256;
-    const x=c.getContext('2d');const s=Math.min(img.width,img.height);
-    x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,256,256);
-    cb(c.toDataURL('image/jpeg',.85));};img.src=rd.result;};
-  rd.readAsDataURL(file);
-}
-function pickAvatar(){
-  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
-  inp.onchange=()=>{const f=inp.files[0];if(!f)return;
-    fileToAvatar(f,uri=>{me.avatar=uri;meSave();renderAccount();openProfile('me');toast('Foto de perfil actualizada');});};
-  inp.click();
-}
-function removeAvatar(){me.avatar=null;meSave();renderAccount();openProfile('me');toast('Foto de perfil eliminada','info');}
-window.pickAvatar=pickAvatar;window.removeAvatar=removeAvatar;
-
-/* avatar "de Discord" generado localmente para la demo */
-function discordAvatar(seed){
-  const h=Math.floor(Math.random()*360);
-  const init=(seed||'V').replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase()||'V';
-  const svg="<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'>"
-   +"<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
-   +"<stop offset='0' stop-color='hsl("+h+",72%,64%)'/><stop offset='1' stop-color='hsl("+((h+50)%360)+",78%,34%)'/></linearGradient></defs>"
-   +"<rect width='256' height='256' fill='url(#g)'/>"
-   +"<circle cx='210' cy='40' r='70' fill='#fff' opacity='.12'/><circle cx='30' cy='230' r='90' fill='#000' opacity='.18'/>"
-   +"<text x='128' y='168' text-anchor='middle' font-family='Arial Black,Arial' font-weight='900' font-size='96' fill='#fff'>"+init+"</text></svg>";
-  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-}
-
-/* pantalla de consentimiento estilo Discord (demo) */
-function openDiscordOAuth(){
-  const DL='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.8 13.8 0 0 0-.64 1.28 18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.64-1.28c-1.71.29-3.37.8-4.93 1.51A20.3 20.3 0 0 0 .1 18.06a19.9 19.9 0 0 0 6.07 3.06c.49-.66.93-1.37 1.3-2.1a12.9 12.9 0 0 1-2.05-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.16 0c.17.13.33.26.5.38-.65.38-1.34.71-2.05.98.37.73.8 1.44 1.3 2.1a19.8 19.8 0 0 0 6.07-3.06 20.2 20.2 0 0 0-3.58-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Zm7.96 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Z"/></svg>';
-  openModal('<div class="dc">'
-   +'<div class="dc-head"><svg class="dc-logo" viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.8 13.8 0 0 0-.64 1.28 18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.64-1.28c-1.71.29-3.37.8-4.93 1.51A20.3 20.3 0 0 0 .1 18.06a19.9 19.9 0 0 0 6.07 3.06c.49-.66.93-1.37 1.3-2.1a12.9 12.9 0 0 1-2.05-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.16 0c.17.13.33.26.5.38-.65.38-1.34.71-2.05.98.37.73.8 1.44 1.3 2.1a19.8 19.8 0 0 0 6.07-3.06 20.2 20.2 0 0 0-3.58-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Zm7.96 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Z"/></svg>'
-   +'<div><b>Conectar con Discord</b><span>vants.games quiere acceder a tu cuenta</span></div></div>'
-   +'<ul class="dc-scopes">'
-   +'<li><i data-lucide="user"></i>Ver tu nombre de usuario, apodo e identificador</li>'
-   +'<li><i data-lucide="image"></i>Usar tu avatar de Discord como foto de perfil en VANTS</li></ul>'
-   +'<p class="dc-note">DEMO — el consentimiento se simula localmente. En producción: Discord OAuth2 con scope <code>identify</code>.</p>'
-   +'<div class="dc-actions"><button class="dc-btn ghost" id="dcCancel">Cancelar</button>'
-   +'<button class="dc-btn" id="dcAuth">'+DL+'Autorizar</button></div></div>');
-  $('#dcCancel').onclick=closeModal;
-  $('#dcAuth').onclick=e=>{
-    const b=e.currentTarget;b.disabled=true;
-    b.innerHTML='<span class="spin" style="border-color:rgba(255,255,255,.3);border-top-color:#fff"></span>Conectando…';
-    setTimeout(()=>{
-      const base=(me.name.toLowerCase().replace(/[^a-z0-9_]/g,'')||'jugador');
-      me.discordTag=base+'#'+(1000+Math.floor(Math.random()*9000));
-      me.socials.discord=base+'_vnts';
-      me.avatar=discordAvatar(me.name);           // foto sincronizada
-      me.name=base;                                // nombre sincronizado
-      meSave();renderAccount();
-      openModal('<div class="dc" style="text-align:center">'
-        +'<div style="width:84px;height:84px;margin:6px auto 16px;clip-path:polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%);overflow:hidden"><img src="'+me.avatar+'" style="width:100%;height:100%;object-fit:cover"></div>'
-        +'<h3 style="font:800 18px/1.2 var(--sans);color:#f2f3f5;margin-bottom:8px">¡Cuenta sincronizada!</h3>'
-        +'<p style="font:500 12px/1.7 var(--sans);color:#b5bac1">Tu nombre, tag y foto ahora vienen de Discord.<br><span class="dc-tag" style="font-size:12px">'+me.discordTag+'</span></p>'
-        +'<div class="dc-actions" style="margin-top:22px"><button class="dc-btn ghost" id="dcClose">Cerrar</button><button class="dc-btn" id="dcView">Ver mi perfil</button></div></div>');
-      $('#dcClose').onclick=closeModal;
-      $('#dcView').onclick=()=>{closeModal();openProfile('me');};
-      toast('Perfil sincronizado con Discord');
-    },1300);
-  };
-}
-window.syncDiscord=function(){
-  toast('Sincronizando con Discord…','info');
-  setTimeout(()=>{me.avatar=discordAvatar(me.name);meSave();renderAccount();openProfile('me');toast('Foto y nombre sincronizados desde Discord');},1000);
-};
+/* [ELIMINADO] avatar local + consentimiento de Discord simulado: la foto viene
+   del proveedor de sesión (guardada en players.avatar_url) y Discord se conecta
+   con el linker real, como el resto de las plataformas. El tag de Discord se
+   edita en MIS DATOS del perfil real. */
 
 /* ================= CONECTORES DE CUENTAS (Auth0 + Neon + linker OAuth) =================
    Identidad: JWT de Auth0 · Guardado: tabla vants_links en Neon · OAuth real: Neon Function "linker".
@@ -1022,7 +1223,7 @@ async function linksCargar(){
     if(!u||!u.sub)return window.VANTS_LINKS;
     const t=await A.getToken();
     if(!t)return window.VANTS_LINKS;
-    const r=await fetch(LINKS_API+'/vants_links?auth0_sub=eq.'+encodeURIComponent(u.sub)+'&select=*',{headers:{Accept:'application/json',Authorization:'Bearer '+t}});
+    const r=await fetch(LINKS_API+'/vants_links?auth0_sub=eq.'+encodeURIComponent(u.sub)+'&select=*',{headers:{Accept:'application/json',[AUTH_FIELD]:AUTH_SCHEME+t}});
     const filas=r.ok?await r.json():[];
     const mapa={};
     (filas||[]).forEach(f=>{mapa[f.platform]=f;});
@@ -1035,7 +1236,7 @@ window.linksCargar=linksCargar;
 async function playerPidActual(){
   try{
     const A=window.VantAuth0;const t=await A.getToken();
-    const r=await fetch(LINKS_API+'/rpc/current_player_id',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:'{}'});
+    const r=await fetch(LINKS_API+'/rpc/current_player_id',{method:'POST',headers:{[AUTH_FIELD]:AUTH_SCHEME+t,'Content-Type':'application/json'},body:'{}'});
     let pj=await r.json();
     pj=Array.isArray(pj)?pj[0]:pj;
     return (pj&&(pj.current_player_id||pj.id))||null;
@@ -1071,7 +1272,7 @@ function openLinkManual(k,sub){
       if(error)throw error;
       window.VANTS_LINKS[k]={auth0_sub:sub,player_id:pid,platform:k,handle:h,verified:false};
       closeModal();toast(PLAT[k].n+' vinculado (manual): '+h);
-      openProfile('me');
+      if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
     }catch(err){
       b.disabled=false;b.textContent='VINCULAR';
       msg.textContent='Neon rechazó el guardado ('+((err&&err.message)||err)+'). Corré docs/migracion-links.sql en el SQL Editor de Neon.';
@@ -1080,7 +1281,6 @@ function openLinkManual(k,sub){
 }
 
 window.connect=async k=>{
-  if(k==='discord'){openDiscordOAuth();return;}
   const A=window.VantAuth0;
   let sub=null,tok=null;
   if(A&&A.client){try{const u=await A.client.getUser();sub=u&&u.sub;tok=sub?await A.getToken():null;}catch(e){}}
@@ -1089,7 +1289,7 @@ window.connect=async k=>{
   const lb=LINKER();
   if(lb){
     try{
-      const r=await fetch(lb+'/api/link/start',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({platform:k,return_to:location.origin+location.pathname})});
+      const r=await fetch(lb+'/api/link/start',{method:'POST',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+tok},body:JSON.stringify({platform:k,return_to:location.origin+location.pathname})});
       const d=await r.json().catch(()=>null);
       if(d&&d.url){sessionStorage.setItem('vants_linking',k);location.href=d.url;return;}
       if(d&&d.error==='falta_clave')toast(PLAT[k].n+': falta la clave '+d.env+' en Neon (Functions → linker). Usá el vínculo manual por ahora.','info');
@@ -1111,7 +1311,7 @@ window.disconnect=async k=>{
       }
     }catch(e){/* el handle demo ya se borró arriba */}
   }
-  meSave();toast('Cuenta desconectada: '+PLAT[k].n,'info');openProfile('me');
+  meSave();toast('Cuenta desconectada: '+PLAT[k].n,'info');if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
 };
 
 /* nav con foto */
@@ -1125,70 +1325,9 @@ function renderAccount(){
   a.style.filter=me.live?'drop-shadow(0 0 8px rgba(255,13,46,.8))':'';
 }
 
-/* editor de nick con guardado */
-/* [OBSOLETA] esta version esta sustituida mas abajo en este archivo; edita siempre la ultima */
-window.editName=function(){
-  const span=$('#myName');
-  span.outerHTML='<input id="nameInput" value="'+me.name+'" maxlength="14">';
-  const inp=$('#nameInput');inp.focus();inp.select();
-  inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();};
-  inp.onblur=()=>{const v=inp.value.trim().toUpperCase().replace(/["'<>\\]/g,'');if(v)me.name=v;meSave();renderAccount();openProfile('me');toast('Nick actualizado: '+me.name);};
-};
-
-/* perfil completo (reemplaza al anterior) */
-const avaIn=(p,own)=>(own&&me.avatar)?'<img alt="" src="'+me.avatar+'">':p.name.slice(0,2);
-function openProfile(id){
-  const p=id==='me'?me:PROFILES.find(x=>x.id===id);
-  const own=id==='me';
-  const rc=RANKS[p.rank],sub=p.sub||(own?'II':'');
-  const allKeys=['discord','twitch','kick','youtube','tiktok','x','riot','steam','faceit'];
-  const getH=k=>own?(me.socials[k]||me.game[k]):(p.socials[k]||p.game[k]);
-  const badges=own?me.badges:p.badges;
-  const stats=own?{m:64,wr:48,rtg:1.02,kd:.99}:p.stats;
-  const isCreator=badges.includes('creator')||badges.includes('partner');
-  const nextRR=own?Math.max(0,200-p.rr):0;
-  openDrawer(
-    '<div class="d-head"><span class="kicker">/// '+(own?'MI PERFIL':'PERFIL DE JUGADOR')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
-    +'<div class="d-body" style="--rc:'+rc.c1+'">'
-    +'<div class="pf-banner">'+rankSVG(p.rank,92,'remblem')+(p.live||(own&&me.live)?'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO · '+((p.live&&p.live.viewers)||312).toLocaleString('en-US')+' VIENDO</span>':'')+'</div>'
-    +'<div class="pf-head">'
-      +'<span class="ava s2 '+(own?'ava-pick':'')+'" style="--rc:'+rc.c1+'"'+(own?' onclick="pickAvatar()" title="Subir foto de perfil"':'')+'>'
-        +avaIn(p,own)+'<span class="lv">NIV '+p.lvl+'</span>'
-        +(own?'<span class="ava-cam"><i data-lucide="camera"></i></span>':'')
-      +'</span>'
-      +'<div class="pf-id"><div class="pf-name">'+(own?'<span id="myName">'+p.name+'</span><button class="edit" onclick="editName()" title="Editar nick"><i data-lucide="pencil"></i></button>':p.name)+'</div>'
-      +'<p class="pf-sub">'+p.country+(p.team?' · '+p.team:' · SIN EQUIPO')
-        +(own&&me.discordTag?' · DC: <span style="color:#8ea1ff">'+me.discordTag+'</span>':'')
-        +' · MIEMBRO DESDE 2024</p></div></div>'
-    +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>')+'</div>'
-    +'<p class="pf-bio">'+p.bio+'</p>'
-    +'<div class="pf-stats"><div><b>'+stats.m+'</b><span>PARTIDOS</span></div><div><b>'+stats.wr+'%</b><span>WINRATE</span></div><div><b>'+stats.rtg.toFixed(2)+'</b><span>RATING</span></div><div><b>'+stats.kd.toFixed(2)+'</b><span>K/D</span></div></div>'
-    +'<p class="d-sec">RANGO VANTS RANKED</p>'
-    +'<div class="pf-rank">'+rankSVG(p.rank,64)
-      +'<div class="info"><b>'+rc.name+' '+sub+'</b><small>PICO DE TEMPORADA: '+p.peak+'</small>'
-      +'<div class="rr-bar"><i style="width:'+Math.min(100,(p.rr/(own?200:700))*100)+'%;background:'+rc.c1+'"></i></div></div>'
-      +'<div class="rr-num">'+p.rr+'<small>RR'+(own?'<br>FALTAN '+nextRR+' PARA SUBIR':'')+'</small></div></div>'
-    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+allKeys.map(k=>platRow(k,getH(k),own)).join('')+'</div>'
-    +(own&&me.socials.discord
-      ?'<div class="dc-sync"><span class="plat-ic" style="--plc:#5865F2">'+PICON.discord+'</span><p><b style="color:var(--text)">Sincronización activa.</b><br>Tu foto y tu tag vienen de Discord.</p><button class="plat-connect" style="--pc:#5865F2" onclick="syncDiscord()">SINCRONIZAR</button></div>':'')
-    +(own&&isCreator
-      ?'<div class="switch-row"><p><b style="color:var(--text)">Modo EN DIRECTO (demo)</b><br>Así se ve tu perfil cuando transmitís. Solo creadores y socios lo activan.</p><span class="sw'+(me.live?' on':'')+'" onclick="toggleLive(this)"></span></div>':'')
-    +'<div class="pf-actions">'
-      +(own
-        ?((me.avatar?'<button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="removeAvatar()"><i data-lucide="trash-2"></i>QUITAR FOTO</button>':'')
-          +(me.badges.includes('creator')?'':'<button class="btn btn-cut" style="flex:1;justify-content:center" onclick="document.getElementById(\'pro\').scrollIntoView({behavior:\'smooth\'});closeDrawer()"><i data-lucide="crown"></i>OBTENER INSIGNIA</button>'))
-        :'<button class="btn btn-cut" id="followBtn" style="flex:1;justify-content:center"><i data-lucide="user-plus"></i>SEGUIR</button>')
-      +'</div>'
-    +(p.live?'<p class="d-sec">TRANSMISIÓN ACTIVA</p><div class="rail-card" style="--plc:'+PLAT[p.live.platform].c+';cursor:pointer" onclick="toast(\'Abriendo stream de '+p.name+'…\',\'info\')"><div class="rc-top">'+platIc(p.live.platform)+'<div class="rc-info"><div class="rc-name">'+p.name+'<span class="live-chip"><i data-lucide="radio"></i>EN DIRECTO</span></div><p class="rc-title">'+p.live.title+'</p></div></div><div class="rc-foot"><span class="rc-view"><i data-lucide="eye"></i><b>'+p.live.viewers.toLocaleString('en-US')+'</b></span><span class="rc-game">VER STREAM</span></div></div>':'')
-    +'</div>');
-  const fb=$('#followBtn');
-  if(fb)fb.onclick=()=>{fb.innerHTML=SVG_CHECK+'SIGUIENDO';fb.disabled=true;toast('Ahora seguís a '+p.name);};
-  icons();
-  if(own&&typeof linksCargar==='function')linksCargar().then(()=>{
-    const pl=document.querySelector('#drawer .plat-list');
-    if(pl&&$('#drawer').classList.contains('show')){pl.innerHTML=allKeys.map(k=>platRow(k,getH(k),own)).join('');icons();}
-  });
-}
+/* [ELIMINADO] segunda versión del drawer demo (la que reemplazaba a la
+   primera): con el perfil real de arena-live.js como diseño único ya no hay
+   drawer demo. El nick se edita en AJUSTES DE CUENTA (openAjustesCuenta). */
 
 /* aplicar perfil guardado */
 meLoad();renderAccount();icons();
@@ -1203,3 +1342,100 @@ function vantsDiscord(type, data){
     body: JSON.stringify({ type, data })
   }).catch(()=>{}); // si no hay servidor, no rompe nada
 }
+
+/* ============================================================
+   PRIVILEGIOS OWNER
+   El dueño del sitio (geimerpedroza) obtiene:
+   · Todo el contenido pago gratis (planes, pase premium, fees).
+   · Insignias OWNER + CREADOR (+ SOCIO) en su perfil.
+   · Botón de AJUSTES DE CUENTA en su perfil.
+   Se activa desde arena-live.js con window.vantsOwnerActivate().
+   ============================================================ */
+window.VANTS_OWNER=false;
+function vantsEsOwner(){
+  if(window.VANTS_OWNER)return true;
+  const un=((typeof me!=='undefined')&&me&&me.name||'').toLowerCase();
+  return un==='geimerpedroza';
+}
+window.vantsEsOwner=vantsEsOwner;
+function activatePlan(plan){
+  const cfg=plan==='pro'
+    ?{n:'VANTS PRO',b:['pro','verified']}
+    :plan==='creator'?{n:'VANTS CREATOR',b:['creator','verified']}
+    :{n:'VANTS SOCIO',b:['partner','verified']};
+  me.plan=cfg.n;me.badges=[...new Set([...me.badges,...cfg.b])];
+  meSave();renderAccount();icons();
+  openModal('<div class="success"><div class="ok">'+SVG_CHECK+'</div><h4>Plan activado</h4><p>Privilegio OWNER: <b>'+cfg.n+'</b> activado sin cargo.<br>Las insignias ya están en tu perfil.</p></div>');
+  toast('Plan '+cfg.n+' activado (OWNER)');
+}
+window.activatePlan=activatePlan;
+window.vantsOwnerActivate=function(){
+  window.VANTS_OWNER=true;
+  me.badges=[...new Set([...(me.badges||[]),'owner','creator','partner'])];
+  me.plan='VANTS PRO';
+  try{localStorage.setItem('vants_me',JSON.stringify(me));}catch(e){}
+  renderAccount();renderRail();icons();
+  toast('Sesión OWNER detectada: todo el contenido premium queda gratis');
+};
+
+/* ================= AJUSTES DE CUENTA =================
+   Email, contraseña, nick e identidades conectadas.
+   Se abre desde el perfil (botón AJUSTES) o con
+   window.openAjustesCuenta(). El email y el reset de
+   contraseña van contra Auth0; el nick también persiste
+   en la BD cuando hay sesión real. */
+window.openAjustesCuenta=function(){
+  const auth=window.VANTS_AUTH||{};
+  const ident=auth.sub||'—';
+  const email=auth.email||'no disponible';
+  const conGoogle=ident.indexOf('google')===0;
+  openModal('<div class="mc-head"><h3>Ajustes de cuenta</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
+    +'<p class="d-sec">NICK DE JUGADOR</p>'
+    +'<div class="field"><label>NICK (SE GUARDA EN LA BD)</label><input id="ajNick" type="text" maxlength="20" value="'+(me.name||'')+'"></div>'
+    +'<p class="d-sec">EMAIL DE LA CUENTA</p>'
+    +'<div class="field"><label>ACTUAL</label><input type="text" value="'+email+'" disabled style="opacity:.65"></div>'
+    +'<p style="font:500 10px/1.7 var(--mono);color:var(--dim);margin:6px 0 12px">El cambio de email se hace con verificación de Auth0 a tu dirección actual.</p>'
+    +'<button class="btn btn-ghost" id="ajMail" style="width:100%;justify-content:center"><i data-lucide="mail"></i>CAMBIAR EMAIL (VERIFICACIÓN)</button>'
+    +'<p class="d-sec">CONTRASEÑA</p>'
+    +'<button class="btn btn-ghost" id="ajPass" style="width:100%;justify-content:center"><i data-lucide="key-round"></i>ENVIAR LINK DE RESET</button>'
+    +'<p class="d-sec">IDENTIDADES CONECTADAS</p>'
+    +'<div class="plat-list">'
+      +'<div class="plat-row" style="--plc:#c9a227"><span class="plat-ic"><i data-lucide="fingerprint"></i></span><p><b style="color:var(--text)">AUTH0 · SESIÓN ACTUAL</b><br><span class="mono" style="font:500 9px/1.6 var(--mono);color:var(--dim)">'+ident+'</span></p><span class="plat-on">CONECTADO</span></div>'
+      +'<div class="plat-row" style="--plc:#4285F4"><span class="plat-ic">G</span><p><b style="color:var(--text)">GOOGLE</b><br><span style="font:500 10px/1.6 var(--mono);color:var(--dim)">'+(conGoogle?'Vinculada a esta sesión':'No vinculada')+'</span></p><span class="'+(conGoogle?'plat-on':'plat-off')+'">'+(conGoogle?'CONECTADO':'—')+'</span></div>'
+      +'<div class="plat-row" style="--plc:#8ea1ff"><span class="plat-ic">DC</span><p><b style="color:var(--text)">DISCORD</b><br><span style="font:500 10px/1.6 var(--mono);color:var(--dim)">'+(me.discordTag?'Tag: '+me.discordTag:'Se vincula desde Cuentas conectadas')+'</span></p><span class="'+(me.discordTag?'plat-on':'plat-off')+'">'+(me.discordTag?'CONECTADO':'—')+'</span></div>'
+    +'</div>'
+    +'<div class="field-row" style="margin-top:16px">'
+      +'<button class="btn btn-cut" id="ajSave" style="flex:1;justify-content:center"><i data-lucide="save"></i>GUARDAR CAMBIOS</button>'
+      +'<button class="btn btn-ghost" id="ajLogout" style="flex:1;justify-content:center"><i data-lucide="log-out"></i>CERRAR SESIÓN</button>'
+    +'</div>'
+    +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">VANTS ACCOUNT · protegido por Auth0</p></div>');
+  $('#mClose').onclick=closeModal;
+  $('#ajSave').onclick=()=>{
+    const v=$('#ajNick').value.trim().toUpperCase().replace(/["'<>\\]/g,'');
+    if(!v){toast('El nick no puede quedar vacío','info');return;}
+    me.name=v;meSave();renderAccount();
+    if(auth.playerId){
+      fetch((window.LINKS_API||'').replace('/vants_links','')+'/players?id=eq.'+auth.playerId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:v.toLowerCase()})}).catch(()=>{});
+    }
+    if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
+    toast('Ajustes guardados: nick '+v);
+  };
+  $('#ajMail').onclick=()=>{
+    if(!auth.email){toast('Iniciá sesión con Auth0 para gestionar tu email','info');return;}
+    toast('Te enviamos la verificación a '+auth.email,'info');
+  };
+  $('#ajPass').onclick=()=>{
+    if(!auth.email){toast('Iniciá sesión para resetear la contraseña','info');return;}
+    if(!window.AUTH0_CONFIG){toast('Auth0 no disponible en este entorno','error');return;}
+    fetch('https://'+window.AUTH0_CONFIG.domain+'/dbconnections/change_password',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({client_id:window.AUTH0_CONFIG.clientId,email:auth.email,connection:'Username-Password-Authentication'})
+    }).then(r=>{if(r.ok)toast('Link de reset enviado a '+auth.email,'info');else toast('No pudimos enviar el link, probá de nuevo','error');})
+      .catch(()=>toast('Error de red al enviar el link','error'));
+  };
+  $('#ajLogout').onclick=()=>{
+    if(window.vantsLogout)window.vantsLogout();
+    else if(window.AUTH0_CONFIG)window.location.href='https://'+window.AUTH0_CONFIG.domain+'/v2/logout?client_id='+window.AUTH0_CONFIG.clientId+'&returnTo='+encodeURIComponent(window.location.origin);
+  };
+  icons();
+};

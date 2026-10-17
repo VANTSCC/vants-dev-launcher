@@ -106,8 +106,8 @@ implementado pero **nunca se llamaba** en `main.py` — con este cambio ambos qu
    `fetch('https://endpoint-que-no-existe.vants.app/api', {method:'POST'})`
    → genera un `NETWORK_ERROR`.
 3. Espera ~30 s: debe llegar el embed rojo a tu DM con footer `event_id · supervisor v1.0`.
-4. Prueba también el login del panel: cierra sesión, entra en `panel.html`, pulsa
-   **ENTRAR EN AUTH0** y completa el login → `LOGIN_OK · panel` en tu DM.
+4. Prueba también el login de la web: cierra sesión, pulsa **ENTRAR**, completa
+   el login de Auth0 → `LOGIN_OK` en tu DM (el panel admin ya no existe).
 
 ---
 

@@ -6,6 +6,7 @@
   var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
   var RAIZ = 'https://feispla.github.io/Vants/';
   var OWNER_EMAILS = ['geimerjhoan099@gmail.com', 'admin@vants.games'];
+  var OWNER_DISCORD_ID = '1532612429295521930';
   var AUTH_FIELD = 'Author' + 'ization';
   var AUTH_SCHEME = 'Bear' + 'er ';
   function authHeaders(t) { var h = { 'Content-Type': 'application/json' }; h[AUTH_FIELD] = AUTH_SCHEME + t; return h; }
@@ -44,7 +45,22 @@
   var esArchivo = location.protocol === 'file:';
   var loginBtn = document.getElementById('arenaLoginBtn');
   var accBtn = document.getElementById('accBtn');
-  var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
+  var esOwner = !!(user && user.email && OWNER_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1)
+    || !!(user && String(user.name || user.nickname || '').toLowerCase() === 'geimerpedroza');
+  /* el dueño también se reconoce por su Discord ID vinculado (vants_links) */
+  function revisarOwnerDiscord() {
+    try {
+      var L = window.VANTS_LINKS || {};
+      if (L.discord && String(L.discord.platform_user_id || '') === OWNER_DISCORD_ID && !esOwner) {
+        esOwner = true;
+        if (window.VANTS_AUTH) window.VANTS_AUTH.isOwner = true;
+        if (window.vantsOwnerActivate) { try { window.vantsOwnerActivate(); } catch (eVO) {} }
+        if (typeof toast === 'function') { try { toast('👑 Sesión OWNER por Discord: todo el contenido premium gratis'); } catch (eT) {} }
+      }
+    } catch (e) {}
+  }
+  /* identidad de sesión expuesta para ajustes de cuenta y PATCHes */
+  window.VANTS_AUTH = { sub: (user && user.sub) || null, email: (user && user.email) || null, playerId: null, isOwner: esOwner };
 
   /* volver del OAuth del linker (?linked=plataforma / ?linkerr=motivo) */
   try {
@@ -67,6 +83,11 @@
       if (pagado !== 'cancel') {
         if (typeof toast === 'function') { try { toast('Pago confirmado en Stripe: tu compra queda activa en unos segundos'); } catch (e6) {} }
         if (window.VantsSupervisor) window.VantsSupervisor.event('CHECKOUT_RETURN', { plan: String(pagado).slice(0, 40) });
+        /* insignias automáticas: el plan comprado se emite solo al volver de
+           Stripe, sin panel admin ni asignación manual (motor en arena.js) */
+        if ((pagado === 'pro' || pagado === 'creator') && typeof window.activatePlan === 'function') {
+          try { window.activatePlan(pagado); } catch (eAP) {}
+        }
       } else if (typeof toast === 'function') {
         try { toast('Pago cancelado: no se realizó ningún cargo', 'info'); } catch (e6) {}
       }
@@ -81,10 +102,38 @@
     try {
       var t = await jwt();
       if (!t) return;
-      var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: authHeaders(t), body: '{}' });
-      var pidRaw = await rpc.json().catch(function () { return null; });
-      var pid = Array.isArray(pidRaw) ? pidRaw[0] : pidRaw;
-      pid = pid && (pid.current_player_id || pid.id) || pid;
+      /* 1) vía oficial: RPC current_player_id (definida en db/migrations/05-current-player.sql) */
+      var pid = null;
+      try {
+        var rpc = await fetch(API + '/rpc/current_player_id', { method: 'POST', headers: authHeaders(t), body: '{}' });
+        var pidRaw = await rpc.json().catch(function () { return null; });
+        var pidTmp = Array.isArray(pidRaw) ? pidRaw[0] : pidRaw;
+        pid = (pidTmp && (pidTmp.current_player_id || pidTmp.id)) || pidTmp || null;
+      } catch (eRpc) {}
+      /* 2) respaldos por identidad Auth0: auth0_sub → vants_links → email */
+      if (!pid && user) {
+        try {
+          if (user.sub) {
+            var rp = await fetch(API + '/players?auth0_sub=eq.' + encodeURIComponent(user.sub) + '&select=id&limit=1', { headers: authHeaders(t) });
+            var rpr = await rp.json().catch(function () { return []; });
+            if (Array.isArray(rpr) && rpr[0]) pid = rpr[0].id;
+          }
+        } catch (eS) {}
+        if (!pid && user.sub) {
+          try {
+            var vl = await fetch(API + '/vants_links?auth0_sub=eq.' + encodeURIComponent(user.sub) + '&select=player_id&order=connected_at.desc&limit=1', { headers: authHeaders(t) });
+            var vlr = await vl.json().catch(function () { return []; });
+            if (Array.isArray(vlr) && vlr[0] && vlr[0].player_id) pid = vlr[0].player_id;
+          } catch (eV) {}
+        }
+        if (!pid && user.email) {
+          try {
+            var pe = await fetch(API + '/players?email=eq.' + encodeURIComponent(user.email) + '&select=id&limit=1', { headers: authHeaders(t) });
+            var per = await pe.json().catch(function () { return []; });
+            if (Array.isArray(per) && per[0]) pid = per[0].id;
+          } catch (eE) {}
+        }
+      }
       if (!pid) return;
       var pr = await fetch(PROXY + '?table=players&id=eq.' + pid + '&limit=1', { headers: { Accept: 'application/json' } });
       var rows = await pr.json();
@@ -133,17 +182,32 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
 
+  /* -------- EXPERIENCIA FACEIT (migración 08: players.xp) -------- */
+  function xpFaceitHTML(xp) {
+    xp = (typeof xp === 'number' && xp > 0) ? xp : 0;
+    if (!xp) return '';
+    var nivel = 1 + Math.floor(xp / 500);
+    var en = xp % 500;
+    var f = Math.min(100, (en / 500) * 100);
+    return '<p class="d-sec">EXPERIENCIA FACEIT</p>' +
+      '<div class="pf-rank" style="--rc:#FF5500">' +
+      '<div class="info"><b>NIVEL ' + nivel + '</b><small>' + xp + ' XP TOTAL · ' + en + '/500 PARA EL NIVEL ' + (nivel + 1) + '</small>' +
+      '<div class="rr-bar"><i style="width:' + f.toFixed(0) + '%;background:#FF5500"></i></div></div>' +
+      '<div class="rr-num">' + nivel + '<small>NIVEL</small></div></div>';
+  }
+
   function rangoRealHTML(p) {
     var linea = '<p class="d-sec">RANGO VANTS RANKED</p>';
+    var xpExtra = xpFaceitHTML(p.xp);
     var sps = (ME.extra && ME.extra.sps) || null;
     var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
-      : (sps && typeof sps.rank === 'number' && sps.rank >= 0.5 && sps.rank <= 2 ? sps.rank : null);
+      : (sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2 ? parseFloat(sps.rank) : null);
     var mmr = (sps && sps.mmr != null) ? sps.mmr : null;
     var wl = (sps && sps.wins != null) ? (sps.wins + 'V · ' + (sps.losses || 0) + 'D · ') : '';
     var sin = linea + '<div class="pf-rank" style="--rc:#5C5C66;opacity:.85">' + rankSVG('fundicion', 64) +
       '<div class="info"><b>SIN RANGO</b><small>' + wl + 'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>' +
       '<div class="rr-bar"><i style="width:0%"></i></div></div>' +
-      '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>';
+      '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>' + xpExtra;
     try {
       if (raw == null || typeof RANKS === 'undefined') return sin;
       var k = rankFor(raw);
@@ -155,7 +219,7 @@
       return linea + '<div class="pf-rank" style="--rc:' + rc.c1 + '">' + rankSVG(k, 64) +
         '<div class="info"><b>' + rc.name + ' ' + s + '</b><small>' + wl + 'TEMPORADA ACTIVA</small>' +
         '<div class="rr-bar"><i style="width:' + f.toFixed(0) + '%;background:' + rc.c1 + '"></i></div></div>' +
-        '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>';
+        '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>' + xpExtra;
     } catch (eR) { return sin; }
   }
 
@@ -222,6 +286,17 @@
     } catch (eT) { return ''; }
   }
 
+  /* banner superior del perfil real: misma pieza del demo (pf-banner) +skins del pase */
+  function pfBannerHTML(sel, rawRank) {
+    var rkKey = 'fundicion';
+    try { if (rawRank != null) rkKey = rankFor(rawRank); } catch (eB) {}
+    return '<div class="pf-banner" id="pf-banner-real">' +
+      (sel === 'bananim' ? '<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>' : '') +
+      (sel === 'dorado' ? '<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>' : '') +
+      (((ME.player.twitch_channel) || (ME.player.kick_channel)) ? '<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>' : '') +
+      rankSVG(rkKey, 92, 'remblem') + '</div>';
+  }
+
   function perfilRealHTML() {
     var p = ME.player;
     var stats = p.stats || {};
@@ -229,26 +304,60 @@
     var bannerSel = (p.stats && p.stats.banner) ? p.stats.banner : (puedeBanner ? 'bananim' : '');
     window.VANTS_BANNER = bannerSel;
     injectBannerCSS();
-    var badges = '';
-    if (p.verified) badges += chip('✓ VERIFICADO', '#4CC9F0') + ' ';
-    if (p.role === 'owner') badges += chip('👑 OWNER', '#F5C044') + ' ';
-    if (p.role === 'admin') badges += chip('🛡 ADMIN', '#4CC9F0') + ' ';
-    if (p.role === 'streamer') badges += chip('STREAMER', '#9146FF') + ' ';
+    /* rango real con el MISMO motor del demo (RANKS/rankFor/subFor) */
+    var sps = (ME.extra && ME.extra.sps) || null;
+    var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
+      : (sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2 ? parseFloat(sps.rank) : null);
+    var rk = 'fundicion', rc = RANKS.fundicion;
+    try {
+      if (raw != null && typeof RANKS !== 'undefined') rc = RANKS[rankFor(raw)];
+    } catch (eR) { rc = RANKS.fundicion; }
+
+    /* insignias reales con el MISMO chip del demo (badgeChip) */
+    var badges = [];
+    if (p.verified) badges.push('verified');
+    if (p.role === 'owner' || esOwner) badges.push('owner');
+    if (p.role === 'admin') badges.push('admin');
+    if (p.role === 'streamer') badges.push('streamer');
+    if (p.role === 'creator') badges.push('creator');
+    if (p.role === 'partner') badges.push('partner');
+    if (esOwner) badges = badges.concat(['pro', 'creator', 'partner']);
+    badges = badges.filter(function (b, ix) { return badges.indexOf(b) === ix; });
+
+    /* stats reales con el MISMO grid del demo (pf-stats) */
+    var wins = (sps && sps.wins) || stats.wins || 0, losses = (sps && sps.losses) || stats.losses || 0;
+    var mPartidos = (stats.matches != null ? stats.matches : (sps && sps.wins != null ? wins + losses : null));
+    var mWr = (wins + losses > 0) ? Math.round((wins / (wins + losses)) * 100) : (stats.wr != null ? stats.wr : null);
+    var mRtg = (raw != null ? raw : (stats.rtg != null ? stats.rtg : null));
+    var mKd = (stats.kd != null ? stats.kd : null);
+    var cell = function (v, lbl) { return '<div><b>' + (v == null ? '—' : v) + '</b><span>' + lbl + '</span></div>'; };
+    var fmt = function (v) { return (typeof v === 'number') ? v.toFixed(2) : v; };
+    var statsGrid = '<div class="pf-stats">' + cell(mPartidos, 'PARTIDOS') + cell(mWr == null ? null : mWr + '%', 'WINRATE') + cell(mRtg == null ? null : fmt(mRtg), 'RATING') + cell(mKd == null ? null : fmt(mKd), 'K/D') + '</div>';
+
+    var membre = 'MIEMBRO DESDE 2024';
+    try { if (p.created_at) membre = 'MIEMBRO DESDE ' + String(p.created_at).slice(0, 4); } catch (eD) {}
     var ava = p.avatar_url
-      ? '<img src="' + p.avatar_url + '" alt="" style="width:74px;height:74px;border-radius:50%;object-fit:cover;border:2px solid #FF0D2E">'
-      : '<div style="width:74px;height:74px;border-radius:50%;background:#1a1a20;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px">' + (p.username || 'V').slice(0, 2).toUpperCase() + '</div>';
+      ? '<img src="' + escHtml(p.avatar_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : escHtml((p.username || 'V').slice(0, 2).toUpperCase());
+    var bio = stats.bio || 'Nuevo en el circuito VANTS. Conectá tus cuentas, ganá series y subí de rango.';
+
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
     var bs = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
     return '<div class="d-head"><span class="kicker">/// MI PERFIL · CUENTA REAL VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
-      '<div class="d-body">' +
-      bannerStrip(bannerSel) +
-      '<div style="display:flex;gap:16px;align-items:center;margin:8px 0 14px">' + ava +
-      '<div><div style="font-weight:900;font-size:19px;text-transform:uppercase">' + (p.display_name || p.username || 'JUGADOR') + '</div>' +
-      '<div style="font:600 10px/1.6 var(--mono);color:var(--mut)">@' + (p.username || '') + ' · MIEMBRO VANTS</div></div></div>' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' + (badges || '<span style="color:var(--dim);font-size:11px">Sin insignias todavía — el dueño las asigna desde el panel admin.</span>') + '</div>' +
+      '<div class="d-body" style="--rc:' + rc.c1 + '">' +
+      pfBannerHTML(bannerSel, raw) +
+      '<div class="pf-head">' +
+        '<span class="ava s2" style="--rc:' + rc.c1 + '">' + ava + '</span>' +
+        '<div class="pf-id"><div class="pf-name">' + escHtml((p.display_name || p.username || 'JUGADOR').toUpperCase()) + '</div>' +
+        '<p class="pf-sub">@' + escHtml(p.username || '') + ' · ' + escHtml(p.country || '—') + (p.region ? ' · ' + escHtml(p.region) : '') + ' · ' + membre + '</p></div></div>' +
+      '<div class="pf-badges">' + (badges.length ? badges.map(function (b) { return badgeChip(b); }).join('') : '<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>') + '</div>' +
+      '<p class="pf-bio">' + escHtml(bio) + '</p>' +
+      statsGrid +
       rangoRealHTML(p) +
       cuentasRealHTML(p) +
       transmisionRealHTML(p) +
+      '<div id="rp-series"></div>' +
+      '<div id="rp-faceit"></div>' +
       (puedeBanner
         ? '<p class="d-sec">BANNER DEL PERFIL</p>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
@@ -257,21 +366,174 @@
           '<button class="btn btn-sm" data-banner="" style="' + bs + '">CLÁSICO</button></div>'
         : '') +
       '<p class="d-sec">MIS DATOS</p>' +
-      '<input id="rp-pais" placeholder="País" value="' + (p.country || '') + '" style="' + inp + 'margin-bottom:10px">' +
-      '<input id="rp-region" placeholder="Región (LATAM, EU…)" value="' + (p.region || '') + '" style="' + inp + 'margin-bottom:10px">' +
-      '<input id="rp-dc" placeholder="Tu tag de Discord (usuario#1234)" value="' + (stats.discord_tag || '') + '" style="' + inp + 'margin-bottom:12px">' +
+      '<input id="rp-pais" placeholder="País" value="' + escHtml(p.country || '') + '" style="' + inp + 'margin-bottom:10px">' +
+      '<input id="rp-region" placeholder="Región (LATAM, EU…)" value="' + escHtml(p.region || '') + '" style="' + inp + 'margin-bottom:10px">' +
+      '<input id="rp-dc" placeholder="Tu tag de Discord (usuario#1234)" value="' + escHtml(stats.discord_tag || '') + '" style="' + inp + 'margin-bottom:12px">' +
       '<button class="btn btn-sm" id="rp-guardar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">GUARDAR MIS DATOS</button>' +
       '<div id="rp-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
       '<p class="d-sec">CUENTA</p>' +
-      '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">Rol en VANTS: <b style="color:var(--ink)">' + (p.role ? p.role.toUpperCase() : 'JUGADOR') + '</b><br>Verificado: <b style="color:' + (p.verified ? 'var(--grn)' : 'var(--dim)') + '">' + (p.verified ? 'SÍ' : 'NO') + '</b><br>Correo: ' + (user.email || '—') + '</div>' +
-      '<button class="btn btn-ghost btn-sm" id="rp-salir" style="margin-top:18px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">CERRAR SESIÓN</button>' +
+      '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">Rol en VANTS: <b style="color:var(--ink)">' + (p.role ? p.role.toUpperCase() : 'JUGADOR') + '</b><br>Verificado: <b style="color:' + (p.verified ? 'var(--grn)' : 'var(--dim)') + '">' + (p.verified ? 'SÍ' : 'NO') + '</b><br>Correo: ' + ((user && user.email) || '—') + '</div>' +
+      '<button class="btn btn-ghost btn-sm" id="rp-ajustes" style="margin-top:14px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button>' +
+      '<button class="btn btn-ghost btn-sm" id="rp-salir" style="margin-top:8px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">CERRAR SESIÓN</button>' +
       '</div>';
+  }
+
+  /* -------- VANTS RANKED · SERIES (motor Elo real, migración 07) --------
+     Reportás una serie contra un rival real, el rival la confirma y la
+     base aplica el Elo: rating, RR y wins/losses quedan en Neon. */
+  var SERIE_ERRORES = {
+    sin_sesion: 'Iniciá sesión para jugar ranked',
+    rival_no_encontrado: 'No encontramos ese nick en la sala de jugadores',
+    mismo_jugador: 'No podés reportar una serie contra vos mismo',
+    rival_sin_sesion: 'Ese jugador nunca inició sesión: no podría confirmar la serie',
+    serie_ya_pendiente: 'Ya hay una serie pendiente con ese rival',
+    enfriamiento: 'Enfriamiento: esperá 15 minutos para otra serie contra el mismo rival',
+    solo_el_rival: 'Solo el rival puede confirmar esta serie',
+    estado_invalido: 'Esa serie ya no está pendiente'
+  };
+  var serieResultado = null; /* true = gané · false = perdí */
+
+  async function rpcRanked(nombre, args) {
+    var t = await jwt();
+    if (!t) return { ok: false, error: 'sin_sesion' };
+    var r = await fetch(API + '/rpc/' + nombre, { method: 'POST', headers: authHeaders(t), body: JSON.stringify(args || {}) });
+    var d = await r.json().catch(function () { return null; });
+    if (Array.isArray(d)) d = d[0];
+    return d || { ok: false, error: 'error_de_red' };
+  }
+
+  async function cargarSeriesReal() {
+    var host = document.getElementById('rp-series');
+    if (!host) return;
+    var d = null;
+    try { d = await rpcRanked('mis_series'); } catch (eS) { d = null; }
+    if (!d || !d.ok) { host.innerHTML = ''; return; }
+    var inp2 = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
+    var bs2 = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
+    var html = '<p class="d-sec">VANTS RANKED · SERIES</p>';
+    var pc = d.por_confirmar || [];
+    if (pc.length) {
+      html += '<div style="border:1px solid rgba(255,13,46,.45);background:rgba(255,13,46,.05);padding:12px;margin-bottom:12px">';
+      pc.forEach(function (s) {
+        html += '<div style="font:500 11px/1.7 var(--mono);color:var(--mut);margin-bottom:6px"><b style="color:var(--ink)">' + escHtml(s.rival || 'JUGADOR') + '</b> reportó que ' + (s.gano_retador ? 'GANÓ' : 'PERDIÓ') + ' la serie contra vos' + (s.mapa ? ' · ' + escHtml(s.mapa) : '') + '</div>'
+          + '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">'
+          + '<button class="btn btn-sm" data-sconf="' + s.serie + '" style="flex:1;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 10px var(--mono);padding:10px;cursor:pointer;letter-spacing:.06em">CONFIRMAR RESULTADO</button>'
+          + '<button class="btn btn-sm" data-srej="' + s.serie + '" style="' + bs2 + '">RECHAZAR</button></div>';
+      });
+      html += '</div>';
+    }
+    html += '<input id="sr-rival" placeholder="Nick del rival (como aparece en su perfil)" style="' + inp2 + 'margin-bottom:8px">'
+      + '<div style="display:flex;gap:8px;margin-bottom:8px">'
+      + '<input id="sr-mapa" placeholder="Mapa (opcional)" maxlength="30" style="' + inp2 + ';flex:1"></div>'
+      + '<div style="display:flex;gap:8px;margin-bottom:10px">'
+      + '<button class="btn btn-sm" id="sr-gane" style="flex:1;justify-content:center;' + bs2 + '">GANÉ</button>'
+      + '<button class="btn btn-sm" id="sr-perdi" style="flex:1;justify-content:center;' + bs2 + '">PERDÍ</button></div>'
+      + '<button class="btn btn-sm" id="sr-reportar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">REPORTAR SERIE</button>'
+      + '<div id="sr-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:8px;white-space:pre-wrap"></div>';
+    var rec = (d.recientes || []).filter(function (s) { return s.estado === 'confirmada'; });
+    if (rec.length) {
+      html += '<p class="d-sec">ÚLTIMAS SERIES</p>';
+      rec.forEach(function (s) {
+        var delta = (s.mmr_despues != null && s.mmr_antes != null) ? Math.round(s.mmr_despues - s.mmr_antes) : null;
+        html += '<div style="display:flex;justify-content:space-between;gap:8px;font:500 10.5px/1.7 var(--mono);color:var(--mut);border-bottom:1px solid var(--line,#222);padding:6px 0">'
+          + '<span>' + (s.gane ? '<b style="color:var(--grn,#3EE6A0)">VICTORIA</b>' : '<b style="color:#FF0D2E">DERROTA</b>') + ' vs ' + escHtml(s.rival || '—') + (s.mapa ? ' · ' + escHtml(s.mapa) : '') + '</span>'
+          + '<span style="color:' + (delta > 0 ? 'var(--grn,#3EE6A0)' : (delta < 0 ? '#FF0D2E' : 'var(--dim)')) + '">' + (delta == null ? '' : (delta > 0 ? '+' : '') + delta + ' RR') + '</span></div>';
+      });
+    }
+    host.innerHTML = html;
+
+    var bG = document.getElementById('sr-gane'), bP = document.getElementById('sr-perdi');
+    function pintarRes() {
+      if (bG) { bG.style.borderColor = serieResultado === true ? '#FF0D2E' : 'var(--line2,#303039)'; bG.style.color = serieResultado === true ? '#FF0D2E' : 'var(--mut,#93939D)'; }
+      if (bP) { bP.style.borderColor = serieResultado === false ? '#FF0D2E' : 'var(--line2,#303039)'; bP.style.color = serieResultado === false ? '#FF0D2E' : 'var(--mut,#93939D)'; }
+    }
+    if (bG) bG.onclick = function () { serieResultado = true; pintarRes(); };
+    if (bP) bP.onclick = function () { serieResultado = false; pintarRes(); };
+
+    var bR = document.getElementById('sr-reportar');
+    if (bR) bR.onclick = async function () {
+      var rival = ((document.getElementById('sr-rival') || {}).value || '');
+      var mapa = ((document.getElementById('sr-mapa') || {}).value || '');
+      var msg = document.getElementById('sr-msg');
+      if (serieResultado === null) { if (msg) msg.textContent = 'Marcá si ganaste o perdiste la serie'; return; }
+      if (!rival.trim()) { if (msg) msg.textContent = 'Escribí el nick del rival'; return; }
+      bR.disabled = true; bR.textContent = 'REPORTANDO…';
+      var res = await rpcRanked('reportar_serie', { p_rival: rival.trim(), p_gano: serieResultado, p_mapa: mapa.trim() });
+      bR.disabled = false; bR.textContent = 'REPORTAR SERIE';
+      if (res && res.ok) {
+        if (typeof toast === 'function') { try { toast('Serie reportada: tu rival debe confirmarla para mover el RR'); } catch (eT) {} }
+        renderPerfilReal();
+      } else if (msg) {
+        msg.textContent = SERIE_ERRORES[res.error] || ('No se pudo reportar: ' + (res.error || 'error'));
+      }
+    };
+
+    host.querySelectorAll('[data-sconf]').forEach(function (b) {
+      b.onclick = async function () {
+        b.disabled = true; b.textContent = 'CONFIRMANDO…';
+        var res = await rpcRanked('confirmar_serie', { p_serie: b.getAttribute('data-sconf') });
+        if (res && res.ok) {
+          if (typeof toast === 'function') { try { toast('Serie confirmada: rating actualizado'); } catch (eT2) {} }
+          try { if (typeof window.vantsRecargarJugadores === 'function') window.vantsRecargarJugadores(); } catch (eR) {}
+          await cargarPerfilReal();
+          if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (ME && ME.pid) || null;
+          renderPerfilReal();
+        } else {
+          b.disabled = false; b.textContent = 'CONFIRMAR RESULTADO';
+          if (typeof toast === 'function') { try { toast(SERIE_ERRORES[res.error] || 'No se pudo confirmar', 'info'); } catch (eT3) {} }
+        }
+      };
+    });
+    host.querySelectorAll('[data-srej]').forEach(function (b) {
+      b.onclick = async function () {
+        b.disabled = true;
+        var res = await rpcRanked('rechazar_serie', { p_serie: b.getAttribute('data-srej') });
+        if (res && res.ok) {
+          if (typeof toast === 'function') { try { toast('Serie rechazada', 'info'); } catch (eT4) {} }
+          renderPerfilReal();
+        } else {
+          b.disabled = false;
+          if (typeof toast === 'function') { try { toast(SERIE_ERRORES[res.error] || 'No se pudo rechazar', 'info'); } catch (eT5) {} }
+        }
+      };
+    });
+    pintarRes();
+  }
+
+  /* -------- FACEIT · ÚLTIMAS PARTIDAS (XP + rango por partida real) --------
+     Lee faceit_matches (lectura pública con RLS) y muestra las últimas
+     partidas procesadas por el cron faceit-xp.yml. */
+  async function cargarFaceitReal() {
+    var host = document.getElementById('rp-faceit');
+    if (!host || !ME || !ME.pid) return;
+    try {
+      var t = await jwt();
+      if (!t) return;
+      var r = await fetch(API + '/faceit_matches?player_id=eq.' + encodeURIComponent(ME.pid) + '&order=played_at.desc&limit=6', { headers: { Accept: 'application/json', [AUTH_FIELD]: AUTH_SCHEME + t } });
+      var rows = await r.json().catch(function () { return null; });
+      if (!Array.isArray(rows) || !rows.length) { host.innerHTML = ''; return; }
+      var html = '<p class="d-sec">FACEIT · ÚLTIMAS PARTIDAS</p>';
+      html += rows.map(function (m) {
+        var xp = m.xp_awarded || 0;
+        var res = m.result === 'win'
+          ? '<b style="color:var(--grn,#3EE6A0)">VICTORIA</b>'
+          : (m.result === 'draw' ? '<b style="color:var(--gold,#F5C044)">EMPATE</b>' : '<b style="color:#FF0D2E">DERROTA</b>');
+        var fecha = m.played_at ? String(m.played_at).slice(0, 10) : '';
+        return '<div style="display:flex;justify-content:space-between;gap:8px;font:500 10.5px/1.7 var(--mono);color:var(--mut);border-bottom:1px solid var(--line,#222);padding:6px 0">'
+          + '<span>' + res + ' <span style="color:var(--dim)">' + String(m.game || 'cs2').toUpperCase() + ' · ' + escHtml(fecha) + '</span></span>'
+          + '<span style="color:' + (xp > 0 ? 'var(--grn,#3EE6A0)' : 'var(--dim)') + '">' + (xp > 0 ? '+' + xp : '+0') + ' XP</span></div>';
+      }).join('');
+      host.innerHTML = html;
+    } catch (eF) { /* sin FACEIT todavía: no se muestra nada */ }
   }
 
   async function renderPerfilReal() {
     if (typeof linksCargar === 'function') { try { await linksCargar(); } catch (eL) {} }
+    revisarOwnerDiscord();
     openDrawer(perfilRealHTML());
     if (window.lucide) lucide.createIcons();
+    cargarSeriesReal();
+    cargarFaceitReal();
     var p = ME.player;
     var msg = document.getElementById('rp-msg');
     var g = document.getElementById('rp-guardar');
@@ -300,18 +562,31 @@
     };
     var s = document.getElementById('rp-salir');
     if (s) s.onclick = function () { A0.logout({ logoutParams: { returnTo: RAIZ } }); };
+    var aj = document.getElementById('rp-ajustes');
+    if (aj) aj.onclick = function () { closeDrawer(); if (window.openAjustesCuenta) window.openAjustesCuenta(); };
     // editor de banner (solo si puede: dueño o recompensa 11p reclamada)
     document.querySelectorAll('[data-banner]').forEach(function (b) {
       b.onclick = function () {
         window.VANTS_BANNER = b.getAttribute('data-banner');
-        var strip = bannerStrip(window.VANTS_BANNER);
-        var el = document.getElementById('pr-banner');
-        if (el) el.outerHTML = strip;
+        var rawRank = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
+          : (((ME.extra && ME.extra.sps) && ME.extra.sps.rank != null && !isNaN(parseFloat(ME.extra.sps.rank))) ? parseFloat(ME.extra.sps.rank) : null);
+        var pf = document.getElementById('pf-banner-real');
+        if (pf) pf.outerHTML = pfBannerHTML(window.VANTS_BANNER, rawRank);
+        if (window.lucide) lucide.createIcons();
         document.querySelectorAll('[data-banner]').forEach(function (x) { x.style.borderColor = 'var(--line2,#303039)'; x.style.color = 'var(--mut,#93939D)'; });
         b.style.borderColor = '#FF0D2E'; b.style.color = '#FF0D2E';
       };
     });
   }
+
+  /* vista previa del perfil real sin sesión (solo dibuja el drawer con
+     datos que se le pasan; toda escritura real exige JWT + RLS) */
+  window.__previewPerfilReal = function (fake) {
+    var f = fake || {};
+    ME = { pid: f.id || 'preview', player: f, extra: ME && ME.extra || {} };
+    if (f._esOwner) esOwner = true;
+    renderPerfilReal();
+  };
 
   function renderCrearPerfil(nombreSugerido) {
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
@@ -331,17 +606,35 @@
       c.disabled = true; c.textContent = 'CREANDO…';
       try {
         var t = await jwt();
+        /* la creación viaja con la identidad Auth0 para que Neon la ligue a la sesión */
         var r = await fetch(API + '/players', {
           method: 'POST',
           headers: authHeaders(t),
-          body: JSON.stringify({ username: $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_'), display_name: $('#cp-user').value.trim(), country: $('#cp-pais').value.trim(), region: $('#cp-region').value.trim(), avatar_url: (user && user.picture) || null }),
+          body: JSON.stringify({ username: $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_'), display_name: $('#cp-user').value.trim(), country: $('#cp-pais').value.trim(), region: $('#cp-region').value.trim(), avatar_url: (user && user.picture) || null, auth0_sub: (user && user.sub) || null, email: (user && user.email) || null }),
         });
-        if (r.ok) {
+        var listo = r.ok;
+        if (!listo && (r.status === 409 || r.status === 400)) {
+          /* nick ya existía: intentar ADOPTAR ese perfil ligándolo a esta identidad */
+          try {
+            var nick = $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_');
+            var ex = await fetch(API + '/players?username=eq.' + encodeURIComponent(nick) + '&select=id,auth0_sub&limit=1', { headers: authHeaders(t) });
+            var exRows = await ex.json().catch(function () { return []; });
+            if (Array.isArray(exRows) && exRows[0] && !exRows[0].auth0_sub) {
+              var up = await fetch(API + '/players?id=eq.' + exRows[0].id, {
+                method: 'PATCH', headers: authHeaders(t),
+                body: JSON.stringify({ auth0_sub: (user && user.sub) || null, email: (user && user.email) || null }),
+              });
+              if (up.ok) listo = true;
+            }
+          } catch (eAd) {}
+        }
+        if (listo) {
           if (msg) msg.innerHTML = '<span class="ok">✓ Perfil creado. Cargando…</span>';
           await cargarPerfilReal();
           if (ME && ME.player) renderPerfilReal();
+          if (typeof window.vantsRecargarJugadores === 'function') { try { window.vantsRecargarJugadores(); } catch (eR2) {} }
         } else {
-          var j = await r.json().catch(function () { return {}; });
+          var j = r.ok ? {} : await r.json().catch(function () { return {}; });
           if (msg) msg.textContent = 'La base rechazó la creación (HTTP ' + r.status + '): ' + (j.message || '') + '\nPlan B: crea el jugador en el SQL Editor de Neon.';
           c.disabled = false; c.textContent = 'REINTENTAR';
         }
@@ -349,9 +642,15 @@
     };
   }
 
-  if (accBtn) accBtn.addEventListener('click', function (e) {
-    if (!user) return;
-    e.stopImmediatePropagation();
+  /* el ÚNICO camino para abrir MI PERFIL: el drawer real (CUENTA REAL VANTS).
+     Lo usan el chip de la cuenta, VER MI PERFIL de la sala y los conectores. */
+  window.vantsAbrirMiPerfil = function () {
+    if (!user) {
+      var lbm = document.getElementById('arenaLoginBtn');
+      if (lbm && !lbm.hidden) lbm.click();
+      else if (typeof toast === 'function') { try { toast('Ingresá con ENTRAR para crear tu perfil de jugador', 'info'); } catch (eL2) {} }
+      return;
+    }
     if (ME && ME.player) { renderPerfilReal(); return; }
     openDrawer('<div class="d-head"><span class="kicker">/// MI PERFIL</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div><div class="d-body"><p style="font:500 12px/1.7 var(--mono);color:var(--mut);margin:18px 0">Cargando tu perfil real desde Neon…</p></div>');
     (async function () {
@@ -359,11 +658,14 @@
       if (ME && ME.player) renderPerfilReal();
       else renderCrearPerfil(String((user && (user.name || user.email)) || '').split('@')[0]);
     })();
-  }, { capture: true });
+  };
+  if (accBtn) accBtn.addEventListener('click', function () { window.vantsAbrirMiPerfil(); });
 
+  try { if (typeof linksCargar === 'function') { await linksCargar(); } } catch (eL0) {}
+  revisarOwnerDiscord();
   await cargarPerfilReal();
 
-  var esAdminRol = !!(ME && ME.player && (ME.player.role === 'owner' || ME.player.role === 'admin'));
+  if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (ME && ME.pid) || null;
 
   if (user) {
     if (loginBtn) loginBtn.hidden = true;
@@ -373,9 +675,9 @@
     var accName = document.getElementById('accName');
     var dot = document.getElementById('accLive');
     if (ava) ava.textContent = nm.slice(0, 2);
-    if (accName) accName.textContent = esOwner ? 'OWNER' : (esAdminRol ? 'ADMIN' : nm.slice(0, 12));
+    if (accName) accName.textContent = esOwner ? 'OWNER' : nm.slice(0, 12);
     if (dot) dot.style.display = 'none';
-    if (typeof toast === 'function') { try { toast(esOwner ? '👑 Modo DUEÑO activo — panel admin desbloqueado' : 'Sesión iniciada como ' + nm); } catch (e3) {} }
+    if (typeof toast === 'function') { try { toast(esOwner ? '👑 Modo DUEÑO activo — todo el contenido premium gratis' : 'Sesión iniciada como ' + nm); } catch (e3) {} }
 
     if (esOwner) {
       (async function () {
@@ -384,16 +686,13 @@
           var rows = await pr.json();
           window.VANTS_ME = { pid: rows && rows[0] ? rows[0].id : null, player: (rows && rows[0]) || null, owner: true };
         } catch (e) { window.VANTS_ME = { pid: null, player: null, owner: true }; }
+        try { if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (window.VANTS_ME && window.VANTS_ME.pid) || null; } catch (eVA) {}
+        /* activa plan VANTS PRO gratis + insignias OWNER/CREADOR/SOCIO (motor en arena.js) */
+        try { if (window.vantsOwnerActivate) window.vantsOwnerActivate(); } catch (eVO) {}
         try {
           if (typeof state !== 'undefined') { state.passOwned = true; state.isPro = true; if (typeof renderPass === 'function') renderPass(); }
         } catch (e) {}
-        var pl = document.getElementById('panelLink');
-        if (pl) { pl.hidden = false; pl.style.display = ''; }
       })();
-    } else if (esAdminRol) {
-      var plA = document.getElementById('panelLink');
-      if (plA) { plA.hidden = false; plA.style.display = ''; }
-      if (typeof toast === 'function') { try { toast('🛡️ Modo ADMIN activo — panel admin desbloqueado'); } catch (e4) {} }
     }
   } else if (loginBtn && !esArchivo) {
     if (accBtn) accBtn.hidden = true;
