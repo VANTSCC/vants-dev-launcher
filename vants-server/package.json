@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Servidor VANTS: web + bot de Discord (anuncios de torneos, membresías, lives y campeones)",
-  "main": "server.js",
+  "description": "VANTS GAMES — arena competitiva. Worker de Cloudflare: web estática + notificaciones a Discord vía REST API.",
+  "main": "worker.js",
   "scripts": {
-    "start": "node server.js"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
-  "dependencies": {
-    "discord.js": "^14.16.3",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.2"
+  "devDependencies": {
+    "wrangler": "^3.99.0"
   }
 }
