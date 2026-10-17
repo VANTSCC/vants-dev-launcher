@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NK: ${{ secrets.NEON_API_KEY }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
       FACEIT_CLIENT_ID: ${{ secrets.FACEIT_CLIENT_ID }}
       FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
       LINKER_URL: https://br-sweet-shape-b42xhogj-linker.compute.c-6.us-east-2.aws.neon.tech
@@ -39,6 +40,7 @@ jobs:
             --project-id square-surf-41242074 \
             --branch br-sweet-shape-b42xhogj \
             --src neon-functions/linker \
+            --api-key "$NK" \
             --wait \
             --env AUTH0_DOMAIN=vants.eu.auth0.com \
             --env AUTH0_AUDIENCE=https://api.vants.app \
