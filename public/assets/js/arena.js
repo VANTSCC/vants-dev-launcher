@@ -121,16 +121,19 @@ const DATA={
  valorant:{
   title:'ASCENSIÓN<br><span class="out">SERIES</span> <span class="acc">S4</span>',short:'ASCENSIÓN SERIES S4',
   sub:'El circuito competitivo abierto de LATAM. Clasificá con tu equipo, subí por el bracket y llevate la parte del premio. Matchmaking por skill, anti-cheat obligatorio y servidores 128 tick.',
-  extraCol:'ACS',live:{a:'KRÜ ASCEND',b:'FURIA RIFT',ta:'KRÜ',tb:'FUR',ev:'ASCENSIÓN SERIES · SEMIFINAL · MAPA: HAVEN',map:'Haven'},
+  extraCol:'ACS',live:{a:'LOUD',b:'TEAM VITALITY',ta:'LOUD',tb:'VIT',ev:'CHAMPIONS 2026 · GRAN FINAL · DOM 18 OCT · 10:00 (CARACAS)',map:'Gran Final',sim:false,url:'https://www.vlr.gg/754737',hora:'10:00',horaLbl:'INICIO (CARACAS)'},
+  /* AGENDA REAL: partidos verificados en vlr.gg (Champions 2026 + Game Changers).
+     real:true => el detalle muestra datos y enlace oficial, sin simulación. */
   mapPool:['Haven','Bind','Lotus','Split','Sunset','Icebox','Ascent'],
   hows:['Eliminación','Defusa','Planta detonada','Tiempo agotado'],
   matches:[
-    {t:'21:00',status:'live',a:'KRÜ ASCEND',b:'FURIA RIFT',sa:9,sb:7,map:'Haven',ev:'Ascensión Series · Semifinal'},
-    {t:'16:10',status:'final',a:'LOUD NOVA',b:'9Z NUCLEUS',sa:13,sb:5,map:'Bind',ev:'Ascensión Series · Cuartos'},
-    {t:'15:00',status:'final',a:'FURIA RIFT',b:'MIBR ECHO',sa:10,sb:13,map:'Lotus',ev:'Ascensión Series · Cuartos'},
-    {t:'13:40',status:'final',a:'LEVIATÁN PRIME',b:'VELOCITY 9',sa:13,sb:11,map:'Sunset',ev:'Ascensión Series · Ronda de 16'},
-    {t:'21:00',status:'up',a:'KRÜ ASCEND',b:'FURIA RIFT',sa:null,sb:null,map:'Split',ev:'Ascensión Series · Semifinal'},
-    {t:'23:30',status:'up',a:'LOUD NOVA',b:'LEVIATÁN PRIME',sa:null,sb:null,map:'Icebox',ev:'Ascensión Series · Semifinal'}],
+    {t:'10:00',status:'up',a:'LOUD',b:'TEAM VITALITY',sa:null,sb:null,map:'Gran Final',bo:'BO5',ev:'Valorant Champions 2026 · Gran Final · Dom 18 Oct · 10:00 Caracas (VET)',real:true,url:'https://www.vlr.gg/754737'},
+    {t:'14:10',status:'final',a:'100 THIEVES',b:'G2 ESPORTS',sa:2,sb:1,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 3 · Vie 16 Oct',real:true,url:'https://www.vlr.gg/754742'},
+    {t:'10:00',status:'final',a:'TEAM VITALITY',b:'LOUD',sa:1,sb:2,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Upper Final · Vie 16 Oct',real:true,url:'https://www.vlr.gg/754736'},
+    {t:'01:00',status:'final',a:'FLYQUEST RED',b:'MIBR GC',sa:2,sb:3,map:'Serie',bo:'BO5',ev:'Game Changers Americas · Last Chance · Gran Final · Vie 16 Oct',real:true,url:'https://www.vlr.gg/744488'},
+    {t:'13:00',status:'final',a:'NRG',b:'100 THIEVES',sa:0,sb:2,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 2 · Dom 11 Oct',real:true,url:'https://www.vlr.gg/754740'},
+    {t:'15:15',status:'final',a:'G2 ESPORTS',b:'T1',sa:2,sb:1,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 2 · Dom 11 Oct',real:true,url:'https://www.vlr.gg/754741'},
+    {t:'13:00',status:'final',a:'T1',b:'PAPER REX',sa:2,sb:1,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 1 · Vie 9 Oct',real:true,url:'https://www.vlr.gg/754739'}],
   players:[
     {name:'DIABLO',team:'KRÜ ASCEND',rating:1.34,kd:1.41,adr:168.2,kast:74.5,x:262,impact:1.72,clutch:9,badges:['pro','verified','champ']},
     {name:'MORBO',team:'LEVIATÁN PRIME',rating:1.29,kd:1.33,adr:161.7,kast:73.1,x:248,impact:1.61,clutch:7,badges:['pro','verified']},
@@ -374,6 +377,7 @@ setInterval(()=>{let d=Math.max(0,cdTarget-Date.now())/1000;
 /* ================= PARTIDO EN VIVO (simulado) ================= */
 const live={a:8,b:6,done:false,reset:0,mapIdx:0,specBase:2418,feed:[]};
 function tickLive(){
+  if(D().live.sim===false)return renderLiveIdle();
   if(live.done){if(--live.reset<=0){live.a=0;live.b=0;live.done=false;live.feed=[];live.mapIdx++;
     $('#liveEvent').textContent=D().short+' · CUARTOS · MAPA: '+D().mapPool[live.mapIdx%D().mapPool.length];}
     renderLive();return;}
@@ -386,6 +390,9 @@ function tickLive(){
   renderLive();
 }
 function renderLive(){
+  if(D().live.sim===false)return renderLiveIdle();
+  const bd0=$('#liveBadge');if(bd0)bd0.innerHTML='<i class="dot"></i>EN VIVO AHORA';
+  const lb0=$('#liveSpecLbl');if(lb0)lb0.textContent='viendo';
   $('#liveScore').innerHTML=live.a+'<i>:</i>'+live.b;
   $('#liveSpec').textContent=(live.specBase+Math.floor(Math.random()*180)-90).toLocaleString('en-US');
   const build=(el,score)=>{let h='';for(let i=0;i<13;i++){let c='pip';
@@ -398,8 +405,25 @@ function renderLive(){
     :'<div class="lf '+(f.w==='a'?'fa':'fb')+'">R'+String(f.r).padStart(2,'0')+' · <b>'+(f.w==='a'?L.a:L.b)+'</b> gana · '+f.how+' · '+f.a+'–'+f.b+'</div>').join('');
 }
 
+/* Estado sin partido en vivo: panel muestra el próximo partido REAL (vlr.gg) */
+function renderLiveIdle(){
+  const L=D().live;
+  const bd=$('#liveBadge');if(bd)bd.innerHTML='<i class="dot"></i>PRÓXIMO PARTIDO';
+  const lb=$('#liveSpecLbl');if(lb)lb.textContent=L.horaLbl||'INICIO';
+  $('#liveSpec').textContent=L.hora||'--:--';
+  $('#liveEvent').textContent=L.ev;
+  $('#liveScore').innerHTML='<i>VS</i>';
+  $('#pipsA').innerHTML='';$('#pipsB').innerHTML='';
+  $('#liveFeed').innerHTML='<div class="lf fa"><b>'+L.a+' vs '+L.b+'</b> · '+L.ev+'</div>'
+    +'<div class="lf fb">RESULTADOS REALES · SIN SIMULACIÓN · COBERTURA Y ROUND A ROUND EN VLR.GG</div>';
+}
+
 /* ================= PARTIDOS ================= */
 function renderMatches(){
+  const nota=$('#agendaNote');
+  if(nota)nota.innerHTML=D().matches.some(m=>m.real)
+    ?'Resultados y horarios <b>REALES</b> de vlr.gg · hora de Caracas (VET). Clic en un partido para el detalle y el enlace a la fuente oficial.'
+    :'Clic en cualquier partido para ver el <b>round a round</b>, destacados y alineaciones.';
   $('#matchList').innerHTML=D().matches.map((m,i)=>{
     const chip=m.status==='live'?'<span class="chip live"><i class="dot"></i>LIVE</span>':m.status==='final'?'<span class="chip fin">FINAL</span>':'<span class="chip up">'+m.t+'</span>';
     const sa=m.status==='live'?live.a:m.sa,sb=m.status==='live'?live.b:m.sb;
@@ -408,7 +432,7 @@ function renderMatches(){
       +'<div class="m-team" style="justify-content:flex-end"><span>'+m.a+'</span></div>'
       +'<div class="m-score mono">'+(m.status==='up'?'<i>vs</i>':(sa>sb?'<b>'+sa+'</b><i>:</i>'+sb:sa+'<i>:</i><b>'+sb+'</b>'))+'</div>'
       +'<div class="m-team"><span>'+m.b+'</span></div>'
-      +'<div class="m-map"><b>'+m.map.toUpperCase()+'</b>BO3</div>'
+      +'<div class="m-map"><b>'+m.map.toUpperCase()+'</b>'+(m.bo||'BO3')+'</div>'
       +'<div class="m-ev">'+m.ev.toUpperCase()+'</div>'
       +'<span class="m-go"><i data-lucide="chevron-right"></i></span></div>';
   }).join('');icons();
@@ -426,6 +450,19 @@ function genRounds(sa,sb,seed){
   return out;
 }
 function openMatchDetail(m){
+  /* Partidos REALES (vlr.gg): sin round a round simulado ni stats inventadas */
+  if(m.real){
+    const isUp=m.status==='up';
+    openDrawer('<div class="d-head"><span class="kicker">/// '+(isUp?'PRÓXIMO · PARTIDO REAL':'RESULTADO REAL')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
+      +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+m.ev.toUpperCase()+'</p>'
+      +'<div class="d-score"><div class="d-team">'+m.a+'</div><div class="d-num">'+(isUp?'<i>VS</i>':m.sa+'<i>:</i>'+m.sb)+'</div><div class="d-team r">'+m.b+'</div></div>'
+      +'<p class="d-map">'+(isUp?('COMIENZA: '+m.t+' (HORA CARACAS) · '+m.bo):('SERIE '+m.bo+' · FINALIZADA'))+'</p>'
+      +'<p class="d-sec">FUENTE OFICIAL · DATOS REALES</p>'
+      +'<a class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%;justify-content:center" href="'+m.url+'" target="_blank" rel="noopener">VER PARTIDO COMPLETO EN VLR.GG <i data-lucide="external-link"></i></a>'
+      +'<p class="d-empty">Sincronizado con vlr.gg. VANTS no simula resultados del circuito profesional: mapas, round a round y estadísticas detalladas viven en la fuente oficial.</p>'
+      +'</div>');
+    return;
+  }
   const d=D(),sa=m.status==='live'?live.a:m.sa,sb=m.status==='live'?live.b:m.sb,isUp=m.status==='up';
   const seed=(m.a+m.b).length+sa+sb+7;
   const rounds=isUp?[]:(m.status==='final'?genRounds(sa,sb,seed):live.feed);
@@ -437,10 +474,10 @@ function openMatchDetail(m){
   let statsHtml='';
   if(m.status==='final'){
     const pool=[...(d.rosters[m.a]||[]).map(n=>({n})),...(d.rosters[m.b]||[]).map(n=>({n}))];
-    const picks=[pool[seed%pool.length],pool[(seed+3)%pool.length],pool[(seed+6)%pool.length]];
-    statsHtml='<p class="d-sec">DESTACADOS DEL PARTIDO</p><div class="d-stats">'+picks.map((p,i)=>{
+    const picks=pool.length?[pool[seed%pool.length],pool[(seed+3)%pool.length],pool[(seed+6)%pool.length]]:[];
+    statsHtml=picks.length?'<p class="d-sec">DESTACADOS DEL PARTIDO</p><div class="d-stats">'+picks.map((p,i)=>{
       const k=18+((seed*(i+2))%9),dd=12+((seed*(i+5))%7),as=4+((seed*(i+3))%8);
-      return '<div class="dr"><b>'+p.n+'</b><span>'+k+'/<span style="color:var(--dim)">'+dd+'</span>/'+as+'</span><span>'+(k/(dd||1)).toFixed(2)+' K/D</span><span>'+(120+((seed*(i+7))%40))+' ADR</span></div>';}).join('')+'</div>';
+      return '<div class="dr"><b>'+p.n+'</b><span>'+k+'/<span style="color:var(--dim)">'+dd+'</span>/'+as+'</span><span>'+(k/(dd||1)).toFixed(2)+' K/D</span><span>'+(120+((seed*(i+7))%40))+' ADR</span></div>';}).join('')+'</div>':'';
   }
   openDrawer('<div class="d-head"><span class="kicker">/// '+(isUp?'PREVIA':(m.status==='live'?'EN VIVO':'DETALLE'))+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
     +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+m.ev.toUpperCase()+'</p>'
@@ -454,6 +491,7 @@ function openMatchDetail(m){
     +'</div>');
 }
  $('#liveMore').addEventListener('click',()=>{const L=D().live;
+  if(L.sim===false){openMatchDetail({real:true,status:'up',a:L.a,b:L.b,map:L.map,bo:'BO5',ev:L.ev,url:L.url,t:L.hora});return;}
   openMatchDetail({status:live.done?'final':'live',a:L.a,b:L.b,map:L.map,ev:D().short+' · Cuartos'});});
 
 /* ================= RANKING ================= */

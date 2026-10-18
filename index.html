@@ -107,14 +107,14 @@
     </div>
     <div class="live-panel">
       <div class="live-head">
-        <span class="live-badge"><i class="dot"></i>EN VIVO AHORA</span>
-        <span class="live-spec mono"><i data-lucide="eye"></i><b id="liveSpec">2,418</b>&nbsp;viendo</span>
+        <span class="live-badge" id="liveBadge"><i class="dot"></i>PRÓXIMO PARTIDO</span>
+        <span class="live-spec mono"><i data-lucide="eye"></i><b id="liveSpec">10:00</b>&nbsp;<span id="liveSpecLbl">INICIO (CARACAS)</span></span>
       </div>
-      <div class="live-event mono" id="liveEvent">ASCENSIÓN SERIES · CUARTOS · MAPA: HAVEN</div>
+      <div class="live-event mono" id="liveEvent">CHAMPIONS 2026 · GRAN FINAL · DOM 18 OCT · 10:00 (CARACAS)</div>
       <div class="live-score">
-        <div class="ls-team"><span class="ls-tag" id="liveTagA">KRÜ</span><span class="ls-name" id="liveNameA">KRÜ ASCEND</span></div>
-        <div class="ls-num" id="liveScore">8<i>:</i>6</div>
-        <div class="ls-team right"><span class="ls-tag" id="liveTagB">LVP</span><span class="ls-name" id="liveNameB">LEVIATÁN PRIME</span></div>
+        <div class="ls-team"><span class="ls-tag" id="liveTagA">LOUD</span><span class="ls-name" id="liveNameA">LOUD</span></div>
+        <div class="ls-num" id="liveScore"><i>VS</i></div>
+        <div class="ls-team right"><span class="ls-tag" id="liveTagB">VIT</span><span class="ls-name" id="liveNameB">TEAM VITALITY</span></div>
       </div>
       <div class="pips"><div class="pip-row" id="pipsA"></div><div class="pip-row" id="pipsB"></div></div>
       <div class="live-feed" id="liveFeed"></div>
@@ -147,8 +147,8 @@
 <section class="sec" id="partidos">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// AGENDA</span><h2>Partidos de hoy</h2></div>
-      <p class="sec-note">Clic en cualquier partido para ver el <b>round a round</b>, destacados y alineaciones.</p>
+      <div><span class="kicker">/// AGENDA</span><h2>Partidos y resultados</h2></div>
+      <p class="sec-note" id="agendaNote">Clic en cualquier partido para ver el <b>round a round</b>, destacados y alineaciones.</p>
     </div>
     <div class="mlist reveal" id="matchList"></div>
   </div>
@@ -543,7 +543,7 @@
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="./assets/js/arena.js?v=12"></script>
+<script src="./assets/js/arena.js?v=13"></script>
 <script>
 /* Apartados nuevos: Tienda × VegaStore + Equipo VANTS DE 5 + Patrocinios */
 (function(){
