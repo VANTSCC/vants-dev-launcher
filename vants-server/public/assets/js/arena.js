@@ -694,10 +694,25 @@ function rankKeyDe(p){const r=(typeof p.rating==='number'&&p.rating>0)?p.rating:
 
 async function cargarJugadores(){
   try{
-    const [rp,rs]=await Promise.all([
+    let [rp,rs]=await Promise.all([
       fetch(PROXY_PUBLICO+'?table=players&limit=200',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():[]).catch(()=>[]),
       fetch(PROXY_PUBLICO+'?table=season_player_stats&limit=500',{headers:{Accept:'application/json'}}).then(r=>r.ok?r.json():[]).catch(()=>[])
     ]);
+    /* el proxy público (vantsdata) está caído (403): si hay sesión, leemos con el JWT
+       directo de la Data API para que la sala y el ranking sigan vivos */
+    if((!Array.isArray(rp)||!rp.length)&&window.VantAuth0&&window.VantAuth0.getToken){
+      try{
+        const t0=await window.VantAuth0.getToken();
+        if(t0){
+          const h={'Content-Type':'application/json',Authorization:'Bearer '+t0};
+          const [ap,as]=await Promise.all([
+            fetch('https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1/players?limit=200',{headers:h}).then(r=>r.ok?r.json():[]).catch(()=>[]),
+            fetch('https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1/season_player_stats?limit=500',{headers:h}).then(r=>r.ok?r.json():[]).catch(()=>[])
+          ]);
+          if(Array.isArray(ap)&&ap.length){rp=ap;rs=as;}
+        }
+      }catch(eAuth){}
+    }
     const stats={};
     (Array.isArray(rs)?rs:[]).forEach(s=>{if(s&&s.player_id)stats[s.player_id]=s;});
     window.VANTS_STATS=stats;
@@ -1226,6 +1241,71 @@ async function loadTeams(){
   renderTeamsGrid(local.concat(remote).slice(0,18));
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadTeams);else loadTeams();
+
+/* ============================================================
+   GPR · GLOBAL POWER RANKINGS (sección #gpr)
+   Snapshot real 18·10·2026 · Fuente: Global Power Rankings — Riot Games
+   (valorantesports.com/es-ES/gpr/2026/current). Regiones colapsables
+   estilo valorantesports: cabecera con ∇ que rota al abrir.
+   ============================================================ */
+const GPR_DATA=[
+ {id:'amer',n:'VCT AMÉRICAS',fz:1540,equipos:[
+   {n:'Leviatán Esports',t:'LEV',p:1498},{n:'NRG',t:'NRG',p:1482},{n:'LOUD',t:'LOUD',p:1481},
+   {n:'100 Thieves',t:'100T',p:1463},{n:'G2 Esports',t:'G2',p:1436},{n:'MIBR',t:'MIBR',p:1314},
+   {n:'ENVY',t:'ENVY',p:1238},{n:'Cloud9',t:'C9',p:1210},{n:'Sentinels',t:'SEN',p:1208},
+   {n:'KRÜ Visa',t:'KRU',p:1205},{n:'ULF Esports',t:'ULF',p:1200},{n:'Evil Geniuses',t:'EG',p:1188},
+   {n:'FURIA',t:'FUR',p:1180}]},
+ {id:'pac',n:'VCT PACIFIC',fz:1440,equipos:[
+   {n:'Paper Rex',t:'PRX',p:1403},{n:'Global Esports',t:'GE',p:1403},{n:'T1',t:'T1',p:1386},
+   {n:'Nongshim RedForce',t:'NS',p:1364},{n:'Gen.G',t:'GEN',p:1292},{n:'Varrel',t:'VL',p:1274},
+   {n:'DetonatioN FocusMe',t:'DFM',p:1270},{n:'Kiwoom DRX',t:'KRX',p:1262},{n:'Rex Regum Qeon',t:'RRQ',p:1254},
+   {n:'Full Sense',t:'FS',p:1228},{n:'ZETA DIVISION',t:'ZETA',p:1197},{n:'Team Secret',t:'TS',p:1141}]},
+ {id:'emea',n:'VCT EMEA',fz:1397,equipos:[
+   {n:'Team Vitality',t:'VIT',p:1405},{n:'Karmine Corp',t:'KC',p:1395},{n:'Team Liquid',t:'TL',p:1348},
+   {n:'Team Heretics',t:'TH',p:1271},{n:'FNATIC',t:'FNC',p:1260},{n:'BBL Esports',t:'BBL',p:1259},
+   {n:'FUT Esports',t:'FUT',p:1256},{n:'Eternal Fire',t:'EF',p:1247},{n:'NAVI',t:'NAVI',p:1207},
+   {n:'Gentle Mates',t:'M8',p:1199},{n:'GIANTX',t:'GX',p:1164},{n:'PCIFIC Esports',t:'PCF',p:1087}]},
+ {id:'cn',n:'VCT CHINA',fz:1223,equipos:[
+   {n:'TYLOO Gaming',t:'TYL',p:1269},{n:'EDward Gaming',t:'EDG',p:1215},{n:'ALL GAMERS',t:'AG',p:1173},
+   {n:'Xi Lai Gaming',t:'XLG',p:1172},{n:'Bilibili Gaming',t:'BLG',p:1168},{n:'JD Gaming',t:'JDG',p:1164},
+   {n:'NOVA Esports',t:'NOVA',p:1148},{n:'Dragon Ranger Gaming',t:'DRG',p:1147},{n:'FunPlus Phoenix',t:'FPX',p:1114},
+   {n:'Wolves Esports',t:'WOL',p:1109},{n:'Trace Esports',t:'TE',p:1071},{n:'TITAN Esports Club',t:'TEC',p:1062}]}
+];
+function renderGpr(){
+  const host=document.getElementById('gprRegions');if(!host)return;
+  const maxP=GPR_DATA[0].equipos[0].p;
+  /* barras de fuerza regional del bloque explicativo */
+  const bars=document.getElementById('gprBars');
+  if(bars){
+    const maxZ=Math.max(...GPR_DATA.map(r=>r.fz));
+    bars.innerHTML=GPR_DATA.map(r=>'<div class="gz-row">'
+      +'<span class="gz-name">'+escTeams(r.n)+'</span>'
+      +'<span class="gz-bar"><i style="width:'+Math.round(r.fz/maxZ*100)+'%"></i></span>'
+      +'<b class="gz-val">'+r.fz+'</b></div>').join('');
+  }
+  /* acordeones por región: ∇ rota al abrir, AMÉRICAS abierta por defecto */
+  host.innerHTML=GPR_DATA.map((r,ri)=>{
+    const eq=[...r.equipos].sort((a,b)=>b.p-a.p),top=eq[0];
+    const rows=eq.map((e,i)=>'<tr'+(i===0?' class="lead"':'')+'>'
+      +'<td class="gp-pos">'+String(i+1).padStart(2,'0')+'</td>'
+      +'<td class="gp-team"><span class="gp-tag">'+escTeams(e.t)+'</span><b>'+escTeams(e.n)+'</b></td>'
+      +'<td class="gp-bar"><i style="width:'+Math.max(8,Math.round(e.p/maxP*100))+'%"></i></td>'
+      +'<td class="gp-pts">'+e.p+'<small>PTS</small></td></tr>').join('');
+    return '<div class="gpr-region'+(ri===0?' open':'')+'" id="gpr-'+r.id+'">'
+      +'<button class="gpr-rhead" type="button" aria-expanded="'+(ri===0?'true':'false')+'">'
+      +'<span class="gpr-rz"><i data-lucide="globe"></i>'+escTeams(r.n)+'</span>'
+      +'<span class="gpr-top">Nº1 · '+escTeams(top.t)+' · '+top.p+' PTS</span>'
+      +'<span class="gpr-caret" aria-hidden="true">∇</span></button>'
+      +'<div class="gpr-rbody"><div class="gpr-rin"><table><tbody>'+rows+'</tbody></table></div></div>'
+      +'</div>';
+  }).join('');
+  host.querySelectorAll('.gpr-rhead').forEach(h=>h.addEventListener('click',()=>{
+    const open=h.parentElement.classList.toggle('open');
+    h.setAttribute('aria-expanded',open?'true':'false');
+  }));
+  icons();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',renderGpr);else renderGpr();
 
 /* ============================================================
    PRIVILEGIOS OWNER

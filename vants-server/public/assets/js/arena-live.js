@@ -97,6 +97,31 @@
   var ME = null;
   async function jwt() { return window.VantAuth0.getToken(); }
 
+  /* ---- caché local del perfil: si la base falla o el proxy público está caído,
+     el jugador NO vuelve a ver el modal "PRIMERA VEZ" (era el bug reportado).
+     Validez 7 días; se refresca cada vez que la base responde. ---- */
+  var ME_CACHE = 'vants_me_cache_v1';
+  function guardarCachePerfil(me) {
+    try { localStorage.setItem(ME_CACHE, JSON.stringify({ ts: Date.now(), pid: me.pid, player: me.player })); } catch (e) {}
+  }
+  function leerCachePerfil(pid) {
+    try {
+      var raw = localStorage.getItem(ME_CACHE);
+      if (!raw) return null;
+      var c = JSON.parse(raw);
+      if (!c || !c.player || !c.pid) return null;
+      if (pid && c.pid !== pid) return null;
+      if (Date.now() - (c.ts || 0) > 7 * 24 * 3600 * 1000) return null;
+      return { pid: c.pid, player: c.player, extra: { cache: true } };
+    } catch (e) { return null; }
+  }
+  function perfilDesdeCache(pid) {
+    if (ME && ME.player) return false;
+    var c = leerCachePerfil(pid);
+    if (c) { ME = c; return true; }
+    return false;
+  }
+
   async function cargarPerfilReal() {
     if (!user) return;
     try {
@@ -134,12 +159,27 @@
           } catch (eE) {}
         }
       }
-      if (!pid) return;
-      var pr = await fetch(PROXY + '?table=players&id=eq.' + pid + '&limit=1', { headers: { Accept: 'application/json' } });
-      var rows = await pr.json();
-      ME = { pid: pid, player: (rows && rows[0]) || null, extra: {} };
+      if (!pid) { perfilDesdeCache(null); return; }
+      /* lectura de la fila SIEMPRE autenticada: el proxy público vantsdata devuelve 403
+         (funciones de Neon deprecadas) y rompía la carga → pedía crear el perfil otra vez.
+         Con el JWT de tu sesión la Data API responde directo. */
+      var rows = null;
       try {
-        var sp = await fetch(PROXY + '?table=season_player_stats&player_id=eq.' + pid + '&limit=1', { headers: { Accept: 'application/json' } });
+        var pr = await fetch(API + '/players?id=eq.' + pid + '&limit=1', { headers: authHeaders(t) });
+        rows = await pr.json().catch(function () { return null; });
+      } catch (eRow) {}
+      if (!Array.isArray(rows) || !rows[0]) {
+        /* último intento por el proxy público, por si vuelve a estar vivo */
+        try {
+          var px = await fetch(PROXY + '?table=players&id=eq.' + pid + '&limit=1', { headers: { Accept: 'application/json' } });
+          rows = await px.json().catch(function () { return null; });
+        } catch (ePx) {}
+      }
+      if (!Array.isArray(rows) || !rows[0]) { perfilDesdeCache(pid); return; }
+      ME = { pid: pid, player: rows[0], extra: {} };
+      guardarCachePerfil(ME);
+      try {
+        var sp = await fetch(API + '/season_player_stats?player_id=eq.' + pid + '&limit=1', { headers: authHeaders(t) });
         var spRows = await sp.json().catch(function () { return null; });
         ME.extra.sps = (Array.isArray(spRows) && spRows[0]) || null;
       } catch (e2) {}
@@ -151,7 +191,7 @@
           ME.extra.accounts = Array.isArray(gaRows) ? gaRows : [];
         }
       } catch (e3) {}
-    } catch (e) { console.warn('[arena] perfil real no disponible', e); }
+    } catch (e) { console.warn('[arena] perfil real no disponible', e); perfilDesdeCache(null); }
   }
 
   function chip(txt, color) { return '<span class="chip" style="color:' + color + ';border-color:' + color + '">' + txt + '</span>'; }
@@ -682,8 +722,12 @@
     if (esOwner) {
       (async function () {
         try {
-          var pr = await fetch(PROXY + '?table=players&username=eq.geimerpedroza&limit=1', { headers: { Accept: 'application/json' } });
-          var rows = await pr.json();
+          var tO = null;
+          try { tO = await jwt(); } catch (eT0) {}
+          var pr = tO
+            ? await fetch(API + '/players?username=eq.geimerpedroza&limit=1', { headers: authHeaders(tO) })
+            : await fetch(PROXY + '?table=players&username=eq.geimerpedroza&limit=1', { headers: { Accept: 'application/json' } });
+          var rows = await pr.json().catch(function () { return []; });
           window.VANTS_ME = { pid: rows && rows[0] ? rows[0].id : null, player: (rows && rows[0]) || null, owner: true };
         } catch (e) { window.VANTS_ME = { pid: null, player: null, owner: true }; }
         try { if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (window.VANTS_ME && window.VANTS_ME.pid) || null; } catch (eVA) {}

@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
-<link rel="stylesheet" href="./assets/css/arena.css?v=4">
+<link rel="stylesheet" href="./assets/css/arena.css?v=5">
 <link rel="stylesheet" href="./assets/css/vants-shop.css?v=1">
 </head>
 <body data-game="valorant">
@@ -46,16 +46,10 @@
     </a>
     <nav class="nav-links">
       <a href="#partidos">PARTIDOS</a>
+      <a href="#gpr">GPR</a>
       <a href="#ranking">RANKING</a>
       <a href="#torneos">TORNEOS</a>
-      <a href="#jugadores">JUGADORES</a>
-      <a href="inventario.html">INVENTARIO</a>
-      <a href="#equipo">EQUIPO</a>
       <a href="#tienda">TIENDA</a>
-      <a href="#rangos">RANGOS</a>
-      <a href="#historia">HISTORIA</a>
-      <a href="clips.html">CLIPS</a>
-      <a href="#pro">PRO</a>
     </nav>
     <div class="nav-right">
       <button class="menu-btn" id="menuBtn" aria-label="Abrir menú de categorías" title="Menú"><i data-lucide="menu"></i><span>MENÚ</span></button>
@@ -147,6 +141,36 @@
       <p class="sec-note" id="agendaNote">Clic en cualquier partido para ver el <b>round a round</b>, destacados y alineaciones.</p>
     </div>
     <div class="mlist reveal" id="matchList"></div>
+  </div>
+</section>
+
+<!-- GPR · GLOBAL POWER RANKINGS -->
+<section class="sec alt" id="gpr">
+  <div class="wrap">
+    <div class="gpr-banner reveal">
+      <span class="gpr-kick">NIVEL 1 · CIRCUITO VCT · TEMPORADA 2026</span>
+      <h2 class="gpr-title">GLOBAL POWER<br>RANKINGS</h2>
+      <p class="gpr-powered">powered by <b>VANTS</b></p>
+      <p class="gpr-src mono">SNAPSHOT 18·10·2026 · FUENTE: GLOBAL POWER RANKINGS (RIOT GAMES)</p>
+    </div>
+    <div class="gpr-explain reveal">
+      <div class="gpr-col">
+        <span class="kicker">¿QUÉ ES EL GPR?</span>
+        <p>Es la medición de la fuerza real de los equipos de Nivel 1. Cada equipo acumula puntos sumando dos partes: su <b>rendimiento en el servidor</b> y la <b>puntuación de fuerza de su región</b>.</p>
+        <ul class="gpr-list">
+          <li><b>Contexto del partido</b> — unos playoffs de Champions pesan más que la temporada regular</li>
+          <li><b>Resultados recientes</b> — las últimas partidas de cada equipo valen más</li>
+          <li><b>Margen de victoria</b> — mapas ganados y perdidos</li>
+          <li><b>Fuerza del oponente</b> — vencer a un equipo fuerte da más puntos</li>
+        </ul>
+      </div>
+      <div class="gpr-col">
+        <span class="kicker">PUNTUACIÓN DE FUERZA REGIONAL</span>
+        <p>La base de puntos de cada liga, según sus resultados en eventos internacionales:</p>
+        <div class="gpr-bars" id="gprBars"></div>
+      </div>
+    </div>
+    <div class="gpr-regions reveal" id="gprRegions"></div>
   </div>
 </section>
 
@@ -505,7 +529,7 @@
         <span class="nav-logo"><svg class="mark" style="width:34px;height:34px"><use href="#vmark"/></svg><span class="wordmark"><b style="font-size:24px">VANT<em>S</em></b><small>GAMES</small></span></span>
         <p>La arena competitiva de VALORANT y Counter-Strike 2: torneos con premio, rangos propios, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</p>
       </div>
-      <div class="f-col"><h5>COMPETIR</h5><a href="#torneos">Torneos abiertos</a><a href="#bracket">Brackets</a><a href="#ranking">Ranking global</a><a href="#rangos">VANTS RANKED</a><a href="clips.html">Clips · Momentos destacados</a></div>
+      <div class="f-col"><h5>COMPETIR</h5><a href="#torneos">Torneos abiertos</a><a href="#bracket">Brackets</a><a href="#gpr">Global Power Rankings</a><a href="#ranking">Ranking global</a><a href="#rangos">VANTS RANKED</a><a href="clips.html">Clips · Momentos destacados</a></div>
       <div class="f-col"><h5>IDENTIDAD</h5><a href="#jugadores">Sala de jugadores</a><a href="#equipo">Equipo VANTS DE 5</a><a href="#historia">Historia de la marca</a><a href="#pro">Programa de socios</a></div>
       <div class="f-col"><h5>MEMBRESÍA</h5><a href="#pro">VANTS PRO</a><a href="#pro">VANTS CREATOR</a><a href="#torneos">Torneos abiertos</a><a href="#tienda">Tienda oficial × VegaStore</a><a href="#patrocinios">Patrocinios y colaboradores</a></div>
     </div>
@@ -555,6 +579,7 @@
   <nav class="md-body">
     <p class="md-label">COMPETIR</p>
     <a class="md-row" href="#partidos" data-md-close><i data-lucide="gamepad-2"></i><span class="md-txt">PARTIDOS<small>Agenda en vivo</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="#gpr" data-md-close><i data-lucide="globe"></i><span class="md-txt">GPR · POWER RANKINGS<small>Los mejores del mundo</small></span><span class="md-new">NUEVO</span><i data-lucide="chevron-right" class="md-go"></i></a>
     <a class="md-row" href="#ranking" data-md-close><i data-lucide="trophy"></i><span class="md-txt">RANKING<small>Top global</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
     <a class="md-row" href="#torneos" data-md-close><i data-lucide="swords"></i><span class="md-txt">TORNEOS<small>Inscripción abierta S4</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
     <a class="md-row" href="#rangos" data-md-close><i data-lucide="medal"></i><span class="md-txt">RANGOS<small>VANTS RANKED</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
@@ -581,7 +606,7 @@
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="./assets/js/arena.js?v=15"></script>
+<script src="./assets/js/arena.js?v=16"></script>
 <script>
 /* Apartados nuevos: Tienda × VegaStore + Equipo VANTS DE 5 + Patrocinios */
 (function(){
@@ -599,7 +624,7 @@
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
 <script src="./assets/js/vants-supervisor.js?v=1" defer></script>
-<script src="./assets/js/arena-live.js?v=19" defer></script>
+<script src="./assets/js/arena-live.js?v=20" defer></script>
 <script src="./assets/js/vants-shop.js?v=1" defer></script>
 </body>
 </html>
