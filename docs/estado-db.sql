@@ -38,6 +38,37 @@ BEGIN
   EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{perfil_dueno}', 'null'::jsonb);
   END;
 
+  -- jugadores reales de la sala (sub enmascarado: identificación sin exponer identidad)
+  BEGIN
+    v := jsonb_set(v, '{jugadores}', (SELECT coalesce(jsonb_agg(j), '[]'::jsonb) FROM (
+      SELECT jsonb_build_object(
+        'username', username,
+        'nombre', display_name,
+        'email', email,
+        'sub', CASE WHEN auth0_sub IS NULL THEN NULL ELSE left(auth0_sub, 20) || '…' END,
+        'rol', role,
+        'verificado', verified,
+        'rating', round(rating::numeric, 3),
+        'xp', xp,
+        'creado', to_char(created_at AT TIME ZONE 'utc', 'YYYY-MM-DD')
+      ) j FROM players ORDER BY created_at) s));
+  EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{jugadores}', 'null'::jsonb);
+  END;
+
+  -- vínculos de cuentas (Discord/Kick/etc.) para auditar fantasmas
+  BEGIN
+    v := jsonb_set(v, '{vants_links_resumen}', (SELECT coalesce(jsonb_agg(j), '[]'::jsonb) FROM (
+      SELECT jsonb_build_object(
+        'plataforma', platform,
+        'handle', handle,
+        'sub', CASE WHEN auth0_sub IS NULL THEN NULL ELSE left(auth0_sub, 20) || '…' END,
+        'ligado_a', CASE WHEN player_id IS NULL THEN NULL
+                         ELSE (SELECT username FROM players p WHERE p.id = vants_links.player_id) END,
+        'verificado', verified
+      ) j FROM vants_links ORDER BY platform) s));
+  EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{vants_links_resumen}', 'null'::jsonb);
+  END;
+
   BEGIN
     v := jsonb_set(v, '{esquema}', (SELECT coalesce(jsonb_object_agg(t || '.' || c, jsonb_build_object('tipo', tipo, 'nullable', nul, 'default', coalesce(def, ''))), '{}'::jsonb) FROM (
       SELECT table_name t, column_name c, data_type tipo, is_nullable nul, column_default def FROM information_schema.columns
