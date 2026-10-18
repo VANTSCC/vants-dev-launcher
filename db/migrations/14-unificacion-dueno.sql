@@ -95,7 +95,8 @@ END $$;
 DO $$
 DECLARE r record; n bigint;
 BEGIN
-  FOR r IN SELECT id, coalesce(username, 'jugador') AS u FROM tmp_dueno_fantasma LOOP
+  FOR r IN SELECT f.id, coalesce(p.username, 'jugador') AS u
+           FROM tmp_dueno_fantasma f LEFT JOIN players p ON p.id = f.id LOOP
     BEGIN
       DELETE FROM players WHERE id = r.id;
       GET DIAGNOSTICS n = ROW_COUNT;
