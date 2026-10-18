@@ -913,7 +913,7 @@ let featCacheList=null,featCacheAt=0;
 async function clipsDestacados(){
   if(featCacheList&&Date.now()-featCacheAt<60000)return featCacheList;
   try{
-    const r=await fetch('/api/clips/featured',{headers:{Accept:'application/json'}});
+    const r=await fetchWorker('/api/clips/featured',{headers:{Accept:'application/json'}});
     const j=await r.json().catch(()=>null);
     featCacheList=(j&&j.ok&&Array.isArray(j.clips))?j.clips:[];
     featCacheAt=Date.now();
@@ -1551,7 +1551,7 @@ window.openAjustesCuenta=function(){
   const proveedor=esGoogle?'Google':(esDiscord?'Discord':null);
   openModal('<div class="mc-head"><h3>Ajustes de cuenta</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
     +'<p class="d-sec">NICK DE JUGADOR</p>'
-    +'<div class="field"><label>NICK (SE GUARDA EN LA BD)</label><input id="ajNick" type="text" maxlength="20" value="'+(me.name||'')+'"></div>'
+    +'<div class="field"><label>NICK (SE GUARDA EN LA BD)</label><input id="ajNick" type="text" maxlength="20" value="'+escHtml((window.VANTS_ME&&window.VANTS_ME.player&&window.VANTS_ME.player.display_name)||me.name||'')+'"></div>'
     +'<p class="d-sec">EMAIL DE LA CUENTA</p>'
     +'<div class="field"><label>ACTUAL</label><input type="text" value="'+email+'" disabled style="opacity:.65"></div>'
     +'<div class="field"><label>NUEVO EMAIL (OPCIONAL)</label><input id="ajMailNvo" type="email" placeholder="tu@correo.com" autocomplete="email"></div>'
@@ -1583,6 +1583,9 @@ window.openAjustesCuenta=function(){
         if(t){
           const r=await fetch(window.VANTS_API_BASE+'/players?id=eq.'+auth.playerId,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({username:v.toLowerCase().replace(/\s+/g,'_'),display_name:v})});
           if(!r.ok)toast('El nick se guardó local, pero la base lo rechazó (HTTP '+r.status+')','info');
+          /* un solo perfil: la ficha y la sala reflejan el nick guardado al instante */
+          try{const mp=window.VANTS_ME&&window.VANTS_ME.player;if(mp){mp.display_name=v;mp.username=v.toLowerCase().replace(/\s+/g,'_');}}catch(eMP){}
+          if(window.vantsRecargarJugadores){try{window.vantsRecargarJugadores();}catch(eRJ){}}
         }
       }catch(eN){/* local igual queda */}
     }
@@ -1604,6 +1607,7 @@ window.openAjustesCuenta=function(){
           out.style.display='block';
           out.innerHTML='<div style="border:1px solid var(--line2,#303039);border-radius:8px;padding:12px;background:#0d0d10">'
             +'<p style="font:700 10px/1.6 var(--mono);color:var(--grn,#3EE6A0);margin:0 0 6px">✓ ENLACE LISTO'+(j.email?(' · '+j.email):'')+'</p>'
+            +(j.nota?'<p style="font:500 9.5px/1.7 var(--mono);color:#F5C044;margin:4px 0 6px">'+escHtml(j.nota)+'</p>':'')
             +'<p style="font:500 10px/1.7 var(--mono);color:var(--mut);margin:0 0 10px">Auth0 también lo envía a ese correo; si no llega (Spam), ábrelo directo acá. Vence en 3 días.</p>'
             +'<a class="btn btn-cut btn-sm" href="'+j.ticket+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i data-lucide="external-link"></i>ABRIR VERIFICACIÓN DE EMAIL</a></div>';
           if(window.lucide)lucide.createIcons();

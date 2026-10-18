@@ -561,7 +561,7 @@ export default {
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
       const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured';
-      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/clips/featured';
+      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured';
       if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
@@ -598,7 +598,7 @@ export default {
       }
       const origin = request.headers.get('origin') || '';
       if (!SITE_ORIGINS.has(origin)) {
-        return json({ ok: false, error: 'Origen no permitido' }, 403);
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const contentType = request.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
@@ -628,11 +628,11 @@ export default {
          same-origin): se permite. Origen presente y ajeno → fuera. */
       const origin = request.headers.get('origin') || '';
       if (origin && !SITE_ORIGINS.has(origin)) {
-        return json({ ok: false, error: 'Origen no permitido' }, 403);
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const e = rateLimit(rlEsports, ip, LIMIT_ESPORTS);
       if (!e.ok) {
-        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(e.retry) });
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(e.retry), 'Access-Control-Allow-Origin': origin || '*' });
       }
       const key = (env && env.HENRIKDEV_API_KEY) || '';
       if (!key) {
@@ -672,7 +672,7 @@ export default {
          same-origin): se permite. Origen presente y ajeno → fuera. */
       const origin = request.headers.get('origin') || '';
       if (origin && !SITE_ORIGINS.has(origin)) {
-        return json({ ok: false, error: 'Origen no permitido' }, 403);
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const t = rateLimit(rlTeams, ip, LIMIT_TEAMS);
       if (!t.ok) {
@@ -697,16 +697,16 @@ export default {
       }
       const origin = request.headers.get('origin') || '';
       if (!SITE_ORIGINS.has(origin)) {
-        return json({ ok: false, error: 'Origen no permitido' }, 403);
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const a = rateLimit(rlAccount, ip, LIMIT_ACCOUNT);
       if (!a.ok) {
-        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(a.retry) });
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(a.retry), 'Access-Control-Allow-Origin': origin || '*' });
       }
       const authz = request.headers.get('authorization') || '';
       const token = authz.replace(/^Bearer\s+/i, '').trim();
       if (!token) {
-        return json({ ok: false, error: 'sin_sesion' }, 401);
+        return json({ ok: false, error: 'sin_sesion' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       let info = null;
       try {
@@ -716,17 +716,17 @@ export default {
         if (ui.ok) info = await ui.json();
       } catch (eUI) { info = null; }
       if (!info || !info.sub) {
-        return json({ ok: false, error: 'token_invalido' }, 401);
+        return json({ ok: false, error: 'token_invalido' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const body = await request.json().catch(() => ({}));
       const nuevo = String((body && body.nuevo_email) || '').trim();
       if (nuevo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(nuevo)) {
-        return json({ ok: false, error: 'email_invalido' }, 400);
+        return json({ ok: false, error: 'email_invalido' }, 400, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const mId = (env && env.AUTH0_MGMT_CLIENT_ID) || '';
       const mSec = (env && env.AUTH0_MGMT_CLIENT_SECRET) || '';
       if (!mId || !mSec) {
-        return json({ ok: false, error: 'mgmt_no_config' }, 503);
+        return json({ ok: false, error: 'mgmt_no_config' }, 503, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       try {
         const mt = await fetch('https://' + AUTH0_TENANT + '/oauth/token', {
@@ -740,12 +740,19 @@ export default {
           }),
         });
         if (!mt.ok) {
-          return json({ ok: false, error: 'mgmt_token' }, 502);
+          return json({ ok: false, error: 'mgmt_token' }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
         }
         const mtj = await mt.json();
         const mgmtH = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mtj.access_token };
         let emailFinal = info.email || '';
-        if (nuevo && nuevo.toLowerCase() !== String(info.email || '').toLowerCase()) {
+        let notaEmail = '';
+        const esSocialId = String(info.sub || '').indexOf('google-oauth2|') === 0 || String(info.sub || '').indexOf('discord|') === 0;
+        if (nuevo && esSocialId) {
+          /* Cuentas sociales: Auth0 no permite cambiar el email (lo gestiona
+             Google/Discord). No fallamos: generamos el enlace de verificación
+             del email ACTUAL y avisamos por qué no se cambió la dirección. */
+          notaEmail = 'Tu cuenta entra con ' + (String(info.sub || '').indexOf('google-oauth2|') === 0 ? 'Google' : 'Discord') + ': el email lo gestiona el proveedor y no se puede cambiar desde VANTS. El enlace verifica tu email actual.';
+        } else if (nuevo && nuevo.toLowerCase() !== String(info.email || '').toLowerCase()) {
           const up = await fetch('https://' + AUTH0_TENANT + '/api/v2/users/' + encodeURIComponent(info.sub), {
             method: 'PATCH',
             headers: mgmtH,
@@ -753,7 +760,7 @@ export default {
           });
           if (!up.ok) {
             const ej = await up.json().catch(() => ({}));
-            return json({ ok: false, error: 'no_se_pudo_cambiar', detalle: String((ej.errorDescription || ej.message || ('HTTP ' + up.status))).slice(0, 180) }, 502);
+            return json({ ok: false, error: 'no_se_pudo_cambiar', detalle: String((ej.errorDescription || ej.message || ('HTTP ' + up.status))).slice(0, 180) }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
           }
           emailFinal = nuevo;
         }
@@ -764,11 +771,11 @@ export default {
         });
         const tj = await tk.json().catch(() => null);
         if (!tk.ok || !tj || !tj.ticket) {
-          return json({ ok: false, error: 'ticket' }, 502);
+          return json({ ok: false, error: 'ticket' }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
         }
-        return json({ ok: true, email: emailFinal, ticket: tj.ticket });
+        return json({ ok: true, email: emailFinal, ticket: tj.ticket, nota: notaEmail }, 200, { 'Access-Control-Allow-Origin': origin || '*' });
       } catch (errA) {
-        return json({ ok: false, error: 'auth0_inalcanzable' }, 502);
+        return json({ ok: false, error: 'auth0_inalcanzable' }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
       }
     }
 
@@ -782,18 +789,18 @@ export default {
       if (method !== 'POST') {
         return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
       }
-      const originP = request.headers.get('origin') || '';
-      if (!SITE_ORIGINS.has(originP)) {
-        return json({ ok: false, error: 'Origen no permitido' }, 403);
+      const origin = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const aP = rateLimit(rlAccount, ip, LIMIT_ACCOUNT);
       if (!aP.ok) {
-        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(aP.retry) });
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(aP.retry), 'Access-Control-Allow-Origin': origin || '*' });
       }
       const authzP = request.headers.get('authorization') || '';
       const tokenP = authzP.replace(/^Bearer\s+/i, '').trim();
       if (!tokenP) {
-        return json({ ok: false, error: 'sin_sesion' }, 401);
+        return json({ ok: false, error: 'sin_sesion' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       let infoP = null;
       try {
@@ -803,12 +810,12 @@ export default {
         if (uiP.ok) infoP = await uiP.json();
       } catch (eUIP) { infoP = null; }
       if (!infoP || !infoP.sub) {
-        return json({ ok: false, error: 'token_invalido' }, 401);
+        return json({ ok: false, error: 'token_invalido' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const mIdP = (env && env.AUTH0_MGMT_CLIENT_ID) || '';
       const mSecP = (env && env.AUTH0_MGMT_CLIENT_SECRET) || '';
       if (!mIdP || !mSecP) {
-        return json({ ok: false, error: 'mgmt_no_config' }, 503);
+        return json({ ok: false, error: 'mgmt_no_config' }, 503, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       try {
         const mtP = await fetch('https://' + AUTH0_TENANT + '/oauth/token', {
@@ -822,7 +829,7 @@ export default {
           }),
         });
         if (!mtP.ok) {
-          return json({ ok: false, error: 'mgmt_token' }, 502);
+          return json({ ok: false, error: 'mgmt_token' }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
         }
         const mtjP = await mtP.json();
         const mgmtHP = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mtjP.access_token };
@@ -837,11 +844,11 @@ export default {
         });
         const tjP = await tkP.json().catch(() => null);
         if (!tkP.ok || !tjP || !tjP.ticket) {
-          return json({ ok: false, error: 'ticket', detalle: String((tjP && (tjP.message || tjP.error_description || tjP.error)) || ('HTTP ' + tkP.status)).slice(0, 180) }, 502);
+          return json({ ok: false, error: 'ticket', detalle: String((tjP && (tjP.message || tjP.error_description || tjP.error)) || ('HTTP ' + tkP.status)).slice(0, 180) }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
         }
-        return json({ ok: true, email: infoP.email || '', ticket: tjP.ticket });
+        return json({ ok: true, email: infoP.email || '', ticket: tjP.ticket }, 200, { 'Access-Control-Allow-Origin': origin || '*' });
       } catch (errP) {
-        return json({ ok: false, error: 'auth0_inalcanzable' }, 502);
+        return json({ ok: false, error: 'auth0_inalcanzable' }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
       }
     }
 
@@ -856,10 +863,10 @@ export default {
       const origin = request.headers.get('origin') || '';
       if (method === 'GET') {
         if (origin && !SITE_ORIGINS.has(origin)) {
-          return json({ ok: false, error: 'Origen no permitido' }, 403);
+          return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
         }
         const c0 = rateLimit(rlClips, ip, 30); // lecturas más frecuentes que subidas
-        if (!c0.ok) return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(c0.retry) });
+        if (!c0.ok) return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(c0.retry), 'Access-Control-Allow-Origin': origin || '*' });
         const now0 = Date.now();
         if (featCache.body && now0 - featCache.at < FEAT_TTL_MS) {
           const cf = json(featCache.body, 200);
@@ -892,13 +899,13 @@ export default {
         return json({ ok: false, error: 'Método no permitido' }, 405, { Allow: 'GET, POST, DELETE, OPTIONS' });
       }
       if (!SITE_ORIGINS.has(origin)) {
-        return json({ ok: false, error: 'Origen no permitido' }, 403);
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const cL = rateLimit(rlClips, ip, LIMIT_CLIPS);
-      if (!cL.ok) return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(cL.retry) });
+      if (!cL.ok) return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(cL.retry), 'Access-Control-Allow-Origin': origin || '*' });
       const ses = await verifySesionJwt(request);
       if (!ses || !ses.sub) {
-        return json({ ok: false, error: 'sin_sesion' }, 401);
+        return json({ ok: false, error: 'sin_sesion' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const ghTok = (env && env.GH_CLIPS_TOKEN) || '';
       if (!ghTok) {
@@ -1024,11 +1031,11 @@ export default {
          same-origin): se permite. Origen presente y ajeno → fuera. */
       const origin = request.headers.get('origin') || '';
       if (origin && !SITE_ORIGINS.has(origin)) {
-        return json({ ok: false, error: 'Origen no permitido' }, 403);
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
       }
       const g = rateLimit(rlGpr, ip, LIMIT_GPR);
       if (!g.ok) {
-        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(g.retry) });
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(g.retry), 'Access-Control-Allow-Origin': origin || '*' });
       }
       const payload = await handleGpr();
       const res = json(payload, payload.ok ? 200 : 502);

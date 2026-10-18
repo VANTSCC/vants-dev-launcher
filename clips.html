@@ -576,13 +576,17 @@ $('#sAjustes').addEventListener('click',abrirAjustes);
    Publicar exige sesión (JWT): el Worker ata el clip a la cuenta que manda
    el vídeo, nadie destaca ni borra en nombre de otra cuenta. */
 var VISTA='mis',featCache=null,featAt=0,MAX_FEAT_MB=48;
+/* La vitrina vive en el Worker: desde el espejo de GitHub Pages las rutas
+   relativas /api/* caen en el 404 de Pages (HTML, no JSON) y el modal
+   mostraba "respuesta_invalida". Base absoluta salvo en el propio Worker. */
+var WB=(location.hostname.indexOf('.workers.dev')>=0)?'':'https://vants.vants.workers.dev';
 var STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 function fmtF(iso){try{return new Date(iso).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return''}}
 function fmtDur2(s){s=parseInt(s,10)||0;if(!s)return'';var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x}
 async function destacados(){
   if(featCache&&Date.now()-featAt<60000)return featCache;
   try{
-    var r=await fetch('/api/clips/featured',{headers:{Accept:'application/json'}});
+    var r=await fetch(WB+'/api/clips/featured',{headers:{Accept:'application/json'}});
     var j=await r.json().catch(function(){return null});
     featCache=(j&&j.ok&&Array.isArray(j.clips))?j.clips:[];featAt=Date.now();
   }catch(e){if(!featCache)featCache=[]}
@@ -687,7 +691,7 @@ function subirDestacado(form,onProg){
   return new Promise(function(res){
     var t=null,mandar=function(){
       var x=new XMLHttpRequest();
-      x.open('POST','/api/clips/featured',true);
+      x.open('POST',WB+'/api/clips/featured',true);
       if(t)x.setRequestHeader('Authorization','Bearer '+t);
       x.upload.onprogress=function(e){if(e.lengthComputable&&onProg)onProg(e.loaded/e.total)};
       x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){res({ok:false,error:'respuesta_invalida'})}};
@@ -756,7 +760,7 @@ async function abrirQuitar(rec){
     var btn=$('#dqGo');btn.disabled=true;btn.style.opacity='.55';
     try{
       var tk=window.VantAuth0&&window.VantAuth0.getToken?await window.VantAuth0.getToken():null;
-      var r=await fetch('/api/clips/featured?id='+encodeURIComponent(rec.destacado),{method:'DELETE',headers:tk?{Authorization:'Bearer '+tk}:{}});
+      var r=await fetch(WB+'/api/clips/featured?id='+encodeURIComponent(rec.destacado),{method:'DELETE',headers:tk?{Authorization:'Bearer '+tk}:{}});
       var j=await r.json().catch(function(){return null});
       if(j&&j.ok){rec.destacado=null;try{await idbPut(rec)}catch(eS){}featCache=null;featAt=0;closePlayer();await reload();toast('Clip quitado de la vitrina');}
       else{btn.disabled=false;btn.style.opacity='';toast((j&&j.error==='no_es_tuyo')?'Ese clip fue publicado por otra cuenta':'No se pudo quitar ahora');}

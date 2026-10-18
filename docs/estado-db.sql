@@ -50,7 +50,17 @@ BEGIN
         'verificado', verified,
         'rating', round(rating::numeric, 3),
         'xp', xp,
-        'creado', to_char(created_at AT TIME ZONE 'utc', 'YYYY-MM-DD')
+        'creado', to_char(created_at AT TIME ZONE 'utc', 'YYYY-MM-DD'),
+        'cuentas', jsonb_build_object(
+          'discord_tag', stats->>'discord_tag',
+          'riot', stats->>'riot',
+          'kick', stats->>'kick',
+          'tiktok', stats->>'tiktok',
+          'x', stats->>'x',
+          'youtube', stats->>'youtube',
+          'faceit', stats->>'faceit',
+          'steam', stats->>'steam'
+        )
       ) j FROM players ORDER BY created_at) s));
   EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{jugadores}', 'null'::jsonb);
   END;
