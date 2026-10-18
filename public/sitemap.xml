@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://feispla.github.io/Vants/</loc></url>
-  <url><loc>https://feispla.github.io/Vants/inventario.html</loc></url>
   <url><loc>https://feispla.github.io/Vants/clips.html</loc></url>
   <url><loc>https://feispla.github.io/Vants/politica-de-privacidad.html</loc></url>
   <url><loc>https://feispla.github.io/Vants/terminos-de-servicio.html</loc></url>
   <url><loc>https://feispla.github.io/Vants/politica-de-reembolsos.html</loc></url>
   <url><loc>https://feispla.github.io/Vants/preguntas-frecuentes.html</loc></url>
+  <url><loc>https://vants.vants.workers.dev/gpr.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/jugadores.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/tienda.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/identidad.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/equipo.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/rangos.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/historia.html</loc><changefreq>weekly</changefreq></url>
 </urlset>
