@@ -2,6 +2,15 @@ name = "vants"
 main = "worker.js"
 compatibility_date = "2026-09-22"
 
+# Observabilidad: logs de peticiones y errores visibles en el dashboard
+# (útil para detectar ataques y tráfico de bots en Workers & Pages -> vants -> Logs)
+[observability]
+enabled = true
+
 # Sirve los archivos estáticos de la carpeta public/
+# binding + run_worker_first: TODA petición pasa primero por el Worker, donde se
+# aplican cabeceras de seguridad, bloqueo de bots/scanners y rate limiting.
 [assets]
 directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
