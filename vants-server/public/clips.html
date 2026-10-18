@@ -109,6 +109,20 @@ header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba
 .mc-row input{background:var(--bg2);border:1px solid var(--line2);color:var(--text);padding:10px 12px;font:600 12px var(--mono);width:110px;outline:none}
 .mc-row input:focus{border-color:var(--grn)}
 .mc-meta{font:500 10px/1.8 var(--mono);color:var(--muted);margin-top:12px}
+/* CUENTA (Auth0): cada jugador ve SOLO sus clips */
+[hidden]{display:none!important}
+.acc-chip{display:inline-flex;align-items:center;gap:8px}
+.acc-ava{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;font:800 10px/1 var(--mono);clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px)}
+.acc-nm{font:800 10px/1 var(--mono);letter-spacing:.12em;color:var(--text);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-out{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line2);color:var(--muted);transition:.15s}
+.acc-out:hover{color:var(--accent);border-color:var(--accent)}
+.acc-out svg{width:13px;height:13px}
+.cta-login{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 6px}
+.ax-block{border-top:1px solid var(--line);padding:14px 0}
+.ax-block:first-of-type{border-top:none;padding-top:0}
+.ax-block h4{font:800 10px/1 var(--mono);letter-spacing:.2em;color:var(--grn);margin-bottom:8px}
+.ax-block p{font:500 10.5px/1.8 var(--mono);color:var(--muted);margin-bottom:10px}
+.ax-block b{color:var(--text)}
 /* FOOTER */
 footer{border-top:1px solid var(--line)}
 .f-in{max-width:1280px;margin:0 auto;padding:18px 24px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font:500 9.5px/1.8 var(--mono);color:var(--dim)}
@@ -133,6 +147,7 @@ footer{border-top:1px solid var(--line)}
       <span class="htab on"><i data-lucide="clapperboard"></i>CLIPS DE JUEGO</span>
     </nav>
     <div class="hright">
+      <span class="acc-chip" id="clipAcc"></span>
       <a class="btn btn-ghost" href="index.html"><i data-lucide="arrow-left"></i>VOLVER A LA ARENA</a>
     </div>
   </div>
@@ -150,18 +165,19 @@ footer{border-top:1px solid var(--line)}
     </div>
     <div class="s-card">
       <h4>PRIVACIDAD</h4>
-      <p>Tu galería corre <b>100% en tu navegador</b>. Los videos nunca suben a ningún servidor: viven en el almacenamiento local de tu navegador (IndexedDB).</p>
+      <p>Tu galería corre <b>100% en tu navegador</b> y vive atada a <b>TU CUENTA VANTS</b>: cada clip queda guardado con la cuenta que lo subió.</p>
+      <p>Sin sesión no se puede subir nada ni ver clips: cada jugador solo ve <b>sus propios clips</b>, nunca los de otra cuenta. Los videos nunca suben a ningún servidor (IndexedDB).</p>
       <p>La sincronización en la nube y la vitrina pública llegan con <b>VANTS PRO</b>.</p>
     </div>
   </aside>
 
   <main>
     <div class="m-head">
-      <h1>CLIPS DE JUEGO <em>RECIENTES</em></h1>
+      <h1>MIS CLIPS DE JUEGO <em>RECIENTES</em></h1>
       <div class="m-actions">
         <button class="link-btn" id="verTodo" type="button">VER TODO</button>
-        <button class="btn btn-ghost" id="btnCortex" type="button"><i data-lucide="folder-open"></i>CONECTAR CARPETA DE CORTEX</button>
-        <button class="btn btn-grn" id="btnSubir" type="button"><i data-lucide="upload"></i>SUBIR CLIP</button>
+        <button class="btn btn-ghost" id="btnCortex" type="button" hidden><i data-lucide="folder-open"></i>CONECTAR CARPETA DE CORTEX</button>
+        <button class="btn btn-grn" id="btnSubir" type="button" hidden><i data-lucide="upload"></i>SUBIR CLIP</button>
         <input type="file" id="fileIn" accept="video/*,.mkv" multiple hidden>
       </div>
     </div>
@@ -181,6 +197,8 @@ footer{border-top:1px solid var(--line)}
 <div class="toasts" id="toasts"></div>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+<script src="./assets/js/auth0-config.js?v=16"></script>
 <script>
 (function(){
 'use strict';
@@ -193,6 +211,57 @@ function toast(msg){
   el.innerHTML=SVG_OK+'<span>'+esc(msg)+'</span>';
   $('#toasts').appendChild(el);requestAnimationFrame(function(){el.classList.add('show')});
   setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.remove()},300)},3200);
+}
+
+/* ============ CUENTA VANTS (Auth0): cada jugador ve SOLO sus clips ============ */
+var USER=null,MI_SUB=null;
+async function authBoot(){
+  try{
+    if(!window.VantAuth0)return;
+    await window.VantAuth0.initAuth0();
+    var A0=window.VantAuth0.client;if(!A0)return;
+    var q=new URLSearchParams(location.search);
+    if(q.get('code')&&q.get('state')){
+      try{await A0.handleRedirectCallback();history.replaceState({},'',location.pathname+location.hash)}catch(eC){}
+    }
+    try{USER=await A0.getUser()||null}catch(eU){USER=null}
+    if(USER&&USER.sub)MI_SUB=String(USER.sub);
+  }catch(e){console.warn('[clips] auth no disponible',e)}
+}
+function nickCuenta(){
+  return String((USER&&(USER.name||USER.nickname||USER.email))||'JUGADOR').split('@')[0].toUpperCase();
+}
+function entrar(){
+  var A0=window.VantAuth0&&window.VantAuth0.client;
+  if(!A0){toast('No se pudo abrir el login: recargá la página');return}
+  /* sin redirect_uri propio: usa el permitido del sitio (origin/) y vuelve a la arena ya logueado */
+  A0.loginWithRedirect({authorizationParams:{scope:'openid profile email'}})
+    .catch(function(){toast('Acá no se puede iniciar sesión: entrá desde la arena (INICIO) y volvé','info')});
+}
+function salir(){
+  try{window.location.href='https://vants.eu.auth0.com/v2/logout?client_id=oaOmNizh7HrASWfmfM29bN284IMJvqPG&returnTo='+encodeURIComponent(location.origin+'/')}
+  catch(e){window.location.href='index.html'}
+}
+function pintarCuenta(){
+  var el=$('#clipAcc');if(!el)return;
+  if(USER){
+    var nm=nickCuenta();
+    el.innerHTML='<span class="acc-ava">'+esc(nm.slice(0,2))+'</span>'
+      +'<span class="acc-nm" title="'+esc((USER.email||nm)+' · clips de tu cuenta')+'">'+esc(nm.slice(0,12))+'</span>'
+      +'<button class="acc-out" id="accOut" type="button" title="Cerrar sesión"><i data-lucide="log-out"></i></button>';
+    icons();
+    $('#accOut').addEventListener('click',salir);
+  }else{
+    el.innerHTML='<button class="btn btn-grn" id="accEnter" type="button"><i data-lucide="log-in"></i>INICIAR SESIÓN</button>';
+    icons();
+    $('#accEnter').addEventListener('click',entrar);
+  }
+}
+function aplicarSesion(){
+  var con=!!USER;
+  var b1=$('#btnSubir'),b2=$('#btnCortex');
+  if(b1)b1.hidden=!con;
+  if(b2)b2.hidden=!con;
 }
 
 /* ============ IndexedDB ============ */
@@ -249,6 +318,17 @@ function cardHTML(rec,url){
     +(rec.kills?'<span class="kl">'+esc(rec.kills)+'Kill</span>':'')
     +'<span>'+esc(fmtFecha(rec.ts))+'</span><span>'+esc(fmtMB(rec.size||0))+'</span></div></div></div>';
 }
+var SIN_SESION='<div class="empty"><h3>TUS CLIPS VIVEN EN TU CUENTA VANTS</h3>'
+  +'<p>Cada jugador tiene su propia galería: entrá con tu cuenta para ver, subir y titular tus momentos destacados de VALORANT. Sin sesión nadie puede subir clips ni ver los de otra cuenta.</p>'
+  +'<div class="cta-login">'
+  +'<button class="btn btn-red" id="emptyEnter" type="button"><i data-lucide="log-in"></i>INICIAR SESIÓN CON MI CUENTA</button>'
+  +'<a class="btn btn-ghost" href="index.html"><i data-lucide="crosshair"></i>CREAR CUENTA EN LA ARENA</a>'
+  +'</div>'
+  +'<div class="steps">'
+  +'<div class="st"><b>1 · ENTRA CON TU CUENTA</b><span>La galería es personal: cada clip que subas queda atado a tu cuenta VANTS.</span></div>'
+  +'<div class="st"><b>2 · CONECTA CORTEX O SUBE</b><span>Con sesión iniciada conectás tu carpeta de Razer Cortex o subís videos directo.</span></div>'
+  +'<div class="st"><b>3 · SOLO TÚ LAS VES</b><span>Si cerrás sesión, tus clips quedan guardados para tu cuenta: nadie más los ve en esta PC.</span></div>'
+  +'</div></div>';
 var EMPTY='<div class="empty"><h3>TODAVÍA NO HAY CLIPS ACÁ</h3>'
   +'<p>Tus momentos destacados de VALORANT viven en tu PC — esta app los reúne en una galería estilo Cortex, sin subir nada a ningún servidor.</p>'
   +'<div class="steps">'
@@ -268,6 +348,13 @@ function emptyConectada(nombre){
   +'<p>La conexión queda guardada: cuando Cortex escriba un clip ahí, entra a esta app y aparecerá al instante.</p></div>';
 }
 async function render(){
+  if(!USER){
+    $('#sCount').textContent='0';
+    $('#grid').innerHTML=SIN_SESION;
+    var be=$('#emptyEnter');if(be)be.addEventListener('click',entrar);
+    icons();refreshStorage();
+    return;
+  }
   var list=cache.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0)});
   $('#sCount').textContent=String(list.length);
   var view=showAll?list:list.slice(0,12);
@@ -290,7 +377,12 @@ async function render(){
   icons();
   refreshStorage();
 }
-async function reload(){cache=await idbAll();render()}
+async function cacheMio(){
+  /* GALERÍA POR CUENTA: solo los clips subidos con esta sesión (owner = sub Auth0) */
+  var todas=await idbAll();
+  return MI_SUB?todas.filter(function(r){return r.owner===MI_SUB}):[];
+}
+async function reload(){cache=await cacheMio();render()}
 
 /* ============ almacenamiento (barra) ============ */
 async function refreshStorage(){
@@ -310,7 +402,7 @@ $('#fileIn').addEventListener('change',async function(e){
   var n=0;
   for(var i=0;i<files.length;i++){
     var f=files[i];if(!esVideo(f.name)&&!(f.type||'').startsWith('video/'))continue;
-    await idbPut({id:'up:'+f.name+':'+f.size+':'+f.lastModified,name:f.name,mime:f.type||'video/mp4',size:f.size,ts:f.lastModified||Date.now(),blob:f,handle:null,kills:null,src:'up'});
+    await idbPut({id:'up:'+f.name+':'+f.size+':'+f.lastModified,name:f.name,mime:f.type||'video/mp4',size:f.size,ts:f.lastModified||Date.now(),blob:f,handle:null,kills:null,src:'up',owner:MI_SUB});
     n++;
   }
   if(n){toast(n==1?'1 clip guardado en tu galería':n+' clips guardados en tu galería');await reload()}
@@ -319,35 +411,38 @@ $('#fileIn').addEventListener('change',async function(e){
 
 /* ============ carpeta de Cortex ============ */
 var FOLDER_OK='Carpeta Cortex: <b>conectada</b>',FOLDER_NO='Carpeta Cortex: <b>no conectada</b>';
-async function scanDir(dir,depth,added){
+async function scanDir(dir,depth,added,todas){
   if(depth>4)return;
+  if(!todas)todas=[];
   try{
     var it=dir.entries();
     while(true){
       var n=await it.next();if(n.done)break;
       var name=n.value[0],h=n.value[1];
-      if(h.kind==='directory'){if(name.charAt(0)!=='.'&&name.charAt(0)!=='$')await scanDir(h,depth+1,added);continue}
+      if(h.kind==='directory'){if(name.charAt(0)!=='.'&&name.charAt(0)!=='$')await scanDir(h,depth+1,added,todas);continue}
       if(h.kind!=='file'||!esVideo(name))continue;
       var id='cx:'+name+':'+(h.size||0);
-      var existing=cache.find(function(r){return r.id===id});
-      if(existing){continue}
+      /* el id ya existe para CUALQUIER cuenta: no se toca (nadie roba clips de otra cuenta) */
+      var existe=todas.some(function(r){return r.id===id});
+      if(existe){continue}
       var f=null;
       try{if(await h.queryPermission({mode:'read'})==='granted')f=await h.getFile()}catch(e){}
-      await idbPut({id:id,name:name,mime:(f&&f.type)||'video/mp4',size:(f&&f.size)||h.size||0,ts:(f&&f.lastModified)||Date.now(),blob:null,handle:h,kills:null,src:'cortex'});
+      await idbPut({id:id,name:name,mime:(f&&f.type)||'video/mp4',size:(f&&f.size)||h.size||0,ts:(f&&f.lastModified)||Date.now(),blob:null,handle:h,kills:null,src:'cortex',owner:MI_SUB});
       added.v=(added.v||0)+1;
     }
   }catch(e){}
 }
 async function connectCortex(silent){
+  if(!MI_SUB){if(!silent)toast('Iniciá sesión con tu cuenta para conectar tu carpeta de clips','info');return}
   if(!window.showDirectoryPicker){
     if(!silent)toast('Tu navegador no permite abrir carpetas: usa Chrome/Edge de escritorio o «SUBIR CLIP»');
     return;
   }
   try{
     var dir=await window.showDirectoryPicker({id:'vants-cortex',mode:'read',startIn:'videos'});
-    var added={v:0};await scanDir(dir,0,added);
+    var added={v:0};await scanDir(dir,0,added,await idbAll());
     await idbMetaSet('cortexDir',dir);
-    cache=await idbAll();
+    cache=await cacheMio();
     var cx=cache.filter(function(r){return r.src==='cortex'}).length;
     $('#stFolder').innerHTML='Carpeta Cortex: <b>'+esc(dir.name)+'</b> conectada'+(added.v?' · +'+added.v+' nuevos':'');
     carpetaVacia=null;
@@ -364,6 +459,39 @@ async function connectCortex(silent){
   }
 }
 $('#btnCortex').addEventListener('click',function(){connectCortex(false)});
+
+/* ============ AJUSTES: cuenta + carpeta + migración local ============ */
+async function abrirAjustes(){
+  var orf=0;
+  try{var todas=await idbAll();orf=todas.filter(function(r){return !r.owner}).length}catch(eO){}
+  var htmlCuenta=USER
+    ?'<div class="ax-block"><h4>CUENTA</h4><p>Esta galería es de <b>'+esc(nickCuenta())+'</b>'+(USER.email?' ('+esc(USER.email)+')':'')+'. Todos los clips que subas quedan atados a tu cuenta: nadie más los ve ni los puede editar.</p><button class="btn btn-ghost" id="axOut" type="button"><i data-lucide="log-out"></i>CERRAR SESIÓN</button></div>'
+    :'<div class="ax-block"><h4>CUENTA</h4><p><b>Sin sesión.</b> Hasta que entres con tu cuenta VANTS no podés subir clips ni ver galería: cada jugador solo ve sus propios clips.</p><button class="btn btn-grn" id="axIn" type="button"><i data-lucide="log-in"></i>INICIAR SESIÓN</button></div>';
+  var htmlMig=(USER&&orf)
+    ?'<div class="ax-block"><h4>MIGRACIÓN LOCAL</h4><p>Hay <b>'+orf+' clip'+(orf==1?'':'s')+' sin cuenta</b> guardado'+(orf==1?'':'s')+' en este navegador (de antes de las cuentas). Podés adoptar'+(orf==1?'lo':'los')+' para TU cuenta.</p><button class="btn btn-grn" id="axAdopt" type="button"><i data-lucide="archive-restore"></i>ADOPTAR PARA MI CUENTA</button></div>'
+    :'';
+  $('#modalCard').innerHTML=
+    '<div class="mc-head"><h3>AJUSTES DE CLIPS</h3><button class="d-x" id="axClose" aria-label="Cerrar"><i data-lucide="x"></i></button></div>'
+    +htmlCuenta
+    +'<div class="ax-block"><h4>CARPETA DE CORTEX</h4><p id="axFolder">La app vigila tu carpeta de clips de Razer Cortex y los muestra acá como referencias.</p><button class="btn btn-ghost" id="axCortex" type="button"><i data-lucide="folder-open"></i>CONECTAR / RECONECTAR CARPETA</button></div>'
+    +htmlMig
+    +'<p class="mc-meta">Regla de la galería: cada clip pertenece a la cuenta que lo subió. Cerrar sesión oculta tus clips hasta que vuelvas a entrar.</p>';
+  $('#modal').classList.add('show');icons();
+  $('#axClose').addEventListener('click',closePlayer);
+  var o1=$('#axOut');if(o1)o1.addEventListener('click',salir);
+  var o2=$('#axIn');if(o2)o2.addEventListener('click',entrar);
+  var o3=$('#axCortex');if(o3)o3.addEventListener('click',function(){closePlayer();connectCortex(false)});
+  var o4=$('#axAdopt');
+  if(o4)o4.addEventListener('click',async function(){
+    try{
+      var todas=await idbAll();var n=0;
+      for(var i=0;i<todas.length;i++){if(!todas[i].owner){await idbPut(Object.assign({},todas[i],{owner:MI_SUB}));n++}}
+      closePlayer();
+      if(n){toast(n==1?'1 clip adoptado para tu cuenta':n+' clips adoptados para tu cuenta');await reload()}
+      else toast('No había clips por adoptar');
+    }catch(eM){toast('No se pudo completar la migración')}
+  });
+}
 
 /* ============ reproductor ============ */
 function closePlayer(){$('#modal').classList.remove('show');var v=$('#modalCard video');if(v){v.pause();v.removeAttribute('src');v.load()}}
@@ -412,18 +540,22 @@ $('#verTodo').addEventListener('click',function(){
   showAll=!showAll;this.textContent=showAll?'VER MENOS':'VER TODO';render();
 });
 $('#sMis').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
-$('#sAjustes').addEventListener('click',function(){connectCortex(false)});
+$('#sAjustes').addEventListener('click',abrirAjustes);
 
 /* ============ arranque ============ */
 (async function boot(){
+  /* 1) sesión: cada jugador ve SOLO sus clips */
+  await authBoot();
+  pintarCuenta();aplicarSesion();
+  /* 2) galería local */
   await idbOpen();
-  cache=await idbAll();
+  cache=await cacheMio();
   var dir=await idbMetaGet('cortexDir');
-  if(dir){
+  if(dir&&MI_SUB){
     var perm='prompt';
     try{perm=await dir.queryPermission({mode:'read'})}catch(e){}
     if(perm==='granted'){
-      var added={v:0};await scanDir(dir,0,added);cache=await idbAll();
+      var added={v:0};await scanDir(dir,0,added,await idbAll());cache=await cacheMio();
       var cx0=cache.filter(function(r){return r.src==='cortex'}).length;
       $('#stFolder').innerHTML='Carpeta Cortex: <b>'+esc(dir.name)+'</b> conectada';
       if(!cx0)carpetaVacia=dir.name;

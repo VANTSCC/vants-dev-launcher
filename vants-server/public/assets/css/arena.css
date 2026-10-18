@@ -827,6 +827,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
 
 /* ============ MENÚ CAJÓN · CATEGORÍAS (estilo Razer) ============ */
 .menu-btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;background:var(--panel);border:1px solid var(--line2);color:var(--text);font:800 10px/1 var(--mono);letter-spacing:.18em;clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);transition:.2s}
+.menu-btn[hidden]{display:none}
 .menu-btn svg{width:15px;height:15px}
 .menu-btn:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
 .mdrawer{position:fixed;top:0;right:0;bottom:0;width:min(430px,100vw);background:linear-gradient(180deg,#0D0D10,#0A0A0C 60%);border-left:1px solid var(--line2);z-index:96;transform:translateX(102%);transition:transform .32s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;box-shadow:-30px 0 80px rgba(0,0,0,.55)}

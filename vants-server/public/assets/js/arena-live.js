@@ -963,6 +963,9 @@
   if (user) {
     if (loginBtn) loginBtn.hidden = true;
     if (accBtn) accBtn.hidden = false;
+    /* MENÚ solo para registrados: con sesión el botón MENÚ aparece */
+    var menuBtnSesion = document.getElementById('menuBtn');
+    if (menuBtnSesion) menuBtnSesion.hidden = false;
     var nm = String(user.name || user.nickname || user.email || 'JUGADOR').split('@')[0].toUpperCase();
     var ava = document.getElementById('accAva');
     var accName = document.getElementById('accName');

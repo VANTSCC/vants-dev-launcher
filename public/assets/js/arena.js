@@ -1196,7 +1196,17 @@ function vantsDiscord(type, data){
    Cajón derecho con las categorías de la arena en filas:
    COMPETIR / COMUNIDAD / IDENTIDAD / MEMBRESÍA.
    ============================================================ */
-function openMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.add('show');const o=$('#menuOv');if(o)o.classList.add('show');icons();}
+function openMenu(){
+  /* MENÚ SOLO PARA JUGADORES REGISTRADOS: sin sesión, no se abre el cajón.
+     Se invita a entrar con ENTRAR (login Auth0) igual que el resto de la arena. */
+  if(!(window.VANTS_AUTH&&window.VANTS_AUTH.sub)){
+    if(typeof toast==='function')toast('Iniciá sesión con tu cuenta para abrir el MENÚ','info');
+    const lb=$('#arenaLoginBtn');
+    if(lb&&!lb.hidden){try{lb.click()}catch(e){}}
+    return;
+  }
+  const d=$('#menuDrawer');if(!d)return;d.classList.add('show');const o=$('#menuOv');if(o)o.classList.add('show');icons();
+}
 function closeMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.remove('show');const o=$('#menuOv');if(o)o.classList.remove('show');}
 (function wireMenu(){
   const b=$('#menuBtn');if(!b)return;
