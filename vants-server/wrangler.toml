@@ -14,3 +14,11 @@ enabled = true
 directory = "./public"
 binding = "ASSETS"
 run_worker_first = true
+
+# DOMINIO PROPIO (vants.gg) — descomentar cuando la zona vants.gg esté activa
+# en la cuenta de Cloudflare (o añadirlo por panel: Workers & Pages -> vants ->
+# Configuración -> Dominios y rutas -> Agregar dominio personalizado):
+# routes = [
+#   { pattern = "vants.gg", custom_domain = true },
+#   { pattern = "www.vants.gg", custom_domain = true },
+# ]

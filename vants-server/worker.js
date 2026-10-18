@@ -20,10 +20,14 @@ const COLORS = {
 /* ==================== SEGURIDAD: CONFIGURACIÓN ==================== */
 
 // Orígenes desde los que se permite llamar a la API interna.
-// ⚠️ Si agregas un dominio propio, añádelo aquí.
+// ⚠️ vants.gg ya está en la lista: funcionará en cuanto conectes el dominio
+// al Worker (panel -> Workers & Pages -> vants -> Dominios y rutas).
+// Si agregas otro dominio propio, añádelo aquí también.
 const SITE_ORIGINS = new Set([
   'https://vants.geimerjhoan099.workers.dev',
   'https://feispla.github.io',
+  'https://vants.gg',
+  'https://www.vants.gg',
 ]);
 
 // Herramientas de ataque/scan conocidas + clientes genéricos de bots/scrapers.
