@@ -1333,10 +1333,10 @@ function renderAccount(){
 meLoad();renderAccount();icons();
 
 /* ====== PUENTE WEB → BOT DE DISCORD ======
-   En la demo (archivo local) falla silenciosamente.
-   Cuando sirvas la web desde vants-server/server.js, funciona real. */
+   URL absoluta del Worker (Cloudflare): funciona igual servido desde
+   Workers, desde GitHub Pages o en local (donde falla silenciosamente). */
 function vantsDiscord(type, data){
-  fetch('/api/discord/notify', {
+  fetch('https://vants.geimerjhoan099.workers.dev/api/discord/notify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type, data })
