@@ -75,6 +75,7 @@ const LIMIT_NOTIFY = 8;      // peticiones por minuto por IP a la API de Discord
 const LIMIT_ESPORTS = 30;    // peticiones por minuto por IP a la agenda Valorant
 const LIMIT_TEAMS = 30;      // peticiones por minuto por IP a /api/teams
 const LIMIT_GPR = 20;        // peticiones por minuto por IP a /api/gpr
+const LIMIT_ACCOUNT = 10;    // peticiones por minuto por IP a /api/account/*
 const WINDOW_MS = 60_000;    // ventana de 1 minuto
 const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
 
@@ -95,6 +96,11 @@ const rlNotify = new Map();
 const rlEsports = new Map();
 const rlTeams = new Map();
 const rlGpr = new Map();
+const rlAccount = new Map();
+
+// Tenant Auth0 del sitio (misma configuración que assets/js/auth0-config.js)
+const AUTH0_TENANT = 'vants.eu.auth0.com';
+const AUTH0_SPA_CLIENT_ID = 'oaOmNizh7HrASWfmfM29bN284IMJvqPG';
 
 function rateLimit(bucket, ip, max) {
   const now = Date.now();
@@ -414,11 +420,12 @@ export default {
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
       const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr';
-      if ((url.pathname === '/api/discord/notify' || isGetApi) && SITE_ORIGINS.has(origin)) {
+      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify';
+      if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
           'Access-Control-Allow-Methods': isGetApi ? 'GET, OPTIONS' : 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Allow-Headers': isPostApi ? 'Content-Type, Authorization' : 'Content-Type',
           'Access-Control-Max-Age': '86400',
         });
       }
@@ -535,6 +542,93 @@ export default {
       res.headers.set('Access-Control-Allow-Origin', origin || '*');
       res.headers.set('Cache-Control', 'public, max-age=60');
       return res;
+    }
+
+    // --- 7b2) Cuenta: verificación/cambio de email vía Auth0 Management API.
+    // El navegador manda el JWT de la sesión; el Worker lo valida con /userinfo,
+    // opcionalmente cambia el email (email_verified=false) y crea el TICKET de
+    // verificación de Auth0. Devuelve el ENLACE directo: aunque el correo caiga
+    // en Spam o no salga, el jugador puede abrir el enlace desde la web.
+    // Requiere secrets: AUTH0_MGMT_CLIENT_ID + AUTH0_MGMT_CLIENT_SECRET (app M2M).
+    if (url.pathname === '/api/account/email-verify') {
+      if (method !== 'POST') {
+        return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403);
+      }
+      const a = rateLimit(rlAccount, ip, LIMIT_ACCOUNT);
+      if (!a.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(a.retry) });
+      }
+      const authz = request.headers.get('authorization') || '';
+      const token = authz.replace(/^Bearer\s+/i, '').trim();
+      if (!token) {
+        return json({ ok: false, error: 'sin_sesion' }, 401);
+      }
+      let info = null;
+      try {
+        const ui = await fetch('https://' + AUTH0_TENANT + '/userinfo', {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        if (ui.ok) info = await ui.json();
+      } catch (eUI) { info = null; }
+      if (!info || !info.sub) {
+        return json({ ok: false, error: 'token_invalido' }, 401);
+      }
+      const body = await request.json().catch(() => ({}));
+      const nuevo = String((body && body.nuevo_email) || '').trim();
+      if (nuevo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(nuevo)) {
+        return json({ ok: false, error: 'email_invalido' }, 400);
+      }
+      const mId = (env && env.AUTH0_MGMT_CLIENT_ID) || '';
+      const mSec = (env && env.AUTH0_MGMT_CLIENT_SECRET) || '';
+      if (!mId || !mSec) {
+        return json({ ok: false, error: 'mgmt_no_config' }, 503);
+      }
+      try {
+        const mt = await fetch('https://' + AUTH0_TENANT + '/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grant_type: 'client_credentials',
+            client_id: mId,
+            client_secret: mSec,
+            audience: 'https://' + AUTH0_TENANT + '/api/v2/',
+          }),
+        });
+        if (!mt.ok) {
+          return json({ ok: false, error: 'mgmt_token' }, 502);
+        }
+        const mtj = await mt.json();
+        const mgmtH = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mtj.access_token };
+        let emailFinal = info.email || '';
+        if (nuevo && nuevo.toLowerCase() !== String(info.email || '').toLowerCase()) {
+          const up = await fetch('https://' + AUTH0_TENANT + '/api/v2/users/' + encodeURIComponent(info.sub), {
+            method: 'PATCH',
+            headers: mgmtH,
+            body: JSON.stringify({ email: nuevo, email_verified: false }),
+          });
+          if (!up.ok) {
+            const ej = await up.json().catch(() => ({}));
+            return json({ ok: false, error: 'no_se_pudo_cambiar', detalle: String((ej.errorDescription || ej.message || ('HTTP ' + up.status))).slice(0, 180) }, 502);
+          }
+          emailFinal = nuevo;
+        }
+        const tk = await fetch('https://' + AUTH0_TENANT + '/api/v2/tickets/email-verification', {
+          method: 'POST',
+          headers: mgmtH,
+          body: JSON.stringify({ user_id: info.sub, client_id: AUTH0_SPA_CLIENT_ID, ttl_sec: 259200 }),
+        });
+        const tj = await tk.json().catch(() => null);
+        if (!tk.ok || !tj || !tj.ticket) {
+          return json({ ok: false, error: 'ticket' }, 502);
+        }
+        return json({ ok: true, email: emailFinal, ticket: tj.ticket });
+      } catch (errA) {
+        return json({ ok: false, error: 'auth0_inalcanzable' }, 502);
+      }
     }
 
     // --- 7c) GPR · Global Power Rankings en vivo (página oficial de Riot)

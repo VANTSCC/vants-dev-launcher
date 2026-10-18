@@ -244,7 +244,7 @@ function cardHTML(rec,url){
   return '<div class="clip-card" data-id="'+esc(rec.id)+'">'
     +'<div class="thumb"><span class="cbadge'+(isRef?' ref':'')+'">'+(isRef?'REFERENCIA':'CARGADO')+'</span>'
     +inner+'<span class="cdur" data-dur>··:··</span></div>'
-    +'<div class="cinfo"><div class="cname" title="'+esc(rec.name)+'">'+esc(rec.name)+'</div>'
+    +'<div class="cinfo"><div class="cname" title="'+esc(rec.titulo||rec.name)+'">'+esc(rec.titulo||rec.name)+'</div>'
     +'<div class="crow"><span class="vg">VALORANT</span>'
     +(rec.kills?'<span class="kl">'+esc(rec.kills)+'Kill</span>':'')
     +'<span>'+esc(fmtFecha(rec.ts))+'</span><span>'+esc(fmtMB(rec.size||0))+'</span></div></div></div>';
@@ -378,19 +378,24 @@ async function openPlayer(id){
   var url=urlFor(rec,file);
   if(!url){toast('Concede acceso a la carpeta de Cortex para reproducir este clip');return}
   $('#modalCard').innerHTML=
-    '<div class="mc-head"><h3>'+esc(rec.name)+'</h3><button class="d-x" id="plClose" aria-label="Cerrar"><i data-lucide="x"></i></button></div>'
+    '<div class="mc-head"><h3>'+esc(rec.titulo||rec.name)+'</h3><button class="d-x" id="plClose" aria-label="Cerrar"><i data-lucide="x"></i></button></div>'
     +'<div class="player"><video src="'+url+'" controls autoplay playsinline></video></div>'
+    +'<div class="mc-row"><label>TÍTULO DEL CLIP</label><input id="plTitulo" type="text" maxlength="60" value="'+esc(rec.titulo||'')+'" placeholder="Ej: ACE en Ascent · clutch 1v4" style="width:100%;flex:1;min-width:180px"></div>'
     +'<div class="mc-row"><label>KILLS DEL CLIP</label><input id="plKills" type="number" min="1" max="50" value="'+(rec.kills||'')+'" placeholder="ej. 4">'
       +'<button class="btn btn-grn" id="plSave" type="button"><i data-lucide="save"></i>GUARDAR</button>'
       +'<button class="btn btn-ghost" id="plDown" type="button"><i data-lucide="download"></i>DESCARGAR</button>'
       +'<button class="btn btn-red" id="plDel" type="button"><i data-lucide="trash-2"></i>ELIMINAR</button></div>'
-    +'<p class="mc-meta">'+esc(fmtFecha(rec.ts))+' · '+esc(fmtMB(rec.size||0))+' · '+(rec.src==='cortex'?'REFERENCIA de tu carpeta Cortex (no ocupa espacio acá)':'GUARDADO en este navegador')+'</p>';
+    +'<p class="mc-meta">'+esc(fmtFecha(rec.ts))+' · '+esc(fmtMB(rec.size||0))+' · '+(rec.src==='cortex'?'REFERENCIA de tu carpeta Cortex (no ocupa espacio acá)':'GUARDADO en este navegador')+'</p>'
+    +'<p class="mc-meta" style="margin-top:4px">El título se muestra en la galería: ponle nombre a tus mejores jugadas.</p>';
   $('#modal').classList.add('show');icons();
   $('#plClose').addEventListener('click',closePlayer);
   $('#plSave').addEventListener('click',async function(){
     var v=parseInt($('#plKills').value,10);
-    rec.kills=isNaN(v)?null:v;await idbPut(rec);await reload();closePlayer();
-    toast(rec.kills?('Marcado como '+rec.kills+'Kill'):'Kills limpiadas');
+    var ti=$('#plTitulo').value.trim().slice(0,60);
+    rec.kills=isNaN(v)?null:v;
+    rec.titulo=ti||null;
+    await idbPut(rec);await reload();closePlayer();
+    toast(ti?('Título guardado: «'+ti+'»'):'Datos del clip guardados');
   });
   $('#plDown').addEventListener('click',function(){
     var a=document.createElement('a');a.href=url;a.download=rec.name;document.body.appendChild(a);a.click();a.remove();

@@ -3,6 +3,7 @@
   'use strict';
   var $ = function (s) { return document.querySelector(s); };
   var API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
+  window.VANTS_API_BASE = API; /* lo usa arena.js (ajustes de cuenta) para el PATCH del nick */
   var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
   var RAIZ = 'https://feispla.github.io/Vants/';
   var OWNER_EMAILS = ['geimerjhoan099@gmail.com', 'admin@vants.games'];
@@ -330,9 +331,13 @@
   function pfBannerHTML(sel, rawRank) {
     var rkKey = 'fundicion';
     try { if (rawRank != null) rkKey = rankFor(rawRank); } catch (eB) {}
+    /* la imagen viva manda (se refleja al instante al subirla/quitarla) */
+    var foto = (typeof window.VANTS_BANNER_FOTO === 'string' && window.VANTS_BANNER_FOTO.indexOf('data:image') === 0) ? window.VANTS_BANNER_FOTO : null;
+    if (!foto && ME.player.stats && typeof ME.player.stats.banner_foto === 'string' && ME.player.stats.banner_foto.indexOf('data:image') === 0) foto = ME.player.stats.banner_foto;
     return '<div class="pf-banner" id="pf-banner-real">' +
-      (sel === 'bananim' ? '<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>' : '') +
-      (sel === 'dorado' ? '<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>' : '') +
+      (foto ? '<img src="' + foto + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">' : '') +
+      (!foto && sel === 'bananim' ? '<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>' : '') +
+      (!foto && sel === 'dorado' ? '<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>' : '') +
       (((ME.player.twitch_channel) || (ME.player.kick_channel)) ? '<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>' : '') +
       rankSVG(rkKey, 92, 'remblem') + '</div>';
   }
@@ -396,12 +401,47 @@
     } catch (eF) { cb(null); }
   }
 
+  /* imagen del banner: redimensiona a 1200×400 (recorte centrado), JPEG ≤ ~200KB */
+  function bannerFotoDataURL(file, cb) {
+    try {
+      var frB = new FileReader();
+      frB.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var W = 1200, H = 400, cv = document.createElement('canvas');
+            cv.width = W; cv.height = H;
+            var cx = cv.getContext('2d');
+            var esc = Math.max(W / img.width, H / img.height);
+            var w = img.width * esc, h = img.height * esc;
+            cx.drawImage(img, (img.width - w) / 2, (img.height - h) / 2, w, h, 0, 0, W, H);
+            var url = cv.toDataURL('image/jpeg', 0.8);
+            if (url.length > 200000) url = cv.toDataURL('image/jpeg', 0.62);
+            if (url.length > 200000) {
+              var cv2 = document.createElement('canvas'); cv2.width = 800; cv2.height = 267;
+              cv2.getContext('2d').drawImage(cv, 0, 0, 800, 267);
+              url = cv2.toDataURL('image/jpeg', 0.62);
+            }
+            cb(url);
+          } catch (eC) { cb(null); }
+        };
+        img.onerror = function () { cb(null); };
+        img.src = frB.result;
+      };
+      frB.onerror = function () { cb(null); };
+      frB.readAsDataURL(file);
+    } catch (eF) { cb(null); }
+  }
+
   function perfilRealHTML() {
     var p = ME.player;
     var stats = p.stats || {};
-    var puedeBanner = esOwner || (state.claimed || []).indexOf('11p') !== -1;
-    var bannerSel = (p.stats && p.stats.banner) ? p.stats.banner : (puedeBanner ? 'bananim' : '');
+    /* banner: todos pueden elegir skin (ANIMADO/DORADO/CLÁSICO) y subir SU
+       imagen (se redimensiona localmente y vive en stats.banner_foto). */
+    var bannerFoto = (typeof stats.banner_foto === 'string' && stats.banner_foto.indexOf('data:image') === 0) ? stats.banner_foto : null;
+    var bannerSel = bannerFoto ? 'foto' : (stats.banner || 'bananim');
     window.VANTS_BANNER = bannerSel;
+    window.VANTS_BANNER_FOTO = bannerFoto;
     injectBannerCSS();
     /* rango real con el MISMO motor del demo (RANKS/rankFor/subFor) */
     var sps = (ME.extra && ME.extra.sps) || null;
@@ -458,13 +498,16 @@
       transmisionRealHTML(p) +
       '<div id="rp-series"></div>' +
       '<div id="rp-faceit"></div>' +
-      (puedeBanner
-        ? '<p class="d-sec">BANNER DEL PERFIL</p>' +
-          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
-          '<button class="btn btn-sm" data-banner="bananim" style="' + bs + '">ANIMADO</button>' +
-          '<button class="btn btn-sm" data-banner="dorado" style="' + bs + '">DORADO</button>' +
-          '<button class="btn btn-sm" data-banner="" style="' + bs + '">CLÁSICO</button></div>'
-        : '') +
+      '<p class="d-sec">BANNER DEL PERFIL</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+      '<button class="btn btn-sm" data-banner="bananim" style="' + bs + '">ANIMADO</button>' +
+      '<button class="btn btn-sm" data-banner="dorado" style="' + bs + '">DORADO</button>' +
+      '<button class="btn btn-sm" data-banner="" style="' + bs + '">CLÁSICO</button>' +
+      '<button class="btn btn-sm" id="rp-bn-foto" style="' + bs + '">SUBIR IMAGEN</button>' +
+      (bannerFoto ? '<button class="btn btn-sm" id="rp-bn-sinfoto" style="' + bs + '">QUITAR IMAGEN</button>' : '') +
+      '</div>' +
+      '<input type="file" id="rp-bn-file" accept="image/*" hidden>' +
+      '<div id="rp-bn-msg" style="font:500 10.5px/1.7 var(--mono);color:var(--mut);margin-bottom:12px"></div>' +
       '<p class="d-sec">MIS DATOS</p>' +
       '<input id="rp-pais" placeholder="País" value="' + escHtml(p.country || '') + '" style="' + inp + 'margin-bottom:10px">' +
       '<input id="rp-region" placeholder="Región (LATAM, EU…)" value="' + escHtml(p.region || '') + '" style="' + inp + 'margin-bottom:10px">' +
@@ -654,7 +697,7 @@
       g.disabled = true; g.textContent = 'GUARDANDO…';
       try {
         var t = await jwt();
-        var statsNuevos = Object.assign({}, p.stats || {}, { discord_tag: $('#rp-dc').value.trim(), banner: window.VANTS_BANNER || '' });
+        var statsNuevos = Object.assign({}, p.stats || {}, { discord_tag: $('#rp-dc').value.trim(), banner: window.VANTS_BANNER || '', banner_foto: window.VANTS_BANNER_FOTO || null });
         var r = await fetch(API + '/players?id=eq.' + ME.pid, {
           method: 'PATCH',
           headers: authHeaders(t),
@@ -743,19 +786,83 @@
     if (s) s.onclick = function () { A0.logout({ logoutParams: { returnTo: RAIZ } }); };
     var aj = document.getElementById('rp-ajustes');
     if (aj) aj.onclick = function () { closeDrawer(); if (window.openAjustesCuenta) window.openAjustesCuenta(); };
-    // editor de banner (solo si puede: dueño o recompensa 11p reclamada)
+    /* ---- BANNER: skins ANIMADO/DORADO/CLÁSICO + imagen propia, con AUTO-GUARDADO
+       (cada clic persiste en stats.banner / stats.banner_foto vía PATCH propio) ---- */
+    var bnMsg = function (t) { var m = document.getElementById('rp-bn-msg'); if (m) m.textContent = t || ''; };
+    async function guardarBanner() {
+      try {
+        var tB = await jwt();
+        if (!tB) { bnMsg('Iniciá sesión para guardar el banner'); return; }
+        var statsB = Object.assign({}, p.stats || {}, { banner: window.VANTS_BANNER || '', banner_foto: window.VANTS_BANNER_FOTO || null });
+        var rB = await fetch(API + '/players?id=eq.' + ME.pid, { method: 'PATCH', headers: authHeaders(tB), body: JSON.stringify({ stats: statsB }) });
+        if (rB.ok) { p.stats = statsB; bnMsg('✓ Banner guardado en tu perfil'); }
+        else {
+          var jb = await rB.json().catch(function () { return {}; });
+          bnMsg('La base rechazó el banner (HTTP ' + rB.status + ')' + (jb.message ? ': ' + jb.message : ''));
+        }
+      } catch (eBS) { bnMsg('Error de red al guardar el banner'); }
+    }
+    function repintarBanner() {
+      var rawRank = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
+        : (((ME.extra && ME.extra.sps) && ME.extra.sps.rank != null && !isNaN(parseFloat(ME.extra.sps.rank))) ? parseFloat(ME.extra.sps.rank) : null);
+      var pf = document.getElementById('pf-banner-real');
+      if (pf) pf.outerHTML = pfBannerHTML(window.VANTS_BANNER, rawRank);
+      if (window.lucide) lucide.createIcons();
+    }
     document.querySelectorAll('[data-banner]').forEach(function (b) {
       b.onclick = function () {
         window.VANTS_BANNER = b.getAttribute('data-banner');
-        var rawRank = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
-          : (((ME.extra && ME.extra.sps) && ME.extra.sps.rank != null && !isNaN(parseFloat(ME.extra.sps.rank))) ? parseFloat(ME.extra.sps.rank) : null);
-        var pf = document.getElementById('pf-banner-real');
-        if (pf) pf.outerHTML = pfBannerHTML(window.VANTS_BANNER, rawRank);
-        if (window.lucide) lucide.createIcons();
+        if (window.VANTS_BANNER === 'foto' && !window.VANTS_BANNER_FOTO) window.VANTS_BANNER = 'bananim';
+        repintarBanner();
         document.querySelectorAll('[data-banner]').forEach(function (x) { x.style.borderColor = 'var(--line2,#303039)'; x.style.color = 'var(--mut,#93939D)'; });
         b.style.borderColor = '#FF0D2E'; b.style.color = '#FF0D2E';
+        bnMsg('Guardando banner…');
+        guardarBanner();
       };
     });
+    var bnFotoBtn = document.getElementById('rp-bn-foto');
+    var bnFile = document.getElementById('rp-bn-file');
+    if (bnFotoBtn && bnFile) bnFotoBtn.onclick = function () { bnFile.click(); };
+    if (bnFile) bnFile.onchange = function () {
+      var f = bnFile.files && bnFile.files[0];
+      if (!f) return;
+      if (!/^image\//.test(f.type || '')) { bnMsg('Ese archivo no es una imagen'); return; }
+      if (bnFotoBtn) { bnFotoBtn.disabled = true; bnFotoBtn.textContent = 'PROCESANDO…'; }
+      bnMsg('Redimensionando imagen…');
+      bannerFotoDataURL(f, function (urlB) {
+        if (bnFotoBtn) { bnFotoBtn.disabled = false; bnFotoBtn.textContent = 'SUBIR IMAGEN'; }
+        if (!urlB) { bnMsg('No se pudo leer la imagen'); return; }
+        window.VANTS_BANNER_FOTO = urlB;
+        window.VANTS_BANNER = 'foto';
+        repintarBanner();
+        bnMsg('Guardando banner…');
+        guardarBanner();
+        if (!document.getElementById('rp-bn-sinfoto') && bnFotoBtn && bnFotoBtn.parentNode) {
+          var qb = document.createElement('button');
+          qb.id = 'rp-bn-sinfoto'; qb.className = 'btn btn-sm';
+          qb.style.cssText = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
+          qb.textContent = 'QUITAR IMAGEN';
+          bnFotoBtn.parentNode.appendChild(qb);
+          qb.onclick = function () {
+            window.VANTS_BANNER_FOTO = null;
+            window.VANTS_BANNER = 'bananim';
+            qb.remove();
+            repintarBanner();
+            bnMsg('Guardando banner…');
+            guardarBanner();
+          };
+        }
+      });
+    };
+    var bnQuitar = document.getElementById('rp-bn-sinfoto');
+    if (bnQuitar) bnQuitar.onclick = function () {
+      window.VANTS_BANNER_FOTO = null;
+      window.VANTS_BANNER = 'bananim';
+      bnQuitar.remove();
+      repintarBanner();
+      bnMsg('Guardando banner…');
+      guardarBanner();
+    };
   }
 
   /* vista previa del perfil real sin sesión (solo dibuja el drawer con
@@ -785,30 +892,37 @@
       c.disabled = true; c.textContent = 'CREANDO…';
       try {
         var t = await jwt();
-        /* la creación viaja con la identidad Auth0 para que Neon la ligue a la sesión */
+        /* la creación viaja con la identidad Auth0 para que Neon la ligue a la sesión.
+           BONUS DE BIENVENIDA: rating 0.95 (ACERO I) + registro del bonus en stats,
+           así los nuevos ya aparecen en el ranking con rango y puntos desde el día 1. */
         var r = await fetch(API + '/players', {
           method: 'POST',
           headers: authHeaders(t),
-          body: JSON.stringify({ username: $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_'), display_name: $('#cp-user').value.trim(), country: $('#cp-pais').value.trim(), region: $('#cp-region').value.trim(), avatar_url: (user && user.picture) || null, auth0_sub: (user && user.sub) || null, email: (user && user.email) || null }),
+          body: JSON.stringify({ username: $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_'), display_name: $('#cp-user').value.trim(), country: $('#cp-pais').value.trim(), region: $('#cp-region').value.trim(), avatar_url: (user && user.picture) || null, auth0_sub: (user && user.sub) || null, email: (user && user.email) || null, rating: 0.95, stats: { bonus_novato: { rr: 100, fecha: new Date().toISOString().slice(0, 10) } } }),
         });
         var listo = r.ok;
+        var adoptado = false;
         if (!listo && (r.status === 409 || r.status === 400)) {
           /* nick ya existía: intentar ADOPTAR ese perfil ligándolo a esta identidad */
           try {
             var nick = $('#cp-user').value.trim().toLowerCase().replace(/\s+/g, '_');
-            var ex = await fetch(API + '/players?username=eq.' + encodeURIComponent(nick) + '&select=id,auth0_sub&limit=1', { headers: authHeaders(t) });
+            var ex = await fetch(API + '/players?username=eq.' + encodeURIComponent(nick) + '&select=id,auth0_sub,rating&limit=1', { headers: authHeaders(t) });
             var exRows = await ex.json().catch(function () { return []; });
             if (Array.isArray(exRows) && exRows[0] && !exRows[0].auth0_sub) {
+              var cuerpo = { auth0_sub: (user && user.sub) || null, email: (user && user.email) || null };
+              /* si el perfil adoptado no tiene rating, también recibe el bonus novato */
+              if (exRows[0].rating == null) cuerpo.rating = 0.95;
               var up = await fetch(API + '/players?id=eq.' + exRows[0].id, {
                 method: 'PATCH', headers: authHeaders(t),
-                body: JSON.stringify({ auth0_sub: (user && user.sub) || null, email: (user && user.email) || null }),
+                body: JSON.stringify(cuerpo),
               });
-              if (up.ok) listo = true;
+              if (up.ok) { listo = true; adoptado = true; }
             }
           } catch (eAd) {}
         }
         if (listo) {
-          if (msg) msg.innerHTML = '<span class="ok">✓ Perfil creado. Cargando…</span>';
+          if (msg) msg.innerHTML = '<span class="ok">✓ Perfil ' + (adoptado ? 'recuperado' : 'creado') + ' · bonus de bienvenida: <b>ACERO I + 100 RR</b>. Cargando…</span>';
+          if (typeof toast === 'function') { try { toast('Puntos de bienvenida: empezás en ACERO I con +100 RR'); } catch (eB2) {} }
           await cargarPerfilReal();
           if (ME && ME.player) renderPerfilReal();
           if (typeof window.vantsRecargarJugadores === 'function') { try { window.vantsRecargarJugadores(); } catch (eR2) {} }

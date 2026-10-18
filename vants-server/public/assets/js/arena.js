@@ -739,6 +739,7 @@ async function cargarJugadores(){
       return rb!==ra?rb-ra:String(a.created_at||'').localeCompare(String(b.created_at||''));
     });
     renderProfileGrid();renderRail();renderLbHead();renderLbBody();
+    if(window.vantsRefreshTeams)window.vantsRefreshTeams();
   }catch(e){/* sin conexión a la base: la sala queda en su último estado */}
 }
 window.vantsRecargarJugadores=cargarJugadores;
@@ -1213,6 +1214,22 @@ function closeMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.remove('s
    ============================================================ */
 const K_TEAMS_API='vants_teams_v1';
 let teamsChampions=[];
+let teamsUltimos=null;
+/* FOTO DE EQUIPO viva: los perfiles guardan stats.equipo={nombre,tag,foto};
+   si el tag o el nombre de un equipo inscrito coincide con el de un perfil,
+   el mosaico muestra su foto en vez de las iniciales. */
+function mapaFotosEquipos(){
+  const m=new Map();
+  (window.VANTS_PLAYERS||[]).forEach(p=>{
+    const e=p&&p.stats&&p.stats.equipo;
+    if(e&&e.foto){
+      if(e.tag)m.set(String(e.tag).toLowerCase(),e.foto);
+      if(e.nombre)m.set(String(e.nombre).toLowerCase(),e.foto);
+    }
+  });
+  return m;
+}
+window.vantsRefreshTeams=function(){if(teamsUltimos)renderTeamsGrid(teamsUltimos);};
 function escTeams(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function teamsLocal(){
   try{
@@ -1230,7 +1247,9 @@ function tiempoAtras(iso){
 }
 function renderTeamsGrid(list){
   const grid=$('#teamsGrid');if(!grid)return;
+  teamsUltimos=list;
   const champs=new Map(teamsChampions.map(c=>[String(c.team||'').toLowerCase(),c]));
+  const fotos=mapaFotosEquipos();
   let html='';
   if(!list.length){
     html='<div class="teams-empty"><b>TODAVÍA NO HAY EQUIPOS ASOCIADOS</b><span>Sé el primero: cuando inscribes tu equipo aparece acá al instante y se anuncia en el Discord de la arena.</span></div>';
@@ -1238,8 +1257,12 @@ function renderTeamsGrid(list){
     html=list.map(r=>{
       const ini=(String(r.tag||r.team||'V').replace(/[^A-Za-z0-9]/g,'').slice(0,3).toUpperCase())||'V';
       const c=champs.get(String(r.team||'').toLowerCase());
+      const foto=fotos.get(String(r.tag||'').toLowerCase())||fotos.get(String(r.team||'').toLowerCase())||null;
+      const ava=foto
+        ?'<span class="tt-ava" style="overflow:hidden"><img src="'+foto+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentNode.textContent=&quot;'+escTeams(ini)+'&quot;"></span>'
+        :'<span class="tt-ava">'+escTeams(ini)+'</span>';
       const when=tiempoAtras(r.ts);
-      return '<div class="team-tile"><span class="tt-ava">'+escTeams(ini)+'</span>'
+      return '<div class="team-tile">'+ava
         +'<div class="tt-info"><span class="tt-tag">'+escTeams(String(r.team||'EQUIPO').slice(0,22))+'</span>'
         +'<span class="tt-name">'+escTeams(r.tag)+' · '+escTeams(String(r.tournament||'TEMPORADA 4').slice(0,36))+'</span>'
         +'<span class="tt-meta">'+(when?'<span class="tt-live"><i></i>INSCRITO '+escTeams(when).toUpperCase()+'</span>':'<span>ASOCIADO</span>')+'</span></div>'
@@ -1404,27 +1427,37 @@ window.vantsOwnerActivate=function(){
 /* ================= AJUSTES DE CUENTA =================
    Email, contraseña, nick e identidades conectadas.
    Se abre desde el perfil (botón AJUSTES) o con
-   window.openAjustesCuenta(). El email y el reset de
-   contraseña van contra Auth0; el nick también persiste
-   en la BD cuando hay sesión real. */
+   window.openAjustesCuenta().
+   · EMAIL: el Worker crea el TICKET de verificación de Auth0
+     (Management API) y devuelve el enlace directo: abre acá mismo,
+     sin depender de que el correo llegue a la bandeja.
+   · CONTRASEÑA: /dbconnections/change_password solo para cuentas
+     auth0| (las de Google/Discord no tienen contraseña local).
+   · NICK: persiste en Neon con el JWT de la sesión (RLS own-row). */
 window.openAjustesCuenta=function(){
   const auth=window.VANTS_AUTH||{};
   const ident=auth.sub||'—';
   const email=auth.email||'no disponible';
-  const conGoogle=ident.indexOf('google')===0;
+  const esGoogle=ident.indexOf('google-oauth2')===0;
+  const esDiscord=ident.indexOf('discord')===0;
+  const esSocial=esGoogle||esDiscord;
+  const proveedor=esGoogle?'Google':(esDiscord?'Discord':null);
   openModal('<div class="mc-head"><h3>Ajustes de cuenta</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
     +'<p class="d-sec">NICK DE JUGADOR</p>'
     +'<div class="field"><label>NICK (SE GUARDA EN LA BD)</label><input id="ajNick" type="text" maxlength="20" value="'+(me.name||'')+'"></div>'
     +'<p class="d-sec">EMAIL DE LA CUENTA</p>'
     +'<div class="field"><label>ACTUAL</label><input type="text" value="'+email+'" disabled style="opacity:.65"></div>'
-    +'<p style="font:500 10px/1.7 var(--mono);color:var(--dim);margin:6px 0 12px">El cambio de email se hace con verificación de Auth0 a tu dirección actual.</p>'
-    +'<button class="btn btn-ghost" id="ajMail" style="width:100%;justify-content:center"><i data-lucide="mail"></i>CAMBIAR EMAIL (VERIFICACIÓN)</button>'
+    +'<div class="field"><label>NUEVO EMAIL (OPCIONAL)</label><input id="ajMailNvo" type="email" placeholder="tu@correo.com" autocomplete="email"></div>'
+    +'<p style="font:500 10px/1.7 var(--mono);color:var(--dim);margin:6px 0 12px">Auth0 genera un enlace de verificación para confirmar el email. Si es nuevo, la verificación viaja a la dirección nueva.</p>'
+    +'<button class="btn btn-ghost" id="ajMail" style="width:100%;justify-content:center"><i data-lucide="mail"></i>CREAR ENLACE DE VERIFICACIÓN</button>'
+    +'<div id="ajMailOut" style="display:none;margin-top:10px"></div>'
     +'<p class="d-sec">CONTRASEÑA</p>'
     +'<button class="btn btn-ghost" id="ajPass" style="width:100%;justify-content:center"><i data-lucide="key-round"></i>ENVIAR LINK DE RESET</button>'
+    +'<p id="ajPassNota" style="font:500 10px/1.7 var(--mono);color:var(--dim);margin:8px 0 0">'+(esSocial?('Tu cuenta entra con '+proveedor+': la contraseña la gestiona '+proveedor+', no VANTS.'):'Llega a tu correo (revisa Spam si no aparece en 10 minutos).')+'</p>'
     +'<p class="d-sec">IDENTIDADES CONECTADAS</p>'
     +'<div class="plat-list">'
       +'<div class="plat-row" style="--plc:#c9a227"><span class="plat-ic"><i data-lucide="fingerprint"></i></span><p><b style="color:var(--text)">AUTH0 · SESIÓN ACTUAL</b><br><span class="mono" style="font:500 9px/1.6 var(--mono);color:var(--dim)">'+ident+'</span></p><span class="plat-on">CONECTADO</span></div>'
-      +'<div class="plat-row" style="--plc:#4285F4"><span class="plat-ic">G</span><p><b style="color:var(--text)">GOOGLE</b><br><span style="font:500 10px/1.6 var(--mono);color:var(--dim)">'+(conGoogle?'Vinculada a esta sesión':'No vinculada')+'</span></p><span class="'+(conGoogle?'plat-on':'plat-off')+'">'+(conGoogle?'CONECTADO':'—')+'</span></div>'
+      +'<div class="plat-row" style="--plc:#4285F4"><span class="plat-ic">G</span><p><b style="color:var(--text)">GOOGLE</b><br><span style="font:500 10px/1.6 var(--mono);color:var(--dim)">'+(esGoogle?'Vinculada a esta sesión':'No vinculada')+'</span></p><span class="'+(esGoogle?'plat-on':'plat-off')+'">'+(esGoogle?'CONECTADO':'—')+'</span></div>'
       +'<div class="plat-row" style="--plc:#8ea1ff"><span class="plat-ic">DC</span><p><b style="color:var(--text)">DISCORD</b><br><span style="font:500 10px/1.6 var(--mono);color:var(--dim)">'+(me.discordTag?'Tag: '+me.discordTag:'Se vincula desde Cuentas conectadas')+'</span></p><span class="'+(me.discordTag?'plat-on':'plat-off')+'">'+(me.discordTag?'CONECTADO':'—')+'</span></div>'
     +'</div>'
     +'<div class="field-row" style="margin-top:16px">'
@@ -1433,27 +1466,64 @@ window.openAjustesCuenta=function(){
     +'</div>'
     +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">VANTS ACCOUNT · protegido por Auth0</p></div>');
   $('#mClose').onclick=closeModal;
-  $('#ajSave').onclick=()=>{
+  $('#ajSave').onclick=async()=>{
     const v=$('#ajNick').value.trim().toUpperCase().replace(/["'<>\\]/g,'');
     if(!v){toast('El nick no puede quedar vacío','info');return;}
     me.name=v;meSave();renderAccount();
-    if(auth.playerId){
-      fetch((window.LINKS_API||'').replace('/vants_links','')+'/players?id=eq.'+auth.playerId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:v.toLowerCase()})}).catch(()=>{});
+    if(auth.playerId&&window.VANTS_API_BASE){
+      try{
+        const t=await window.VantAuth0.getToken();
+        if(t){
+          const r=await fetch(window.VANTS_API_BASE+'/players?id=eq.'+auth.playerId,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({username:v.toLowerCase().replace(/\s+/g,'_'),display_name:v})});
+          if(!r.ok)toast('El nick se guardó local, pero la base lo rechazó (HTTP '+r.status+')','info');
+        }
+      }catch(eN){/* local igual queda */}
     }
     if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
     toast('Ajustes guardados: nick '+v);
   };
-  $('#ajMail').onclick=()=>{
-    if(!auth.email){toast('Iniciá sesión con Auth0 para gestionar tu email','info');return;}
-    toast('Te enviamos la verificación a '+auth.email,'info');
+  $('#ajMail').onclick=async()=>{
+    const out=$('#ajMailOut');if(out)out.style.display='none';
+    if(!auth.email||!auth.sub){toast('Iniciá sesión con Auth0 para gestionar tu email','info');return;}
+    const btn=$('#ajMail');const old=btn.innerHTML;
+    btn.disabled=true;btn.textContent='CREANDO ENLACE…';
+    try{
+      const t=await window.VantAuth0.getToken();
+      const nuevo=($('#ajMailNvo')&&$('#ajMailNvo').value||'').trim();
+      const r=await fetchWorker('/api/account/email-verify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(t||'')},body:JSON.stringify(nuevo?{nuevo_email:nuevo}:{})});
+      const j=await r.json().catch(()=>null);
+      if(j&&j.ok&&j.ticket){
+        if(out){
+          out.style.display='block';
+          out.innerHTML='<div style="border:1px solid var(--line2,#303039);border-radius:8px;padding:12px;background:#0d0d10">'
+            +'<p style="font:700 10px/1.6 var(--mono);color:var(--grn,#3EE6A0);margin:0 0 6px">✓ ENLACE LISTO'+(j.email?(' · '+j.email):'')+'</p>'
+            +'<p style="font:500 10px/1.7 var(--mono);color:var(--mut);margin:0 0 10px">Auth0 también lo envía a ese correo; si no llega (Spam), ábrelo directo acá. Vence en 3 días.</p>'
+            +'<a class="btn btn-cut btn-sm" href="'+j.ticket+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i data-lucide="external-link"></i>ABRIR VERIFICACIÓN DE EMAIL</a></div>';
+          if(window.lucide)lucide.createIcons();
+        }
+        toast('Enlace de verificación de Auth0 creado','ok');
+      }else if(j&&j.error==='mgmt_no_config'){
+        if(out){
+          out.style.display='block';
+          out.innerHTML='<div style="border:1px solid #F5C044;border-radius:8px;padding:12px;background:#171204">'
+            +'<p style="font:700 10px/1.6 var(--mono);color:#F5C044;margin:0 0 6px">FALTA CONFIGURAR AUTH0 EN EL SERVIDOR</p>'
+            +'<p style="font:500 10px/1.7 var(--mono);color:var(--mut);margin:0">El dueño debe crear una app Machine-to-Machine en Auth0 (Management API) y cargar AUTH0_MGMT_CLIENT_ID y AUTH0_MGMT_CLIENT_SECRET en el Worker. Guía completa en GUÍA → Ajustes de cuenta.</p></div>';
+        }
+        toast('Auth0 del servidor sin configurar todavía','info');
+      }else{
+        toast('No se pudo crear el enlace'+(j&&j.detalle?(' ('+j.detalle+')'):''),'error');
+      }
+    }catch(eM){toast('Error de red al crear el enlace','error');}
+    btn.disabled=false;btn.innerHTML=old;if(window.lucide)lucide.createIcons();
   };
   $('#ajPass').onclick=()=>{
     if(!auth.email){toast('Iniciá sesión para resetear la contraseña','info');return;}
+    if(esSocial){toast('Tu cuenta entra con '+proveedor+': no tiene contraseña de VANTS que resetear','info');return;}
     if(!window.AUTH0_CONFIG){toast('Auth0 no disponible en este entorno','error');return;}
     fetch('https://'+window.AUTH0_CONFIG.domain+'/dbconnections/change_password',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({client_id:window.AUTH0_CONFIG.clientId,email:auth.email,connection:'Username-Password-Authentication'})
-    }).then(r=>{if(r.ok)toast('Link de reset enviado a '+auth.email,'info');else toast('No pudimos enviar el link, probá de nuevo','error');})
+    }).then(r=>{if(r.ok)toast('Link de reset enviado a '+auth.email+' — revisa Spam','info');else toast('No pudimos enviar el link, probá de nuevo','error');})
       .catch(()=>toast('Error de red al enviar el link','error'));
   };
   $('#ajLogout').onclick=()=>{
