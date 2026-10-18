@@ -6,6 +6,19 @@ const state={game:'valorant',isPro:false,sort:{key:'rating',dir:-1},search:'',en
 const D=()=>DATA[state.game];
 const icons=()=>{if(window.lucide)lucide.createIcons();};
 
+/* Bases del Worker (Cloudflare). La 1.ª es la URL actual; la 2.ª entra en
+   automático si el subdominio de cuenta de workers.dev cambia a "vants"
+   (https://vants.vants.workers.dev). Así el puente Discord y la agenda
+   sobreviven al cambio de subdominio sin tocar código. */
+const WORKER_BASES=['https://vants.geimerjhoan099.workers.dev','https://vants.vants.workers.dev'];
+async function fetchWorker(path,opts){
+  let err=null;
+  for(let i=0;i<WORKER_BASES.length;i++){
+    try{return await fetch(WORKER_BASES[i]+path,opts);}catch(e){err=e;}
+  }
+  throw err||new Error('Worker inalcanzable');
+}
+
 const SVG_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
 const SVG_INFO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
 
@@ -920,7 +933,7 @@ async function agendaEnVivo(){
   if(state.game!=='valorant')return;
   try{
     const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),4000);
-    const r=await fetch('https://vants.geimerjhoan099.workers.dev/api/valorant/esports',{headers:{Accept:'application/json'},signal:ctrl.signal});
+    const r=await fetchWorker('/api/valorant/esports',{headers:{Accept:'application/json'},signal:ctrl.signal});
     clearTimeout(to);
     if(!r.ok)return;
     const j=await r.json().catch(()=>null);
@@ -1112,11 +1125,16 @@ meLoad();renderAccount();icons();
    URL absoluta del Worker (Cloudflare): funciona igual servido desde
    Workers, desde GitHub Pages o en local (donde falla silenciosamente). */
 function vantsDiscord(type, data){
-  fetch('https://vants.geimerjhoan099.workers.dev/api/discord/notify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type, data })
-  }).catch(()=>{}); // si no hay servidor, no rompe nada
+  const body=JSON.stringify({ type, data });
+  const send=i=>{
+    if(i>=WORKER_BASES.length)return; // si no hay servidor, no rompe nada
+    fetch(WORKER_BASES[i]+'/api/discord/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body
+    }).catch(()=>send(i+1));
+  };
+  send(0);
 }
 
 /* ============================================================

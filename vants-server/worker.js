@@ -29,6 +29,7 @@ const COLORS = {
 // Si agregas otro dominio propio, añádelo aquí también.
 const SITE_ORIGINS = new Set([
   'https://vants.geimerjhoan099.workers.dev',
+  'https://vants.vants.workers.dev',
   'https://feispla.github.io',
   'https://vantsgg.com',
   'https://www.vantsgg.com',
