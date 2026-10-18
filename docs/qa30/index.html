@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><title>QA30</title></head><body>
+<div id="modal"></div><div id="modalCard"></div><div id="toasts"></div>
+<script src="/assets/js/arena.js?v=24"></script>
+<script>
+window.QA=[];
+/* 1) owner por fila real (VANTS_ME.player.role=owner) aunque el nick local sea otro */
+window.VANTS_ME={pid:'fila-feispla',player:{id:'x',username:'feispla',role:'owner',rating:0.84},owner:true};
+QA.push(['owner por fila real', window.vantsEsOwner&&window.vantsEsOwner()===true]);
+/* 2) sin fila y sin nick local → no es owner */
+window.VANTS_ME=null;
+QA.push(['sin señales → false', window.vantsEsOwner()===false]);
+/* 3) owner por nick local (compat) */
+window.me=window.me||{}; try{ me.name='geimerpedroza'; }catch(e){ QA.push(['me global', false]); }
+QA.push(['owner por nick local', window.vantsEsOwner()===true]);
+try{ me.name='FEISPLA'; }catch(e){}
+/* 4) ratingDe con boost owner */
+QA.push(['ratingDe boost owner 0.84→1.30', ratingDe({rating:0.84,role:'owner'})===1.3]);
+/* 5) rango del owner → apex */
+QA.push(['rankKeyDe owner → apex', rankKeyDe({rating:0.84,role:'owner'})==='apex']);
+/* 6) emblema FUNDICIÓN III (el de la captura) pinta placa nueva */
+var em = rankSVG('fundicion',44,'');
+QA.push(['emblema fundicion III', !!em && em.indexOf('rank-emblem')!==-1 && em.indexOf('--r1')!==-1]);
+document.title='QA30 OK '+QA.filter(q=>q[1]).length+'/'+QA.length;
+</script></body></html>

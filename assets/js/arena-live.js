@@ -988,15 +988,24 @@
 
     if (esOwner) {
       (async function () {
+        /* Fila del owner por el sub de SU sesión. El hardcode viejo
+           (username=eq.geimerpedroza) quedó huérfano cuando la fila se
+           renombró a feispla: devolvía vacío, dejaba VANTS_ME.player=null
+           y VANTS_AUTH.playerId roto (el nick no guardaba en Neon). Si la
+           búsqueda por sub no encuentra fila, NO se pisa lo que ya cargó
+           cargarPerfilReal (sub → vants_links → email). */
+        var filaOwner = null;
         try {
           var tO = null;
           try { tO = await jwt(); } catch (eT0) {}
-          var pr = tO
-            ? await fetch(API + '/players?username=eq.geimerpedroza&limit=1', { headers: authHeaders(tO) })
-            : await fetch(PROXY + '?table=players&username=eq.geimerpedroza&limit=1', { headers: { Accept: 'application/json' } });
-          var rows = await pr.json().catch(function () { return []; });
-          window.VANTS_ME = { pid: rows && rows[0] ? rows[0].id : null, player: (rows && rows[0]) || null, owner: true };
-        } catch (e) { window.VANTS_ME = { pid: null, player: null, owner: true }; }
+          if (tO && user && user.sub) {
+            var prO = await fetch(API + '/players?auth0_sub=eq.' + encodeURIComponent(user.sub) + '&limit=1', { headers: authHeaders(tO) });
+            var rowsO = await prO.json().catch(function () { return []; });
+            if (Array.isArray(rowsO) && rowsO[0]) filaOwner = rowsO[0];
+          }
+        } catch (eOw) {}
+        if (filaOwner) window.VANTS_ME = { pid: filaOwner.id, player: filaOwner, owner: true };
+        else window.VANTS_ME = { pid: (ME && ME.pid) || null, player: (ME && ME.player) || null, owner: true };
         try { if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (window.VANTS_ME && window.VANTS_ME.pid) || null; } catch (eVA) {}
         /* activa plan VANTS PRO gratis + insignias OWNER/CREADOR/SOCIO (motor en arena.js) */
         try { if (window.vantsOwnerActivate) window.vantsOwnerActivate(); } catch (eVO) {}

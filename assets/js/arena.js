@@ -1504,7 +1504,11 @@ window.VANTS_OWNER=false;
 function vantsEsOwner(){
   if(window.VANTS_OWNER)return true;
   const un=((typeof me!=='undefined')&&me&&me.name||'').toLowerCase();
-  return un==='geimerpedroza';
+  if(un==='geimerpedroza')return true;
+  /* la fila REAL manda: si la sesión resolvió una fila owner en Neon
+     (por sub), el dueño es dueño aunque su nick local sea otro */
+  try{const mp=window.VANTS_ME&&window.VANTS_ME.player;if(mp&&mp.role==='owner')return true;}catch(e){}
+  return false;
 }
 window.vantsEsOwner=vantsEsOwner;
 function activatePlan(plan){
