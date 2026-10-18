@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="stylesheet" href="./assets/css/arena.css?v=4">
+<link rel="stylesheet" href="./assets/css/vants-shop.css?v=1">
 </head>
 <body data-game="valorant">
 
@@ -48,6 +49,7 @@
       <a href="#ranking">RANKING</a>
       <a href="#torneos">TORNEOS</a>
       <a href="#jugadores">JUGADORES</a>
+      <a href="inventario.html">INVENTARIO</a>
       <a href="#equipo">EQUIPO</a>
       <a href="#tienda">TIENDA</a>
       <a href="#rangos">RANGOS</a>
@@ -187,6 +189,10 @@
       <p class="sec-note">Inscripción por equipo desde la web. Fechas, pozos y formatos se anuncian por Discord cuando se confirman.</p>
     </div>
     <div class="tlist reveal" id="tournList"></div>
+    <div class="feed-reg reveal">
+      <p class="rf-title"><span class="live-badge"><i class="dot"></i>EN VIVO</span> RECIÉN INSCRITOS · ASCENSIÓN SERIES S4 <span class="rf-note">— cada inscripción se anuncia automáticamente en el Discord de la arena</span></p>
+      <div class="rf-grid" id="rfGrid"></div>
+    </div>
   </div>
 </section>
 
@@ -290,6 +296,29 @@
       <div class="shop-card locked"><i data-lucide="gem"></i><b>ROBUX & STEAM</b><span>Robux, wallets y juegos</span><em>PRÓXIMAMENTE</em></div>
       <div class="shop-card locked"><i data-lucide="gift"></i><b>GIFT CARDS</b><span>Netflix, Discord, Twitch y más</span><em>PRÓXIMAMENTE</em></div>
       <div class="shop-card locked"><i data-lucide="shirt"></i><b>MERCH VANTS</b><span>El merch oficial del circuito</span><em>PRÓXIMAMENTE</em></div>
+    </div>
+  </div>
+</section>
+
+<!-- TIENDA DE IDENTIDAD: TARJETAS Y MARCOS -->
+<section class="sec alt" id="identidad">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">TIENDA DE IDENTIDAD</span><h2>Tarjetas y marcos con tu sello</h2></div>
+      <p class="sec-note">El diseño con el que te ven en la arena: <b>tarjetas de perfil</b> y <b>marcos de avatar</b> dibujados por la casa. Se administran y equipan en tu <a href="inventario.html" style="color:var(--text);text-decoration:underline;text-underline-offset:3px">INVENTARIO</a>.</p>
+    </div>
+    <div class="shopx-group reveal">
+      <p class="shopx-title">TARJETAS DE PERFIL <span class="count">8 DISEÑOS</span></p>
+      <div class="shopx-grid" id="shopxCards"></div>
+    </div>
+    <div class="shopx-group reveal">
+      <p class="shopx-title">MARCOS DE AVATAR <span class="count">5 DISEÑOS</span></p>
+      <div class="shopx-grid" id="shopxFrames"></div>
+    </div>
+    <div class="pro-cta-row reveal" style="margin-top:26px">
+      <i data-lucide="crown" style="width:13px;height:13px;color:var(--accent)"></i>
+      Cada plan desbloquea su línea completa al activarse: <b style="color:var(--text)">&nbsp;PRO&nbsp;</b> abre las tarjetas y marcos de su línea, y <b style="color:var(--text)">&nbsp;CREATOR&nbsp;</b> incluye todo más las piezas legendarias.
+      <button class="btn btn-cut btn-sm" id="shopIdentBtn" style="margin-left:auto"><i data-lucide="crown"></i>VER MEMBRESÍAS</button>
     </div>
   </div>
 </section>
@@ -519,6 +548,8 @@
   var t=function(msg){if(typeof window.toast==='function'){window.toast(msg,'ok')}else{console.log(msg)}};
   var shop=$('#shopNotifyBtn');
   if(shop)shop.addEventListener('click',function(){t('📌 Te avisamos cuando la tienda VANTS × VEGASTORE abra. Quedate atento en redes.')});
+  var ident=$('#shopIdentBtn');
+  if(ident)ident.addEventListener('click',function(){document.getElementById('pro').scrollIntoView({behavior:'smooth'})});
   var sp=$('#sponsorsCtaBtn');
   if(sp)sp.addEventListener('click',function(){t('📨 Escribinos por Discord para recibir el kit de patrocinio de la Temporada 4.')});
 })();
@@ -528,5 +559,6 @@
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
 <script src="./assets/js/vants-supervisor.js?v=1" defer></script>
 <script src="./assets/js/arena-live.js?v=19" defer></script>
+<script src="./assets/js/vants-shop.js?v=1" defer></script>
 </body>
 </html>

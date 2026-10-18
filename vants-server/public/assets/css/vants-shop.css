@@ -1,0 +1,182 @@
+
+/* ============================================================
+   VANTS SHOP DE IDENTIDAD — Tarjetas de perfil + Marcos de avatar
+   Inventario estilo FACEIT · Feed de inscriptos
+   v1 — usa los tokens de arena.css (var(--accent) etc.)
+   ============================================================ */
+
+/* ============ UTILIDADES DE RAREZA ============ */
+.r-c{color:#93939D}.r-r{color:#4CC9F0}.r-e{color:#B44CFF}.r-l{color:#F5C044}
+.chip-rar{display:inline-flex;align-items:center;gap:4px;font:700 8px/1 var(--mono);letter-spacing:.14em;padding:3px 7px;border:1px solid currentColor;background:color-mix(in srgb,currentColor 10%,transparent);clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+.chip-tier{display:inline-flex;align-items:center;gap:5px;font:800 8.5px/1 var(--mono);letter-spacing:.12em;padding:4px 8px;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+.chip-tier svg{width:10px;height:10px}
+.chip-tier.tier-pro{color:var(--accent);border:1px solid var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.chip-tier.tier-creator{color:var(--vi);border:1px solid var(--vi);background:color-mix(in srgb,var(--vi) 12%,transparent)}
+.chip-tier.tier-free{color:var(--muted);border:1px solid var(--line2);background:var(--panel)}
+
+/* ============ TARJETAS DE PERFIL (diseños) ============ */
+.icard{position:relative;aspect-ratio:8/5;width:100%;max-width:330px;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:#101014;isolation:isolate;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.icard .ic-mark{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:72px;height:72px;opacity:.95;filter:drop-shadow(0 8px 20px rgba(0,0,0,.55));z-index:3}
+.icard .ic-art{position:absolute;inset:0;z-index:2;pointer-events:none}
+.icard .ic-art svg{position:absolute;inset:0;width:100%;height:100%}
+.icard .ic-name{position:absolute;left:13px;bottom:22px;z-index:4;font:800 16px/1 var(--disp);letter-spacing:.05em;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.65)}
+.icard .ic-sub{position:absolute;left:13px;bottom:10px;z-index:4;font:700 7.5px/1 var(--mono);letter-spacing:.34em;color:rgba(255,255,255,.55)}
+.icard .ic-strip{position:absolute;left:0;top:0;bottom:0;width:5px;z-index:4}
+.icard::after{content:'';position:absolute;inset:0;z-index:6;background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.16) 48%,transparent 60%);transform:translateX(-130%) skewX(-8deg);transition:transform .8s ease;pointer-events:none}
+.sx-tile:hover .icard::after,.slot-card:hover .icard::after{transform:translateX(130%) skewX(-8deg)}
+
+/* 1 · ORIGEN (FREE) — placa de acero de casa */
+.ic-origen{background:linear-gradient(130deg,#23272f 0%,#0b0c10 62%)}
+.ic-origen::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 2px,transparent 2px 7px)}
+.ic-origen .ic-strip{background:linear-gradient(180deg,#e8ecef,#ff0d2e)}
+
+/* 2 · ASCENSO (PRO) — franjas rojas cortando el negro */
+.ic-ascenso{background:linear-gradient(135deg,#420914 0%,#12050a 58%)}
+.ic-ascenso::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-55deg,transparent 0 30px,rgba(255,13,46,.17) 30px 40px),radial-gradient(90% 130% at 100% 100%,rgba(255,13,46,.22),transparent 55%)}
+.ic-ascenso .ic-strip{background:linear-gradient(180deg,#ff5a68,#9e0019)}
+
+/* 3 · HIELO ETERNO (PRO) — cristales fríos */
+.ic-hielo{background:linear-gradient(150deg,#123047 0%,#050b12 62%)}
+.ic-hielo::before{content:'';position:absolute;inset:0;background:radial-gradient(70% 120% at 88% 12%,rgba(76,201,240,.32),transparent 55%),repeating-linear-gradient(65deg,rgba(76,201,240,.10) 0 1px,transparent 1px 12px),repeating-linear-gradient(-65deg,rgba(76,201,240,.07) 0 1px,transparent 1px 16px)}
+.ic-hielo .ic-strip{background:linear-gradient(180deg,#bdeeff,#2b7ea8)}
+
+/* 4 · ORO MAESTRO (PRO) — brillo de campeonato */
+.ic-oro{background:linear-gradient(140deg,#2c2206 0%,#0d0a03 58%)}
+.ic-oro::before{content:'';position:absolute;inset:0;background:radial-gradient(60% 130% at 18% 0%,rgba(245,192,68,.30),transparent 58%),repeating-linear-gradient(100deg,rgba(245,192,68,.05) 0 2px,transparent 2px 9px)}
+.ic-oro .ic-strip{background:linear-gradient(180deg,#ffe9a8,#8a6a1a)}
+
+/* 5 · NEÓN VERDE (PRO) — rejilla de server room */
+.ic-neon{background:linear-gradient(160deg,#06110c 0%,#050807 60%)}
+.ic-neon::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(62,230,160,.13) 0 1px,transparent 1px 15px),repeating-linear-gradient(90deg,rgba(62,230,160,.13) 0 1px,transparent 1px 15px),radial-gradient(75% 110% at 85% 85%,rgba(62,230,160,.16),transparent 60%)}
+.ic-neon .ic-strip{background:linear-gradient(180deg,#8affd4,#0f7a4e)}
+
+/* 6 · GLITCH (CREATOR) — señal interferida */
+.ic-glitch{background:linear-gradient(150deg,#170b26 0%,#08050d 60%)}
+.ic-glitch::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 12%,rgba(180,76,255,.28) 12%,rgba(180,76,255,.28) 14%,transparent 14%,transparent 34%,rgba(76,201,240,.24) 34%,rgba(76,201,240,.24) 35%,transparent 35%,transparent 68%,rgba(180,76,255,.18) 68%,rgba(180,76,255,.18) 72%,transparent 72%),repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 2px,transparent 2px 5px)}
+.ic-glitch .ic-strip{background:linear-gradient(180deg,#d9b3ff,#5a1f96)}
+
+/* 7 · INFERNO (CREATOR) — brasas y fuego */
+.ic-inferno{background:radial-gradient(85% 115% at 50% 115%,#ff4d00 0%,#8a0e18 46%,#150409 82%)}
+.ic-inferno::before{content:'';position:absolute;inset:0;background:radial-gradient(3px 3px at 22% 38%,rgba(255,138,61,.9),transparent 60%),radial-gradient(2px 2px at 38% 62%,rgba(255,196,110,.8),transparent 60%),radial-gradient(2.5px 2.5px at 58% 30%,rgba(255,110,40,.75),transparent 60%),radial-gradient(2px 2px at 72% 55%,rgba(255,170,80,.8),transparent 60%),radial-gradient(3px 3px at 84% 26%,rgba(255,138,61,.7),transparent 60%),radial-gradient(2px 2px at 12% 70%,rgba(255,196,110,.65),transparent 60%)}
+.ic-inferno .ic-strip{background:linear-gradient(180deg,#ffb35c,#8a0e18)}
+
+/* 8 · CORAZÓN VANTS (CREATOR) — meta a cuadros */
+.ic-corazon{background:linear-gradient(150deg,#141518 0%,#0a0a0c 62%)}
+.ic-corazon::before{content:'';position:absolute;left:0;right:0;height:16px;top:0;background:repeating-conic-gradient(#dfe3e8 0 25%,#15161a 0 50%) 0 0/16px 16px;opacity:.9}
+.ic-corazon .ic-checkbot{position:absolute;left:0;right:0;height:16px;bottom:0;background:repeating-conic-gradient(#dfe3e8 0 25%,#15161a 0 50%) 0 0/16px 16px;opacity:.9;z-index:2}
+.ic-corazon .ic-strip{display:none}
+
+/* ============ MARCOS DE AVATAR (diseños) ============ */
+.aframe{position:relative;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;flex:none}
+.aframe::before{content:'';position:absolute;inset:0;border-radius:50%}
+.aframe>span{position:relative;z-index:2;width:68px;height:68px;border-radius:50%;background:#15161c;border:1px solid var(--line);display:grid;place-items:center;font:800 17px var(--disp);color:var(--muted)}
+.aframe .fr-art{position:absolute;inset:-6px;z-index:3;pointer-events:none}
+.aframe .fr-art svg{width:100%;height:100%}
+.if-ninguno::before{border:2px dashed #3a3a44;background:none;box-shadow:none}
+.if-arco::before{background:conic-gradient(from 200deg,#ff0d2e,#7a0716 28%,#8d949e 45%,#ff5a68 62%,#23262e 82%,#ff0d2e);box-shadow:0 0 18px rgba(255,13,46,.4)}
+.if-oro::before{background:conic-gradient(#ffe9a8,#c89b2c 25%,#f5c044 50%,#8a6a1a 75%,#ffe9a8);box-shadow:0 0 16px rgba(245,192,68,.35);animation:oroSpin 7s linear infinite}
+.if-neon::before{background:conic-gradient(#3EE6A0,#0f7a4e 40%,#3EE6A0 58%,#0f7a4e);animation:neonPulse 2.3s ease-in-out infinite}
+.if-campeon::before{background:conic-gradient(from 10deg,#f8e08e,#b98a1e 30%,#f5c044 55%,#7c5c12 80%,#f8e08e);box-shadow:0 0 20px rgba(245,192,68,.45)}
+@keyframes oroSpin{to{transform:rotate(360deg)}}
+@keyframes neonPulse{0%,100%{box-shadow:0 0 7px rgba(62,230,160,.35)}50%{box-shadow:0 0 24px rgba(62,230,160,.8)}}
+
+/* Anillo del marco aplicado al avatar real de la cuenta (nav) */
+.ava[data-frame="frame-arco"]{border-color:#ff0d2e;filter:drop-shadow(0 0 6px rgba(255,13,46,.75))}
+.ava[data-frame="frame-oro"]{border-color:#f5c044;filter:drop-shadow(0 0 6px rgba(245,192,68,.7))}
+.ava[data-frame="frame-neon"]{border-color:#3EE6A0;filter:drop-shadow(0 0 7px rgba(62,230,160,.85))}
+.ava[data-frame="frame-campeon"]{border-color:#f8e08e;filter:drop-shadow(0 0 7px rgba(248,224,142,.9))}
+
+/* ============ SECCIÓN TIENDA DE IDENTIDAD (index) ============ */
+.shopx-group{margin-top:30px}
+.shopx-title{display:flex;align-items:center;gap:12px;font:800 12px/1 var(--mono);letter-spacing:.22em;color:var(--text);margin:0 0 16px}
+.shopx-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.shopx-title .count{font:700 9px/1 var(--mono);color:var(--dim);letter-spacing:.1em}
+.shopx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
+.sx-tile{position:relative;display:flex;flex-direction:column;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.sx-tile:hover{border-color:var(--line2);transform:translateY(-3px);box-shadow:0 16px 34px rgba(0,0,0,.4)}
+.sx-tile.is-owned{border-color:color-mix(in srgb,var(--grn) 35%,var(--line))}
+.sx-prev{display:grid;place-items:center;background:radial-gradient(80% 100% at 50% 0%,rgba(255,255,255,.03),transparent),var(--bg2);border:1px solid var(--line);border-radius:9px;padding:18px;min-height:150px}
+.sx-prev .aframe{margin:8px 0}
+.sx-names{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sx-names b{font:800 15px/1 var(--disp);letter-spacing:.03em}
+.sx-desc{font:500 11px/1.65 var(--sans);color:var(--muted);margin:0;min-height:36px}
+.sx-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}
+.sx-val{font:700 10px/1 var(--mono);letter-spacing:.08em;color:var(--dim)}
+.sx-tile .sx-actions{display:flex;gap:8px}
+.sx-tile .sx-actions .btn{flex:1;justify-content:center}
+.lock-note{position:absolute;top:22px;right:22px;z-index:7;display:inline-flex;align-items:center;gap:5px;font:700 8.5px/1 var(--mono);letter-spacing:.12em;color:#0a0a0c;background:var(--gold);padding:4px 8px;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+.lock-note svg{width:10px;height:10px}
+.equipada-note{position:absolute;top:22px;right:22px;z-index:7;display:inline-flex;align-items:center;gap:5px;font:700 8.5px/1 var(--mono);letter-spacing:.12em;color:#052b1a;background:var(--grn);padding:4px 8px;clip-path:polygon(5px 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%,0 5px)}
+.equipada-note svg{width:10px;height:10px}
+
+/* ============ FEED · RECIÉN INSCRITOS (index · torneos) ============ */
+.feed-reg{margin-top:30px;border:1px solid var(--line);background:linear-gradient(120deg,rgba(255,13,46,.05),transparent 55%),var(--panel);border-radius:12px;padding:18px 20px}
+.rf-title{display:flex;align-items:center;gap:12px;font:800 11.5px/1.4 var(--mono);letter-spacing:.18em;color:var(--text);margin:0 0 14px;flex-wrap:wrap}
+.rf-title .rf-note{font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--dim);text-transform:none}
+.rf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.rf-card{display:flex;align-items:center;gap:11px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:11px 12px;animation:rfIn .45s ease both}
+@keyframes rfIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rf-tag{flex:none;font:800 10px/1 var(--mono);letter-spacing:.08em;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);background:color-mix(in srgb,var(--accent) 12%,transparent);padding:7px 8px;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px)}
+.rf-info{min-width:0;display:flex;flex-direction:column;gap:3px}
+.rf-info b{font:800 12.5px/1 var(--sans);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rf-info span{font:500 9px/1 var(--mono);letter-spacing:.08em;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rf-time{margin-left:auto;font:700 8.5px/1 var(--mono);letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+.rf-ok{flex:none;color:var(--grn)}
+.rf-ok svg{width:14px;height:14px}
+.rf-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:flex-start;gap:10px;background:var(--bg2);border:1px dashed var(--line2);border-radius:9px;padding:20px}
+.rf-empty b{font:800 12px/1.5 var(--sans);color:var(--text)}
+.rf-empty span{font:500 10.5px/1.7 var(--mono);color:var(--muted)}
+
+/* ============ PÁGINA INVENTARIO ============ */
+.inv-wrap{max-width:1160px;margin:0 auto;padding:34px 24px 70px}
+.inv-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:8px 0 26px}
+.inv-hero h1{font-family:var(--disp);font-size:clamp(30px,5vw,46px);line-height:.95;text-transform:uppercase;margin:10px 0 8px}
+.inv-hero h1 em{font-style:normal;color:var(--accent)}
+.inv-hero .lead{color:var(--muted);font:500 13px/1.7 var(--sans);max-width:60ch}
+.inv-user{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.inv-user .ava{width:44px;height:44px;font-size:13px}
+.inv-user b{display:block;font:800 13px/1.2 var(--sans);letter-spacing:.03em}
+.inv-user span{font:600 9px/1.5 var(--mono);letter-spacing:.14em;color:var(--muted)}
+.inv-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px}
+.inv-tabs button{font:800 10px/1 var(--mono);letter-spacing:.16em;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:11px 16px;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:all .2s}
+.inv-tabs button:hover{color:var(--text);border-color:var(--line2)}
+.inv-tabs button.on{color:#fff;background:var(--accent);border-color:var(--accent)}
+.inv-sec-title{display:flex;align-items:center;gap:12px;font:800 11.5px/1 var(--mono);letter-spacing:.22em;color:var(--text);margin:30px 0 14px}
+.inv-sec-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.slot-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:8px}
+.slot-card{position:relative;display:flex;flex-direction:column;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.slot-card .slot-kind{font:700 9px/1 var(--mono);letter-spacing:.26em;color:var(--dim)}
+.slot-card b.slot-name{font:800 17px/1 var(--disp);letter-spacing:.03em}
+.slot-card .sx-foot{margin:0}
+.slot-card .slot-actions{display:flex;flex-wrap:wrap;gap:8px}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.inv-item{display:flex;flex-direction:column;gap:11px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px;transition:border-color .25s,transform .25s}
+.inv-item:hover{border-color:var(--line2);transform:translateY(-2px)}
+.inv-item .inv-prev{display:grid;place-items:center;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:14px;min-height:120px}
+.inv-item .inv-prev .aframe{margin:6px 0}
+.inv-meta{display:flex;flex-direction:column;gap:9px}
+.inv-meta .row1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.inv-meta .row1 b{font:800 13.5px/1 var(--disp);letter-spacing:.03em}
+.inv-meta .desc{font:500 10.5px/1.6 var(--sans);color:var(--muted);min-height:32px;margin:0}
+.inv-item.is-equipped{border-color:color-mix(in srgb,var(--grn) 45%,var(--line))}
+.inv-item.locked{opacity:.92}
+.inv-item.locked .inv-prev{position:relative;overflow:hidden}
+.inv-item.locked .inv-prev::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.028) 0 10px,transparent 10px 20px),rgba(8,8,10,.45)}
+.inv-item.locked .inv-prev{filter:grayscale(.85)}
+.inv-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(120deg,rgba(255,13,46,.08),transparent 60%),var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 18px;margin:0 0 22px}
+.inv-banner svg{width:16px;height:16px;color:var(--accent);flex:none}
+.inv-banner p{margin:0;font:500 11px/1.7 var(--mono);color:var(--muted);flex:1;min-width:220px}
+.inv-banner b{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font:700 10.5px/1 var(--mono);letter-spacing:.12em;padding:12px 18px;clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);transition:filter .2s;text-decoration:none;border:none;cursor:pointer}
+.btn:hover{filter:brightness(1.13)}
+.btn.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--line2)}
+.btn.btn-ghost:hover{border-color:var(--accent);color:#fff}
+.btn.btn-sm{padding:9px 13px;font-size:9.5px}
+.btn[disabled]{opacity:.55;cursor:default}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:720px){
+  .inv-hero{flex-direction:column;align-items:flex-start}
+  .rf-time{display:none}
+}
