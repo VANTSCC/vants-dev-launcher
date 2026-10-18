@@ -1550,7 +1550,7 @@ window.openAjustesCuenta=function(){
     +'<div id="ajMailOut" style="display:none;margin-top:10px"></div>'
     +'<p class="d-sec">CONTRASEÑA</p>'
     +'<button class="btn btn-ghost" id="ajPass" style="width:100%;justify-content:center"><i data-lucide="key-round"></i>ENVIAR LINK DE RESET</button>'
-    +'<p id="ajPassNota" style="font:500 10px/1.7 var(--mono);color:var(--dim);margin:8px 0 0">'+(esSocial?('Tu cuenta entra con '+proveedor+': la contraseña la gestiona '+proveedor+', no VANTS.'):'Llega a tu correo (revisa Spam si no aparece en 10 minutos).')+'</p>'
+    +'<p id="ajPassNota" style="font:500 10px/1.7 var(--mono);color:var(--dim);margin:8px 0 0">'+(esSocial?('Tu cuenta entra con '+proveedor+': la contraseña la gestiona '+proveedor+', no VANTS.'):'Crea un enlace directo en pantalla para definir tu contraseña nueva (no depende del correo).')+'</p>'
     +'<p class="d-sec">IDENTIDADES CONECTADAS</p>'
     +'<div class="plat-list">'
       +'<div class="plat-row" style="--plc:#c9a227"><span class="plat-ic"><i data-lucide="fingerprint"></i></span><p><b style="color:var(--text)">AUTH0 · SESIÓN ACTUAL</b><br><span class="mono" style="font:500 9px/1.6 var(--mono);color:var(--dim)">'+ident+'</span></p><span class="plat-on">CONECTADO</span></div>'
@@ -1613,15 +1613,39 @@ window.openAjustesCuenta=function(){
     }catch(eM){toast('Error de red al crear el enlace','error');}
     btn.disabled=false;btn.innerHTML=old;if(window.lucide)lucide.createIcons();
   };
-  $('#ajPass').onclick=()=>{
+  $('#ajPass').onclick=async()=>{
     if(!auth.email){toast('Iniciá sesión para resetear la contraseña','info');return;}
     if(esSocial){toast('Tu cuenta entra con '+proveedor+': no tiene contraseña de VANTS que resetear','info');return;}
-    if(!window.AUTH0_CONFIG){toast('Auth0 no disponible en este entorno','error');return;}
-    fetch('https://'+window.AUTH0_CONFIG.domain+'/dbconnections/change_password',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({client_id:window.AUTH0_CONFIG.clientId,email:auth.email,connection:'Username-Password-Authentication'})
-    }).then(r=>{if(r.ok)toast('Link de reset enviado a '+auth.email+' — revisa Spam','info');else toast('No pudimos enviar el link, probá de nuevo','error');})
-      .catch(()=>toast('Error de red al enviar el link','error'));
+    const out=$('#ajMailOut');if(out)out.style.display='none';
+    const btn=$('#ajPass');const old=btn.innerHTML;
+    btn.disabled=true;btn.textContent='CREANDO ENLACE…';
+    try{
+      const t=await window.VantAuth0.getToken();
+      const r=await fetchWorker('/api/account/password-reset',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(t||'')},body:'{}'});
+      const j=await r.json().catch(()=>null);
+      if(j&&j.ok&&j.ticket){
+        if(out){
+          out.style.display='block';
+          out.innerHTML='<div style="border:1px solid var(--line2,#303039);border-radius:8px;padding:12px;background:#0d0d10">'
+            +'<p style="font:700 10px/1.6 var(--mono);color:var(--grn,#3EE6A0);margin:0 0 6px">✓ ENLACE DE RESET LISTO'+(j.email?(' · '+j.email):'')+'</p>'
+            +'<p style="font:500 10px/1.7 var(--mono);color:var(--mut);margin:0 0 10px">Definí una contraseña nueva acá mismo. Vence en 3 días y solo se creó para TU cuenta.</p>'
+            +'<a class="btn btn-cut btn-sm" href="'+j.ticket+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none"><i data-lucide="key-round"></i>DEFINIR CONTRASEÑA NUEVA</a></div>';
+          if(window.lucide)lucide.createIcons();
+        }
+        toast('Enlace de reset de Auth0 creado','ok');
+      }else{
+        /* Fallback: flujo clásico por correo (si el servidor aún no tiene la app M2M). */
+        if(!window.AUTH0_CONFIG){toast('Auth0 no disponible en este entorno','error');}
+        else{
+          try{
+            const r2=await fetch('https://'+window.AUTH0_CONFIG.domain+'/dbconnections/change_password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:window.AUTH0_CONFIG.clientId,email:auth.email,connection:'Username-Password-Authentication'})});
+            if(r2.ok)toast('Link de reset enviado a '+auth.email+' — revisa Spam','info');
+            else toast('No se pudo crear el enlace'+(j&&j.detalle?(' ('+j.detalle+')'):'')+' — probamos por correo','error');
+          }catch(eF){toast('Error de red al enviar el link','error');}
+        }
+      }
+    }catch(eP){toast('Error de red al crear el enlace','error');}
+    btn.disabled=false;btn.innerHTML=old;if(window.lucide)lucide.createIcons();
   };
   $('#ajLogout').onclick=()=>{
     if(window.vantsLogout)window.vantsLogout();

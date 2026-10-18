@@ -751,6 +751,79 @@ export default {
       }
     }
 
+    // --- 7b2c) Cuenta: reset de contraseña vía TICKET de Auth0 (Management API).
+    // Igual que la verificación de email: el enlace se crea en el servidor y se
+    // devuelve en pantalla, así el jugador no depende de que el correo de Auth0
+    // llegue (Spam/proveedores). SEGURIDAD: exige el JWT de la propia sesión —
+    // solo puedes pedir el ticket de TU usuario; nadie genera resets para la
+    // cuenta de otro. Requiere scopes M2M: create:user_tickets + read:users.
+    if (url.pathname === '/api/account/password-reset') {
+      if (method !== 'POST') {
+        return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      }
+      const originP = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(originP)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403);
+      }
+      const aP = rateLimit(rlAccount, ip, LIMIT_ACCOUNT);
+      if (!aP.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(aP.retry) });
+      }
+      const authzP = request.headers.get('authorization') || '';
+      const tokenP = authzP.replace(/^Bearer\s+/i, '').trim();
+      if (!tokenP) {
+        return json({ ok: false, error: 'sin_sesion' }, 401);
+      }
+      let infoP = null;
+      try {
+        const uiP = await fetch('https://' + AUTH0_TENANT + '/userinfo', {
+          headers: { Authorization: 'Bearer ' + tokenP },
+        });
+        if (uiP.ok) infoP = await uiP.json();
+      } catch (eUIP) { infoP = null; }
+      if (!infoP || !infoP.sub) {
+        return json({ ok: false, error: 'token_invalido' }, 401);
+      }
+      const mIdP = (env && env.AUTH0_MGMT_CLIENT_ID) || '';
+      const mSecP = (env && env.AUTH0_MGMT_CLIENT_SECRET) || '';
+      if (!mIdP || !mSecP) {
+        return json({ ok: false, error: 'mgmt_no_config' }, 503);
+      }
+      try {
+        const mtP = await fetch('https://' + AUTH0_TENANT + '/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grant_type: 'client_credentials',
+            client_id: mIdP,
+            client_secret: mSecP,
+            audience: 'https://' + AUTH0_TENANT + '/api/v2/',
+          }),
+        });
+        if (!mtP.ok) {
+          return json({ ok: false, error: 'mgmt_token' }, 502);
+        }
+        const mtjP = await mtP.json();
+        const mgmtHP = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mtjP.access_token };
+        const tkP = await fetch('https://' + AUTH0_TENANT + '/api/v2/tickets/password-change', {
+          method: 'POST',
+          headers: mgmtHP,
+          body: JSON.stringify({
+            user_id: infoP.sub,
+            ttl_sec: 259200,
+            resultUrl: 'https://vants.vants.workers.dev/',
+          }),
+        });
+        const tjP = await tkP.json().catch(() => null);
+        if (!tkP.ok || !tjP || !tjP.ticket) {
+          return json({ ok: false, error: 'ticket', detalle: String((tjP && (tjP.message || tjP.error_description || tjP.error)) || ('HTTP ' + tkP.status)).slice(0, 180) }, 502);
+        }
+        return json({ ok: true, email: infoP.email || '', ticket: tjP.ticket });
+      } catch (errP) {
+        return json({ ok: false, error: 'auth0_inalcanzable' }, 502);
+      }
+    }
+
     // --- 7b3) CLIPS DESTACADOS: vitrina pública de los clips de los jugadores.
     // GET (público): manifest con los clips publicados. POST (con sesión JWT):
     // multipart {video, thumb, titulo, juego, nick, username, dur, ext} → crea
