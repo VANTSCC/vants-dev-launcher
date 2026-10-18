@@ -241,8 +241,11 @@
     var linea = '<p class="d-sec">RANGO VANTS RANKED</p>';
     var xpExtra = xpFaceitHTML(p.xp);
     var sps = (ME.extra && ME.extra.sps) || null;
-    var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
-      : (sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2 ? parseFloat(sps.rank) : null);
+    /* mismo motor que la ficha pública: ratingDe aplica el boost del owner
+       para que el rango del editor coincida SIEMPRE con el perfil de jugador */
+    var raw = null;
+    try { raw = (typeof ratingDe === 'function') ? ratingDe(p) : ((typeof p.rating === 'number' && p.rating > 0) ? p.rating : null); } catch (eRl) { raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating : null; }
+    if (raw == null && sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2) raw = parseFloat(sps.rank);
     var mmr = (sps && sps.mmr != null) ? sps.mmr : null;
     var wl = (sps && sps.wins != null) ? (sps.wins + 'V · ' + (sps.losses || 0) + 'D · ') : '';
     var sin = linea + '<div class="pf-rank" style="--rc:#5C5C66;opacity:.85">' + rankSVG('fundicion', 64) +
@@ -443,10 +446,11 @@
     window.VANTS_BANNER = bannerSel;
     window.VANTS_BANNER_FOTO = bannerFoto;
     injectBannerCSS();
-    /* rango real con el MISMO motor del demo (RANKS/rankFor/subFor) */
+    /* rango real con el MISMO motor del demo (RANKS/rankFor/subFor) + boost owner */
     var sps = (ME.extra && ME.extra.sps) || null;
-    var raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating
-      : (sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2 ? parseFloat(sps.rank) : null);
+    var raw = null;
+    try { raw = (typeof ratingDe === 'function') ? ratingDe(p) : ((typeof p.rating === 'number' && p.rating > 0) ? p.rating : null); } catch (eRl2) { raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating : null; }
+    if (raw == null && sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2) raw = parseFloat(sps.rank);
     var rk = 'fundicion', rc = RANKS.fundicion;
     try {
       if (raw != null && typeof RANKS !== 'undefined') rc = RANKS[rankFor(raw)];
@@ -482,7 +486,7 @@
 
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
     var bs = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
-    return '<div class="d-head"><span class="kicker">MI PERFIL · CUENTA REAL VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
+    return '<div class="d-head"><span class="kicker">EDITAR PERFIL · CUENTA REAL VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
       '<div class="d-body" style="--rc:' + rc.c1 + '">' +
       pfBannerHTML(bannerSel, raw) +
       '<div class="pf-head">' +
@@ -952,7 +956,14 @@
       else renderCrearPerfil(String((user && (user.name || user.email)) || '').split('@')[0]);
     })();
   };
-  if (accBtn) accBtn.addEventListener('click', function () { window.vantsAbrirMiPerfil(); });
+  if (accBtn) accBtn.addEventListener('click', function () {
+    /* UN SOLO PERFIL: el chip de la cuenta abre la ficha de jugador
+       (con la sección TU CUENTA → editar banner/datos y ajustes). */
+    if (user && ME && ME.player && window.openPlayerProfile) {
+      try { window.openPlayerProfile(ME.player); return; } catch (ePf) {}
+    }
+    window.vantsAbrirMiPerfil();
+  });
 
   try { if (typeof linksCargar === 'function') { await linksCargar(); } } catch (eL0) {}
   revisarOwnerDiscord();

@@ -740,7 +740,7 @@ async function abrirDestacar(rec){
       btn.disabled=false;btn.style.opacity='';
       msg.style.display='';
       var er=(r&&r.error)||'error';
-      msg.innerHTML='No se pudo publicar: <b style="color:var(--accent)">'+esc(er==='clip_demasiado_grande'?'el clip supera '+MAX_FEAT_MB+' MB':(er==='sin_sesion'||er==='token_invalido'?'tu sesión expiró, entra de nuevo':(er==='gh_no_config'?'la vitrina se está configurando, prueba más tarde':er)))+'</b>';
+      msg.innerHTML='No se pudo publicar: <b style="color:var(--accent)">'+esc(er==='clip_demasiado_grande'?'el clip supera '+MAX_FEAT_MB+' MB':(er==='sin_sesion'||er==='token_invalido'?'tu sesión expiró, entra de nuevo':(er==='gh_no_config'?'la vitrina se está configurando, prueba más tarde':er)))+'</b>'+(r&&r.detalle?'<span style="display:block;font:500 9.5px/1.6 var(--mono);color:#9a9aa6;margin-top:6px">Motivo: '+esc(String(r.detalle))+'</span>':'');
     }
   });
 }

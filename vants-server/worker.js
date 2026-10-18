@@ -272,15 +272,36 @@ async function ghHeaders(token) {
   if (token) h.Authorization = 'Bearer ' + token;
   return h;
 }
+/* Extrae un motivo legible de una respuesta de error de GitHub (para el
+   detalle que se muestra en la UI cuando falla publicar/quitar). */
+async function ghDetalle(r) {
+  let m = '';
+  try {
+    const j = await r.json();
+    m = String(j.message || '');
+    if (Array.isArray(j.errors) && j.errors.length) m += ' · ' + String(JSON.stringify(j.errors[0])).slice(0, 90);
+  } catch (e) { /* sin cuerpo JSON */ }
+  return ('GitHub HTTP ' + r.status + (m ? ' · ' + m : '')).slice(0, 170);
+}
 async function leerManifest(token) {
-  const r = await fetch(GH_API + '/contents/manifest.json', { headers: await ghHeaders(token), signal: AbortSignal.timeout(9000) });
-  if (r.status === 404) return { sha: null, clips: [] };
-  if (!r.ok) throw new Error('manifest ' + r.status);
-  const j = await r.json();
-  let clips = [];
-  try { clips = JSON.parse(b64ToUtf8(j.content || '')); } catch (e) { clips = []; }
-  if (!Array.isArray(clips)) clips = [];
-  return { sha: j.sha || null, clips };
+  /* Lectura robusta: si el token está vencido/revocado (401) o sin acceso
+     (403), reintenta ANÓNIMO — el repo es público y la vitrina no puede
+     quedar ciega por un secret vencido. */
+  const intentos = token ? [token, ''] : [''];
+  let last = null;
+  for (const t of intentos) {
+    const r = await fetch(GH_API + '/contents/manifest.json', { headers: await ghHeaders(t), signal: AbortSignal.timeout(9000) });
+    if (r.status === 404) return { sha: null, clips: [] };
+    if (r.ok) {
+      const j = await r.json();
+      let clips = [];
+      try { clips = JSON.parse(b64ToUtf8(j.content || '')); } catch (e) { clips = []; }
+      if (!Array.isArray(clips)) clips = [];
+      return { sha: j.sha || null, clips };
+    }
+    last = new Error('manifest ' + r.status);
+  }
+  throw last;
 }
 async function guardarManifest(token, sha, clips) {
   const cuerpo = { message: 'destacados: ' + clips.length + ' clips', content: utf8ToB64(JSON.stringify(clips)) };
@@ -855,6 +876,14 @@ export default {
           res0.headers.set('Cache-Control', 'public, max-age=60');
           return res0;
         } catch (eF) {
+          /* si la lectura falla (p.ej. secret vencido) sirve el caché viejo
+             antes que dejar la vitrina ciega */
+          if (featCache.body) {
+            const cf = json(featCache.body, 200);
+            cf.headers.set('Access-Control-Allow-Origin', origin || '*');
+            cf.headers.set('Cache-Control', 'public, max-age=60');
+            return cf;
+          }
           return json({ ok: false, error: 'vitrina_no_disponible' }, 502);
         }
       }
@@ -907,7 +936,7 @@ export default {
             body: JSON.stringify({ tag_name: tag, name: titulo.slice(0, 60), body: 'Destacado por ' + nick + ' en la arena VANTS.', draft: true, prerelease: true }),
             signal: AbortSignal.timeout(12000),
           });
-          if (!rRel.ok) return json({ ok: false, error: 'release' }, 502);
+          if (!rRel.ok) return json({ ok: false, error: 'release', detalle: await ghDetalle(rRel) }, 502);
           const rel = await rRel.json();
           // 2) subir el VÍDEO como asset binario (octet-stream)
           const vBuf = await video.arrayBuffer();
@@ -917,7 +946,7 @@ export default {
           });
           if (!rVid.ok) {
             try { await fetch(GH_API + '/releases/' + rel.id, { method: 'DELETE', headers: await ghHeaders(ghTok) }); } catch (e) {}
-            return json({ ok: false, error: 'subida_video' }, 502);
+            return json({ ok: false, error: 'subida_video', detalle: await ghDetalle(rVid) }, 502);
           }
           const vidJ = await rVid.json();
           // 3) subir la MINIATURA como asset
@@ -933,7 +962,7 @@ export default {
           });
           if (!rPub.ok) {
             try { await fetch(GH_API + '/releases/' + rel.id, { method: 'DELETE', headers: await ghHeaders(ghTok) }); } catch (e) {}
-            return json({ ok: false, error: 'publicar' }, 502);
+            return json({ ok: false, error: 'publicar', detalle: await ghDetalle(rPub) }, 502);
           }
           const pubJ = await rPub.json();
           const assetReal = (n) => {
