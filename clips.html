@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VANTS CLIPS — Momentos destacados de VALORANT</title>
+<meta name="description" content="VANTS CLIPS: tu galería de momentos destacados de VALORANT estilo Cortex. Conecta la carpeta de clips de Razer Cortex, sube tus highlights y míralos en un solo lugar. Todo corre en tu navegador.">
+<link rel="canonical" href="https://feispla.github.io/Vants/clips.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0E;--bg2:#0D0D10;--panel:#141418;--panel2:#1A1A20;--line:#232329;--line2:#303039;
+--text:#EDEDE7;--muted:#93939D;--dim:#5C5C66;--accent:#FF0D2E;--gold:#F5C044;--grn:#44D62C;
+--mono:'JetBrains Mono',monospace;--sans:'Archivo',sans-serif;--disp:'Archivo Black',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:var(--accent);color:#160608}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{var(--bg);background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--line2);border:2px solid var(--bg)}::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+.mono{font-family:var(--mono)}
+/* HEADER */
+header{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,11,14,.94);backdrop-filter:blur(10px);z-index:20}
+.hnav{max-width:1280px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:30px;height:30px;filter:drop-shadow(0 0 10px rgba(255,13,46,.35))}
+.wordmark{display:flex;flex-direction:column;line-height:1;font-family:var(--disp);font-size:17px}
+.wordmark em{font-style:normal;color:var(--accent)}
+.wordmark small{font:700 7px/1 var(--mono);letter-spacing:.5em;color:var(--dim);margin-top:3px}
+.htabs{display:flex;gap:2px;margin-left:8px;flex-wrap:wrap}
+.htab{padding:10px 14px;font:700 10px/1 var(--mono);letter-spacing:.14em;color:var(--muted);border-bottom:2px solid transparent;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.htab:hover{color:var(--text);background:var(--panel)}
+.htab.on{color:var(--grn);border-bottom-color:var(--grn)}
+.htab svg{width:13px;height:13px}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:800 10.5px/1 var(--mono);letter-spacing:.14em;padding:11px 16px;transition:.18s;clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+.btn svg{width:14px;height:14px}
+.btn-ghost{border:1px solid var(--line2);color:var(--text);background:var(--panel)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-grn{background:var(--grn);color:#07130a}
+.btn-grn:hover{filter:brightness(1.1)}
+.btn-red{background:var(--accent);color:#fff}
+.btn-red:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+/* LAYOUT */
+.app{max-width:1280px;margin:0 auto;width:100%;padding:26px 24px 40px;display:grid;grid-template-columns:250px 1fr;gap:26px;flex:1}
+.side{display:flex;flex-direction:column;gap:8px;align-self:start;position:sticky;top:84px}
+.s-item{display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid transparent;border-left:3px solid transparent;color:var(--muted);font:700 10.5px/1 var(--mono);letter-spacing:.12em;transition:.15s;cursor:pointer;background:none;text-align:left}
+.s-item svg{width:16px;height:16px;flex:none}
+.s-item:hover{color:var(--text);background:var(--panel)}
+.s-item.on{color:var(--grn);border-color:var(--line);border-left-color:var(--grn);background:var(--panel)}
+.s-item b{margin-left:auto;font:700 10px/1 var(--mono);color:var(--dim)}
+.s-card{margin-top:14px;border:1px solid var(--line);background:var(--panel);padding:16px}
+.s-card h4{font:800 10px/1 var(--mono);letter-spacing:.2em;color:var(--dim);margin-bottom:10px}
+.s-card p{font:500 10.5px/1.8 var(--mono);color:var(--muted)}
+.s-card p+p{margin-top:8px}
+.s-card b{color:var(--text)}
+.bar{height:6px;background:var(--bg2);border:1px solid var(--line);margin-top:10px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--grn),#8ef07a);width:0%}
+/* MAIN */
+.m-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.m-head h1{font-family:var(--disp);font-size:clamp(18px,2.6vw,26px);letter-spacing:.01em}
+.m-head h1 em{font-style:normal;color:var(--grn)}
+.m-actions{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.link-btn{font:700 10px/1 var(--mono);letter-spacing:.16em;color:var(--muted);padding:8px 4px;border-bottom:1px solid transparent}
+.link-btn:hover{color:var(--grn);border-color:var(--grn)}
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:16px}
+.clip-card{background:var(--panel);border:1px solid var(--line);clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);transition:.2s;cursor:pointer;overflow:hidden}
+.clip-card:hover{border-color:var(--grn);transform:translateY(-3px);box-shadow:0 16px 36px rgba(68,214,44,.12)}
+.thumb{position:relative;aspect-ratio:16/9;background:#000;display:block;width:100%}
+.thumb video{width:100%;height:100%;object-fit:cover;display:block;background:#000}
+.thumb .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--dim);font:700 9px/1.6 var(--mono);letter-spacing:.14em;text-align:center;padding:10px}
+.thumb .ph svg{width:26px;height:26px}
+.cbadge{position:absolute;top:8px;left:8px;font:800 8px/1 var(--mono);letter-spacing:.12em;color:#07130a;background:var(--grn);padding:4px 7px;z-index:2}
+.cbadge.ref{color:var(--gold);background:rgba(245,192,68,.14);border:1px solid rgba(245,192,68,.4)}
+.cdur{position:absolute;right:8px;bottom:8px;font:700 9.5px/1 var(--mono);letter-spacing:.06em;color:#fff;background:rgba(5,5,7,.78);padding:4px 6px;z-index:2}
+.cinfo{padding:12px 13px 13px}
+.cname{font:700 12px/1.4 var(--sans);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap;font:600 8.5px/1 var(--mono);letter-spacing:.06em;color:var(--muted)}
+.crow .vg{color:#ff4655;border:1px solid rgba(255,70,85,.45);padding:3px 6px;font-weight:800}
+.crow .kl{color:var(--grn);font-weight:800}
+/* EMPTY */
+.empty{grid-column:1/-1;border:1px dashed var(--line2);padding:34px 22px;text-align:center}
+.empty h3{font-family:var(--disp);font-size:17px;margin-bottom:10px}
+.empty p{font:500 11px/1.9 var(--mono);color:var(--muted);max-width:560px;margin:0 auto}
+.empty .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:22px 0;text-align:left}
+.empty .st{border:1px solid var(--line);background:var(--panel);padding:14px}
+.empty .st b{display:block;font:800 10px/1 var(--mono);letter-spacing:.16em;color:var(--grn);margin-bottom:8px}
+.empty .st span{font:500 10.5px/1.7 var(--mono);color:var(--muted)}
+/* TOASTS */
+.toasts{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line2);border-left:3px solid var(--grn);padding:11px 16px;font:600 11px/1.4 var(--mono);color:var(--text);opacity:0;transform:translateY(8px);transition:.25s;max-width:90vw}
+.toast.show{opacity:1;transform:none}
+/* MODAL */
+.modal{position:fixed;inset:0;z-index:50;display:none}
+.modal.show{display:block}
+.modal-bg{position:absolute;inset:0;background:rgba(4,4,6,.82);backdrop-filter:blur(4px)}
+.modal-card{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(880px,94vw);max-height:92vh;overflow:auto;background:var(--panel);border:1px solid var(--line2);padding:20px}
+.mc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.mc-head h3{font-family:var(--disp);font-size:17px}
+.d-x{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line2);color:var(--muted);transition:.15s}
+.d-x:hover{color:var(--accent);border-color:var(--accent)}
+.d-x svg{width:15px;height:15px}
+.player video{width:100%;max-height:56vh;background:#000;display:block}
+.mc-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.mc-row label{font:700 9px/1 var(--mono);letter-spacing:.18em;color:var(--dim)}
+.mc-row input{background:var(--bg2);border:1px solid var(--line2);color:var(--text);padding:10px 12px;font:600 12px var(--mono);width:110px;outline:none}
+.mc-row input:focus{border-color:var(--grn)}
+.mc-meta{font:500 10px/1.8 var(--mono);color:var(--muted);margin-top:12px}
+/* FOOTER */
+footer{border-top:1px solid var(--line)}
+.f-in{max-width:1280px;margin:0 auto;padding:18px 24px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font:500 9.5px/1.8 var(--mono);color:var(--dim)}
+.f-in a{color:var(--muted);border-bottom:1px solid var(--line)}
+.f-in a:hover{color:var(--text);border-color:var(--accent)}
+@media(max-width:920px){.app{grid-template-columns:1fr;gap:18px}.side{position:static;flex-direction:row;flex-wrap:wrap}.s-card{width:100%}.m-head h1{width:100%}.m-actions{margin-left:0}}
+</style>
+</head>
+</content>
+<body>
+<header>
+  <div class="hnav">
+    <a class="brand" href="index.html" aria-label="VANTS GAMES — inicio">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M12 2H52L62 12V52L52 62H12L2 52V12Z" fill="#191c22" stroke="#ff0d2e" stroke-width="3"/><path d="M9 14H23L34.5 44.5L32 52Z" fill="#e8ecef"/><path d="M55 14H41L32.4 37L42.2 37Z" fill="#ff0d2e"/></svg>
+      <span class="wordmark"><b>VANT<em>S</em> CLIPS</b><small>GAME CLIPS</small></span>
+    </a>
+    <nav class="htabs">
+      <a class="htab" href="index.html"><i data-lucide="home"></i>INICIO</a>
+      <a class="htab" href="index.html#ranking"><i data-lucide="trophy"></i>RANKING</a>
+      <a class="htab" href="index.html#torneos"><i data-lucide="swords"></i>TORNEOS</a>
+      <a class="htab" href="index.html#rangos"><i data-lucide="medal"></i>RANGOS</a>
+      <span class="htab on"><i data-lucide="clapperboard"></i>CLIPS DE JUEGO</span>
+    </nav>
+    <div class="hright">
+      <a class="btn btn-ghost" href="index.html"><i data-lucide="arrow-left"></i>VOLVER A LA ARENA</a>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="side">
+    <button class="s-item on" id="sMis"><i data-lucide="folder-video"></i>MIS CLIPS DE JUEGO<b id="sCount">0</b></button>
+    <button class="s-item" id="sAjustes"><i data-lucide="settings"></i>AJUSTES</button>
+    <div class="s-card">
+      <h4>ESTADO</h4>
+      <p id="stFolder">Carpeta Cortex: <b>no conectada</b></p>
+      <p id="stStore">Almacenamiento local: <b>—</b></p>
+      <div class="bar"><i id="stBar"></i></div>
+    </div>
+    <div class="s-card">
+      <h4>PRIVACIDAD</h4>
+      <p>Tu galería corre <b>100% en tu navegador</b>. Los videos nunca suben a ningún servidor: viven en el almacenamiento local de tu navegador (IndexedDB).</p>
+      <p>La sincronización en la nube y la vitrina pública llegan con <b>VANTS PRO</b>.</p>
+    </div>
+  </aside>
+
+  <main>
+    <div class="m-head">
+      <h1>CLIPS DE JUEGO <em>RECIENTES</em></h1>
+      <div class="m-actions">
+        <button class="link-btn" id="verTodo" type="button">VER TODO</button>
+        <button class="btn btn-ghost" id="btnCortex" type="button"><i data-lucide="folder-open"></i>CONECTAR CARPETA DE CORTEX</button>
+        <button class="btn btn-grn" id="btnSubir" type="button"><i data-lucide="upload"></i>SUBIR CLIP</button>
+        <input type="file" id="fileIn" accept="video/*,.mkv" multiple hidden>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<footer>
+  <div class="f-in">
+    <span>© 2026 VANTS GAMES — CLIPS · Momentos destacados de VALORANT</span>
+    <span>No afiliado a Riot Games ni a Razer Inc. «Razer Cortex» es una marca de Razer Inc.; la app lee tus clips locales solo con tu permiso.</span>
+    <span><a href="politica-de-privacidad.html">Privacidad</a> · <a href="terminos-de-servicio.html">Términos</a> · <a href="preguntas-frecuentes.html">Preguntas frecuentes</a></span>
+  </div>
+</footer>
+
+<div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
+<div class="toasts" id="toasts"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+function icons(){if(window.lucide)lucide.createIcons()}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+var SVG_OK='<svg viewBox="0 0 24 24" fill="none" stroke="#44D62C" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+function toast(msg){
+  var el=document.createElement('div');el.className='toast';
+  el.innerHTML=SVG_OK+'<span>'+esc(msg)+'</span>';
+  $('#toasts').appendChild(el);requestAnimationFrame(function(){el.classList.add('show')});
+  setTimeout(function(){el.classList.remove('show');setTimeout(function(){el.remove()},300)},3200);
+}
+
+/* ============ IndexedDB ============ */
+var DB='vants-clips',STORE='clips',META='meta',db=null;
+var VID_EXT=['mp4','webm','mkv','mov','avi','m4v','ogv'];
+function idbOpen(){return new Promise(function(res,rej){
+  var r=indexedDB.open(DB,1);
+  r.onupgradeneeded=function(e){var d=e.target.result;
+    if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id'});
+    if(!d.objectStoreNames.contains(META))d.createObjectStore(META)};
+  r.onsuccess=function(e){db=e.target.result;res(db)};
+  r.onerror=function(){rej(r.error)};
+})}
+function idbAll(){return new Promise(function(res,rej){
+  var q=db.transaction(STORE,'readonly').objectStore(STORE).getAll();
+  q.onsuccess=function(){res(q.result||[])};q.onerror=function(){rej(q.error)}})}
+function idbPut(rec){return new Promise(function(res,rej){
+  var q=db.transaction(STORE,'readwrite').objectStore(STORE).put(rec);
+  q.onsuccess=function(){res()};q.onerror=function(){rej(q.error)}})}
+function idbDel(id){return new Promise(function(res,rej){
+  var q=db.transaction(STORE,'readwrite').objectStore(STORE)['delete'](id);
+  q.onsuccess=function(){res()};q.onerror=function(){rej(q.error)}})}
+function idbMetaGet(k){return new Promise(function(res,rej){
+  var q=db.transaction(META,'readonly').objectStore(META).get(k);
+  q.onsuccess=function(){res(q.result||null)};q.onerror=function(){rej(q.error)}})}
+function idbMetaSet(k,v){return new Promise(function(res,rej){
+  var q=db.transaction(META,'readwrite').objectStore(META).put(v,k);
+  q.onsuccess=function(){res()};q.onerror=function(){rej(q.error)}})}
+
+/* ============ helpers de video ============ */
+function esVideo(name){var m=/\.([a-z0-9]+)$/i.exec(name||'');return m&&VID_EXT.indexOf(m[1].toLowerCase())>=0}
+function fmtDur(s){if(!isFinite(s)||s<0)return'';var m=Math.floor(s/60),x=Math.floor(s%60);return(m<10?'0':'')+m+':'+(x<10?'0':'')+x}
+function fmtMB(b){return(b/1048576).toFixed(1)+' MB'}
+function fmtFecha(ts){try{return new Date(ts).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return''}}
+
+/* ============ galería ============ */
+var urls={},showAll=false,cache=[];
+function urlFor(rec,file){
+  if(urls[rec.id])return urls[rec.id];
+  if(rec.blob){urls[rec.id]=URL.createObjectURL(rec.blob);return urls[rec.id]}
+  if(file){urls[rec.id]=URL.createObjectURL(file);return urls[rec.id]}
+  return null;
+}
+function cardHTML(rec,url){
+  var isRef=!rec.blob;
+  var inner=url
+    ?'<video src="'+url+'#t=0.6" preload="metadata" muted playsinline></video>'
+    :'<span class="ph"><i data-lucide="film"></i>PULSA PARA CARGAR<br>DESDE LA CARPETA</span>';
+  return '<div class="clip-card" data-id="'+esc(rec.id)+'">'
+    +'<div class="thumb"><span class="cbadge'+(isRef?' ref':'')+'">'+(isRef?'REFERENCIA':'CARGADO')+'</span>'
+    +inner+'<span class="cdur" data-dur>··:··</span></div>'
+    +'<div class="cinfo"><div class="cname" title="'+esc(rec.name)+'">'+esc(rec.name)+'</div>'
+    +'<div class="crow"><span class="vg">VALORANT</span>'
+    +(rec.kills?'<span class="kl">'+esc(rec.kills)+'Kill</span>':'')
+    +'<span>'+esc(fmtFecha(rec.ts))+'</span><span>'+esc(fmtMB(rec.size||0))+'</span></div></div></div>';
+}
+var EMPTY='<div class="empty"><h3>TODAVÍA NO HAY CLIPS ACÁ</h3>'
+  +'<p>Tus momentos destacados de VALORANT viven en tu PC — esta app los reúne en una galería estilo Cortex, sin subir nada a ningún servidor.</p>'
+  +'<div class="steps">'
+  +'<div class="st"><b>1 · GRABA EN CORTEX</b><span>Con Razer Cortex (CLIPS DE JUEGO) graba tus highlights: asesinatos múltiples, clutch, aces.</span></div>'
+  +'<div class="st"><b>2 · CONECTA LA CARPETA</b><span>Pulsa «CONECTAR CARPETA DE CORTEX» y elige la carpeta donde Cortex guarda tus clips. Queda conectada para próximas visitas.</span></div>'
+  +'<div class="st"><b>3 · O SUBE DIRECTO</b><span>¿Los tienes en otro lado? «SUBIR CLIP» los guarda en tu navegador (IndexedDB), sin nube.</span></div>'
+  +'</div>'
+  +'<p>Tip: los clips marcados <b style="color:var(--gold)">REFERENCIA</b> se leen directo de tu carpeta; los <b style="color:var(--grn)">CARGADO</b> viven dentro de la app.</p></div>';
+async function render(){
+  var list=cache.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0)});
+  $('#sCount').textContent=String(list.length);
+  var view=showAll?list:list.slice(0,12);
+  for(var i=0;i<view.length;i++){
+    var rec=view[i];
+    if(rec.blob){urlFor(rec);continue}
+    if(!rec.blob&&rec.handle&&!urls[rec.id]){
+      try{
+        var perm=await rec.handle.queryPermission({mode:'read'});
+        if(perm==='granted'){var f=await rec.handle.getFile();urlFor(rec,f)}
+      }catch(e){}
+    }
+  }
+  $('#grid').innerHTML=view.map(function(r){return cardHTML(r,urls[r.id])}).join('')||EMPTY;
+  Array.prototype.forEach.call($('#grid').querySelectorAll('.clip-card'),function(card){
+    card.addEventListener('click',function(){openPlayer(card.getAttribute('data-id'))});
+    var v=card.querySelector('video');
+    if(v){v.addEventListener('loadedmetadata',function(){var d=card.querySelector('[data-dur]');if(d)d.textContent=fmtDur(v.duration)})}
+  });
+  icons();
+  refreshStorage();
+}
+async function reload(){cache=await idbAll();render()}
+
+/* ============ almacenamiento (barra) ============ */
+async function refreshStorage(){
+  if(!navigator.storage||!navigator.storage.estimate)return;
+  try{
+    var e=await navigator.storage.estimate();
+    var pct=e.quota?Math.min(100,(e.usage/e.quota)*100):0;
+    $('#stStore').innerHTML='Almacenamiento local: <b>'+fmtMB(e.usage||0)+' usados</b>';
+    $('#stBar').style.width=Math.max(2,pct).toFixed(1)+'%';
+  }catch(err){}
+}
+
+/* ============ subir clips ============ */
+$('#btnSubir').addEventListener('click',function(){$('#fileIn').click()});
+$('#fileIn').addEventListener('change',async function(e){
+  var files=Array.prototype.slice.call(e.target.files||[]);e.target.value='';
+  var n=0;
+  for(var i=0;i<files.length;i++){
+    var f=files[i];if(!esVideo(f.name)&&!(f.type||'').startsWith('video/'))continue;
+    await idbPut({id:'up:'+f.name+':'+f.size+':'+f.lastModified,name:f.name,mime:f.type||'video/mp4',size:f.size,ts:f.lastModified||Date.now(),blob:f,handle:null,kills:null,src:'up'});
+    n++;
+  }
+  if(n){toast(n==1?'1 clip guardado en tu galería':n+' clips guardados en tu galería');await reload()}
+  else toast('No se encontró ningún video en la selección');
+});
+
+/* ============ carpeta de Cortex ============ */
+var FOLDER_OK='Carpeta Cortex: <b>conectada</b>',FOLDER_NO='Carpeta Cortex: <b>no conectada</b>';
+async function scanDir(dir,depth,added){
+  if(depth>2)return;
+  try{
+    var it=dir.entries();
+    while(true){
+      var n=await it.next();if(n.done)break;
+      var name=n.value[0],h=n.value[1];
+      if(h.kind==='directory'){await scanDir(h,depth+1,added);continue}
+      if(h.kind!=='file'||!esVideo(name))continue;
+      var id='cx:'+name+':'+(h.size||0);
+      var existing=cache.find(function(r){return r.id===id});
+      if(existing){continue}
+      var f=null;
+      try{if(await h.queryPermission({mode:'read'})==='granted')f=await h.getFile()}catch(e){}
+      await idbPut({id:id,name:name,mime:(f&&f.type)||'video/mp4',size:(f&&f.size)||h.size||0,ts:(f&&f.lastModified)||Date.now(),blob:null,handle:h,kills:null,src:'cortex'});
+      added++;
+    }
+  }catch(e){}
+}
+async function connectCortex(silent){
+  if(!window.showDirectoryPicker){
+    if(!silent)toast('Tu navegador no permite abrir carpetas: usa Chrome/Edge de escritorio o «SUBIR CLIP»');
+    return;
+  }
+  try{
+    var dir=await window.showDirectoryPicker({id:'vants-cortex',mode:'read',startIn:'videos'});
+    var added=0;await scanDir(dir,0,{v:0});
+    await idbMetaSet('cortexDir',dir);
+    $('#stFolder').innerHTML=FOLDER_OK;
+    await reload();
+    var cx=cache.filter(function(r){return r.src==='cortex'}).length;
+    toast('Carpeta conectada · '+cx+' clips encontrados en tu galería');
+  }catch(e){
+    if(e&&e.name!=='AbortError'&&!silent)toast('No se pudo conectar la carpeta');
+  }
+}
+$('#btnCortex').addEventListener('click',function(){connectCortex(false)});
+
+/* ============ reproductor ============ */
+function closePlayer(){$('#modal').classList.remove('show');var v=$('#modalCard video');if(v){v.pause();v.removeAttribute('src');v.load()}}
+$('#modalBg').addEventListener('click',closePlayer);
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closePlayer()});
+async function openPlayer(id){
+  var rec=cache.find(function(r){return r.id===id});if(!rec)return;
+  var file=null;
+  if(!rec.blob&&rec.handle){
+    try{if(await rec.handle.queryPermission({mode:'read'})==='granted')file=await rec.handle.getFile()}catch(e){}
+  }
+  var url=urlFor(rec,file);
+  if(!url){toast('Concede acceso a la carpeta de Cortex para reproducir este clip');return}
+  $('#modalCard').innerHTML=
+    '<div class="mc-head"><h3>'+esc(rec.name)+'</h3><button class="d-x" id="plClose" aria-label="Cerrar"><i data-lucide="x"></i></button></div>'
+    +'<div class="player"><video src="'+url+'" controls autoplay playsinline></video></div>'
+    +'<div class="mc-row"><label>KILLS DEL CLIP</label><input id="plKills" type="number" min="1" max="50" value="'+(rec.kills||'')+'" placeholder="ej. 4">'
+      +'<button class="btn btn-grn" id="plSave" type="button"><i data-lucide="save"></i>GUARDAR</button>'
+      +'<button class="btn btn-ghost" id="plDown" type="button"><i data-lucide="download"></i>DESCARGAR</button>'
+      +'<button class="btn btn-red" id="plDel" type="button"><i data-lucide="trash-2"></i>ELIMINAR</button></div>'
+    +'<p class="mc-meta">'+esc(fmtFecha(rec.ts))+' · '+esc(fmtMB(rec.size||0))+' · '+(rec.src==='cortex'?'REFERENCIA de tu carpeta Cortex (no ocupa espacio acá)':'GUARDADO en este navegador')+'</p>';
+  $('#modal').classList.add('show');icons();
+  $('#plClose').addEventListener('click',closePlayer);
+  $('#plSave').addEventListener('click',async function(){
+    var v=parseInt($('#plKills').value,10);
+    rec.kills=isNaN(v)?null:v;await idbPut(rec);await reload();closePlayer();
+    toast(rec.kills?('Marcado como '+rec.kills+'Kill'):'Kills limpiadas');
+  });
+  $('#plDown').addEventListener('click',function(){
+    var a=document.createElement('a');a.href=url;a.download=rec.name;document.body.appendChild(a);a.click();a.remove();
+  });
+  $('#plDel').addEventListener('click',async function(){
+    if(rec.handle&&!rec.blob){await idbDel(rec.id);await reload();closePlayer();toast('Referencia eliminada (el archivo sigue en tu carpeta)');return}
+    await idbDel(rec.id);if(urls[rec.id]){URL.revokeObjectURL(urls[rec.id]);delete urls[rec.id]}
+    await reload();closePlayer();toast('Clip eliminado de la galería');
+  });
+}
+
+/* ============ ver todo / ajustes ============ */
+$('#verTodo').addEventListener('click',function(){
+  showAll=!showAll;this.textContent=showAll?'VER MENOS':'VER TODO';render();
+});
+$('#sMis').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
+$('#sAjustes').addEventListener('click',function(){connectCortex(false)});
+
+/* ============ arranque ============ */
+(async function boot(){
+  await idbOpen();
+  cache=await idbAll();
+  var dir=await idbMetaGet('cortexDir');
+  if(dir){
+    var perm='prompt';
+    try{perm=await dir.queryPermission({mode:'read'})}catch(e){}
+    if(perm==='granted'){
+      $('#stFolder').innerHTML=FOLDER_OK;
+      var added=0;await scanDir(dir,0,added);cache=await idbAll();
+    }else{
+      $('#stFolder').innerHTML='Carpeta Cortex: <b>reconectar permiso</b>';
+      $('#btnCortex').innerHTML='<i data-lucide="refresh-cw"></i>RECONECTAR CARPETA DE CORTEX';
+    }
+  }
+  render();icons();
+})();
+})();
+</script>
+</body>
+</html>

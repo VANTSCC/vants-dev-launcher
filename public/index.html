@@ -54,9 +54,11 @@
       <a href="#tienda">TIENDA</a>
       <a href="#rangos">RANGOS</a>
       <a href="#historia">HISTORIA</a>
+      <a href="clips.html">CLIPS</a>
       <a href="#pro">PRO</a>
     </nav>
     <div class="nav-right">
+      <button class="menu-btn" id="menuBtn" aria-label="Abrir menú de categorías" title="Menú"><i data-lucide="menu"></i><span>MENÚ</span></button>
       <span class="pro-badge" id="proBadge"><i data-lucide="zap"></i>PRO</span>
       <button class="btn btn-ghost btn-sm" id="plansBtn"><i data-lucide="crown"></i>MEMBRESÍAS</button>
       <button class="btn btn-ghost btn-sm" id="arenaLoginBtn" hidden><i data-lucide="log-in"></i>ENTRAR</button>
@@ -466,6 +468,11 @@
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 18H3z"/></svg>HALCYON</span>
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21 21 3M3 12 12 3M12 21l9-9"/></svg>VXRFIBER</span>
     </div>
+    <div class="teams-block reveal">
+      <p class="sp-label">EQUIPOS ASOCIADOS · INSCRIPCIÓN EN VIVO · TEMPORADA 4</p>
+      <div class="teams-grid" id="teamsGrid" aria-live="polite"></div>
+      <p class="teams-note">Cada equipo que se inscribe en un torneo de la S4 aparece acá automáticamente, igual que en el Discord de la arena. Los campeones lucen corona 👑 y la lista se actualiza sola.</p>
+    </div>
     <div class="collab-block reveal">
       <p class="sp-label">COLABORADORES</p>
       <div class="collab-grid">
@@ -498,7 +505,7 @@
         <span class="nav-logo"><svg class="mark" style="width:34px;height:34px"><use href="#vmark"/></svg><span class="wordmark"><b style="font-size:24px">VANT<em>S</em></b><small>GAMES</small></span></span>
         <p>La arena competitiva de VALORANT y Counter-Strike 2: torneos con premio, rangos propios, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</p>
       </div>
-      <div class="f-col"><h5>COMPETIR</h5><a href="#torneos">Torneos abiertos</a><a href="#bracket">Brackets</a><a href="#ranking">Ranking global</a><a href="#rangos">VANTS RANKED</a></div>
+      <div class="f-col"><h5>COMPETIR</h5><a href="#torneos">Torneos abiertos</a><a href="#bracket">Brackets</a><a href="#ranking">Ranking global</a><a href="#rangos">VANTS RANKED</a><a href="clips.html">Clips · Momentos destacados</a></div>
       <div class="f-col"><h5>IDENTIDAD</h5><a href="#jugadores">Sala de jugadores</a><a href="#equipo">Equipo VANTS DE 5</a><a href="#historia">Historia de la marca</a><a href="#pro">Programa de socios</a></div>
       <div class="f-col"><h5>MEMBRESÍA</h5><a href="#pro">VANTS PRO</a><a href="#pro">VANTS CREATOR</a><a href="#torneos">Torneos abiertos</a><a href="#tienda">Tienda oficial × VegaStore</a><a href="#patrocinios">Patrocinios y colaboradores</a></div>
     </div>
@@ -535,12 +542,46 @@
 </div>
 
 <!-- OVERLAYS -->
+<!-- MENÚ CAJÓN · CATEGORÍAS (estilo Razer) -->
+<div class="ov" id="menuOv"></div>
+<aside class="mdrawer" id="menuDrawer" aria-label="Menú de categorías">
+  <div class="md-head">
+    <a href="#inicio" class="nav-logo" data-md-close>
+      <svg class="mark"><use href="#vmark"/></svg>
+      <span class="wordmark"><b>VANT<em>S</em></b><small>GAMES</small></span>
+    </a>
+    <button class="d-x" id="menuClose" aria-label="Cerrar menú"><i data-lucide="x"></i></button>
+  </div>
+  <nav class="md-body">
+    <p class="md-label">COMPETIR</p>
+    <a class="md-row" href="#partidos" data-md-close><i data-lucide="gamepad-2"></i><span class="md-txt">PARTIDOS<small>Agenda en vivo</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="#ranking" data-md-close><i data-lucide="trophy"></i><span class="md-txt">RANKING<small>Top global</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="#torneos" data-md-close><i data-lucide="swords"></i><span class="md-txt">TORNEOS<small>Inscripción abierta S4</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="#rangos" data-md-close><i data-lucide="medal"></i><span class="md-txt">RANGOS<small>VANTS RANKED</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <p class="md-label">COMUNIDAD</p>
+    <a class="md-row" href="#jugadores" data-md-close><i data-lucide="users"></i><span class="md-txt">JUGADORES<small>Sala de jugadores</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="#equipo" data-md-close><i data-lucide="shield"></i><span class="md-txt">EQUIPO<small>VANTS DE 5</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="clips.html" data-md-close><i data-lucide="clapperboard"></i><span class="md-txt">CLIPS<small>Momentos destacados</small></span><span class="md-new">NUEVO</span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <p class="md-label">IDENTIDAD Y TIENDA</p>
+    <a class="md-row" href="inventario.html" data-md-close><i data-lucide="package"></i><span class="md-txt">INVENTARIO<small>Tus tarjetas y marcos</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="#tienda" data-md-close><i data-lucide="shopping-bag"></i><span class="md-txt">TIENDA<small>Oficial × VegaStore</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <a class="md-row" href="#historia" data-md-close><i data-lucide="book-open"></i><span class="md-txt">HISTORIA<small>De la marca</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+    <p class="md-label">MEMBRESÍA</p>
+    <a class="md-row md-row-pro" href="#pro" data-md-close><i data-lucide="crown"></i><span class="md-txt">PRO<small>PRO · CREATOR · SOCIO</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
+  </nav>
+  <div class="md-foot">
+    <a href="preguntas-frecuentes.html" data-md-close>Preguntas frecuentes</a>
+    <a href="terminos-de-servicio.html" data-md-close>Términos</a>
+    <a href="politica-de-privacidad.html" data-md-close>Privacidad</a>
+  </div>
+</aside>
+
 <div class="ov" id="drawerOv"></div>
 <aside class="drawer" id="drawer"></aside>
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="./assets/js/arena.js?v=14"></script>
+<script src="./assets/js/arena.js?v=15"></script>
 <script>
 /* Apartados nuevos: Tienda × VegaStore + Equipo VANTS DE 5 + Patrocinios */
 (function(){

@@ -12,6 +12,10 @@
  *    api.henrikdev.xyz. La clave NUNCA va en el código: se configura como secret
  *    del Worker (HENRIKDEV_API_KEY). Sin clave, responde 503 y la web usa su
  *    agenda verificada de vlr.gg.
+ *  - Endpoint /api/teams (GET): equipos asociados EN VIVO. Lee de vuelta los
+ *    anuncios "🏆 Nueva inscripción" y "👑 Nuevo campeón" que el propio Worker
+ *    publica en el canal de Discord (mismo bot, sin storage adicional). El
+ *    resultado se cachea 60 s para no golpear la API de Discord en cada visita.
  */
 
 const COLORS = {
@@ -65,6 +69,7 @@ const SCANNER_PATHS = [
 const LIMIT_GENERAL = 240;   // peticiones por minuto por IP (navegar gasta ~20)
 const LIMIT_NOTIFY = 8;      // peticiones por minuto por IP a la API de Discord
 const LIMIT_ESPORTS = 30;    // peticiones por minuto por IP a la agenda Valorant
+const LIMIT_TEAMS = 30;      // peticiones por minuto por IP a /api/teams
 const WINDOW_MS = 60_000;    // ventana de 1 minuto
 const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
 
@@ -72,9 +77,14 @@ const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
 const ESPORTS_TTL_MS = 5 * 60_000;
 let esportsCache = { at: 0, body: null, status: 200 };
 
+// Caché de equipos asociados (60 s): evita golpear la API de Discord en cada visita.
+const TEAMS_TTL_MS = 60_000;
+let teamsCache = { at: 0, body: null };
+
 const rlGeneral = new Map();
 const rlNotify = new Map();
 const rlEsports = new Map();
+const rlTeams = new Map();
 
 function rateLimit(bucket, ip, max) {
   const now = Date.now();
@@ -113,6 +123,7 @@ const SEC_HEADERS = {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "font-src 'self' data: https://fonts.gstatic.com; " +
     "img-src 'self' data: https:; " +
+    "media-src 'self' blob: data: https:; " +
     "connect-src 'self' https:; " +
     "frame-src 'self' https:; " +
     "frame-ancestors 'none'; " +
@@ -216,6 +227,82 @@ async function handleNotify(request, env) {
   }
 }
 
+/* ==================== EQUIPOS ASOCIADOS EN VIVO ====================
+ * La fuente de verdad es el canal de Discord: cada inscripción publicada por
+ * /api/discord/notify ("🏆 Nueva inscripción") y cada campeonato ("👑 Nuevo
+ * campeón") se leen de vuelta con el mismo bot. Sin base de datos nueva, sin
+ * bindings nuevos: si el dueño borra un mensaje en Discord, el equipo desaparece
+ * de la web (moderación directa).
+ */
+const RE_INSCRIPCION = /\*\*(.+?)\s*\[([^\]]+)\]\*\* se inscribió en \*\*(.+?)\*\*/;
+const RE_CAMPEON = /\*\*(.+?)\*\* ganó \*\*(.+?)\*\*/;
+
+async function handleTeams(env) {
+  const token = (env && env.DISCORD_TOKEN) || '';
+  const channelId = (env && env.CHANNEL_ID) || '';
+  if (!token || !channelId) {
+    return { ok: true, source: 'unconfigured', count: 0, teams: [], champions: [] };
+  }
+  const now = Date.now();
+  if (teamsCache.body && now - teamsCache.at < TEAMS_TTL_MS) {
+    return teamsCache.body;
+  }
+  let payload;
+  try {
+    const up = await fetch(
+      `https://discord.com/api/v10/channels/${channelId}/messages?limit=100`,
+      { headers: { Authorization: `Bot ${token}`, Accept: 'application/json' } }
+    );
+    if (!up.ok) {
+      // Sin detalles internos: el frontend muestra su estado vacío honesto.
+      payload = { ok: true, source: 'discord_error', count: 0, teams: [], champions: [] };
+    } else {
+      const msgs = await up.json().catch(() => []);
+      const teams = new Map();   // clave tag+team normalizado → registro más reciente
+      const champions = new Map(); // nombre de equipo → { tournament, ts, wins }
+      for (const m of Array.isArray(msgs) ? msgs : []) {
+        const ts = m.timestamp || null;
+        for (const e of Array.isArray(m.embeds) ? m.embeds : []) {
+          const desc = String(e.description || '');
+          const mi = desc.match(RE_INSCRIPCION);
+          if (mi) {
+            const team = mi[1].trim().slice(0, 40);
+            const tag = mi[2].trim().toUpperCase().slice(0, 6);
+            const tournament = mi[3].trim().slice(0, 80);
+            const key = tag + '|' + team.toLowerCase();
+            const prev = teams.get(key);
+            if (!prev || (ts && (!prev.ts || ts > prev.ts))) {
+              teams.set(key, { team, tag, tournament, ts });
+            }
+            continue;
+          }
+          const mc = desc.match(RE_CAMPEON);
+          if (mc) {
+            const team = mc[1].trim().slice(0, 40);
+            const tournament = mc[2].trim().slice(0, 80);
+            const prev = champions.get(team.toLowerCase());
+            champions.set(team.toLowerCase(), {
+              team,
+              tournament,
+              ts,
+              wins: (prev ? prev.wins : 0) + 1,
+            });
+          }
+        }
+      }
+      const list = [...teams.values()]
+        .sort((a, b) => String(b.ts).localeCompare(String(a.ts)))
+        .slice(0, 24);
+      const champs = [...champions.values()].sort((a, b) => b.wins - a.wins).slice(0, 12);
+      payload = { ok: true, source: 'discord', count: list.length, teams: list, champions: champs };
+    }
+  } catch (err) {
+    payload = { ok: true, source: 'discord_error', count: 0, teams: [], champions: [] };
+  }
+  teamsCache = { at: now, body: payload };
+  return payload;
+}
+
 /* ==================== WORKER PRINCIPAL ==================== */
 
 export default {
@@ -235,10 +322,11 @@ export default {
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      if ((url.pathname === '/api/discord/notify' || url.pathname === '/api/valorant/esports') && SITE_ORIGINS.has(origin)) {
+      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams';
+      if ((url.pathname === '/api/discord/notify' || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
-          'Access-Control-Allow-Methods': url.pathname === '/api/valorant/esports' ? 'GET, OPTIONS' : 'POST, OPTIONS',
+          'Access-Control-Allow-Methods': isGetApi ? 'GET, OPTIONS' : 'POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
           'Access-Control-Max-Age': '86400',
         });
@@ -332,6 +420,26 @@ export default {
       } catch (err) {
         return json({ ok: false, error: 'No se pudo contactar api.henrikdev.xyz: ' + err.message }, 502);
       }
+    }
+
+    // --- 7b) Equipos asociados en vivo (lectura del canal de Discord)
+    if (url.pathname === '/api/teams') {
+      if (method !== 'GET') {
+        return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403);
+      }
+      const t = rateLimit(rlTeams, ip, LIMIT_TEAMS);
+      if (!t.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(t.retry) });
+      }
+      const payload = await handleTeams(env);
+      const res = json(payload);
+      res.headers.set('Access-Control-Allow-Origin', origin);
+      res.headers.set('Cache-Control', 'public, max-age=60');
+      return res;
     }
 
     // --- 8) Resto: archivos estáticos con cabeceras de seguridad

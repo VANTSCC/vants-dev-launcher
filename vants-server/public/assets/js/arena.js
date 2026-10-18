@@ -34,7 +34,7 @@ function closeModal(){if(paying)return;$('#modal').classList.remove('show');}
 function openDrawer(html){$('#drawer').innerHTML=html;$('#drawerOv').classList.add('show');$('#drawer').classList.add('show');icons();}
 function closeDrawer(){$('#drawerOv').classList.remove('show');$('#drawer').classList.remove('show');}
  $('#drawerOv').addEventListener('click',closeDrawer);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();closeCin();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();closeMenu();closeCin();}});
 
 /* encabezado de sesión (fragmentado, mismo patrón que arena-live.js) */
 const AUTH_FIELD='Author'+'ization',AUTH_SCHEME='Bear'+'er ';
@@ -619,6 +619,7 @@ function finishEnroll(t,team,tag){
   openModal('<div class="success"><div class="ok">'+SVG_CHECK+'</div><h4>Tu equipo está dentro</h4><p>'+team+' ['+tag+'] · '+t.name+'<br>Fixture 24 h antes del inicio.<br>¡Nos vemos en el servidor!</p></div>');
   renderTournaments();toast('Inscripción confirmada: '+team+' ['+tag+']');
   vantsDiscord('torneo_inscripcion',{team,tag,tournament:t.name});
+  if(typeof loadTeams==='function')setTimeout(loadTeams,900);
 }
 
 /* [ELIMINADO] Pase competitivo y pase premium: fuera del sitio por
@@ -1136,6 +1137,95 @@ function vantsDiscord(type, data){
   };
   send(0);
 }
+
+/* ============================================================
+   MENÚ CAJÓN · CATEGORÍAS (estilo Razer)
+   Cajón derecho con las categorías de la arena en filas:
+   COMPETIR / COMUNIDAD / IDENTIDAD / MEMBRESÍA.
+   ============================================================ */
+function openMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.add('show');const o=$('#menuOv');if(o)o.classList.add('show');icons();}
+function closeMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.remove('show');const o=$('#menuOv');if(o)o.classList.remove('show');}
+(function wireMenu(){
+  const b=$('#menuBtn');if(!b)return;
+  b.addEventListener('click',openMenu);
+  const c=$('#menuClose');if(c)c.addEventListener('click',closeMenu);
+  const ov=$('#menuOv');if(ov)ov.addEventListener('click',closeMenu);
+  $$('#menuDrawer [data-md-close]').forEach(el=>el.addEventListener('click',closeMenu));
+})();
+
+/* ============================================================
+   EQUIPOS ASOCIADOS · INSCRIPCIÓN EN VIVO
+   Fuente: GET /api/teams (el Worker lee los anuncios "🏆 Nueva
+   inscripción" del canal de Discord) + merge con las inscripciones
+   locales (mismo dispositivo) para que tu equipo se vea al instante.
+   ============================================================ */
+const K_TEAMS_API='vants_teams_v1';
+let teamsChampions=[];
+function escTeams(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function teamsLocal(){
+  try{
+    const a=JSON.parse(localStorage.getItem('vants_feed_v1')||'null');
+    if(Array.isArray(a))return a.slice(0,8).map(r=>({team:String(r.t||'EQUIPO'),tag:String(r.g||'VNTS'),tournament:String(r.to||'ASCENSIÓN SERIES S4'),ts:r.ts?new Date(r.ts).toISOString():null}));
+  }catch(e){}
+  return[];
+}
+function tiempoAtras(iso){
+  if(!iso)return'';
+  const s=(Date.now()-new Date(iso).getTime())/1000;
+  if(!isFinite(s)||s<0)return'';
+  if(s<60)return 'hace instantes';if(s<3600)return 'hace '+Math.floor(s/60)+' min';
+  if(s<86400)return 'hace '+Math.floor(s/3600)+' h';return 'hace '+Math.floor(s/86400)+' d';
+}
+function renderTeamsGrid(list){
+  const grid=$('#teamsGrid');if(!grid)return;
+  const champs=new Map(teamsChampions.map(c=>[String(c.team||'').toLowerCase(),c]));
+  let html='';
+  if(!list.length){
+    html='<div class="teams-empty"><b>TODAVÍA NO HAY EQUIPOS ASOCIADOS</b><span>Sé el primero: cuando inscribes tu equipo aparece acá al instante y se anuncia en el Discord de la arena.</span></div>';
+  }else{
+    html=list.map(r=>{
+      const ini=(String(r.tag||r.team||'V').replace(/[^A-Za-z0-9]/g,'').slice(0,3).toUpperCase())||'V';
+      const c=champs.get(String(r.team||'').toLowerCase());
+      const when=tiempoAtras(r.ts);
+      return '<div class="team-tile"><span class="tt-ava">'+escTeams(ini)+'</span>'
+        +'<div class="tt-info"><span class="tt-tag">'+escTeams(String(r.team||'EQUIPO').slice(0,22))+'</span>'
+        +'<span class="tt-name">'+escTeams(r.tag)+' · '+escTeams(String(r.tournament||'TEMPORADA 4').slice(0,36))+'</span>'
+        +'<span class="tt-meta">'+(when?'<span class="tt-live"><i></i>INSCRITO '+escTeams(when).toUpperCase()+'</span>':'<span>ASOCIADO</span>')+'</span></div>'
+        +(c?'<span class="tt-crown">👑 ×'+Number(c.wins||1)+'</span>':'')
+        +'</div>';
+    }).join('');
+  }
+  html+='<button class="team-tile tt-cta" id="teamsJoin" type="button"><i data-lucide="swords"></i><b>TU EQUIPO AQUÍ</b><span>INSCRIBIR EN LA TEMPORADA 4 →</span></button>';
+  grid.innerHTML=html;
+  const jb=$('#teamsJoin');if(jb)jb.addEventListener('click',()=>{const h=$('#heroJoin');if(h)h.click();});
+  icons();
+}
+async function loadTeams(){
+  const grid=$('#teamsGrid');if(!grid)return;
+  renderTeamsGrid(teamsLocal());
+  let api=null;
+  try{
+    const c=JSON.parse(sessionStorage.getItem(K_TEAMS_API)||'null');
+    if(c&&c.at&&(Date.now()-c.at)<60000&&c.data)api=c.data;
+  }catch(e){}
+  if(!api){
+    try{
+      const r=await fetchWorker('/api/teams',{headers:{'Accept':'application/json'}});
+      if(r.ok)api=await r.json();
+    }catch(e){}
+    if(api){try{sessionStorage.setItem(K_TEAMS_API,JSON.stringify({at:Date.now(),data:api}))}catch(e){}}
+  }
+  if(!api||!api.ok)return;
+  teamsChampions=Array.isArray(api.champions)?api.champions:[];
+  const local=teamsLocal();
+  const seen=new Set(local.map(r=>(String(r.tag)+'|'+String(r.team)).toLowerCase()));
+  const remote=(Array.isArray(api.teams)?api.teams:[]).filter(r=>{
+    const k=(String(r.tag)+'|'+String(r.team)).toLowerCase();
+    if(seen.has(k))return false;seen.add(k);return true;
+  });
+  renderTeamsGrid(local.concat(remote).slice(0,18));
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadTeams);else loadTeams();
 
 /* ============================================================
    PRIVILEGIOS OWNER
