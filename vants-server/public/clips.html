@@ -129,6 +129,27 @@ footer{border-top:1px solid var(--line)}
 .f-in a{color:var(--muted);border-bottom:1px solid var(--line)}
 .f-in a:hover{color:var(--text);border-color:var(--accent)}
 @media(max-width:920px){.app{grid-template-columns:1fr;gap:18px}.side{position:static;flex-direction:row;flex-wrap:wrap}.s-card{width:100%}.m-head h1{width:100%}.m-actions{margin-left:0}}
+/* DESTACADOS (vitrina pública) */
+.cstar{position:absolute;left:8px;top:8px;z-index:3;width:28px;height:28px;border-radius:8px;background:rgba(8,9,12,.82);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s}
+.cstar svg{width:14px;height:14px}
+.cstar:hover{color:var(--gold);border-color:var(--gold)}
+.cstar.on{color:var(--gold);border-color:var(--gold);background:rgba(245,192,68,.14)}
+.feat-grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px}
+.featc{background:var(--panel);border:1px solid var(--line);cursor:pointer;transition:border-color .2s,transform .2s;overflow:hidden}
+.featc:hover{border-color:var(--gold);transform:translateY(-2px)}
+.featc .ft{position:relative;aspect-ratio:16/9;background:#0b0b0e}
+.featc .ft img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.featc .fdur{position:absolute;right:8px;bottom:8px;background:rgba(8,9,12,.85);border:1px solid var(--line2);font:700 9.5px/1 var(--mono);padding:4px 6px;color:var(--text)}
+.featc .fplay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;background:rgba(255,13,46,.92);display:flex;align-items:center;justify-content:center;color:#fff}
+.featc .fplay svg{width:18px;height:18px;fill:#fff}
+.featc .finfo{padding:12px 13px 13px}
+.featc .ftit{font:800 12.5px/1.35 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.featc .fmeta{display:flex;gap:9px;flex-wrap:wrap;margin-top:7px;font:600 8.5px/1 var(--mono);letter-spacing:.08em;color:var(--muted)}
+.featc .fmeta .fnk{color:var(--gold);text-transform:uppercase}
+.pbar{height:8px;border:1px solid var(--line2);background:var(--bg2);margin:14px 0 8px;position:relative;overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--grn);transition:width .25s}
+.dest-note{font:500 10.5px/1.8 var(--mono);color:var(--muted);border:1px dashed var(--line2);padding:12px 14px;margin-bottom:16px}
+.dest-note b{color:var(--gold)}
 </style>
 </head>
 </content>
@@ -156,6 +177,7 @@ footer{border-top:1px solid var(--line)}
 <div class="app">
   <aside class="side">
     <button class="s-item on" id="sMis"><i data-lucide="folder-video"></i>MIS CLIPS DE JUEGO<b id="sCount">0</b></button>
+    <button class="s-item" id="sDest"><i data-lucide="star"></i>DESTACADOS<b id="sDestCount">0</b></button>
     <button class="s-item" id="sAjustes"><i data-lucide="settings"></i>AJUSTES</button>
     <div class="s-card">
       <h4>ESTADO</h4>
@@ -167,13 +189,13 @@ footer{border-top:1px solid var(--line)}
       <h4>PRIVACIDAD</h4>
       <p>Tu galería corre <b>100% en tu navegador</b> y vive atada a <b>TU CUENTA VANTS</b>: cada clip queda guardado con la cuenta que lo subió.</p>
       <p>Sin sesión no se puede subir nada ni ver clips: cada jugador solo ve <b>sus propios clips</b>, nunca los de otra cuenta. Los videos nunca suben a ningún servidor (IndexedDB).</p>
-      <p>La sincronización en la nube y la vitrina pública llegan con <b>VANTS PRO</b>.</p>
+      <p>¿Quieres que todos vean tu mejor jugada? Pulsa la <b>estrella</b> de un clip tuyo: se publica en <b>DESTACADOS</b> y sale público en la <b>Sala de jugadores</b> para toda la arena.</p>
     </div>
   </aside>
 
   <main>
     <div class="m-head">
-      <h1>MIS CLIPS DE JUEGO <em>RECIENTES</em></h1>
+      <h1 id="mTitle">MIS CLIPS DE JUEGO <em>RECIENTES</em></h1>
       <div class="m-actions">
         <button class="link-btn" id="verTodo" type="button">VER TODO</button>
         <button class="btn btn-ghost" id="btnCortex" type="button" hidden><i data-lucide="folder-open"></i>CONECTAR CARPETA DE CORTEX</button>
@@ -310,9 +332,10 @@ function cardHTML(rec,url){
   var inner=url
     ?'<video src="'+url+'#t=0.6" preload="metadata" muted playsinline></video>'
     :'<span class="ph"><i data-lucide="film"></i>PULSA PARA CARGAR<br>DESDE LA CARPETA</span>';
+  var star=USER?'<button class="cstar'+(rec.destacado?' on':'')+'" data-star="'+esc(rec.id)+'" title="'+(rec.destacado?'Destacado · pulsa para quitar':'Destacar en la vitrina pública')+'"><i data-lucide="star"'+(rec.destacado?' style="fill:currentColor"':'')+'></i></button>':'';
   return '<div class="clip-card" data-id="'+esc(rec.id)+'">'
     +'<div class="thumb"><span class="cbadge'+(isRef?' ref':'')+'">'+(isRef?'REFERENCIA':'CARGADO')+'</span>'
-    +inner+'<span class="cdur" data-dur>··:··</span></div>'
+    +star+inner+'<span class="cdur" data-dur>··:··</span></div>'
     +'<div class="cinfo"><div class="cname" title="'+esc(rec.titulo||rec.name)+'">'+esc(rec.titulo||rec.name)+'</div>'
     +'<div class="crow"><span class="vg">VALORANT</span>'
     +(rec.kills?'<span class="kl">'+esc(rec.kills)+'Kill</span>':'')
@@ -373,6 +396,9 @@ async function render(){
     card.addEventListener('click',function(){openPlayer(card.getAttribute('data-id'))});
     var v=card.querySelector('video');
     if(v){v.addEventListener('loadedmetadata',function(){var d=card.querySelector('[data-dur]');if(d)d.textContent=fmtDur(v.duration)})}
+  });
+  Array.prototype.forEach.call($('#grid').querySelectorAll('.cstar'),function(st){
+    st.addEventListener('click',function(ev){ev.stopPropagation();var id=st.getAttribute('data-star');var rec=cache.find(function(r){return r.id===id});if(!rec)return;if(rec.destacado)abrirQuitar(rec);else abrirDestacar(rec);});
   });
   icons();
   refreshStorage();
@@ -513,6 +539,7 @@ async function openPlayer(id){
       +'<button class="btn btn-grn" id="plSave" type="button"><i data-lucide="save"></i>GUARDAR</button>'
       +'<button class="btn btn-ghost" id="plDown" type="button"><i data-lucide="download"></i>DESCARGAR</button>'
       +'<button class="btn btn-red" id="plDel" type="button"><i data-lucide="trash-2"></i>ELIMINAR</button></div>'
+    +'<div class="mc-row" style="margin-top:10px"><button class="btn'+(rec.destacado?' btn-ghost':' btn-grn')+'" id="plFeat" type="button"><i data-lucide="star"'+(rec.destacado?' style="fill:currentColor"':'')+'></i>'+(rec.destacado?'DESTACADO · QUITAR DE LA VITRINA':'DESTACAR EN LA VITRINA')+'</button></div>'
     +'<p class="mc-meta">'+esc(fmtFecha(rec.ts))+' · '+esc(fmtMB(rec.size||0))+' · '+(rec.src==='cortex'?'REFERENCIA de tu carpeta Cortex (no ocupa espacio acá)':'GUARDADO en este navegador')+'</p>'
     +'<p class="mc-meta" style="margin-top:4px">El título se muestra en la galería: ponle nombre a tus mejores jugadas.</p>';
   $('#modal').classList.add('show');icons();
@@ -533,6 +560,8 @@ async function openPlayer(id){
     await idbDel(rec.id);if(urls[rec.id]){URL.revokeObjectURL(urls[rec.id]);delete urls[rec.id]}
     await reload();closePlayer();toast('Clip eliminado de la galería');
   });
+  var pf=$('#plFeat');
+  if(pf)pf.addEventListener('click',function(){closePlayer();if(rec.destacado)abrirQuitar(rec);else abrirDestacar(rec);});
 }
 
 /* ============ ver todo / ajustes ============ */
@@ -541,6 +570,199 @@ $('#verTodo').addEventListener('click',function(){
 });
 $('#sMis').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
 $('#sAjustes').addEventListener('click',abrirAjustes);
+
+/* ============ DESTACADOS: vitrina pública de la comunidad ============
+   Lo que el jugador destaca acá sale público en la Sala de jugadores.
+   Publicar exige sesión (JWT): el Worker ata el clip a la cuenta que manda
+   el vídeo, nadie destaca ni borra en nombre de otra cuenta. */
+var VISTA='mis',featCache=null,featAt=0,MAX_FEAT_MB=48;
+var STAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+function fmtF(iso){try{return new Date(iso).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return''}}
+function fmtDur2(s){s=parseInt(s,10)||0;if(!s)return'';var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x}
+async function destacados(){
+  if(featCache&&Date.now()-featAt<60000)return featCache;
+  try{
+    var r=await fetch('/api/clips/featured',{headers:{Accept:'application/json'}});
+    var j=await r.json().catch(function(){return null});
+    featCache=(j&&j.ok&&Array.isArray(j.clips))?j.clips:[];featAt=Date.now();
+  }catch(e){if(!featCache)featCache=[]}
+  return featCache;
+}
+function featCard(c){
+  var dur=fmtDur2(c.dur),mb=(c.tam>0)?fmtMB(c.tam):'';
+  return '<div class="featc" data-fid="'+esc(c.id)+'">'
+    +'<div class="ft">'+(c.thumb?'<img src="'+esc(c.thumb)+'" alt="" loading="lazy">':'')
+    +(dur?'<span class="fdur">'+esc(dur)+'</span>':'')
+    +'<span class="fplay">'+STAR+'</span></div>'
+    +'<div class="finfo"><div class="ftit" title="'+esc(c.titulo||'Clip destacado')+'">'+esc(c.titulo||'Clip destacado')+'</div>'
+    +'<div class="fmeta"><span class="fnk">'+esc(c.nick||'JUGADOR')+'</span><span>'+esc(c.juego||'VALORANT')+'</span>'+(mb?'<span>'+esc(mb)+'</span>':'')+'<span>'+esc(fmtF(c.fecha))+'</span></div></div></div>';
+}
+async function renderDestacados(){
+  $('#sDestCount').textContent='·';
+  $('#mTitle').innerHTML='CLIPS <em>DESTACADOS</em>';
+  var b1=$('#verTodo'),b2=$('#btnCortex'),b3=$('#btnSubir');if(b1)b1.style.visibility='hidden';if(b2)b2.hidden=true;if(b3)b3.hidden=true;
+  var list=await destacados();
+  $('#sDestCount').textContent=String(list.length);
+  if(!list.length){
+    $('#grid').innerHTML='<div class="empty"><h3>TODAVÍA NO HAY CLIPS DESTACADOS</h3>'
+      +'<p>Sé el primero: entra a <b>MIS CLIPS DE JUEGO</b>, pulsa la estrella de tu mejor jugada y se publicará acá para toda la arena — con tu nombre y tu cuenta.</p>'
+      +'<div class="steps"><div class="st"><b>1 · ELIGE TU MEJOR CLIP</b><span>En tu galería, cada tarjeta tiene una estrella arriba a la izquierda.</span></div>'
+      +'<div class="st"><b>2 · PULSA LA ESTRELLA</b><span>Con sesión iniciada, escribe el título y publica: el video se sube a la vitrina de VANTS.</span></div>'
+      +'<div class="st"><b>3 · SALE EN LA SALA</b><span>Todos lo verán en la Sala de jugadores, con tu perfil y tus insignias.</span></div></div></div>';
+    return;
+  }
+  $('#grid').innerHTML='<div class="dest-note" style="grid-column:1/-1">Los clips destacados son <b>públicos</b>: los ve toda la arena en la <b>Sala de jugadores</b>. Cada clip queda publicado con la cuenta de quien lo subió. Máximo '+MAX_FEAT_MB+' MB por clip.</div>'
+    +'<div class="feat-grid2" style="grid-column:1/-1">'+list.map(featCard).join('')+'</div>';
+  Array.prototype.forEach.call($('#grid').querySelectorAll('.featc'),function(card){
+    card.addEventListener('click',function(){abrirClipPublico(card.getAttribute('data-fid'))});
+  });
+  icons();
+}
+function abrirClipPublico(fid){
+  destacados().then(function(list){
+    var c=(list||[]).find(function(x){return x.id===fid});
+    if(!c){toast('Ese clip ya no está destacado');return}
+    $('#modalCard').innerHTML=
+      '<div class="mc-head"><h3 title="'+esc(c.titulo||'Clip destacado')+'">'+esc(c.titulo||'Clip destacado')+'</h3><button class="d-x" id="plClose" aria-label="Cerrar"><i data-lucide="x"></i></button></div>'
+      +'<div class="player"><video src="'+esc(c.video||'')+'" controls autoplay playsinline></video></div>'
+      +'<p class="mc-meta">DESTACADO POR <b style="color:var(--gold)">'+esc(c.nick||'JUGADOR')+'</b> · '+esc(c.juego||'VALORANT')+' · '+esc(fmtF(c.fecha))+'</p>'
+      +'<p class="mc-meta" style="margin-top:4px">Este clip es público: toda la arena lo ve en la Sala de jugadores.</p>';
+    $('#modal').classList.add('show');icons();
+    $('#plClose').addEventListener('click',closePlayer);
+  });
+}
+async function activarVista(v){
+  VISTA=v;
+  var s1=$('#sMis'),s2=$('#sDest');
+  if(v==='mis'){
+    if(s1)s1.classList.add('on');if(s2)s2.classList.remove('on');
+    $('#mTitle').innerHTML='MIS CLIPS DE JUEGO <em>RECIENTES</em>';
+    var b1=$('#verTodo'),b2=$('#btnCortex'),b3=$('#btnSubir');if(b1)b1.style.visibility='';if(b2)b2.hidden=!USER;if(b3)b3.hidden=!USER;
+    $('#sDestCount').textContent=String((featCache||[]).length);
+    await reload();
+  }else{
+    if(s1)s1.classList.remove('on');if(s2)s2.classList.add('on');
+    await renderDestacados();
+  }
+}
+$('#sDest').addEventListener('click',function(){activarVista('dest');window.scrollTo({top:0,behavior:'smooth'})});
+$('#sMis').addEventListener('click',function(){if(VISTA!=='mis')activarVista('mis');});
+
+/* ============ destacar un clip propio ============ */
+function archivoDe(rec){
+  return new Promise(function(res){
+    if(rec.blob){res(rec.blob);return}
+    if(rec.handle){rec.handle.queryPermission({mode:'read'}).then(function(p){
+      if(p!=='granted'){res(null);return}
+      rec.handle.getFile().then(res,function(){res(null)});
+    },function(){res(null)});return}
+    res(null);
+  });
+}
+function capturarThumb(rec,url){
+  return new Promise(function(res){
+    var v=document.createElement('video');
+    try{
+      v.muted=true;v.playsInline=true;v.preload='auto';v.src=url;
+      var hecho=false;
+      function fin(){
+        if(hecho)return;hecho=true;
+        try{
+          var w=480,r=(v.videoWidth&&v.videoHeight)?(v.videoHeight/v.videoWidth):(9/16);
+          var h=Math.max(200,Math.round(w*r));
+          var c=document.createElement('canvas');c.width=w;c.height=h;
+          c.getContext('2d').drawImage(v,0,0,w,h);
+          var d=c.toDataURL('image/jpeg',0.72);
+          res({thumb:(d&&d.length>2000)?d:null,dur:isFinite(v.duration)?Math.round(v.duration):0});
+        }catch(e){res({thumb:null,dur:0})}
+      }
+      v.addEventListener('loadeddata',function(){try{v.currentTime=Math.min(0.8,(v.duration||2)/4)}catch(e){fin()}});
+      v.addEventListener('seeked',function(){setTimeout(fin,80)});
+      v.addEventListener('error',function(){res({thumb:null,dur:0})});
+      setTimeout(function(){if(!hecho){res({thumb:null,dur:0})}},5000);
+    }catch(e){res({thumb:null,dur:0})}
+  });
+}
+function subirDestacado(form,onProg){
+  return new Promise(function(res){
+    var t=null,mandar=function(){
+      var x=new XMLHttpRequest();
+      x.open('POST','/api/clips/featured',true);
+      if(t)x.setRequestHeader('Authorization','Bearer '+t);
+      x.upload.onprogress=function(e){if(e.lengthComputable&&onProg)onProg(e.loaded/e.total)};
+      x.onload=function(){try{res(JSON.parse(x.responseText))}catch(e){res({ok:false,error:'respuesta_invalida'})}};
+      x.onerror=function(){res({ok:false,error:'sin_conexion'})};
+      x.send(form);
+    };
+    if(window.VantAuth0&&window.VantAuth0.getToken){window.VantAuth0.getToken().then(function(tk){t=tk;mandar()}).catch(function(){mandar()})}
+    else mandar();
+  });
+}
+async function abrirDestacar(rec){
+  if(!USER){toast('Iniciá sesión con tu cuenta para destacar clips');return}
+  var file=await archivoDe(rec);
+  if(!file){toast('Concede acceso a la carpeta de Cortex o vuelve a subir el clip para destacarlo');return}
+  if(file.size>MAX_FEAT_MB*1048576){toast('El clip supera '+MAX_FEAT_MB+' MB: recórtalo antes de destacarlo');return}
+  var url=urlFor(rec,file);
+  var th={thumb:null,dur:0};
+  if(url)th=await capturarThumb(rec,url);
+  var br=esc('«'+(rec.titulo||rec.name)+'»');
+  $('#modalCard').innerHTML=
+    '<div class="mc-head"><h3>DESTACAR EN LA VITRINA</h3><button class="d-x" id="plClose" aria-label="Cerrar"><i data-lucide="x"></i></button></div>'
+    +'<div class="ax-block" style="border-top:none;padding-top:6px"><p>Publicarás <b>'+br+'</b> para toda la arena. Sale público en la <b>Sala de jugadores</b> con tu cuenta: <b>'+esc(nickCuenta())+'</b>. Máximo '+MAX_FEAT_MB+' MB.</p>'
+    +(th.thumb?'<div style="position:relative;aspect-ratio:16/9;background:#0b0b0e;margin:10px 0 2px"><img src="'+th.thumb+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></div>':'<p style="color:var(--muted)">No se pudo generar la miniatura (se publicará sin ella).</p>')+'</div>'
+    +'<div class="ax-block"><h4>TÍTULO PÚBLICO</h4><input id="dtTitulo" type="text" maxlength="70" value="'+esc(rec.titulo||'')+'" placeholder="Ej: ACE en Ascent · clutch 1v4" style="width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--text);padding:12px 13px;font:500 12px var(--mono);outline:none"></div>'
+    +'<div class="pbar" id="dtBar" style="display:none"><i></i></div>'
+    +'<p class="mc-meta" id="dtMsg" style="display:none"></p>'
+    +'<div class="cta-login" style="justify-content:flex-start"><button class="btn btn-grn" id="dtGo" type="button"><i data-lucide="star"></i>PUBLICAR EN DESTACADOS</button><button class="btn btn-ghost" id="dtNo" type="button">CANCELAR</button></div>';
+  $('#modal').classList.add('show');icons();
+  $('#plClose').addEventListener('click',closePlayer);
+  $('#dtNo').addEventListener('click',closePlayer);
+  $('#dtGo').addEventListener('click',async function(){
+    var btn=$('#dtGo');btn.disabled=true;btn.style.opacity='.55';
+    var titulo=($('#dtTitulo').value||'').trim().slice(0,70)||'Clip destacado';
+    var fd=new FormData();
+    fd.append('video',file,file.name||('clip.'+(rec.name||'mp4').split('.').pop()));
+    if(th.thumb){var tb=new Uint8Array(atob(th.thumb.split(',')[1]).length);var bin=atob(th.thumb.split(',')[1]);for(var i=0;i<bin.length;i++)tb[i]=bin.charCodeAt(i);fd.append('thumb',new Blob([tb],{type:'image/jpeg'}),'thumb.jpg')}
+    var extM=/\.([a-z0-9]+)$/i.exec(rec.name||'');var ext=(extM&&['webm','mp4','mkv','mov','m4v'].indexOf(extM[1].toLowerCase())>=0)?extM[1].toLowerCase():'mp4';
+    fd.append('titulo',titulo);fd.append('juego','VALORANT');fd.append('nick',nickCuenta());
+    fd.append('username',String((USER&&(USER.preferred_username||USER.nickname))||'').replace(/[^a-z0-9_\-.]/gi,'').slice(0,32));
+    fd.append('ext',ext);fd.append('dur',String(th.dur||0));
+    var bar=$('#dtBar'),msg=$('#dtMsg');bar.style.display='';msg.style.display='';
+    var r=await subirDestacado(fd,function(p){bar.querySelector('i').style.width=(p*100).toFixed(0)+'%';msg.textContent='Subiendo el video: '+(p*100).toFixed(0)+'%'});
+    if(r&&r.ok){
+      rec.destacado=r.id;try{await idbPut(rec)}catch(eS){}
+      featCache=null;featAt=0;
+      closePlayer();await reload();
+      toast('Publicado en DESTACADOS: ya está en la Sala de jugadores');
+      activarVista('dest');
+    }else{
+      btn.disabled=false;btn.style.opacity='';
+      msg.style.display='';
+      var er=(r&&r.error)||'error';
+      msg.innerHTML='No se pudo publicar: <b style="color:var(--accent)">'+esc(er==='clip_demasiado_grande'?'el clip supera '+MAX_FEAT_MB+' MB':(er==='sin_sesion'||er==='token_invalido'?'tu sesión expiró, entra de nuevo':(er==='gh_no_config'?'la vitrina se está configurando, prueba más tarde':er)))+'</b>';
+    }
+  });
+}
+async function abrirQuitar(rec){
+  $('#modalCard').innerHTML=
+    '<div class="mc-head"><h3>QUITAR DE DESTACADOS</h3><button class="d-x" id="plClose" aria-label="Cerrar"><i data-lucide="x"></i></button></div>'
+    +'<div class="ax-block" style="border-top:none;padding-top:6px"><p>Este clip está publicado en la vitrina pública. Si lo quitas, deja de verse en la Sala de jugadores (tu copia local no se toca).</p></div>'
+    +'<div class="cta-login" style="justify-content:flex-start"><button class="btn btn-red" id="dqGo" type="button"><i data-lucide="star-off"></i>QUITAR DE DESTACADOS</button><button class="btn btn-ghost" id="dqNo" type="button">DEJARLO PUBLICADO</button></div>';
+  $('#modal').classList.add('show');icons();
+  $('#plClose').addEventListener('click',closePlayer);
+  $('#dqNo').addEventListener('click',closePlayer);
+  $('#dqGo').addEventListener('click',async function(){
+    var btn=$('#dqGo');btn.disabled=true;btn.style.opacity='.55';
+    try{
+      var tk=window.VantAuth0&&window.VantAuth0.getToken?await window.VantAuth0.getToken():null;
+      var r=await fetch('/api/clips/featured?id='+encodeURIComponent(rec.destacado),{method:'DELETE',headers:tk?{Authorization:'Bearer '+tk}:{}});
+      var j=await r.json().catch(function(){return null});
+      if(j&&j.ok){rec.destacado=null;try{await idbPut(rec)}catch(eS){}featCache=null;featAt=0;closePlayer();await reload();toast('Clip quitado de la vitrina');}
+      else{btn.disabled=false;btn.style.opacity='';toast((j&&j.error==='no_es_tuyo')?'Ese clip fue publicado por otra cuenta':'No se pudo quitar ahora');}
+    }catch(e){btn.disabled=false;btn.style.opacity='';toast('Sin conexión para quitar el clip')}
+  });
+}
 
 /* ============ arranque ============ */
 (async function boot(){
@@ -565,6 +787,8 @@ $('#sAjustes').addEventListener('click',abrirAjustes);
     }
   }
   render();icons();
+  /* contador de la vitrina pública (sin bloquear el arranque) */
+  destacados().then(function(l){var el=$('#sDestCount');if(el)el.textContent=String(l.length)}).catch(function(){});
 })();
 })();
 </script>

@@ -931,3 +931,32 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
 .gpr-rin tr.lead .gp-pts{color:var(--accent)}
 .gpr-rin tr.lead .gp-pos{color:var(--accent)}
 @media(max-width:900px){.gpr-explain{grid-template-columns:1fr}.gpr-banner{padding:34px 24px 30px}.gp-bar{display:none}.gpr-top{display:none}}
+
+/* ================= CLIPS DESTACADOS · VITRINA PÚBLICA ================= */
+/* Rail bajo la Sala de jugadores + grid dentro de la ficha. El video vive
+   publicado en el repo VANTSgg/vants-clips; la miniatura va en el manifest. */
+.rail.feat-rail{display:grid;grid-auto-flow:row;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));overflow:visible;scroll-snap-type:none;padding-bottom:4px}
+.feat-card{background:var(--panel,#141418);border:1px solid var(--line,#232329);cursor:pointer;transition:border-color .2s,transform .2s;display:flex;flex-direction:column;overflow:hidden}
+.feat-card:hover{border-color:var(--gold,#F5C044);transform:translateY(-2px)}
+.feat-thumb{position:relative;aspect-ratio:16/9;background:#0b0b0e;overflow:hidden}
+.feat-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.feat-thumb .feat-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--dim,#5C5C66)}
+.feat-thumb .feat-ph svg{width:34px;height:34px}
+.feat-dur{position:absolute;right:8px;bottom:8px;background:rgba(8,9,12,.85);border:1px solid var(--line2,#303039);color:var(--text,#EDEDE7);font:700 9.5px/1 var(--mono);padding:4px 6px;letter-spacing:.06em}
+.feat-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;background:rgba(255,13,46,.92);display:flex;align-items:center;justify-content:center;color:#fff;opacity:0;transition:opacity .2s;box-shadow:0 6px 22px rgba(255,13,46,.4)}
+.feat-play svg{width:18px;height:18px;fill:#fff}
+.feat-card:hover .feat-play{opacity:1}
+.feat-info{padding:12px 13px 13px;min-width:0}
+.feat-title{font:800 12.5px/1.35 var(--sans);color:var(--text,#EDEDE7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feat-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:7px;font:600 8.5px/1 var(--mono);letter-spacing:.08em;color:var(--mut,#93939D)}
+.feat-meta .feat-nk{display:inline-flex;align-items:center;gap:4px;color:var(--gold,#F5C044);text-transform:uppercase}
+.feat-meta .feat-nk svg{width:10px;height:10px}
+.feat-meta .feat-gm{color:var(--accent,#FF0D2E)}
+.ficha-clips{margin-top:20px}
+.ficha-clips .feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:11px;margin-top:4px}
+.feat-modal{max-width:760px;width:100%;text-align:left;padding:26px}
+.feat-mhead h4{font-family:var(--disp);font-size:18px;text-transform:uppercase;margin:8px 0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feat-player{margin:14px 0 12px;background:#000;border:1px solid var(--line2,#303039)}
+.feat-player video{display:block;width:100%;max-height:58vh;background:#000}
+@media(max-width:640px){.feat-player video{max-height:44vh}}
+.live-badge svg{width:11px;height:11px}

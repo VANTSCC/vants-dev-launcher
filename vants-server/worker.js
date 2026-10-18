@@ -76,8 +76,34 @@ const LIMIT_ESPORTS = 30;    // peticiones por minuto por IP a la agenda Valoran
 const LIMIT_TEAMS = 30;      // peticiones por minuto por IP a /api/teams
 const LIMIT_GPR = 20;        // peticiones por minuto por IP a /api/gpr
 const LIMIT_ACCOUNT = 10;    // peticiones por minuto por IP a /api/account/*
+const LIMIT_CLIPS = 6;       // peticiones por minuto por IP a /api/clips/* (subidas/bajas)
 const WINDOW_MS = 60_000;    // ventana de 1 minuto
 const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
+const MAX_CLIP_BYTES = 48 * 1024 * 1024; // vídeo destacado: máx 48 MB
+const MAX_THUMB_BYTES = 400 * 1024;      // miniatura JPEG: máx 400 KB
+
+/* ==================== CLIPS DESTACADOS (GitHub Releases) ====================
+   Repositorio público que almacena los clips que los jugadores destacan:
+   cada clip = un release con 2 assets (video + miniatura), inmutable una vez
+   publicado. El índice (manifest.json) vive en el contents del repo y se
+   actualiza atómicamente (sha). El video lo sube el navegador con el JWT de
+   su sesión; el Worker valida el token (JWKS de Auth0) y nunca acepta un
+   sub distinto al de la sesión. Sin sesión no se publica nada. */
+const GH_CLIPS_REPO = 'VANTSgg/vants-clips';
+const GH_API = 'https://api.github.com/repos/' + GH_CLIPS_REPO;
+const CLIPS_EXT = ['webm', 'mp4', 'mkv', 'mov', 'm4v'];
+const MAX_MANIFEST_ENTRIES = 60;
+
+// Caché del manifest (60 s): la vitrina pública no golpea GitHub en cada visita.
+const FEAT_TTL_MS = 60_000;
+let featCache = { at: 0, body: null };
+
+// Caché de claves públicas JWKS de Auth0 (1 h) para verificar JWT sin /userinfo
+// (los tokens del SPA van con audience api.vants.app; JWKS es infalible).
+const JWKS_TTL_MS = 60 * 60_000;
+let jwksCache = { at: 0, keys: null };
+
+const rlClips = new Map();
 
 // Caché de la agenda esports (5 min): evita golpear api.henrikdev.xyz en cada visita.
 const ESPORTS_TTL_MS = 5 * 60_000;
@@ -171,6 +197,100 @@ function buildEmbed(color, title, description) {
     timestamp: new Date().toISOString(),
   };
 }
+
+// ---- base64 helpers seguros para UTF-8 (manifest con títulos con acentos) ----
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
+}
+function b64ToUtf8(b64) {
+  const bin = atob(b64.replace(/\s/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+// ---- verificación de JWT de sesión Auth0 con JWKS (RS256) ----
+async function verifySesionJwt(request) {
+  const authz = request.headers.get('authorization') || '';
+  const token = authz.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  let head, payload;
+  try {
+    head = JSON.parse(b64ToUtf8(parts[0]));
+    payload = JSON.parse(b64ToUtf8(parts[1]));
+  } catch (e) { return null; }
+  if (!payload || !payload.sub) return null;
+  if (payload.exp && Date.now() / 1000 > payload.exp + 30) return null;
+  if (payload.iss && payload.iss !== 'https://' + AUTH0_TENANT + '/') return null;
+  if (!head || head.alg !== 'RS256' || !head.kid) return null;
+  try {
+    const now = Date.now();
+    if (!jwksCache.keys || now - jwksCache.at > JWKS_TTL_MS) {
+      const r = await fetch('https://' + AUTH0_TENANT + '/.well-known/jwks.json', {
+        headers: { 'User-Agent': 'vants-worker' }, signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) return null;
+      const j = await r.json();
+      if (!j || !Array.isArray(j.keys)) return null;
+      jwksCache = { at: now, keys: j.keys };
+    }
+    const jk = jwksCache.keys.find((k) => k.kid === head.kid);
+    if (!jk || !jk.n || !jk.e) return null;
+    const b64u = (s) => {
+      let t = String(s).replace(/-/g, '+').replace(/_/g, '/');
+      while (t.length % 4) t += '=';
+      return atob(t);
+    };
+    const key = await crypto.subtle.importKey(
+      'jwk', { kty: 'RSA', e: jk.e, n: jk.n, alg: 'RS256', ext: true },
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']
+    );
+    const data = new TextEncoder().encode(parts[0] + '.' + parts[1]);
+    const sig = new Uint8Array(b64u(parts[2]).length);
+    const sigBin = b64u(parts[2]);
+    for (let i = 0; i < sigBin.length; i++) sig[i] = sigBin.charCodeAt(i);
+    const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, sig, data);
+    return ok ? { sub: String(payload.sub) } : null;
+  } catch (e) { return null; }
+}
+
+// ---- manifest.json del repo (índice de destacados) ----
+async function ghHeaders(token) {
+  const h = {
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'vants-worker',
+  };
+  /* repo público: las lecturas funcionan sin token (60/h por IP);
+     con secret, el token sube el límite (5.000/h) y permite escribir */
+  if (token) h.Authorization = 'Bearer ' + token;
+  return h;
+}
+async function leerManifest(token) {
+  const r = await fetch(GH_API + '/contents/manifest.json', { headers: await ghHeaders(token), signal: AbortSignal.timeout(9000) });
+  if (r.status === 404) return { sha: null, clips: [] };
+  if (!r.ok) throw new Error('manifest ' + r.status);
+  const j = await r.json();
+  let clips = [];
+  try { clips = JSON.parse(b64ToUtf8(j.content || '')); } catch (e) { clips = []; }
+  if (!Array.isArray(clips)) clips = [];
+  return { sha: j.sha || null, clips };
+}
+async function guardarManifest(token, sha, clips) {
+  const cuerpo = { message: 'destacados: ' + clips.length + ' clips', content: utf8ToB64(JSON.stringify(clips)) };
+  if (sha) cuerpo.sha = sha;
+  const r = await fetch(GH_API + '/contents/manifest.json', {
+    method: 'PUT', headers: await ghHeaders(token), body: JSON.stringify(cuerpo), signal: AbortSignal.timeout(15000),
+  });
+  return r.ok;
+}
+const nombreLimpio = (s, max) => String(s || '').replace(/[\u0000-\u001f<>:"\\/\\|?*]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 
 function json(data, status = 200, extraHeaders = {}) {
   return harden(
@@ -411,20 +531,20 @@ export default {
 
     // --- 1) Métodos permitidos (sitio de lectura + POST para la API)
     const method = request.method.toUpperCase();
-    const allowedMethods = ['GET', 'HEAD', 'POST', 'OPTIONS'];
+    const allowedMethods = ['GET', 'HEAD', 'POST', 'OPTIONS', 'DELETE'];
     if (!allowedMethods.includes(method)) {
-      return txt(405, 'Método no permitido', { Allow: 'GET, HEAD, POST, OPTIONS' });
+      return txt(405, 'Método no permitido', { Allow: 'GET, HEAD, POST, OPTIONS, DELETE' });
     }
 
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr';
-      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify';
+      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured';
+      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/clips/featured';
       if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
-          'Access-Control-Allow-Methods': isGetApi ? 'GET, OPTIONS' : 'POST, OPTIONS',
+          'Access-Control-Allow-Methods': url.pathname === '/api/clips/featured' ? 'GET, POST, DELETE, OPTIONS' : (isGetApi ? 'GET, OPTIONS' : 'POST, OPTIONS'),
           'Access-Control-Allow-Headers': isPostApi ? 'Content-Type, Authorization' : 'Content-Type',
           'Access-Control-Max-Age': '86400',
         });
@@ -628,6 +748,168 @@ export default {
         return json({ ok: true, email: emailFinal, ticket: tj.ticket });
       } catch (errA) {
         return json({ ok: false, error: 'auth0_inalcanzable' }, 502);
+      }
+    }
+
+    // --- 7b3) CLIPS DESTACADOS: vitrina pública de los clips de los jugadores.
+    // GET (público): manifest con los clips publicados. POST (con sesión JWT):
+    // multipart {video, thumb, titulo, juego, nick, username, dur, ext} → crea
+    // un release inmutable en el repo de clips (video + miniatura) y actualiza
+    // el manifest. DELETE (con sesión JWT, solo el dueño del clip): quita la
+    // entrada y borra el release. La propiedad del clip queda atada al sub de
+    // la sesión: nadie publica ni borra en nombre de otra cuenta.
+    if (url.pathname === '/api/clips/featured') {
+      const origin = request.headers.get('origin') || '';
+      if (method === 'GET') {
+        if (origin && !SITE_ORIGINS.has(origin)) {
+          return json({ ok: false, error: 'Origen no permitido' }, 403);
+        }
+        const c0 = rateLimit(rlClips, ip, 30); // lecturas más frecuentes que subidas
+        if (!c0.ok) return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(c0.retry) });
+        const now0 = Date.now();
+        if (featCache.body && now0 - featCache.at < FEAT_TTL_MS) {
+          const cf = json(featCache.body, 200);
+          cf.headers.set('Access-Control-Allow-Origin', origin || '*');
+          cf.headers.set('Cache-Control', 'public, max-age=60');
+          return cf;
+        }
+        try {
+          const { clips } = await leerManifest((env && env.GH_CLIPS_TOKEN) || '');
+          const payload = { ok: true, clips };
+          featCache = { at: now0, body: payload };
+          const res0 = json(payload, 200);
+          res0.headers.set('Access-Control-Allow-Origin', origin || '*');
+          res0.headers.set('Cache-Control', 'public, max-age=60');
+          return res0;
+        } catch (eF) {
+          return json({ ok: false, error: 'vitrina_no_disponible' }, 502);
+        }
+      }
+      // POST y DELETE: sesión obligatoria + origen propio + rate limit duro
+      if (method !== 'POST' && method !== 'DELETE') {
+        return json({ ok: false, error: 'Método no permitido' }, 405, { Allow: 'GET, POST, DELETE, OPTIONS' });
+      }
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403);
+      }
+      const cL = rateLimit(rlClips, ip, LIMIT_CLIPS);
+      if (!cL.ok) return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(cL.retry) });
+      const ses = await verifySesionJwt(request);
+      if (!ses || !ses.sub) {
+        return json({ ok: false, error: 'sin_sesion' }, 401);
+      }
+      const ghTok = (env && env.GH_CLIPS_TOKEN) || '';
+      if (!ghTok) {
+        return json({ ok: false, error: 'gh_no_config' }, 503);
+      }
+      try {
+        if (method === 'POST') {
+          const len = parseInt(request.headers.get('content-length') || '0', 10);
+          if (!len || len > MAX_CLIP_BYTES + 1_500_000) { // vídeo + thumb + forma-data overhead
+            return json({ ok: false, error: len ? 'clip_demasiado_grande' : 'cuerpo_vacio' }, 413);
+          }
+          const form = await request.formData();
+          const video = form.get('video');
+          const thumb = form.get('thumb');
+          if (!video || typeof video === 'string' || !video.size) {
+            return json({ ok: false, error: 'falta_video' }, 400);
+          }
+          if (video.size > MAX_CLIP_BYTES) {
+            return json({ ok: false, error: 'clip_demasiado_grande', max_mb: 48 }, 413);
+          }
+          const ext = CLIPS_EXT.includes(String(form.get('ext') || '').toLowerCase()) ? String(form.get('ext')).toLowerCase() : 'mp4';
+          const titulo = nombreLimpio(form.get('titulo') || 'Clip destacado', 80) || 'Clip destacado';
+          const juego = nombreLimpio(form.get('juego') || 'VALORANT', 24).toUpperCase();
+          const nick = nombreLimpio(form.get('nick') || 'JUGADOR', 24).toUpperCase();
+          const username = String(form.get('username') || '').replace(/[^a-z0-9_\-.]/gi, '').slice(0, 32);
+          const dur = Math.max(0, Math.min(3600, parseInt(form.get('dur'), 10) || 0));
+          if (!thumb || typeof thumb === 'string' || thumb.size > MAX_THUMB_BYTES) {
+            return json({ ok: false, error: 'thumb_invalida' }, 400);
+          }
+          // 1) release BORRADOR (la organización exige borrador: las releases
+          //    publicadas son inmutables y no aceptan assets)
+          const tag = 'clip-' + Date.now().toString(36);
+          const rRel = await fetch(GH_API + '/releases', {
+            method: 'POST', headers: await ghHeaders(ghTok),
+            body: JSON.stringify({ tag_name: tag, name: titulo.slice(0, 60), body: 'Destacado por ' + nick + ' en la arena VANTS.', draft: true, prerelease: true }),
+            signal: AbortSignal.timeout(12000),
+          });
+          if (!rRel.ok) return json({ ok: false, error: 'release' }, 502);
+          const rel = await rRel.json();
+          // 2) subir el VÍDEO como asset binario (octet-stream)
+          const vBuf = await video.arrayBuffer();
+          const rVid = await fetch('https://uploads.github.com/repos/' + GH_CLIPS_REPO + '/releases/' + rel.id + '/assets?name=clip.' + ext, {
+            method: 'POST', headers: { Authorization: 'Bearer ' + ghTok, 'Content-Type': 'application/octet-stream', 'User-Agent': 'vants-worker' },
+            body: vBuf, signal: AbortSignal.timeout(120000),
+          });
+          if (!rVid.ok) {
+            try { await fetch(GH_API + '/releases/' + rel.id, { method: 'DELETE', headers: await ghHeaders(ghTok) }); } catch (e) {}
+            return json({ ok: false, error: 'subida_video' }, 502);
+          }
+          const vidJ = await rVid.json();
+          // 3) subir la MINIATURA como asset
+          const tBuf = await thumb.arrayBuffer();
+          const rTh = await fetch('https://uploads.github.com/repos/' + GH_CLIPS_REPO + '/releases/' + rel.id + '/assets?name=thumb.jpg', {
+            method: 'POST', headers: { Authorization: 'Bearer ' + ghTok, 'Content-Type': 'application/octet-stream', 'User-Agent': 'vants-worker' },
+            body: tBuf, signal: AbortSignal.timeout(20000),
+          });
+          const thJ = rTh.ok ? await rTh.json() : null;
+          // 4) PUBLICAR el release (inmutabilidad activa: nadie lo cambia después)
+          const rPub = await fetch(GH_API + '/releases/' + rel.id, {
+            method: 'PATCH', headers: await ghHeaders(ghTok), body: JSON.stringify({ draft: false }), signal: AbortSignal.timeout(12000),
+          });
+          if (!rPub.ok) {
+            try { await fetch(GH_API + '/releases/' + rel.id, { method: 'DELETE', headers: await ghHeaders(ghTok) }); } catch (e) {}
+            return json({ ok: false, error: 'publicar' }, 502);
+          }
+          const pubJ = await rPub.json();
+          const assetReal = (n) => {
+            const a = (pubJ.assets || []).find((x) => x.name === n);
+            return a ? a.browser_download_url : (n === 'clip.' + ext ? vidJ.browser_download_url : (thJ && thJ.browser_download_url) || '');
+          };
+          // 5) actualizar el manifest (índice de la vitrina)
+          const { sha, clips } = await leerManifest(ghTok);
+          const entrada = {
+            id: tag, sub: ses.sub, username, nick, titulo, juego, ext,
+            fecha: new Date().toISOString(), dur, tam: video.size,
+            video: assetReal('clip.' + ext), thumb: assetReal('thumb.jpg'),
+          };
+          clips.unshift(entrada);
+          while (clips.length > MAX_MANIFEST_ENTRIES) clips.pop();
+          const gOK = await guardarManifest(ghTok, sha, clips);
+          if (!gOK) featCache = { at: 0, body: null }; // fuerza relectura en la próxima visita
+          featCache = { at: 0, body: null };
+          const resP = json({ ok: true, id: tag, video: entrada.video, thumb: entrada.thumb, manifest: gOK });
+          resP.headers.set('Access-Control-Allow-Origin', origin);
+          return resP;
+        }
+        // DELETE: solo el dueño del clip (sub de la sesión)
+        const idDel = String(url.searchParams.get('id') || '');
+        if (!/^clip-[a-z0-9]+$/.test(idDel)) {
+          return json({ ok: false, error: 'id_invalido' }, 400);
+        }
+        const { sha: shaD, clips: clipsD } = await leerManifest(ghTok);
+        const objetivo = clipsD.find((c) => c && c.id === idDel);
+        if (!objetivo) return json({ ok: false, error: 'no_existe' }, 404);
+        if (objetivo.sub !== ses.sub) return json({ ok: false, error: 'no_es_tuyo' }, 403);
+        const restantes = clipsD.filter((c) => !(c && c.id === idDel));
+        const gD = await guardarManifest(ghTok, shaD, restantes);
+        featCache = { at: 0, body: null };
+        // borrar release + tag (si la inmutabilidad bloquea el asset, la entrada
+        // ya no está en el manifest: el clip desaparece de la vitrina igual)
+        try {
+          const rFind = await fetch(GH_API + '/releases/tags/' + idDel, { headers: await ghHeaders(ghTok), signal: AbortSignal.timeout(9000) });
+          if (rFind.ok) {
+            const relD = await rFind.json();
+            await fetch(GH_API + '/releases/' + relD.id, { method: 'DELETE', headers: await ghHeaders(ghTok), signal: AbortSignal.timeout(9000) });
+            await fetch(GH_API + '/git/refs/tags/' + idDel, { method: 'DELETE', headers: await ghHeaders(ghTok), signal: AbortSignal.timeout(9000) });
+          }
+        } catch (eDel) {}
+        const resD = json({ ok: true, manifest: gD });
+        resD.headers.set('Access-Control-Allow-Origin', origin);
+        return resD;
+      } catch (eC) {
+        return json({ ok: false, error: 'clips_error' }, 502);
       }
     }
 

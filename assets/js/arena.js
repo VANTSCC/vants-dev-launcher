@@ -93,7 +93,7 @@ const platIc=k=>'<span class="plat-ic" style="--plc:'+PLAT[k].c+'">'+PICON[k]+'<
 const BADGES={
   pro:{label:'PRO',icon:'zap',color:'#FF0D2E'},
   verified:{label:'VERIFICADO',icon:'badge-check',color:'#4CC9F0'},
-  creator:{label:'CREADOR',icon:'play',color:'#B44CFF'},
+  creator:{label:'CREATOR',icon:'play',color:'#B44CFF'},
   partner:{label:'SOCIO VANTS',icon:'gem',color:'#F5C044'},
   champ:{label:'CAMPEÓN',icon:'trophy',color:'#F5C044'},
   streamer:{label:'STREAMER',icon:'radio',color:'#9146FF'},
@@ -707,8 +707,13 @@ window.VANTS_PLAYERS=[];
 window.VANTS_STATS={};
 const PROXY_PUBLICO='https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const badgesDeRol=p=>{const b=[];if(p.verified)b.push('verified');if(p.role==='owner')b.push('owner');if(p.role==='admin')b.push('admin');if(p.role==='streamer')b.push('streamer');if(p.role==='creator')b.push('creator');if(p.role==='partner')b.push('partner');return b;};
-function rankKeyDe(p){const r=(typeof p.rating==='number'&&p.rating>0)?p.rating:null;try{return r==null?'fundicion':rankFor(r);}catch(e){return 'fundicion';}}
+const badgesDeRol=p=>{const b=[];if(p.verified)b.push('verified');if(p.role==='owner'){b.push('owner');b.push('streamer');b.push('creator');}if(p.role==='admin')b.push('admin');if(p.role==='streamer')b.push('streamer');if(p.role==='creator')b.push('creator');if(p.role==='partner')b.push('partner');return b;};
+/* El OWNER de la arena es la cima del circuito: su rango se muestra como
+   VANTS APEX (tier máximo de la escala, sub APEX) sin depender de su rating.
+   El resto de jugadores sigue la escala normal por rating. */
+const VANTS_APEX_MIN=1.30;
+function ratingDe(p){let r=(typeof p.rating==='number'&&p.rating>0)?p.rating:null;try{if(p&&p.role==='owner')r=Math.max(r||0,VANTS_APEX_MIN);return r;}catch(e){return r;}}
+function rankKeyDe(p){const r=ratingDe(p);try{return r==null?'fundicion':rankFor(r);}catch(e){return 'fundicion';}}
 
 async function cargarJugadores(){
   try{
@@ -738,7 +743,7 @@ async function cargarJugadores(){
       const ra=(typeof a.rating==='number'&&a.rating>0)?a.rating:0,rb=(typeof b.rating==='number'&&b.rating>0)?b.rating:0;
       return rb!==ra?rb-ra:String(a.created_at||'').localeCompare(String(b.created_at||''));
     });
-    renderProfileGrid();renderRail();renderLbHead();renderLbBody();
+    renderProfileGrid();renderRail();renderLbHead();renderLbBody();renderDestacadosRail();
     if(window.vantsRefreshTeams)window.vantsRefreshTeams();
   }catch(e){/* sin conexión a la base: la sala queda en su último estado */}
 }
@@ -782,13 +787,16 @@ function renderProfileGrid(){
     const eqChip=eq?'<div style="display:flex;align-items:center;gap:7px;margin-top:9px;border:1px solid var(--line2,#303039);background:#0d0d10;padding:5px 8px">'
       +'<span style="width:22px;height:22px;flex:none;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 8px var(--mono);color:var(--accent)">'+(eq.foto?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
       +'<span style="font:700 9px var(--mono);letter-spacing:.08em;color:var(--mut,#93939D);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(String(eq.nombre).toUpperCase())+'</span></div>':'';
+    /* banner del perfil del jugador (imagen editable en su cuenta) sobre la franja del card */
+    const bFoto=(p.stats&&p.stats.banner_foto)?String(p.stats.banner_foto):'';
+    const bImg=(bFoto&&/^data:image\//.test(bFoto))?'<img src="'+bFoto+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62"><span style="position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,9,12,.78),rgba(8,9,12,.18) 55%,rgba(8,9,12,.66))"></span>':'';
     return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openPlayerProfile(\''+p.id+'\')">'
-      +'<div class="pc-banner">'+rankSVG(k,64,'remblem')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
+      +'<div class="pc-banner">'+bImg+rankSVG(k,64,'remblem')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
       +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+ava+'</span>'
       +'<div class="pc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'<small>'+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+'</small></div>'
       +'<div class="pc-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
       +eqChip
-      +'<div class="pc-rank">'+rankSVG(k,30)+'<div class="rk-name">'+rc.name+'<small>VANTS RANKED</small></div><span class="rr mono">'+(mmr!=null?mmr:'—')+' MMR</span></div>'
+      +'<div class="pc-rank">'+rankSVG(k,30)+'<div class="rk-name">'+rc.name+(k==='vants'?' APEX':'')+'<small>VANTS RANKED</small></div><span class="rr mono">'+(mmr!=null?mmr:'—')+' MMR</span></div>'
       +'</div></div>';
   }).join('');
   icons();
@@ -797,10 +805,12 @@ function renderProfileGrid(){
 /* ================= FICHA PÚBLICA DE JUGADOR =================
    Mismo diseño que el perfil real (CUENTA REAL VANTS), en solo lectura:
    banner con skin, insignias, stats, rango, cuentas conectadas y canal. */
-function bannerPublicoHTML(sel,rawRank){
+function bannerPublicoHTML(sel,rawRank,foto){
   let rkKey='fundicion';
   try{if(rawRank!=null)rkKey=rankFor(rawRank);}catch(e){}
+  const f=(foto&&String(foto).indexOf('data:image/')===0)?String(foto):'';
   return '<div class="pf-banner">'
+    +(f?'<img src="'+f+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6"><span style="position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,9,12,.8),rgba(8,9,12,.3) 55%,rgba(8,9,12,.7))"></span>':'')
     +(sel==='bananim'?'<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>':'')
     +(sel==='dorado'?'<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>':'')
     +rankSVG(rkKey,92,'remblem')+'</div>';
@@ -848,7 +858,8 @@ function openPlayerProfile(pid){
   const k=rankKeyDe(p),rc=RANKS[k];
   const mmr=(st&&st.mmr!=null)?st.mmr:null;
   const wins=(st&&st.wins)||stats.wins||0,losses=(st&&st.losses)||stats.losses||0;
-  const raw=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st&&st.rank!=null&&st.rank!==''&&!isNaN(parseFloat(st.rank))&&parseFloat(st.rank)>=.5&&parseFloat(st.rank)<=2)?parseFloat(st.rank):null);
+  const raw0=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st&&st.rank!=null&&st.rank!==''&&!isNaN(parseFloat(st.rank))&&parseFloat(st.rank)>=.5&&parseFloat(st.rank)<=2)?parseFloat(st.rank):null);
+  const raw=(p.role==='owner')?Math.max(raw0||0,VANTS_APEX_MIN):raw0;
   const mPart=(stats.matches!=null)?stats.matches:((wins+losses)>0?wins+losses:null);
   const mWr=((wins+losses)>0)?Math.round((wins/(wins+losses))*100):(stats.wr!=null?stats.wr:null);
   const mRtg=(raw!=null)?raw:(stats.rtg!=null?stats.rtg:null);
@@ -868,7 +879,7 @@ function openPlayerProfile(pid){
   openDrawer(
     '<div class="d-head"><span class="kicker">PERFIL DE JUGADOR</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
     +'<div class="d-body" style="--rc:'+rc.c1+'">'
-    +bannerPublicoHTML(stats.banner||'',raw)
+    +bannerPublicoHTML(stats.banner||'',raw,stats.banner_foto)
     +'<div class="pf-head"><span class="ava s2" style="--rc:'+rc.c1+'">'+(p.avatar_url?'<img src="'+escHtml(p.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.username||'V').slice(0,2).toUpperCase()))+'</span>'
       +'<div class="pf-id"><div class="pf-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div>'
       +'<p class="pf-sub">@'+escHtml(p.username||'')+' · '+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+' · MIEMBRO DESDE '+String(p.created_at||'2024').slice(0,4)+'</p></div></div>'
@@ -883,6 +894,82 @@ function openPlayerProfile(pid){
       +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+PLAT[c.k].n+'</b></span><span class="rc-game">VER CANAL</span></div></div>':'')
     +'</div>');
   icons();
+  /* CLIPS DESTACADOS del jugador (vitrina pública): se agregan cuando llegan
+     del manifest, sin bloquear la apertura de la ficha */
+  completarClipsFicha(p);
+}
+
+/* ================= CLIPS DESTACADOS · VITRINA PÚBLICA =================
+   Los clips que los jugadores destacan desde VANTS CLIPS se publican en
+   /api/clips/featured (índice en VANTSgg/vants-clips). Toda la arena los
+   ve: rail bajo la Sala de jugadores y ficha pública de cada autor. */
+let featCacheList=null,featCacheAt=0;
+async function clipsDestacados(){
+  if(featCacheList&&Date.now()-featCacheAt<60000)return featCacheList;
+  try{
+    const r=await fetch('/api/clips/featured',{headers:{Accept:'application/json'}});
+    const j=await r.json().catch(()=>null);
+    featCacheList=(j&&j.ok&&Array.isArray(j.clips))?j.clips:[];
+    featCacheAt=Date.now();
+  }catch(e){ if(!featCacheList)featCacheList=[]; }
+  return featCacheList;
+}
+function featDurTxt(s){s=parseInt(s,10)||0;if(!s)return'';const m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
+function featFechaTxt(iso){try{return new Date(iso).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return''}}
+function featCardHTML(c){
+  const tt=escHtml(c.titulo||'Clip destacado'),nk=escHtml(c.nick||'JUGADOR');
+  const dur=featDurTxt(c.dur),mb=(c.tam>0)?(c.tam/1048576).toFixed(1)+' MB':'';
+  return '<div class="feat-card" data-fid="'+escHtml(c.id)+'" onclick="abrirClipPublico(\''+escHtml(c.id)+'\')">'
+    +'<div class="feat-thumb">'+(c.thumb?'<img src="'+escHtml(c.thumb)+'" alt="" loading="lazy">':'<span class="feat-ph"><i data-lucide="film"></i></span>')
+    +(dur?'<span class="feat-dur mono">'+dur+'</span>':'')+'<span class="feat-play"><i data-lucide="play"></i></span></div>'
+    +'<div class="feat-info"><div class="feat-title" title="'+tt+'">'+tt+'</div>'
+    +'<div class="feat-meta"><span class="feat-nk"><i data-lucide="user"></i>'+nk+'</span>'
+    +'<span class="feat-gm">'+escHtml(c.juego||'VALORANT')+'</span>'
+    +(mb?'<span>'+mb+'</span>':'')+'<span>'+featFechaTxt(c.fecha)+'</span></div></div></div>';
+}
+async function renderDestacadosRail(){
+  const rail=$('#featRail');if(!rail)return;
+  const sec=rail.closest('.reveal');
+  const list=await clipsDestacados();
+  if(sec)sec.style.display=(list&&list.length)?'':'none';
+  if(!list||!list.length){rail.innerHTML='';return;}
+  rail.innerHTML=list.slice(0,8).map(featCardHTML).join('');
+  icons();
+}
+async function abrirClipPublico(fid){
+  const list=await clipsDestacados();
+  const c=(list||[]).find(x=>x&&x.id===fid);
+  if(!c){toast('Ese clip ya no está destacado','info');return;}
+  const autor=escHtml(c.nick||'JUGADOR'),tt=escHtml(c.titulo||'Clip destacado');
+  openModal(
+    '<div class="success feat-modal">'
+    +'<div class="feat-mhead"><span class="kicker" style="color:var(--gold)">CLIP DESTACADO</span>'
+    +'<h4 title="'+tt+'">'+tt+'</h4>'
+    +'<p class="mono" style="font:600 10px var(--mono);color:var(--mut,#93939D);letter-spacing:.08em">POR '+autor+' · '+escHtml(c.juego||'VALORANT')+(featDurTxt(c.dur)?' · '+featDurTxt(c.dur):'')+'</p></div>'
+    +'<div class="feat-player"><video src="'+escHtml(c.video||'')+'" controls autoplay playsinline preload="auto"></video></div>'
+    +'<p class="mono" style="font:500 9.5px/1.7 var(--mono);color:var(--dim,#5C5C66)">Publicado desde VANTS CLIPS por la cuenta de '+autor+'. Los clips destacados son públicos en la Sala de jugadores.</p>'
+    +'<div style="margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="closeModal()"><i data-lucide="x"></i>CERRAR</button></div>'
+    +'</div>');
+  icons();
+  const v=document.querySelector('#modalCard video');
+  if(v)v.addEventListener('click',function(ev){ev.stopPropagation();});
+}
+async function completarClipsFicha(p){
+  try{
+    const list=await clipsDestacados();
+    if(!list||!list.length)return;
+    const mios=list.filter(c=>c&&(c.sub&&p.auth0_sub&&c.sub===p.auth0_sub)||(c.username&&p.username&&c.username.toLowerCase()===String(p.username).toLowerCase()));
+    if(!mios.length)return;
+    const body=document.querySelector('#drawer .d-body');
+    if(!body||!body.isConnected)return;
+    if(body.querySelector('.ficha-clips'))return;
+    const sec=document.createElement('div');
+    sec.className='ficha-clips';
+    sec.innerHTML='<p class="d-sec">CLIPS DESTACADOS · '+mios.length+'</p>'
+      +'<div class="feat-grid">'+mios.slice(0,4).map(featCardHTML).join('')+'</div>';
+    body.appendChild(sec);
+    icons();
+  }catch(e){}
 }
 /* VER MI PERFIL abre SIEMPRE el perfil real (CUENTA REAL VANTS, ver
    arena-live.js); sin sesión, manda al login */
@@ -1033,7 +1120,7 @@ function renderAll(){
 /* ================= INIT ================= */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
  $$('.reveal').forEach(el=>io.observe(el));
-renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();cargarJugadores();agendaEnVivo();
+renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();cargarJugadores();agendaEnVivo();renderDestacadosRail();
 if(document.getElementById('cin')&&!sessionStorage.getItem('vants_film')){sessionStorage.setItem('vants_film','1');setTimeout(openCin,700);}
 
 /* ================= FOTO DE PERFIL + DISCORD ================= */
