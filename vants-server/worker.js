@@ -8,6 +8,10 @@
  *  - Bloqueo de rutas típicas de scanners (/wp-admin, /.env, /.git, ...)
  *  - Rate limiting por IP (anti-flood general + límite estricto en la API)
  *  - Endpoint /api/discord/notify protegido: solo orígenes propios, JSON y límite de tamaño
+ *  - Endpoint /api/valorant/esports (GET): agenda esports real de Valorant vía
+ *    api.henrikdev.xyz. La clave NUNCA va en el código: se configura como secret
+ *    del Worker (HENRIKDEV_API_KEY). Sin clave, responde 503 y la web usa su
+ *    agenda verificada de vlr.gg.
  */
 
 const COLORS = {
@@ -59,11 +63,17 @@ const SCANNER_PATHS = [
 // Rate limiting por IP (por instancia del Worker; suficiente como anti-flood).
 const LIMIT_GENERAL = 240;   // peticiones por minuto por IP (navegar gasta ~20)
 const LIMIT_NOTIFY = 8;      // peticiones por minuto por IP a la API de Discord
+const LIMIT_ESPORTS = 30;    // peticiones por minuto por IP a la agenda Valorant
 const WINDOW_MS = 60_000;    // ventana de 1 minuto
 const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
 
+// Caché de la agenda esports (5 min): evita golpear api.henrikdev.xyz en cada visita.
+const ESPORTS_TTL_MS = 5 * 60_000;
+let esportsCache = { at: 0, body: null, status: 200 };
+
 const rlGeneral = new Map();
 const rlNotify = new Map();
+const rlEsports = new Map();
 
 function rateLimit(bucket, ip, max) {
   const now = Date.now();
@@ -224,10 +234,10 @@ export default {
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      if (url.pathname === '/api/discord/notify' && SITE_ORIGINS.has(origin)) {
+      if ((url.pathname === '/api/discord/notify' || url.pathname === '/api/valorant/esports') && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Methods': url.pathname === '/api/valorant/esports' ? 'GET, OPTIONS' : 'POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
           'Access-Control-Max-Age': '86400',
         });
@@ -281,7 +291,49 @@ export default {
       return resp;
     }
 
-    // --- 7) Resto: archivos estáticos con cabeceras de seguridad
+    // --- 7) Agenda esports de Valorant (datos reales, api.henrikdev.xyz)
+    if (url.pathname === '/api/valorant/esports') {
+      if (method !== 'GET') {
+        return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403);
+      }
+      const e = rateLimit(rlEsports, ip, LIMIT_ESPORTS);
+      if (!e.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(e.retry) });
+      }
+      const key = (env && env.HENRIKDEV_API_KEY) || '';
+      if (!key) {
+        return json({ ok: false, error: 'HENRIKDEV_API_KEY no configurada (secret del Worker). La web usa su agenda verificada de vlr.gg.' }, 503);
+      }
+      const now = Date.now();
+      if (esportsCache.body && now - esportsCache.at < ESPORTS_TTL_MS) {
+        const c = json(esportsCache.body, esportsCache.status);
+        c.headers.set('Access-Control-Allow-Origin', origin);
+        c.headers.set('Cache-Control', 'public, max-age=120');
+        return c;
+      }
+      try {
+        const up = await fetch('https://api.henrikdev.xyz/valorant/v1/esports/schedule', {
+          headers: { Authorization: key, Accept: 'application/json' },
+        });
+        const body = await up.json().catch(() => null);
+        const payload = body || { ok: false, error: 'Respuesta inválida de api.henrikdev.xyz' };
+        const status = up.ok ? 200 : (up.status === 401 ? 500 : up.status); // 401: la clave nunca se expone al cliente
+        if (up.ok) {
+          esportsCache = { at: now, body: payload, status: 200 };
+        }
+        const res = json(payload, status);
+        res.headers.set('Access-Control-Allow-Origin', origin);
+        return res;
+      } catch (err) {
+        return json({ ok: false, error: 'No se pudo contactar api.henrikdev.xyz: ' + err.message }, 502);
+      }
+    }
+
+    // --- 8) Resto: archivos estáticos con cabeceras de seguridad
     if (env.ASSETS) {
       const res = await env.ASSETS.fetch(request);
       return harden(new Response(res.body, res));

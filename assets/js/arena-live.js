@@ -343,7 +343,7 @@
 
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
     var bs = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
-    return '<div class="d-head"><span class="kicker">/// MI PERFIL · CUENTA REAL VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
+    return '<div class="d-head"><span class="kicker">MI PERFIL · CUENTA REAL VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
       '<div class="d-body" style="--rc:' + rc.c1 + '">' +
       pfBannerHTML(bannerSel, raw) +
       '<div class="pf-head">' +
@@ -590,7 +590,7 @@
 
   function renderCrearPerfil(nombreSugerido) {
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
-    openDrawer('<div class="d-head"><span class="kicker">/// MI PERFIL · PRIMERA VEZ</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
+    openDrawer('<div class="d-head"><span class="kicker">MI PERFIL · PRIMERA VEZ</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
       '<div class="d-body">' +
       '<p style="font:500 12px/1.7 var(--mono);color:var(--mut);margin:16px 0">Crea tu jugador oficial en la base de VANTS. Se guarda en Neon y queda ligado a tu cuenta.</p>' +
       '<input id="cp-user" placeholder="Tu usuario (nick)" value="' + (nombreSugerido || '') + '" style="' + inp + 'margin-bottom:10px">' +
@@ -652,7 +652,7 @@
       return;
     }
     if (ME && ME.player) { renderPerfilReal(); return; }
-    openDrawer('<div class="d-head"><span class="kicker">/// MI PERFIL</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div><div class="d-body"><p style="font:500 12px/1.7 var(--mono);color:var(--mut);margin:18px 0">Cargando tu perfil real desde Neon…</p></div>');
+    openDrawer('<div class="d-head"><span class="kicker">MI PERFIL</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div><div class="d-body"><p style="font:500 12px/1.7 var(--mono);color:var(--mut);margin:18px 0">Cargando tu perfil real desde Neon…</p></div>');
     (async function () {
       await cargarPerfilReal();
       if (ME && ME.player) renderPerfilReal();
@@ -690,7 +690,7 @@
         /* activa plan VANTS PRO gratis + insignias OWNER/CREADOR/SOCIO (motor en arena.js) */
         try { if (window.vantsOwnerActivate) window.vantsOwnerActivate(); } catch (eVO) {}
         try {
-          if (typeof state !== 'undefined') { state.passOwned = true; state.isPro = true; if (typeof renderPass === 'function') renderPass(); }
+          if (typeof state !== 'undefined') { state.isPro = true; }
         } catch (e) {}
       })();
     }
@@ -708,7 +708,7 @@
   function liveBadge(on, n) {
     var el = document.getElementById('liveDataBadge');
     if (!el) return;
-    el.innerHTML = on ? '<span class="dot"></span>DATOS EN VIVO · NEON · ' + n + ' TORNEOS' : 'DATOS DE DEMOSTRACIÓN';
+    el.innerHTML = on ? '<span class="dot"></span>DATOS EN VIVO · NEON · ' + n + ' TORNEOS' : 'CALENDARIO S4 · FECHAS POR ANUNCIAR';
     el.classList.toggle('on', !!on);
   }
   try {
@@ -716,7 +716,7 @@
     if (Array.isArray(rows) && rows.length) {
       var list = rows.map(function (t) {
         var d = t.starts_at ? new Date(t.starts_at) : null;
-        return { id: String(t.slug || t.id), day: d ? String(d.getDate()).padStart(2, '0') : '—', mon: d ? d.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase() : '', name: t.name || 'Torneo VANTS', tier: String(t.tier || 'open').toUpperCase(), tags: [String(t.status || 'abierto').toUpperCase()], prize: Number(t.prize_pool) || 0, slots: Number(t.max_participants) || 0, filled: Number(t.current_participants) || 0, fee: 0 };
+        return { id: String(t.slug || t.id), day: d ? String(d.getDate()).padStart(2, '0') : '—', mon: d ? d.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase() : '', name: t.name || 'Torneo VANTS', tier: String(t.tier || 'open').toUpperCase(), tags: [String(t.status || 'abierto').toUpperCase()], prize: (t.prize_pool == null ? null : Number(t.prize_pool) || 0), slots: (t.max_participants == null ? null : Number(t.max_participants) || 0), filled: Number(t.current_participants) || 0, fee: 0 };
       });
       ['valorant', 'cs2'].forEach(function (g) { if (DATA[g]) DATA[g].tournaments = list; });
       if (typeof renderTournaments === 'function') renderTournaments();
@@ -724,39 +724,5 @@
     } else { liveBadge(false, 0); }
   } catch (e) { console.warn('[arena] Neon no disponible', e); liveBadge(false, 0); }
 
-  try {
-    if (user) {
-      var t = await jwt();
-      if (t) {
-        var re = await fetch(API + '/rpc/pass_estado', { method: 'POST', headers: authHeaders(t), body: '{}' });
-        var e = await re.json();
-        if (e && e.nivel != null) {
-          Object.assign(state, { lvl: e.nivel, xp: e.xp, xpMax: e.xp_max, claimed: e.reclamadas || [], passOwned: !!e.premium });
-          if (typeof renderPass === 'function') renderPass();
-          var pc = document.getElementById('paseNeonChip');
-          if (pc) { pc.textContent = 'PROGRESO GUARDADO EN NEON · NIVEL ' + e.nivel; pc.classList.add('on'); }
-        }
-      }
-    }
-  } catch (e) { console.warn('[arena] pase Neon', e); }
-
-  if (typeof claimReward === 'function') {
-    claimReward = async function (i) {
-      var rw = PASS_REWARDS[i];
-      var key = rw.lvl + (rw.prem ? 'p' : 'f');
-      try {
-        var t = await jwt();
-        var r = await fetch(API + '/rpc/pass_reclamar', { method: 'POST', headers: authHeaders(t), body: JSON.stringify({ p_key: key }) });
-        var res = await r.json().catch(function () { return {}; });
-        if (res.ok) {
-          state.claimed = res.reclamadas || state.claimed;
-          state.xp = res.xp; state.lvl = res.nivel; state.xpMax = res.xp_max;
-          if (typeof passSave === 'function') passSave();
-          if (typeof renderPass === 'function') renderPass();
-          if (typeof openReward === 'function') openReward(i);
-          if (typeof toast === 'function') { try { toast(res.xp_ganado > 0 ? '+' + res.xp_ganado + ' XP acreditados al pase' : 'Recompensa reclamada: ' + rw.name); } catch (e5) {} }
-        } else if (typeof toast === 'function') { try { toast('No se pudo reclamar: ' + (res.error || 'error'), 'info'); } catch (e5) {} }
-      } catch (e) { if (typeof toast === 'function') { try { toast('Error de red al reclamar', 'info'); } catch (e6) {} } }
-    };
-  }
+  /* [ELIMINADO] sincronización del Pase competitivo (sección removida del sitio). */
 })();

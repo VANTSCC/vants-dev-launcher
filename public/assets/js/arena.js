@@ -2,7 +2,7 @@
 /* ================= HELPERS / ESTADO ================= */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const money=n=>'$'+n.toLocaleString('en-US');
-const state={game:'valorant',isPro:false,passOwned:false,sort:{key:'rating',dir:-1},search:'',entered:{},period:'mo'};
+const state={game:'valorant',isPro:false,sort:{key:'rating',dir:-1},search:'',entered:{},period:'mo'};
 const D=()=>DATA[state.game];
 const icons=()=>{if(window.lucide)lucide.createIcons();};
 
@@ -134,68 +134,48 @@ const DATA={
     {t:'13:00',status:'final',a:'NRG',b:'100 THIEVES',sa:0,sb:2,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 2 · Dom 11 Oct',real:true,url:'https://www.vlr.gg/754740'},
     {t:'15:15',status:'final',a:'G2 ESPORTS',b:'T1',sa:2,sb:1,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 2 · Dom 11 Oct',real:true,url:'https://www.vlr.gg/754741'},
     {t:'13:00',status:'final',a:'T1',b:'PAPER REX',sa:2,sb:1,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 1 · Vie 9 Oct',real:true,url:'https://www.vlr.gg/754739'}],
-  players:[
-    {name:'DIABLO',team:'KRÜ ASCEND',rating:1.34,kd:1.41,adr:168.2,kast:74.5,x:262,impact:1.72,clutch:9,badges:['pro','verified','champ']},
-    {name:'MORBO',team:'LEVIATÁN PRIME',rating:1.29,kd:1.33,adr:161.7,kast:73.1,x:248,impact:1.61,clutch:7,badges:['pro','verified']},
-    {name:'NINCHA',team:'LOUD NOVA',rating:1.24,kd:1.28,adr:159.0,kast:71.8,x:243,impact:1.58,clutch:6,badges:['creator']},
-    {name:'KAISEL',team:'9Z NUCLEUS',rating:1.21,kd:1.19,adr:154.6,kast:70.2,x:231,impact:1.49,clutch:8,badges:['pro']},
-    {name:'VELKZ',team:'FURIA RIFT',rating:1.18,kd:1.22,adr:151.2,kast:69.7,x:228,impact:1.44,clutch:5,badges:['creator']},
-    {name:'TARUK',team:'KRÜ ASCEND',rating:1.15,kd:1.10,adr:149.8,kast:72.4,x:221,impact:1.41,clutch:4,badges:['pro']},
-    {name:'SOMBRA J',team:'MIBR ECHO',rating:1.12,kd:1.08,adr:147.3,kast:68.9,x:217,impact:1.38,clutch:6,badges:[]},
-    {name:'PIÑON',team:'VELOCITY 9',rating:1.09,kd:1.05,adr:143.1,kast:67.5,x:209,impact:1.30,clutch:3,badges:[]},
-    {name:'FROSTIE',team:'LOUD NOVA',rating:1.07,kd:1.02,adr:141.6,kast:66.8,x:205,impact:1.27,clutch:5,badges:[]},
-    {name:'ZAYER',team:'LEVIATÁN PRIME',rating:1.31,kd:1.35,adr:160.4,kast:72.7,x:251,impact:1.63,clutch:7,badges:['partner','verified']}],
-  rosters:{'KRÜ ASCEND':['DIABLO','TARUK','FAUSTO','NVX','QUILA'],'LEVIATÁN PRIME':['MORBO','ZAYER','KIWI','HUNTER','PAWA'],'LOUD NOVA':['NINCHA','FROSTIE','TACO','VITINHO','RUX'],'9Z NUCLEUS':['KAISEL','MTH','DEDO','LUCHO','ANV'],'FURIA RIFT':['VELKZ','KRM','IGLU','PROKO','JAPA'],'MIBR ECHO':['SOMBRA J','GORDOX','NNK','FEL','ZOCK'],'VELOCITY 9':['PIÑON','DRAKO','MYA','TITO','BLEND'],'TARSA FIVE':['RON','KABE','YUJI','PEPO','LANA']},
+  /* RANKING REAL: se alimenta de Neon (jugadores + season_player_stats vía
+     arena-live.js). Sin datos cargados, el ranking queda vacío — nada de
+     jugadores inventados. */
+  players:[],
+  /* CALENDARIO REAL: la S4 todavía no tiene fecha, pozo ni fee confirmados.
+     Cuando se confirmen, editá acá — o cargá el torneo en Neon (tabla
+     tournaments): la web lo lee automáticamente y el cartel cambia a
+     DATOS EN VIVO · NEON. Sin números inventados. */
   tournaments:[
-    {id:'v1',day:'26',mon:'ABR',name:'ASCENSIÓN SERIES · ETAPA 4',tags:['DOBLE ELIM.','BO3','ONLINE'],tier:'PRO',prize:25000,slots:16,filled:12,fee:9.99},
-    {id:'v2',day:'28',mon:'ABR',name:'OPEN LADDER NOCTURNA #88',tags:['SUIZO','BO1','NOCTURNA'],tier:'FREE',prize:500,slots:64,filled:51,fee:0},
-    {id:'v3',day:'03',mon:'MAY',name:'COPA LATAM INVITACIONAL',tags:['INVITACIÓN','BO3'],tier:'PRO',prize:10000,slots:8,filled:5,fee:14.99},
-    {id:'v4',day:'05',mon:'MAY',name:'SCRIM CUP · FINDE #12',tags:['BO3','AMISTOSO+'],tier:'FREE',prize:250,slots:32,filled:9,fee:0}],
-  bracket:{quarters:[{a:'KRÜ ASCEND',b:'TARSA FIVE',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'LOUD NOVA',b:'9Z NUCLEUS',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'LEVIATÁN PRIME',b:'VELOCITY 9',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'FURIA RIFT',b:'MIBR ECHO',sa:2,sb:1,meta:'BO3 · COMPLETADO'}],
-    semis:[{a:'KRÜ ASCEND',b:'FURIA RIFT',sa:null,sb:null,meta:'HOY · 21:00'},{a:'LOUD NOVA',b:'LEVIATÁN PRIME',sa:null,sb:null,meta:'HOY · 23:30'}],
-    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'},
-    lb1:[{a:'9Z NUCLEUS',b:'TARSA FIVE',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'MIBR ECHO',b:'VELOCITY 9',sa:2,sb:1,meta:'BO3 · COMPLETADO'}],
-    lb2:[{a:null,b:'9Z NUCLEUS',meta:'TRAS SEMIS · BO3'},{a:null,b:'MIBR ECHO',meta:'TRAS SEMIS · BO3'}],
-    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO3'}},
-  ticker:['VANTS GAMES — TEMPORADA 4 · $25,000 EN PREMIOS','INSCRIPCIONES ABIERTAS: ASCENSIÓN SERIES S4','ZAYER (SOCIO VANTS) ESTÁ EN DIRECTO EN TWITCH','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','SUBÍ TU RANGO VANTS RANKED GANANDO SERIES']
+    {id:'v1',day:'—',mon:'2026',name:'ASCENSIÓN SERIES S4',tags:['FECHA POR ANUNCIAR','DOBLE ELIM.','BO3','5v5','ONLINE LATAM'],tier:'FREE',prize:null,slots:null,filled:0,fee:0}],
+  /* BRACKET REAL: la S4 no arrancó (inscripciones abiertas). El bracket se
+     arma cuando cierra la inscripción — sin equipos ni marcadores ficticios. */
+  bracket:{quarters:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    semis:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    final:{a:null,b:null,meta:'POR DEFINIR · BO5'},
+    lb1:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    lb2:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    lbf:{a:null,b:null,meta:'POR DEFINIR · BO3'}},
+  ticker:['INSCRIPCIONES ABIERTAS: ASCENSIÓN SERIES S4','PREMIOS Y FECHAS POR ANUNCIAR EN DISCORD','SEGUÍ EL CIRCUITO PRO REAL EN LA AGENDA · VLR.GG','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','GANA SERIES Y SUBÍ TU RANGO VANTS RANKED']
  },
  cs2:{
   title:'STRATOS<br><span class="out">MAJOR</span> <span class="acc">S4</span>',short:'STRATOS MAJOR S4',
   sub:'El circuito de Counter-Strike 2 con los mejores equipos de la región. Brackets en vivo, MR12, servidores dedicados y revisión de demos ante cualquier sospecha.',
-  extraCol:'HS %',live:{a:'BESTIA ALFA',b:'9Z CIRCUIT',ta:'BST',tb:'9Z',ev:'STRATOS MAJOR · SEMIFINAL · MAPA: MIRAGE',map:'Mirage'},
+  extraCol:'HS %',/* Panel idle honesto: aún no hay cobertura pro real de CS2 */
+  live:{a:'CS2',b:'PRONTO',ta:'CS2',tb:'—',ev:'COBERTURA REAL DEL CIRCUITO PRO DE CS2 · PRÓXIMAMENTE',sim:false,hora:'PRONTO',horaLbl:'DATOS REALES'},
   mapPool:['Mirage','Inferno','Nuke','Ancient','Anubis','Vertigo','Dust II'],
   hows:['Eliminación','Defusa','Explosión','Tiempo agotado'],
-  matches:[
-    {t:'21:00',status:'live',a:'BESTIA ALFA',b:'9Z CIRCUIT',sa:10,sb:8,map:'Mirage',ev:'Stratos Major · Semifinal'},
-    {t:'16:10',status:'final',a:'9Z CIRCUIT',b:'HORIZON FIVE',sa:13,sb:4,map:'Inferno',ev:'Stratos Major · Cuartos'},
-    {t:'15:00',status:'final',a:'SHARKS APEX',b:'PAMPA SIX',sa:11,sb:13,map:'Nuke',ev:'Stratos Major · Cuartos'},
-    {t:'13:40',status:'final',a:'ROWZONE',b:'DINAMO SUR',sa:13,sb:9,map:'Ancient',ev:'Stratos Major · Ronda de 16'},
-    {t:'21:00',status:'up',a:'BESTIA ALFA',b:'9Z CIRCUIT',sa:null,sb:null,map:'Anubis',ev:'Stratos Major · Semifinal'},
-    {t:'23:30',status:'up',a:'SHARKS APEX',b:'ROWZONE',sa:null,sb:null,map:'Vertigo',ev:'Stratos Major · Semifinal'}],
-  players:[
-    {name:'BRUMA',team:'BESTIA ALFA',rating:1.36,kd:1.44,adr:88.4,kast:75.1,x:55.6,impact:1.69,clutch:8,badges:['pro','verified','champ']},
-    {name:'KITO',team:'9Z CIRCUIT',rating:1.31,kd:1.37,adr:86.2,kast:73.8,x:49.2,impact:1.62,clutch:6,badges:['pro','verified']},
-    {name:'NYXO',team:'ROWZONE',rating:1.27,kd:1.29,adr:84.9,kast:72.0,x:51.8,impact:1.55,clutch:7,badges:['creator']},
-    {name:'CAZKO',team:'SHARKS APEX',rating:1.22,kd:1.21,adr:82.7,kast:70.6,x:47.3,impact:1.47,clutch:5,badges:['pro']},
-    {name:'TUNDRA',team:'LAVA JAGUARS',rating:1.19,kd:1.17,adr:81.5,kast:71.2,x:53.4,impact:1.43,clutch:4,badges:[]},
-    {name:'DELTA9',team:'BESTIA ALFA',rating:1.16,kd:1.12,adr:80.1,kast:69.4,x:50.7,impact:1.39,clutch:6,badges:['pro']},
-    {name:'MACHETE',team:'DINAMO SUR',rating:1.13,kd:1.09,adr:78.8,kast:68.1,x:46.9,impact:1.33,clutch:3,badges:[]},
-    {name:'OVNI',team:'HORIZON FIVE',rating:1.10,kd:1.04,adr:77.2,kast:67.3,x:52.1,impact:1.28,clutch:4,badges:[]},
-    {name:'PAMPERO',team:'PAMPA SIX',rating:1.08,kd:1.01,adr:76.0,kast:66.5,x:48.8,impact:1.24,clutch:2,badges:[]},
-    {name:'GORILA',team:'9Z CIRCUIT',rating:1.05,kd:0.97,adr:74.6,kast:65.0,x:44.7,impact:1.18,clutch:3,badges:['creator']}],
-  rosters:{'BESTIA ALFA':['BRUMA','DELTA9','TERO','NOKTU','PIWE'],'9Z CIRCUIT':['KITO','GORILA','ROJ0','MBL','CUTI'],'ROWZONE':['NYXO','ST1CK','FEROZ','HUGO','LIPA'],'SHARKS APEX':['CAZKO','TREMOR','SABLA','OSO','VUKO'],'LAVA JAGUARS':['TUNDRA','VULCA','MAGMA','ZETA','PIO'],'HORIZON FIVE':['OVNI','ORION','KIMA','DUXO','PLUM'],'PAMPA SIX':['PAMPERO','GUAZO','TALO','NENE','RULO'],'DINAMO SUR':['MACHETE','FRIO','BALT','YUPI','CRUZ']},
+  /* AGENDA: sin datos reales de CS2 todavía (vlr.gg cubre VALORANT).
+     Nada de partidos simulados: el panel queda vacío y honesto. */
+  matches:[],
+  players:[],
+  /* CALENDARIO REAL CS2: fecha y pozo por confirmar. Igual que VALORANT:
+     se edita acá o se carga en Neon. */
   tournaments:[
-    {id:'c1',day:'26',mon:'ABR',name:'STRATOS MAJOR · ETAPA 4',tags:['MR12','BO3','ONLINE'],tier:'PRO',prize:25000,slots:16,filled:11,fee:9.99},
-    {id:'c2',day:'28',mon:'ABR',name:'OPEN LADDER NOCTURNA #52',tags:['SUIZO','BO1','NOCTURNA'],tier:'FREE',prize:500,slots:64,filled:44,fee:0},
-    {id:'c3',day:'03',mon:'MAY',name:'COPA SUR INVITACIONAL',tags:['INVITACIÓN','BO3'],tier:'PRO',prize:10000,slots:8,filled:6,fee:14.99},
-    {id:'c4',day:'05',mon:'MAY',name:'WINGMAN CUP · FINDE',tags:['BO3','2V2'],tier:'FREE',prize:250,slots:32,filled:17,fee:0}],
-  bracket:{quarters:[{a:'BESTIA ALFA',b:'LAVA JAGUARS',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'9Z CIRCUIT',b:'HORIZON FIVE',sa:2,sb:0,meta:'BO3 · COMPLETADO'},{a:'SHARKS APEX',b:'PAMPA SIX',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'ROWZONE',b:'DINAMO SUR',sa:2,sb:0,meta:'BO3 · COMPLETADO'}],
-    semis:[{a:'BESTIA ALFA',b:'9Z CIRCUIT',sa:null,sb:null,meta:'HOY · 21:00'},{a:'SHARKS APEX',b:'ROWZONE',sa:null,sb:null,meta:'HOY · 23:30'}],
-    final:{a:null,b:null,meta:'DOMINGO · 20:00 · BO5'},
-    lb1:[{a:'HORIZON FIVE',b:'LAVA JAGUARS',sa:2,sb:1,meta:'BO3 · COMPLETADO'},{a:'PAMPA SIX',b:'DINAMO SUR',sa:2,sb:0,meta:'BO3 · COMPLETADO'}],
-    lb2:[{a:null,b:'HORIZON FIVE',meta:'TRAS SEMIS · BO3'},{a:null,b:'PAMPA SIX',meta:'TRAS SEMIS · BO3'}],
-    lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO3'}},
-  ticker:['VANTS GAMES — TEMPORADA 4 · $25,000 EN PREMIOS','INSCRIPCIONES ABIERTAS: STRATOS MAJOR S4','MORBO (CREADOR) ESTÁ EN DIRECTO EN TWITCH','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','SUBÍ TU RANGO VANTS RANKED GANANDO SERIES']
+    {id:'c1',day:'—',mon:'2026',name:'STRATOS MAJOR S4',tags:['FECHA POR ANUNCIAR','MR12','BO3','5v5','ONLINE LATAM'],tier:'FREE',prize:null,slots:null,filled:0,fee:0}],
+  bracket:{quarters:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    semis:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    final:{a:null,b:null,meta:'POR DEFINIR · BO5'},
+    lb1:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    lb2:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
+    lbf:{a:null,b:null,meta:'POR DEFINIR · BO3'}},
+  ticker:['INSCRIPCIONES ABIERTAS: STRATOS MAJOR S4','PREMIOS Y FECHAS POR ANUNCIAR EN DISCORD','COBERTURA PRO DE CS2 · PRÓXIMAMENTE','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','GANA SERIES Y SUBÍ TU VANTS RATING CS2']
  },
  lol:{
   gameLabel:'LEAGUE OF LEGENDS',
@@ -362,50 +342,21 @@ const DATA={
 const me={name:'RETADOR',country:'AR 🇦🇷',rank:'acero',sub:'II',rr:148,peak:'ACERO II',lvl:23,badges:[],socials:{},game:{},live:false,bio:'Nuevo en el circuito VANTS. Conectá tus cuentas, ganá series y subí de rango.'};
 function addBadge(b){if(!me.badges.includes(b))me.badges.push(b);}
 
-/* ================= TICKER + COUNTDOWN ================= */
+/* ================= TICKER ================= */
 function renderTicker(){
-  const items=D().ticker.map(t=>'<span>/// '+t+'</span>').join('');
+  const items=D().ticker.map(t=>'<span>'+t+'</span>').join('');
   $('#tickerTrack').innerHTML=items+items;
 }
-const cdTarget=Date.now()+((3*24+14)*3600+27*60+12)*1000;
-setInterval(()=>{let d=Math.max(0,cdTarget-Date.now())/1000;
-  $('#cdD').textContent=String(Math.floor(d/86400)).padStart(2,'0');
-  $('#cdH').textContent=String(Math.floor(d%86400/3600)).padStart(2,'0');
-  $('#cdM').textContent=String(Math.floor(d%3600/60)).padStart(2,'0');
-  $('#cdS').textContent=String(Math.floor(d%60)).padStart(2,'0');},1000);
 
-/* ================= PARTIDO EN VIVO (simulado) ================= */
-const live={a:8,b:6,done:false,reset:0,mapIdx:0,specBase:2418,feed:[]};
-function tickLive(){
-  if(D().live.sim===false)return renderLiveIdle();
-  if(live.done){if(--live.reset<=0){live.a=0;live.b=0;live.done=false;live.feed=[];live.mapIdx++;
-    $('#liveEvent').textContent=D().short+' · CUARTOS · MAPA: '+D().mapPool[live.mapIdx%D().mapPool.length];}
-    renderLive();return;}
-  const w=Math.random()<(.5-(live.a-live.b)*.018)?'a':'b';
-  if(w==='a')live.a++;else live.b++;
-  live.feed.unshift({r:live.a+live.b,w,how:D().hows[Math.floor(Math.random()*D().hows.length)],a:live.a,b:live.b});
-  live.feed=live.feed.slice(0,5);
-  if(live.a>=13||live.b>=13){live.done=true;live.reset=8;
-    live.feed.unshift({over:true,w:live.a>=13?'a':'b',a:live.a,b:live.b});}
-  renderLive();
-}
+/* ================= PARTIDO EN VIVO =================
+   Sin simulación: si el juego no tiene datos reales, el panel muestra
+   el estado idle (renderLiveIdle). La agenda de VALORANT usa partidos
+   reales verificados de vlr.gg y, si hay secret HENRIKDEV_API_KEY en el
+   Worker, se refresca en vivo vía /api/valorant/esports. */
+
 function renderLive(){
-  if(D().live.sim===false)return renderLiveIdle();
-  const bd0=$('#liveBadge');if(bd0)bd0.innerHTML='<i class="dot"></i>EN VIVO AHORA';
-  const lb0=$('#liveSpecLbl');if(lb0)lb0.textContent='viendo';
-  $('#liveScore').innerHTML=live.a+'<i>:</i>'+live.b;
-  $('#liveSpec').textContent=(live.specBase+Math.floor(Math.random()*180)-90).toLocaleString('en-US');
-  const build=(el,score)=>{let h='';for(let i=0;i<13;i++){let c='pip';
-    if(i<score)c+=score===live.a?' wa':' wb';else if(i===score&&!live.done&&score<=12)c+=' cur';
-    h+='<span class="'+c+'"></span>';}el.innerHTML=h;};
-  build($('#pipsA'),live.a);build($('#pipsB'),live.b);
-  const L=D().live;
-  $('#liveFeed').innerHTML=live.feed.map(f=>f.over
-    ?'<div class="lf fa"><b>PARTIDO FINALIZADO</b> · '+L.a+' gana '+(f.w==='a'?f.a+':'+f.b:f.b+':'+f.a)+'</div>'
-    :'<div class="lf '+(f.w==='a'?'fa':'fb')+'">R'+String(f.r).padStart(2,'0')+' · <b>'+(f.w==='a'?L.a:L.b)+'</b> gana · '+f.how+' · '+f.a+'–'+f.b+'</div>').join('');
+  renderLiveIdle();
 }
-
-/* Estado sin partido en vivo: panel muestra el próximo partido REAL (vlr.gg) */
 function renderLiveIdle(){
   const L=D().live;
   const bd=$('#liveBadge');if(bd)bd.innerHTML='<i class="dot"></i>PRÓXIMO PARTIDO';
@@ -423,10 +374,11 @@ function renderMatches(){
   const nota=$('#agendaNote');
   if(nota)nota.innerHTML=D().matches.some(m=>m.real)
     ?'Resultados y horarios <b>REALES</b> de vlr.gg · hora de Caracas (VET). Clic en un partido para el detalle y el enlace a la fuente oficial.'
-    :'Clic en cualquier partido para ver el <b>round a round</b>, destacados y alineaciones.';
-  $('#matchList').innerHTML=D().matches.map((m,i)=>{
+    :'Cobertura real de partidos aún no disponible para este juego. La agenda de <b>VALORANT</b> se alimenta de vlr.gg.';
+  const list=D().matches;
+  $('#matchList').innerHTML=list.length?list.map((m,i)=>{
     const chip=m.status==='live'?'<span class="chip live"><i class="dot"></i>LIVE</span>':m.status==='final'?'<span class="chip fin">FINAL</span>':'<span class="chip up">'+m.t+'</span>';
-    const sa=m.status==='live'?live.a:m.sa,sb=m.status==='live'?live.b:m.sb;
+    const sa=m.status==='live'?null:m.sa,sb=m.status==='live'?null:m.sb;
     return '<div class="mrow" data-idx="'+i+'">'
       +'<div class="m-time"><b class="mono">'+(m.status==='live'?'AHORA':m.t)+'</b>'+chip+'</div>'
       +'<div class="m-team" style="justify-content:flex-end"><span>'+m.a+'</span></div>'
@@ -435,64 +387,38 @@ function renderMatches(){
       +'<div class="m-map"><b>'+m.map.toUpperCase()+'</b>'+(m.bo||'BO3')+'</div>'
       +'<div class="m-ev">'+m.ev.toUpperCase()+'</div>'
       +'<span class="m-go"><i data-lucide="chevron-right"></i></span></div>';
-  }).join('');icons();
+  }).join(''):'<div style="grid-column:1/-1;border:1px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;font:600 11px/1.8 var(--mono);letter-spacing:.12em;color:var(--dim)">SIN PARTIDOS CARGADOS PARA ESTE JUEGO · COBERTURA PRO REAL EN LA AGENDA DE VALORANT (VLR.GG)</div>';icons();
 }
  $('#matchList').addEventListener('click',e=>{const r=e.target.closest('.mrow');if(r)openMatchDetail(D().matches[+r.dataset.idx]);});
 
-function genRounds(sa,sb,seed){
-  const hows=D().hows;let a=0,b=0,out=[],i=0;
-  while((a<sa||b<sb)&&i<80){let w;
-    if(a>=sa)w='b';else if(b>=sb)w='a';
-    else w=((Math.sin(seed*91.7+i*13.3)+1)/2)>.5?'a':'b';
-    if(w==='a'&&a<sa){a++;out.push({r:a+b,w:'a',how:hows[(i*3+seed)%hows.length],a,b});}
-    else if(w==='b'&&b<sb){b++;out.push({r:a+b,w:'b',how:hows[(i*5+seed)%hows.length],a,b});}
-    i++;}
-  return out;
-}
 function openMatchDetail(m){
   /* Partidos REALES (vlr.gg): sin round a round simulado ni stats inventadas */
   if(m.real){
     const isUp=m.status==='up';
-    openDrawer('<div class="d-head"><span class="kicker">/// '+(isUp?'PRÓXIMO · PARTIDO REAL':'RESULTADO REAL')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
+    openDrawer('<div class="d-head"><span class="kicker">'+(isUp?'PRÓXIMO · PARTIDO REAL':'RESULTADO REAL')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
       +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+m.ev.toUpperCase()+'</p>'
       +'<div class="d-score"><div class="d-team">'+m.a+'</div><div class="d-num">'+(isUp?'<i>VS</i>':m.sa+'<i>:</i>'+m.sb)+'</div><div class="d-team r">'+m.b+'</div></div>'
       +'<p class="d-map">'+(isUp?('COMIENZA: '+m.t+' (HORA CARACAS) · '+m.bo):('SERIE '+m.bo+' · FINALIZADA'))+'</p>'
       +'<p class="d-sec">FUENTE OFICIAL · DATOS REALES</p>'
-      +'<a class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%;justify-content:center" href="'+m.url+'" target="_blank" rel="noopener">VER PARTIDO COMPLETO EN VLR.GG <i data-lucide="external-link"></i></a>'
+      +(m.url?'<a class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%;justify-content:center" href="'+m.url+'" target="_blank" rel="noopener">VER PARTIDO COMPLETO EN VLR.GG <i data-lucide="external-link"></i></a>':'')
       +'<p class="d-empty">Sincronizado con vlr.gg. VANTS no simula resultados del circuito profesional: mapas, round a round y estadísticas detalladas viven en la fuente oficial.</p>'
       +'</div>');
     return;
   }
-  const d=D(),sa=m.status==='live'?live.a:m.sa,sb=m.status==='live'?live.b:m.sb,isUp=m.status==='up';
-  const seed=(m.a+m.b).length+sa+sb+7;
-  const rounds=isUp?[]:(m.status==='final'?genRounds(sa,sb,seed):live.feed);
-  const rosterA=d.rosters[m.a]||[],rosterB=d.rosters[m.b]||[];
-  const winner=sa>sb?m.a:m.b,mvp=(d.rosters[winner]||[])[0];
-  let roundsHtml;
-  if(isUp)roundsHtml='<p class="d-empty">El partido aún no comienza. Activá una alerta para enterarte del match point.</p>';
-  else roundsHtml=rounds.map(f=>'<div class="dr '+(f.w==='a'?'ga':'')+'"><b>R'+String(f.r).padStart(2,'0')+'</b><span class="dr-w">'+(f.w==='a'?m.a:m.b)+' · '+f.how+'</span><span class="dr-sc">'+f.a+'–'+f.b+'</span></div>').join('');
-  let statsHtml='';
-  if(m.status==='final'){
-    const pool=[...(d.rosters[m.a]||[]).map(n=>({n})),...(d.rosters[m.b]||[]).map(n=>({n}))];
-    const picks=pool.length?[pool[seed%pool.length],pool[(seed+3)%pool.length],pool[(seed+6)%pool.length]]:[];
-    statsHtml=picks.length?'<p class="d-sec">DESTACADOS DEL PARTIDO</p><div class="d-stats">'+picks.map((p,i)=>{
-      const k=18+((seed*(i+2))%9),dd=12+((seed*(i+5))%7),as=4+((seed*(i+3))%8);
-      return '<div class="dr"><b>'+p.n+'</b><span>'+k+'/<span style="color:var(--dim)">'+dd+'</span>/'+as+'</span><span>'+(k/(dd||1)).toFixed(2)+' K/D</span><span>'+(120+((seed*(i+7))%40))+' ADR</span></div>';}).join('')+'</div>':'';
-  }
-  openDrawer('<div class="d-head"><span class="kicker">/// '+(isUp?'PREVIA':(m.status==='live'?'EN VIVO':'DETALLE'))+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
+  /* Partidos del circuito VANTS (no pro): sin round a round ni stats
+     inventadas. El detalle muestra el marcador real cuando existe. */
+  const isUp=m.status==='up'||m.status==='live';
+  const sa=m.status==='final'?m.sa:null,sb=m.status==='final'?m.sb:null;
+  openDrawer('<div class="d-head"><span class="kicker">'+(isUp?'PREVIA':'DETALLE')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
     +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+m.ev.toUpperCase()+'</p>'
     +'<div class="d-score"><div class="d-team">'+m.a+'</div><div class="d-num">'+(isUp?'<i>vs</i>':sa+'<i>:</i>'+sb)+'</div><div class="d-team r">'+m.b+'</div></div>'
-    +'<p class="d-map">MAPA: '+m.map.toUpperCase()+' · BO3'+(m.status==='final'?' · FINALIZADO':'')+'</p>'
-    +(m.status==='final'&&mvp?'<p class="mono" style="font-size:11px;color:var(--muted)">MVP DE LA SERIE: <b style="color:var(--accent)">'+mvp+'</b> ('+winner+')</p>':'')
-    +'<p class="d-sec">'+(isUp?'ALINEACIONES PROBABLES':'RONDA A RONDA')+'</p>'
-    +(isUp?'<div class="d-roster" style="margin-bottom:14px">'+rosterA.map(n=>'<li><b>'+m.a.slice(0,3).toUpperCase()+'</b>'+n+'</li>').join('')+'</div><div class="d-roster">'+rosterB.map(n=>'<li><b>'+m.b.slice(0,3).toUpperCase()+'</b>'+n+'</li>').join('')+'</div>':'<div class="d-rounds">'+roundsHtml+'</div>')
-    +statsHtml
-    +(isUp?'<button class="btn btn-ghost btn-sm" style="margin-top:20px;width:100%;justify-content:center" onclick="toast(\'Alerta activada: te avisamos al match point\',\'info\')"><i data-lucide="bell"></i>AVISARME CUANDO EMPIECE</button>':'')
+    +'<p class="d-map">'+(isUp?('SERIE PROGRAMADA · '+(m.map||'POR DEFINIR').toUpperCase()):('SERIE '+(m.bo||'BO3')+' · FINALIZADA'))+'</p>'
+    +'<p class="d-sec">DATOS DEL CIRCUITO VANTS</p>'
+    +'<p class="d-empty">VANTS no inventa round a round ni estadísticas: el detalle completo de cada serie del circuito se publica con el resultado confirmado por ambos capitanes.</p>'
     +'</div>');
 }
  $('#liveMore').addEventListener('click',()=>{const L=D().live;
-  if(L.sim===false){openMatchDetail({real:true,status:'up',a:L.a,b:L.b,map:L.map,bo:'BO5',ev:L.ev,url:L.url,t:L.hora});return;}
-  openMatchDetail({status:live.done?'final':'live',a:L.a,b:L.b,map:L.map,ev:D().short+' · Cuartos'});});
+  openMatchDetail({real:true,status:'up',a:L.a,b:L.b,map:L.map,bo:L.bo||'BO5',ev:L.ev,url:L.url,t:L.hora});});
 
 /* ================= RANKING ================= */
 const COLS=[
@@ -575,7 +501,7 @@ function renderLbBody(){
       +'<td class="num mono">'+p.x+'</td>'
       +'<td class="num mono"><span class="pro-val">'+p.impact.toFixed(2)+'</span></td>'
       +'<td class="num mono"><span class="pro-val">'+p.clutch+'</span></td></tr>';
-  }).join(''):'<tr><td colspan="11" style="text-align:center;color:var(--dim);padding:34px">Sin resultados para "'+state.search+'"</td></tr>';
+  }).join(''):'<tr><td colspan="11" style="text-align:center;color:var(--dim);padding:34px">'+(state.search?('Sin resultados para "'+state.search+'"'):'Todavía no hay jugadores rankeados: creá tu perfil y reportá tu primera serie')+'</td></tr>';
   icons();
 }
  $('#lbHead').addEventListener('click',e=>{
@@ -623,12 +549,15 @@ function renderBracket(){
 /* ================= TORNEOS ================= */
 function renderTournaments(){
   $('#tournList').innerHTML=D().tournaments.map(t=>{
-    const done=state.entered[t.id],full=t.filled>=t.slots;
+    const done=state.entered[t.id],full=t.slots!=null&&t.filled>=t.slots;
+    const prizeTxt=(t.prize==null)?'POR ANUNCIAR':money(t.prize);
     return '<div class="trow'+(done?' done':'')+'">'
       +'<div class="t-date"><b>'+t.day+'</b><span>'+t.mon+'</span></div>'
       +'<div class="t-info"><h3>'+t.name+'</h3><div class="t-tags"><span class="tag'+(t.tier==='PRO'?' prem':'')+'">'+t.tier+'</span>'+t.tags.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div></div>'
-      +'<div class="t-prize"><b>'+money(t.prize)+'</b><span>POZO DE PREMIOS</span></div>'
-      +'<div class="t-slots"><div class="sl-bar"><i style="width:'+(t.filled/t.slots*100)+'%"></i></div><div class="sl-txt"><span>CUPOS</span><span>'+t.filled+' / '+t.slots+'</span></div></div>'
+      +'<div class="t-prize"><b>'+prizeTxt+'</b><span>POZO DE PREMIOS</span></div>'
+      +(t.slots!=null
+        ?'<div class="t-slots"><div class="sl-bar"><i style="width:'+(t.filled/t.slots*100)+'%"></i></div><div class="sl-txt"><span>CUPOS</span><span>'+t.filled+' / '+t.slots+'</span></div></div>'
+        :'<div class="t-slots"><div class="sl-txt" style="align-items:center"><span>CUPOS</span><span>ABIERTOS</span></div></div>')
       +'<div class="t-fee '+(t.fee?'paid':'free')+'">'+(t.fee?money(t.fee):'GRATIS')+'<small>'+(t.fee?'POR EQUIPO':'ENTRADA LIBRE')+'</small></div>'
       +'<div class="t-act"><button class="btn '+(t.tier==='PRO'?'btn-cut':'btn-ghost')+' btn-sm btn-join" data-tid="'+t.id+'"'+(full?' disabled':'')+'>'
       +(full?'COMPLETO':(t.tier==='PRO'?'INSCRIBIR · '+money(t.fee):'INSCRIBIRME'))+'</button>'
@@ -679,219 +608,8 @@ function finishEnroll(t,team,tag){
   vantsDiscord('torneo_inscripcion',{team,tag,tournament:t.name});
 }
 
-/* ================= PASE: RAREZAS + ARTES SVG ================= */
-const RAR={comun:{c:'#8f9aa6',n:'COMÚN'},raro:{c:'#4CC9F0',n:'RARO'},epico:{c:'#B44CFF',n:'ÉPICO'},legendario:{c:'#F5C044',n:'LEGENDARIO'}};
-
-const ART={
- xp:(uid,r)=>{const V={c:['#8fe9ff','#1287ad'],v:['#d9a8ff','#7a1fd0'],r:['#ff8a96','#a3000f']}[r.v||'c'];return `<svg viewBox="0 0 96 96">
-  <defs><linearGradient id="xp${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${V[0]}"/><stop offset="1" stop-color="${V[1]}"/></linearGradient></defs>
-  <path d="M30 8h36l20 20v40L66 88H30L10 68V28Z" fill="#0e0e12" stroke="url(#xp${uid})" stroke-width="3"/>
-  <path d="M35 17h26l13 13v36L61 79H35L22 66V30Z" fill="none" stroke="${V[0]}" stroke-opacity=".35" stroke-width="1.5"/>
-  <path d="M56 20 32 52h14l-6 24 26-34H51l8-22Z" fill="url(#xp${uid})"/>
-  <path d="M30 8h20l-5 4H32Z" fill="#fff" opacity=".4"/></svg>`},
- charm:uid=>`<svg viewBox="0 0 96 96">
-  <defs><linearGradient id="ch${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffefb0"/><stop offset=".5" stop-color="#f5c044"/><stop offset="1" stop-color="#8a6a1d"/></linearGradient></defs>
-  <circle cx="48" cy="12" r="5" fill="none" stroke="#9aa3ad" stroke-width="2.5"/>
-  <circle cx="48" cy="24" r="4" fill="none" stroke="url(#ch${uid})" stroke-width="2.5"/>
-  <circle cx="48" cy="56" r="24" fill="none" stroke="url(#ch${uid})" stroke-width="4"/>
-  <circle cx="48" cy="56" r="15" fill="none" stroke="url(#ch${uid})" stroke-width="1.5" opacity=".7"/>
-  <path d="M48 30v10M48 72v10M22 56h10M64 56h10" stroke="url(#ch${uid})" stroke-width="4" stroke-linecap="round"/>
-  <circle cx="48" cy="56" r="4" fill="url(#ch${uid})"/>
-  <path d="M30 42a26 26 0 0 1 16-11" stroke="#fff" stroke-opacity=".8" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
- card:uid=>`<svg viewBox="0 0 120 72">
-  <defs><linearGradient id="cf${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#101014"/><stop offset="1" stop-color="#2a0a10"/></linearGradient>
-  <linearGradient id="cfs${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#98a0aa"/></linearGradient>
-  <linearGradient id="cfr${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a68"/><stop offset="1" stop-color="#9e0019"/></linearGradient></defs>
-  <rect width="120" height="72" fill="url(#cf${uid})"/>
-  <ellipse cx="60" cy="76" rx="72" ry="26" fill="#ff0d2e" opacity=".28"/>
-  <circle cx="18" cy="20" r="1.6" fill="#ff7a5c" opacity=".9"/><circle cx="30" cy="34" r="1.2" fill="#ffb46b" opacity=".7"/>
-  <circle cx="98" cy="16" r="1.4" fill="#ff7a5c" opacity=".8"/><circle cx="104" cy="40" r="1.1" fill="#ffb46b" opacity=".6"/><circle cx="88" cy="52" r="1.3" fill="#ff5a68" opacity=".7"/>
-  <g transform="translate(37 12) scale(.72)">
-   <path d="M9 14H23L34.5 44.5 32 52Z" fill="url(#cfs${uid})"/>
-   <path d="M55 14H41L32.4 37 42.2 37Z" fill="url(#cfr${uid})"/>
-   <path d="M38.6 41H41L32 52l1.6-4.4Z" fill="#ff0d2e" opacity=".9"/></g>
-  <rect x="1" y="1" width="118" height="70" fill="none" stroke="#3a3f47" stroke-width="2"/></svg>`,
- patch:uid=>`<svg viewBox="0 0 96 96">
-  <defs><linearGradient id="pt${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dde3"/><stop offset="1" stop-color="#8d949e"/></linearGradient></defs>
-  <path d="M28 6h40l18 18v40L68 90H28L10 68V24Z" fill="#16181d" stroke="#2c313a" stroke-width="2"/>
-  <path d="M33 11h30l16 16v34L63 85H33L15 67V27Z" fill="none" stroke="#3f4550" stroke-width="1.6" stroke-dasharray="4 3"/>
-  <g stroke="#9aa3ad" opacity=".14"><path d="M22 30 44 8M30 40 62 8M42 46 78 10M54 52 86 20M64 58 88 34"/></g>
-  <g transform="translate(28 16) scale(.66)">
-   <path d="M9 14H23L34.5 44.5 32 52Z" fill="url(#pt${uid})"/>
-   <path d="M55 14H41L32.4 37 42.2 37Z" fill="#9e0019"/>
-   <path d="M38.6 41H41L32 52l1.6-4.4Z" fill="#ff0d2e"/></g>
-  <path d="M24 74h48l-5 8H29Z" fill="#1d2026" stroke="#3f4550"/>
-  <text x="48" y="80.5" text-anchor="middle" font-family="'Archivo Black',sans-serif" font-size="6.5" letter-spacing="2.5" fill="url(#pt${uid})">VANTS</text></svg>`,
- spray:uid=>`<svg viewBox="0 0 96 96">
-  <path d="M20 16 44 74 68 16" fill="none" stroke="#ff0d2e" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M17 14 41 72 65 14" fill="none" stroke="#ff5a68" stroke-width="3" stroke-linecap="round" opacity=".5"/>
-  <path d="M42 78h4" stroke="#ff0d2e" stroke-width="5" stroke-linecap="round"/>
-  <path d="M44 84h1.5" stroke="#ff0d2e" stroke-width="3" stroke-linecap="round"/>
-  <path d="M28 40v7" stroke="#ff0d2e" stroke-width="2.5" stroke-linecap="round"/>
-  <g fill="#ff5a68" opacity=".55"><circle cx="12" cy="12" r="1.5"/><circle cx="76" cy="10" r="1.3"/><circle cx="10" cy="26" r="1"/><circle cx="82" cy="24" r="1.2"/><circle cx="48" cy="8" r="1"/></g></svg>`,
- reroll:uid=>`<svg viewBox="0 0 120 72">
-  <defs><linearGradient id="rr${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fe9ff"/><stop offset="1" stop-color="#1287ad"/></linearGradient></defs>
-  <path d="M8 14h104v44H8Z" fill="#0e1216" stroke="url(#rr${uid})" stroke-width="2.5"/>
-  <circle cx="8" cy="36" r="5" fill="#0A0A0C"/><circle cx="112" cy="36" r="5" fill="#0A0A0C"/>
-  <path d="M86 14v44" stroke="url(#rr${uid})" stroke-width="1.6" stroke-dasharray="4 4"/>
-  <g stroke="url(#rr${uid})" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-   <path d="M24 44c8 0 10-14 18-14h14"/><path d="M24 30c8 0 10 14 18 14h14"/>
-   <path d="M50 24l6 6-6 6"/><path d="M50 38l6 6-6 6"/></g>
-  <text x="99" y="41" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-weight="700" font-size="13" fill="url(#rr${uid})">×1</text></svg>`,
- coupon:uid=>`<svg viewBox="0 0 120 72">
-  <defs><linearGradient id="cp${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffefb0"/><stop offset="1" stop-color="#b98a1e"/></linearGradient></defs>
-  <path d="M112 14H20l-6 5.5 6 5.5-6 5.5 6 5.5-6 5.5 6 5.5-6 5.5 6 5.6h92Z" fill="#141208" stroke="url(#cp${uid})" stroke-width="2.5"/>
-  <path d="M28 21h78v30H28Z" fill="none" stroke="url(#cp${uid})" stroke-opacity=".4" stroke-dasharray="4 3"/>
-  <text x="67" y="45" text-anchor="middle" font-family="'Archivo Black',sans-serif" font-size="22" fill="url(#cp${uid})">-50%</text></svg>`,
- plaque:uid=>`<svg viewBox="0 0 96 96">
-  <defs><linearGradient id="pl${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffefb0"/><stop offset=".5" stop-color="#f5c044"/><stop offset="1" stop-color="#8a6a1d"/></linearGradient></defs>
-  <path d="M20 6h56l14 14v56L76 90H20L6 76V20Z" fill="#121317" stroke="url(#pl${uid})" stroke-width="4"/>
-  <path d="M24 12h48l10 10v52L72 84H24L12 72V22Z" fill="none" stroke="#f5c044" stroke-opacity=".4"/>
-  <g transform="translate(30 16) scale(.55)">
-   <path d="M9 14H23L34.5 44.5 32 52Z" fill="#1c1e24" stroke="url(#pl${uid})" stroke-width=".8"/>
-   <path d="M55 14H41L32.4 37 42.2 37Z" fill="#5b000f" stroke="url(#pl${uid})" stroke-width=".8"/></g>
-  <rect x="22" y="74" width="52" height="9" fill="#0d0e11" stroke="#3a3f47"/>
-  <text x="48" y="80.5" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-weight="700" font-size="5.5" letter-spacing="1" fill="url(#pl${uid})">TEMPORADA 4</text></svg>`,
- titleR:uid=>`<svg viewBox="0 0 96 96">
-  <defs><linearGradient id="tR${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f4f7"/><stop offset=".55" stop-color="#c9cfd7"/><stop offset="1" stop-color="#7d8590"/></linearGradient></defs>
-  <path d="M8 32h80l-8 14 8 14H8Z" fill="url(#tR${uid})"/>
-  <path d="M15 37h66l-6 9 6 9H15Z" fill="none" stroke="#4a4f57"/>
-  <text x="48" y="50.5" text-anchor="middle" font-family="'Archivo Black',sans-serif" font-size="10" letter-spacing=".5" fill="#12141a">RETADOR</text></svg>`,
- titleA:uid=>`<svg viewBox="0 0 96 96">
-  <defs><linearGradient id="tA${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffefb0"/><stop offset=".55" stop-color="#f5c044"/><stop offset="1" stop-color="#8a6a1d"/></linearGradient></defs>
-  <path d="M40 24l3-9 5 6 5-6 3 9Z" fill="url(#tA${uid})"/>
-  <path d="M12 36h72l-7 13 7 13H12Z" fill="url(#tA${uid})"/>
-  <path d="M19 41h58l-5 8 5 8H19Z" fill="none" stroke="#6b521a"/>
-  <path d="M14 44l-5 5 5 5M82 44l5 5-5 5" stroke="url(#tA${uid})" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-  <text x="48" y="53" text-anchor="middle" font-family="'Archivo Black',sans-serif" font-size="9" letter-spacing=".4" fill="#1a1406">ASCENDIDO</text></svg>`,
- bananim:uid=>`<svg viewBox="0 0 120 72">
-  <defs><linearGradient id="ba${uid}" gradientUnits="userSpaceOnUse" x1="-60" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ff0d2e" stop-opacity="0"/><stop offset=".5" stop-color="#ff0d2e" stop-opacity=".55"/><stop offset="1" stop-color="#ff0d2e" stop-opacity="0"/></linearGradient></defs>
-  <rect width="120" height="72" fill="#0b0b0e" stroke="#3a3f47" stroke-width="2"/>
-  <rect width="60" height="72" fill="url(#ba${uid})" opacity=".5"><animate attributeName="x" values="-60;120" dur="2.6s" repeatCount="indefinite"/></rect>
-  <rect width="40" height="72" fill="url(#ba${uid})" opacity=".3"><animate attributeName="x" values="120;-40" dur="3.4s" repeatCount="indefinite"/></rect>
-  <g transform="translate(42 16) scale(.56)">
-   <path d="M9 14H23L34.5 44.5 32 52Z" fill="#e8ecef"/>
-   <path d="M55 14H41L32.4 37 42.2 37Z" fill="#ff0d2e"/>
-   <path d="M38.6 41H41L32 52l1.6-4.4Z" fill="#ff0d2e" opacity=".9"/></g>
-  <rect width="120" height="3" fill="#fff" opacity=".12"><animate attributeName="y" values="0;69;0" dur="4s" repeatCount="indefinite"/></rect></svg>`
-};
-
-/* ================= LISTA DEL PASE ================= */
-const PASS_REWARDS=[
- {lvl:1,prem:false,art:'titleR',rar:'comun',type:'TÍTULO',name:'Título: RETADOR',desc:'Placa de acero para tu perfil. El primer sello de todo jugador del circuito.'},
- {lvl:2,prem:false,art:'xp',v:'c',rar:'comun',type:'BOOST',xp:100,name:'Boost +100 XP',desc:'Cápsula de energía del circuito. Se acredita al instante en tu pase.'},
- {lvl:3,prem:true,art:'charm',rar:'legendario',type:'CHARM',name:'Charm: Mira Dorada',desc:'Colgante forjado en oro para tu arma favorita. Exclusivo de la pista premium.'},
- {lvl:4,prem:false,art:'card',rar:'raro',type:'TARJETA',name:'Tarjeta: FUNDICIÓN',desc:'Fondo de perfil con la marca de origen: brasas, acero y la V de ventaja.'},
- {lvl:5,prem:true,art:'reroll',rar:'epico',type:'UTILIDAD',name:'Reroll de fixture',desc:'Cambia el horario de una serie sin penalización. Ideal para imprevistos.'},
- {lvl:6,prem:false,art:'xp',v:'v',rar:'comun',type:'BOOST',xp:250,name:'Boost +250 XP',desc:'Cápsula violeta de alta carga. Sumá experiencia y subí de nivel más rápido.'},
- {lvl:7,prem:false,art:'patch',rar:'raro',type:'PARCHE',name:'Parche de equipo',desc:'Escudo bordado con el sello VANTS para la ficha de tu equipo.'},
- {lvl:8,prem:true,art:'titleA',rar:'legendario',type:'TÍTULO',name:'Título: ASCENDIDO',desc:'Placa de oro con corona. Se emite una sola vez por temporada.'},
- {lvl:9,prem:false,art:'xp',v:'r',rar:'comun',type:'BOOST',xp:400,name:'Boost +400 XP',desc:'La cápsula más potente de la pista gratis. Empuje directo al nivel final.'},
- {lvl:10,prem:true,art:'coupon',rar:'epico',type:'CUPÓN',name:'-50% inscripción',desc:'Cupón para un torneo PRO de la temporada. Se aplica al pagar el fee.'},
- {lvl:11,prem:true,art:'bananim',rar:'epico',type:'BANNER',name:'Banner animado',desc:'La V en movimiento con luces de arena. Se anima en tu ficha pública.'},
- {lvl:12,prem:true,art:'plaque',rar:'legendario',type:'PLACA',name:'Placa de temporada S4',desc:'La máxima condecoración del pase: oro, acero y el sello de la casa.'},
- {lvl:13,prem:false,art:'xp',v:'c',rar:'comun',type:'BOOST',xp:150,name:'Boost +150 XP',desc:'Recarga intermedia de la pista gratis para cerrar el nivel 13.'},
- {lvl:14,prem:true,art:'spray',rar:'raro',type:'SPRAY',name:'Spray: V de VANTS',desc:'Dejá tu marca en el servidor con la V roja del circuito.'},
- {lvl:15,prem:true,art:'xp',v:'v',rar:'comun',type:'BOOST',xp:500,name:'Boost +500 XP',desc:'La cápsula violeta más cargada del pase. Directo al nivel final.'},
- {lvl:16,prem:false,art:'card',rar:'raro',type:'TARJETA',name:'Tarjeta: CIELO S4',desc:'Fondo de perfil con el cielo nocturno de la Temporada 4.'},
- {lvl:17,prem:true,art:'reroll',rar:'epico',type:'UTILIDAD',name:'Reroll ×2 de fixture',desc:'Dos usos: mové el horario de dos series sin penalización.'},
- {lvl:18,prem:true,art:'bananim',rar:'epico',type:'BANNER',name:'Banner: Arena S4',desc:'Banner animado con el marcador de la arena de fondo.'},
- {lvl:19,prem:false,art:'patch',rar:'raro',type:'PARCHE',name:'Parche S4Limited',desc:'Parche de edición limitada con el sello de la Temporada 4.'},
- {lvl:20,prem:true,art:'charm',rar:'legendario',type:'CHARM',name:'Charm: Corona OWNER',desc:'El charm final del pase: corona dorada para los que llegaron hasta el final.'}
-];
-
-/* ================= ESTADO DEL PASE (persistente en la sesión) ================= */
-Object.assign(state,{lvl:7,xp:1780,xpMax:2000,claimed:[]});
-function passSave(){try{sessionStorage.setItem('vants_pass',JSON.stringify({lvl:state.lvl,xp:state.xp,xpMax:state.xpMax,claimed:state.claimed,owned:state.passOwned}))}catch(e){}}
-function passLoad(){try{const s=JSON.parse(sessionStorage.getItem('vants_pass'));if(s){state.lvl=s.lvl;state.xp=s.xp;state.xpMax=s.xpMax;state.claimed=s.claimed||[];state.passOwned=!!s.owned;}}catch(e){}}
-passLoad();
-
-const rwKey=r=>r.lvl+(r.prem?'p':'f');
-function rwState(r){
- const reached=state.lvl>=r.lvl, owned=!r.prem||state.passOwned;
- if(state.claimed.includes(rwKey(r)))return 'claimed';
- if(reached&&owned)return 'claimable';
- if(!owned)return 'locked';
- return 'unreached';
-}
-
-/* ================= RENDER DEL TRACK ================= */
-function renderPass(){
- const pct=Math.min(100,state.xp/state.xpMax*100);
- $('#passLvl').textContent=state.lvl;
- $('#passNextLvl').textContent=state.lvl+1;
- $('#passXpTxt').textContent=state.xp.toLocaleString('en-US')+' / '+state.xpMax.toLocaleString('en-US')+' XP';
- $('#passXpBar').style.width=pct+'%';
- $('#passInv').textContent='RECOMPENSAS RECLAMADAS: '+state.claimed.length+' / '+PASS_REWARDS.length;
- const pb=$('#passBtn');
- if(pb){if(state.passOwned){pb.innerHTML=SVG_CHECK+'PASE PREMIUM ACTIVO';pb.disabled=true;}
-  else{pb.innerHTML='<i data-lucide="ticket"></i>DESBLOQUEAR PREMIUM · $7.99';pb.disabled=false;}}
- $('#passTrack').innerHTML=PASS_REWARDS.map((r,i)=>{
-  const st=rwState(r);
-  const lane=prem=>r.prem===prem
-    ?'<span class="bp-art r-'+r.rar+' '+st+'"><span class="bp-art-in">'+ART[r.art](r.lvl+(r.prem?'p':'f'),r)+'</span>'
-      +(st==='claimable'?'<span class="bp-tag">RECLAMAR</span>':'')
-      +(st==='locked'?'<span class="bp-lock"><i data-lucide="lock"></i></span>':'')
-      +(st==='claimed'?'<span class="bp-check">'+SVG_CHECK+'</span>':'')
-    +'</span>'
-    :'<span class="bp-empty"></span>';
-  return '<div class="bp-col'+(i===0?' first':'')+(i===PASS_REWARDS.length-1?' last':'')+'" style="--rar:'+RAR[r.rar].c+'">'
-   +'<div class="bp-cell" data-i="'+i+'">'+lane(true)+'</div>'
-   +'<div class="bp-node'+(state.lvl>=r.lvl?' reached':'')+(r.lvl===state.lvl?' now':'')+'">'+r.lvl+'</div>'
-   +'<div class="bp-cell" data-i="'+i+'">'+lane(false)+'</div></div>';
- }).join('');
- icons();
-}
- $('#passTrack').addEventListener('click',e=>{
- const c=e.target.closest('.bp-cell');if(!c||c.querySelector('.bp-empty'))return;
- openReward(+c.dataset.i);
-});
-
-/* ================= EXHIBICIÓN + RECLAMO ================= */
-function openReward(i){
- const r=PASS_REWARDS[i],st=rwState(r),R=RAR[r.rar];
- let cta;
- if(st==='claimable')cta='<button class="btn btn-cut" id="rwClaim"><i data-lucide="gift"></i>RECLAMAR RECOMPENSA</button>';
- else if(st==='claimed')cta='<button class="btn btn-ghost" disabled>'+SVG_CHECK+'RECLAMADO</button>';
- else if(st==='locked')cta='<button class="btn btn-cut" id="rwUnlock"><i data-lucide="lock"></i>DESBLOQUEAR PREMIUM · $7.99</button>';
- else cta='<p class="rw-wait">Alcanzá el nivel '+r.lvl+' para reclamar'+(r.prem?' con el pase premium activo':'')+'.</p>';
- openModal('<div class="rw-stage" style="--rar:'+R.c+'"><div class="rw-big">'+ART[r.art]('m'+i,r)+'</div></div>'
-  +'<div class="mc-body"><h3 class="rw-name">'+r.name+'</h3>'
-  +'<div class="rw-chips"><span class="tag" style="border-color:'+R.c+';color:'+R.c+'">'+R.n+'</span><span class="tag">'+r.type+'</span><span class="tag">'+(r.prem?'PREMIUM':'GRATIS')+'</span><span class="tag">NIVEL '+r.lvl+'</span></div>'
-  +'<p class="rw-desc">'+r.desc+'</p><div class="rw-cta">'+cta+'</div></div>');
- const cl=$('#rwClaim');if(cl)cl.onclick=()=>claimReward(i);
- const un=$('#rwUnlock');if(un)un.onclick=()=>openPassCheckout(()=>{renderPass();openReward(i);});
-}
-function claimReward(i){
- const r=PASS_REWARDS[i];
- state.claimed.push(rwKey(r));
- if(r.xp){state.xp+=r.xp;
-  while(state.xp>=state.xpMax){state.xp-=state.xpMax;state.lvl++;state.xpMax=Math.round(state.xpMax*1.15/50)*50;levelFx();}}
- passSave();renderPass();openReward(i);
- toast(r.xp?'+'+r.xp+' XP acreditados al pase':'Recompensa reclamada: '+r.name);
-}
-function levelFx(){
- const el=$('#passLvl');if(el){el.classList.add('lvlup');setTimeout(()=>el.classList.remove('lvlup'),1300);}
- toast('¡SUBISTE AL NIVEL '+state.lvl+' DEL PASE!');
-}
-
-/* ================= CHECKOUT PREMIUM (reutilizable) ================= */
-function openPassCheckout(after){
- if(vantsEsOwner()){after&&after();toast('Privilegio OWNER: pase premium activado gratis');return;}
- openModal('<div class="mc-head"><h3>Pase Competitivo · Premium S4</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
-  +'<div class="mc-sum"><span>Pase Premium Temporada 4</span><span>ÚNICO</span></div>'
-  +'<div class="mc-sum"><span>Charm dorado, banner animado y placa S4</span><span style="color:var(--accent)">INCLUIDO</span></div>'
-  +'<div class="mc-total"><span>TOTAL HOY</span><b>$7.99</b></div>'
-  +'<button class="btn btn-cut" id="payBtn"><i data-lucide="credit-card"></i>DESBLOQUEAR · $7.99</button>'
-  +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">'+notaPago('pase')+'</p></div>');
- $('#mClose').onclick=closeModal;
- $('#payBtn').onclick=e=>pagarO(e.currentTarget,{plan:'pase'},()=>{
-  state.passOwned=true;passSave();renderPass();
-  toast('Pase Premium S4 activado — pista premium desbloqueada');
-  if(after)after();
- });
-}
- $('#passBtn').addEventListener('click',()=>openPassCheckout());
+/* [ELIMINADO] Pase competitivo y pase premium: fuera del sitio por
+   decisión del dueño (la sección #pase se removió de index.html). */
 
 /* ================= MEMBRESÍAS ================= */
  $$('#planToggle button').forEach(b=>b.addEventListener('click',()=>{
@@ -1090,7 +808,7 @@ function openPlayerProfile(pid){
   const c=canales[0];
   const url=c?((c.k==='twitch'?'https://www.twitch.tv/':'https://kick.com/')+String(c.h).replace(/[^A-Za-z0-9_\-]/g,'')):null;
   openDrawer(
-    '<div class="d-head"><span class="kicker">/// PERFIL DE JUGADOR</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
+    '<div class="d-head"><span class="kicker">PERFIL DE JUGADOR</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
     +'<div class="d-body" style="--rc:'+rc.c1+'">'
     +bannerPublicoHTML(stats.banner||'',raw)
     +'<div class="pf-head"><span class="ava s2" style="--rc:'+rc.c1+'">'+(p.avatar_url?'<img src="'+escHtml(p.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.username||'V').slice(0,2).toUpperCase()))+'</span>'
@@ -1193,6 +911,37 @@ function closeCin(){
  $('#filmBtn').addEventListener('click',openCin);
  $('#filmCard').addEventListener('click',openCin);
 
+/* ================= AGENDA EN VIVO (opcional) =================
+   Si el Worker tiene el secret HENRIKDEV_API_KEY, /api/valorant/esports
+   devuelve el calendario esports real de api.henrikdev.xyz. Si la clave no
+   está configurada o el upstream falla, la agenda conserva los partidos
+   reales verificados de vlr.gg (nada se rompe). */
+async function agendaEnVivo(){
+  if(state.game!=='valorant')return;
+  try{
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),4000);
+    const r=await fetch('https://vants.geimerjhoan099.workers.dev/api/valorant/esports',{headers:{Accept:'application/json'},signal:ctrl.signal});
+    clearTimeout(to);
+    if(!r.ok)return;
+    const j=await r.json().catch(()=>null);
+    const src=j&&j.data&&(Array.isArray(j.data.schedule)?j.data.schedule:(Array.isArray(j.data)?j.data:null));
+    if(!src||!src.length)return;
+    const map=src.slice(0,6).map(m=>{
+      const eq=(m&&m.teams?m.teams:[]).map(x=>(x&&(x.name||x.code))||x).filter(Boolean);
+      if(eq.length<2)return null;
+      const f=m.start_time?new Date(m.start_time):null;
+      const t=f&&isNaN(f.getTime())?'—':f.toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',hour12:false});
+      const ev=(m.tournament&&(m.tournament.name||m.tournament))||'CIRCUITO PRO';
+      const url=(typeof m.vlr_url==='string'&&m.vlr_url.indexOf('vlr.gg')>-1)?m.vlr_url:((typeof m.url==='string'&&m.url.indexOf('vlr.gg')>-1)?m.url:null);
+      return {t,status:'up',a:String(eq[0]).toUpperCase().slice(0,24),b:String(eq[1]).toUpperCase().slice(0,24),sa:null,sb:null,map:'Serie',bo:'BO3',ev:String(ev).slice(0,80),real:true,url};
+    }).filter(Boolean);
+    if(!map.length)return;
+    D().matches=map.concat(D().matches.filter(m=>m.status==='final'));
+    renderMatches();
+    const n=$('#agendaNote');if(n)n.innerHTML='Agenda <b>EN VIVO</b> (HenrikDev API) + resultados reales de vlr.gg · hora de Caracas.';
+  }catch(e){/* sin clave/red: queda la agenda verificada */}
+}
+
 /* ================= CAMBIO DE JUEGO ================= */
 function renderAll(){
   const d=D();
@@ -1200,26 +949,24 @@ function renderAll(){
   renderTicker();
   $('#heroTitle').innerHTML=d.title;
   $('#heroSub').textContent=d.sub;
-  $('#gbNext').innerHTML='<b>'+d.short+'</b>CIERRE DE INSCRIPCIÓN EN 3D 14H';
+  $('#gbNext').innerHTML='<b>'+d.short+'</b>INSCRIPCIONES ABIERTAS';
   $('#liveNameA').textContent=d.live.a;$('#liveNameB').textContent=d.live.b;
   $('#liveTagA').textContent=d.live.ta;$('#liveTagB').textContent=d.live.tb;
   $('#liveEvent').textContent=d.live.ev;
-  renderMatches();renderLbHead();renderLbBody();renderBracket();renderTournaments();renderPass();renderRail();
+  renderMatches();renderLbHead();renderLbBody();renderBracket();renderTournaments();renderRail();
   icons();
 }
  $$('.gbtn').forEach(b=>b.addEventListener('click',()=>{
   if(state.game===b.dataset.game)return;
   state.game=b.dataset.game;
   $$('.gbtn').forEach(x=>x.classList.toggle('on',x===b));
-  live.a=4;live.b=3;live.done=false;live.feed=[];live.mapIdx=0;
   renderAll();renderLive();
 }));
 
 /* ================= INIT ================= */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
  $$('.reveal').forEach(el=>io.observe(el));
-renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();cargarJugadores();
-setInterval(tickLive,2600);
+renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();cargarJugadores();agendaEnVivo();
 if(!sessionStorage.getItem('vants_film')){sessionStorage.setItem('vants_film','1');setTimeout(openCin,700);}
 
 /* ================= FOTO DE PERFIL + DISCORD ================= */
@@ -1362,10 +1109,10 @@ function renderAccount(){
 meLoad();renderAccount();icons();
 
 /* ====== PUENTE WEB → BOT DE DISCORD ======
-   En la demo (archivo local) falla silenciosamente.
-   Cuando sirvas la web desde vants-server/server.js, funciona real. */
+   URL absoluta del Worker (Cloudflare): funciona igual servido desde
+   Workers, desde GitHub Pages o en local (donde falla silenciosamente). */
 function vantsDiscord(type, data){
-  fetch('/api/discord/notify', {
+  fetch('https://vants.geimerjhoan099.workers.dev/api/discord/notify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type, data })

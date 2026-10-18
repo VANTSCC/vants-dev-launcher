@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VANTS GAMES — Arena competitiva de VALORANT y CS2</title>
-<meta name="description" content="VANTS GAMES: arena competitiva de VALORANT y CS2. Partidos en vivo, ranking, bracket de torneos y pase de temporada. Entra con Google, Discord, GitHub, Kick o correo.">
+<meta name="description" content="VANTS GAMES: arena competitiva de VALORANT y CS2. Partidos y resultados reales, ranking, calendario de torneos y VANTS RANKED. Entra con Google, Discord, GitHub, Kick o correo.">
 <link rel="canonical" href="https://feispla.github.io/Vants/">
 <meta property="og:title" content="VANTS GAMES — Arena competitiva">
 <meta property="og:url" content="https://feispla.github.io/Vants/">
@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
-<link rel="stylesheet" href="./assets/css/arena.css?v=3">
+<link rel="stylesheet" href="./assets/css/arena.css?v=4">
 </head>
 <body data-game="valorant">
 
@@ -48,6 +48,8 @@
       <a href="#ranking">RANKING</a>
       <a href="#torneos">TORNEOS</a>
       <a href="#jugadores">JUGADORES</a>
+      <a href="#equipo">EQUIPO</a>
+      <a href="#tienda">TIENDA</a>
       <a href="#rangos">RANGOS</a>
       <a href="#historia">HISTORIA</a>
       <a href="#pro">PRO</a>
@@ -79,29 +81,21 @@
 <section class="hero" id="inicio">
   <div class="wrap hero-in">
     <div class="hero-left">
-      <span class="kicker">VANTS GAMES PRESENTA · TEMPORADA 4 · INSCRIPCIONES ABIERTAS</span>
+      <span class="kicker">VANTS GAMES PRESENTA · INSCRIPCIONES ABIERTAS</span>
       <h1 id="heroTitle">ASCENSIÓN<br><span class="out">SERIES</span> <span class="acc">S4</span></h1>
       <p class="hero-sub" id="heroSub">El circuito competitivo abierto de LATAM. Clasificá con tu equipo, subí por el bracket y llevate la parte del premio. Matchmaking por skill, anti-cheat obligatorio y servidores 128 tick.</p>
       <div class="hero-meta">
-        <div class="hm"><i data-lucide="trophy"></i><b id="heroPrize">$25,000</b>&nbsp;PREMIOS</div>
-        <div class="hm"><i data-lucide="users"></i><b>48</b>&nbsp;EQUIPOS</div>
+        <div class="hm"><i data-lucide="trophy"></i><b id="heroPrize">POR ANUNCIAR</b>&nbsp;PREMIOS</div>
+        <div class="hm"><i data-lucide="users"></i><b>5v5</b>&nbsp;FORMATO</div>
         <div class="hm"><i data-lucide="swords"></i><b>BO3</b>&nbsp;DOBLE ELIM.</div>
         <div class="hm"><i data-lucide="globe"></i><b>ONLINE</b>&nbsp;LATAM</div>
       </div>
-      <div class="cd">
-        <span class="cd-label">CIERRE DE INSCRIPCIÓN EN</span>
-        <div class="cd-grid">
-          <div class="cd-cell hot"><b id="cdD">00</b><span>DÍAS</span></div>
-          <div class="cd-cell"><b id="cdH">00</b><span>HORAS</span></div>
-          <div class="cd-cell"><b id="cdM">00</b><span>MIN</span></div>
-          <div class="cd-cell"><b id="cdS">00</b><span>SEG</span></div>
-        </div>
-      </div>
+      <p class="hero-note mono" style="font:700 10px/1 var(--mono);letter-spacing:.14em;color:var(--accent)">INSCRIPCIONES ABIERTAS · FECHA Y POZO POR ANUNCIAR EN DISCORD</p>
       <div class="hero-ctas">
         <button class="btn btn-cut" id="heroJoin"><i data-lucide="swords"></i>INSCRIBIR MI EQUIPO</button>
         <a class="btn btn-ghost" href="#bracket"><i data-lucide="git-fork"></i>VER BRACKET</a>
       </div>
-      <p class="hero-note">// Reembolso garantizado hasta 48 h antes. Fee desde $9.99 por equipo. Ganá RR de VANTS RANKED en cada serie.</p>
+      <p class="hero-note">Reembolso garantizado hasta 48 h antes del inicio si hubiera fee. Ganá RR de VANTS RANKED en cada serie.</p>
     </div>
     <div class="live-panel">
       <div class="live-head">
@@ -125,7 +119,7 @@
 <section class="sec alt" id="jugadores">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// IDENTIDADES</span><h2>Sala de jugadores</h2></div>
+      <div><span class="kicker">IDENTIDADES</span><h2>Sala de jugadores</h2></div>
       <p class="sec-note">Las insignias se emiten al verificar identidad o al suscribirte. El cartel <b>EN DIRECTO</b> se activa solo para <b>CREADORES y SOCIOS</b>.</p>
     </div>
     <div class="reveal">
@@ -145,7 +139,7 @@
 <section class="sec" id="partidos">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// AGENDA</span><h2>Partidos y resultados</h2></div>
+      <div><span class="kicker">AGENDA</span><h2>Partidos y resultados</h2></div>
       <p class="sec-note" id="agendaNote">Clic en cualquier partido para ver el <b>round a round</b>, destacados y alineaciones.</p>
     </div>
     <div class="mlist reveal" id="matchList"></div>
@@ -156,7 +150,7 @@
 <section class="sec alt" id="ranking">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// LÍDERES</span><h2>Ranking de jugadores</h2></div>
+      <div><span class="kicker">LÍDERES</span><h2>Ranking de jugadores</h2></div>
       <p class="sec-note">El emblema junto a cada nombre es su <b>rango VANTS RANKED</b> real, calculado con su rendimiento en el circuito.</p>
     </div>
     <div class="lb-controls reveal">
@@ -178,8 +172,8 @@
 <section class="sec" id="bracket">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// LLAVES</span><h2>Bracket principal</h2></div>
-      <p class="sec-note" id="bracketNote">Doble eliminación · <b>BO3</b> · Actualizado en vivo</p>
+      <div><span class="kicker">LLAVES</span><h2>Bracket principal</h2></div>
+      <p class="sec-note" id="bracketNote">Doble eliminación · <b>BO3</b> · Se publica cuando cierra la inscripción</p>
     </div>
     <div class="bracket reveal" id="bracketGrid"></div>
   </div>
@@ -189,35 +183,10 @@
 <section class="sec alt" id="torneos">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// CALENDARIO</span><h2>Torneos abiertos</h2><span class="live-flag" id="liveDataBadge">DATOS DE DEMOSTRACIÓN</span></div>
-      <p class="sec-note">Inscripción por equipo. Los torneos <b>PRO</b> requieren fee; los <b>FREE</b> son entrada libre.</p>
+      <div><span class="kicker">CALENDARIO</span><h2>Torneos abiertos</h2><span class="live-flag" id="liveDataBadge">CALENDARIO S4 · FECHAS POR ANUNCIAR</span></div>
+      <p class="sec-note">Inscripción por equipo desde la web. Fechas, pozos y formatos se anuncian por Discord cuando se confirman.</p>
     </div>
     <div class="tlist reveal" id="tournList"></div>
-  </div>
-</section>
-
-<!-- PASE -->
-<section class="sec" id="pase">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <div><span class="kicker">/// TEMPORADA 4</span><h2>Pase competitivo</h2><span class="live-flag" id="paseNeonChip">PROGRESO EN ESTA SESIÓN</span></div>
-      <p class="sec-note">Recompensas <b>GRATIS</b> para todos y pista <b>PREMIUM</b> con cosméticos exclusivos. Clic en cualquier recompensa para verla en detalle.</p>
-    </div>
-    <div class="pass-top reveal">
-      <div class="pass-lvl"><b id="passLvl">7</b><span>NIVEL ACTUAL · 30 TOTAL</span></div>
-      <div class="pass-xp">
-        <div class="sl-txt"><span>PROGRESO AL NIVEL <b id="passNextLvl">8</b></span><span id="passXpTxt">—</span></div>
-        <div class="sl-bar"><i id="passXpBar" style="width:0%"></i></div>
-        <div class="bp-inv" id="passInv"></div>
-      </div>
-      <div class="pass-buy"><button class="btn btn-cut" id="passBtn"><i data-lucide="ticket"></i>DESBLOQUEAR PREMIUM · $7.99</button></div>
-    </div>
-    <div class="bp-legend reveal">
-      <span class="bpl free"><i></i>PISTA GRATIS</span>
-      <span class="bpl prem"><i></i>PISTA PREMIUM</span>
-      <span class="bpl claim"><i></i>LISTA PARA RECLAMAR</span>
-    </div>
-    <div class="bp-track reveal" id="passTrack"></div>
   </div>
 </section>
 
@@ -225,7 +194,7 @@
 <section class="sec alt" id="pro">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// MEMBRESÍAS</span><h2>Elegí tu nivel</h2></div>
+      <div><span class="kicker">MEMBRESÍAS</span><h2>Elegí tu nivel</h2></div>
       <div class="pp-toggle" id="planToggle">
         <button data-period="mo" class="on">MENSUAL</button>
         <button data-period="yr">ANUAL<span class="pp-save">-33%</span></button>
@@ -289,11 +258,104 @@
   </div>
 </section>
 
+<!-- TIENDA -->
+<section class="sec" id="tienda">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">TIENDA OFICIAL</span><h2>VANTS <em class="shop-x">×</em> VEGASTORE</h2></div>
+      <span class="shop-soon"><i data-lucide="lock"></i>PRÓXIMAMENTE</span>
+    </div>
+    <p class="sec-note reveal">Nos aliamos con <b>VEGA STORE VZLA</b>, el centro de recarga venezolano, para traerte recargas y productos gaming directamente desde la arena. La tienda abre muy pronto: mientras tanto podés visitar su catálogo completo.</p>
+    <div class="shop-banner reveal">
+      <div class="shop-banner-bg"><svg class="mark"><use href="#vmark"/></svg></div>
+      <div class="shop-banner-in">
+        <span class="shop-kicker"><i data-lucide="handshake"></i>COLABORACIÓN OFICIAL · TEMPORADA 4</span>
+        <h3>RECARGAS, GIFT CARDS Y MÁS<br><span class="out">CON PRECIO DE COMPA</span></h3>
+        <div class="shop-soon-big"><b>PRÓXIMAMENTE</b><span>LA TIENDA ESTÁ EN ARMADO · QUEDATE ATENTO</span></div>
+        <div class="shop-ctas">
+          <a class="btn btn-cut" href="https://vegastorevzla.com/" target="_blank" rel="noopener"><i data-lucide="external-link"></i>VISITAR VEGASTORE</a>
+          <button class="btn btn-ghost" id="shopNotifyBtn"><i data-lucide="bell"></i>AVISARME CUANDO ABRA</button>
+        </div>
+      </div>
+      <div class="shop-strip mono">
+        <span><i data-lucide="crosshair"></i>VALORANT · VP</span>
+        <span><i data-lucide="gem"></i>ROBUX</span>
+        <span><i data-lucide="gamepad-2"></i>STEAM</span>
+        <span><i data-lucide="gift"></i>GIFT CARDS</span>
+        <span><i data-lucide="clapperboard"></i>STREAMING</span>
+      </div>
+    </div>
+    <div class="shop-grid reveal">
+      <div class="shop-card locked"><i data-lucide="crosshair"></i><b>VALORANT VP</b><span>Puntos para skins y pases</span><em>PRÓXIMAMENTE</em></div>
+      <div class="shop-card locked"><i data-lucide="gem"></i><b>ROBUX & STEAM</b><span>Robux, wallets y juegos</span><em>PRÓXIMAMENTE</em></div>
+      <div class="shop-card locked"><i data-lucide="gift"></i><b>GIFT CARDS</b><span>Netflix, Discord, Twitch y más</span><em>PRÓXIMAMENTE</em></div>
+      <div class="shop-card locked"><i data-lucide="shirt"></i><b>MERCH VANTS</b><span>El merch oficial del circuito</span><em>PRÓXIMAMENTE</em></div>
+    </div>
+  </div>
+</section>
+
+<!-- EQUIPO VANTS DE 5 -->
+<section class="sec alt" id="equipo">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><span class="kicker">LA ALINEACIÓN DE LA CASA</span><h2>VANTS DE 5</h2></div>
+      <p class="sec-note">El equipo oficial de la organización. Cinco plazas, una sola bandera: <b>jugamos para subir</b>. El dueño va directo — sin filtros, sin intermediarios.</p>
+    </div>
+    <div class="team-grid reveal">
+      <div class="team-card owner">
+        <span class="tc-flag"><i data-lucide="crown"></i>DUEÑO DIRECTO</span>
+        <div class="tc-ava" style="--rc:#F5C044"><span>FS</span><i class="lv">FUNDADOR</i></div>
+        <b class="tc-name">FEISS</b>
+        <span class="tc-tag mono">VANTS · FUNDADOR Y DUEÑO</span>
+        <p class="tc-desc">El que arma el proyecto de cero. Dirige la org, la arena y este equipo de 5. La ventaja no se pide: se toma.</p>
+        <div class="tc-foot mono"><i data-lucide="shield-check"></i>MIEMBRO DESDE 2019</div>
+      </div>
+      <div class="team-card soon">
+        <span class="tc-flag neutral"><i data-lucide="crosshair"></i>IGL</span>
+        <div class="tc-ava"><span>?</span><i class="lv">VACANTE</i></div>
+        <b class="tc-name soon-txt">PRÓXIMAMENTE</b>
+        <span class="tc-tag mono">CAPITÁN · LLAMA LAS JUGADAS</span>
+        <p class="tc-desc">Plaza reservada para la cabeza táctica del equipo. Al mando de cada serie y del draft.</p>
+        <div class="tc-foot mono"><i data-lucide="hourglass"></i>EN SELECCIÓN</div>
+      </div>
+      <div class="team-card soon">
+        <span class="tc-flag neutral"><i data-lucide="zap"></i>DUELISTA</span>
+        <div class="tc-ava"><span>?</span><i class="lv">VACANTE</i></div>
+        <b class="tc-name soon-txt">PRÓXIMAMENTE</b>
+        <span class="tc-tag mono">PRIMER SANGRE · ENTRY FRAGGER</span>
+        <p class="tc-desc">La plaza del que abre los sitios y se tira primero. Agresividad con puntería.</p>
+        <div class="tc-foot mono"><i data-lucide="hourglass"></i>EN SELECCIÓN</div>
+      </div>
+      <div class="team-card soon">
+        <span class="tc-flag neutral"><i data-lucide="eye"></i>CENTINELA</span>
+        <div class="tc-ava"><span>?</span><i class="lv">VACANTE</i></div>
+        <b class="tc-name soon-txt">PRÓXIMAMENTE</b>
+        <span class="tc-tag mono">DEFENSA · LECTURA DEL RIVAL</span>
+        <p class="tc-desc">Plaza reservada para el que sostiene el sitio y castiga cada apuro del enemigo.</p>
+        <div class="tc-foot mono"><i data-lucide="hourglass"></i>EN SELECCIÓN</div>
+      </div>
+      <div class="team-card soon">
+        <span class="tc-flag neutral"><i data-lucide="life-buoy"></i>SOPORTE</span>
+        <div class="tc-ava"><span>?</span><i class="lv">VACANTE</i></div>
+        <b class="tc-name soon-txt">PRÓXIMAMENTE</b>
+        <span class="tc-tag mono">UTILIDADES · LA CASA BASE</span>
+        <p class="tc-desc">La plaza del que deja la jugada servida: smokes, flashes y siempre el último en rendirse.</p>
+        <div class="tc-foot mono"><i data-lucide="hourglass"></i>EN SELECCIÓN</div>
+      </div>
+    </div>
+    <div class="team-note reveal">
+      <i data-lucide="megaphone"></i>
+      <span><b>¿Querés una plaza?</b> El staff observa el circuito todos los días: jugá los torneos, subí tu VANTS RATING y hacete notar.</span>
+      <a class="btn btn-ghost btn-sm" href="#torneos"><i data-lucide="swords"></i>IR A LOS TORNEOS</a>
+    </div>
+  </div>
+</section>
+
 <!-- RANGOS -->
 <section class="sec" id="rangos">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div><span class="kicker">/// VANTS RANKED</span><h2>Ocho tiers. Un solo destino.</h2></div>
+      <div><span class="kicker">VANTS RANKED</span><h2>Ocho tiers. Un solo destino.</h2></div>
       <p class="sec-note">Tu rango sube con <b>RR</b>: victoria de serie, impacto individual y consistencia. Se juega donde importa: en los torneos.</p>
     </div>
     <div class="rank-cta reveal" id="rankedCta" style="display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px solid var(--line);background:linear-gradient(120deg,rgba(255,13,46,.08),transparent 60%);padding:18px 20px;margin:0 0 26px">
@@ -313,9 +375,9 @@
   <div class="wrap">
     <div class="story-grid">
       <div class="story-copy reveal">
-        <span class="kicker">/// LA HISTORIA</span>
+        <span class="kicker">LA HISTORIA</span>
         <h2>Nacimos en<br>la <em>fundición</em></h2>
-        <p>VANTS GAMES empezó en 2019 en un ciber de barrio, con tres jugadores hartos de brackets que se caían, resultados que nadie verificaba y premios que nunca llegaban. La primera versión de la plataforma corrió sobre un servidor casero que se reiniciaba cada vez que llovía.</p>
+        <p>La idea nació en 2019, en un ciber de barrio: tres jugadores hartos de brackets que se caían, resultados que nadie verificaba y premios que nunca llegaban. Durante años eso fue una promesa entre amigos. En 2026, tras meses de desarrollo, la promesa se hizo marca: VANTS GAMES, la arena donde la ventaja se gana con juego.</p>
         <p>El nombre viene de <b style="color:var(--text)">"ventaja"</b>: porque la ventaja no se pide, se toma. Y el logo lo cuenta: el trazo de acero es la habilidad del jugador; el trazo rojo es el fuego de la competencia. Juntos forman una sola hoja — la V de VANTS.</p>
         <div class="story-quote">"Construimos el campo donde la ventaja se gana: torneos serios, stats honestas y una comunidad que juega para subir."</div>
         <div class="hero-ctas">
@@ -331,7 +393,7 @@
       <div class="film-card reveal" id="filmCard">
         <div class="remblem-bg"><svg class="mark"><use href="#vmark"/></svg></div>
         <div class="fc-body">
-          <span class="kicker">/// BRAND FILM · 2025</span>
+          <span class="kicker">BRAND FILM · 2026</span>
           <h3>Donde nace<br>la ventaja</h3>
           <p>12 SEGUNDOS · SONIDO OFF · UNA PROMESA:<br>ACÁ SE GANA CON JUEGO, NO CON EXCUSAS.</p>
           <div class="fc-play"><span class="pl"><i data-lucide="play"></i></span><span>REPRODUCIR FILM</span></div>
@@ -339,37 +401,62 @@
       </div>
     </div>
     <div class="timeline reveal">
-      <div class="tl-item hot"><b>2019</b><h5>La fundición</h5><p>Tres jugadores, un servidor casero y la idea de un circuito que no fraude.</p></div>
-      <div class="tl-item"><b>2021</b><h5>Primer torneo</h5><p>64 equipos, 8.000 espectadores y el primer premio pagado en 24 horas.</p></div>
-      <div class="tl-item"><b>2022</b><h5>VANTS RANKED</h5><p>Nace el sistema propio de rangos y RR con emblemas diseñados in-house.</p></div>
-      <div class="tl-item"><b>2023</b><h5>Creadores</h5><p>Primeros socios y streamers verificados con cartel EN DIRECTO nativo.</p></div>
-      <div class="tl-item"><b>2024</b><h5>$250K pagados</h5><p>Medio millón de dólares acumulados en premios desde el día uno.</p></div>
-      <div class="tl-item hot"><b>2025</b><h5>VANTS 2.0</h5><p>La arena que estás viendo: dos juegos, una sola identidad.</p></div>
+      <div class="tl-item hot"><b>2019</b><h5>La fundición</h5><p>Tres jugadores, un ciber de barrio y la idea de un circuito que no fraude.</p></div>
+      <div class="tl-item"><b>2026</b><h5>VANTS GAMES</h5><p>La idea se vuelve marca: meses de desarrollo y la arena abre oficialmente.</p></div>
+      <div class="tl-item"><b>2026</b><h5>Temporada 4</h5><p>Arrancan los torneos con premio y VANTS RANKED: 8 rangos e insignias.</p></div>
+      <div class="tl-item"><b>2026</b><h5>Vegastore</h5><p>Alianza oficial con el centro de recarga venezolano. La tienda, en camino.</p></div>
+      <div class="tl-item hot"><b>AHORA</b><h5>VANTS DE 5</h5><p>Se arma el equipo oficial. FEISS, dueño directo; cuatro plazas en selección.</p></div>
+      <div class="tl-item"><b>SIGUE</b><h5>Lo que viene</h5><p>Más torneos, merch oficial y nuevos formatos. Esto recién empieza.</p></div>
     </div>
     <div class="story-stats reveal">
-      <div class="ss"><b>128K</b><span>JUGADORES REGISTRADOS</span></div>
-      <div class="ss"><b>3,412</b><span>TORNEOS ORGANIZADOS</span></div>
-      <div class="ss"><b>$2.1M</b><span>PAGADOS EN PREMIOS</span></div>
-      <div class="ss"><b>46</b><span>PAÍSES EN EL CIRCUITO</span></div>
+      <div class="ss"><b>8</b><span>RANGOS EN VANTS RANKED</span></div>
+      <div class="ss"><b>2</b><span>JUEGOS OFICIALES</span></div>
+      <div class="ss"><b>5</b><span>PLAZAS EN VANTS DE 5</span></div>
+      <div class="ss"><b>T4</b><span>LA TEMPORADA EN CURSO</span></div>
     </div>
   </div>
 </section>
 
-<!-- SPONSORS -->
-<section class="sponsors reveal" style="padding:56px 0;border-top:1px solid var(--line)">
+<!-- PATROCINIOS Y COLABORADORES -->
+<section class="sponsors" id="patrocinios" style="padding:64px 0 72px;border-top:1px solid var(--line)">
   <div class="wrap">
-    <div class="titles-row">
+    <div class="sec-head reveal">
+      <div><span class="kicker">ALIANZAS</span><h2>Patrocinios y colaboradores</h2></div>
+      <p class="sec-note">Las marcas que empujan la escena y los aliados que hacen posible cada temporada.</p>
+    </div>
+    <div class="titles-row reveal">
       <div class="title-plate" style="--tp:var(--accent)"><span class="tp-name">VALORANT</span><span class="tp-sub">TÍTULO OFICIAL · RIOT GAMES</span></div>
       <div class="title-plate" style="--tp:#FFB43A"><span class="tp-name">CS2<small>COUNTER-STRIKE 2</small></span><span class="tp-sub">TÍTULO OFICIAL · VALVE</span></div>
     </div>
     <p class="sp-label">AUSPICIAN LA TEMPORADA 4</p>
-    <div class="sp-row">
+    <div class="sp-row reveal">
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>NOVAKIN</span>
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s6 7 6 12a6 6 0 1 1-12 0c0-5 6-12 6-12z"/></svg>TITANFUEL</span>
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 18a10 10 0 0 1 20 0h-4a6 6 0 0 0-12 0z"/></svg>ARCLIGHT GEAR</span>
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="3" width="6" height="18"/></svg>MONOLITH ENERGY</span>
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 18H3z"/></svg>HALCYON</span>
       <span class="sp"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 21 21 3M3 12 12 3M12 21l9-9"/></svg>VXRFIBER</span>
+    </div>
+    <div class="collab-block reveal">
+      <p class="sp-label">COLABORADORES</p>
+      <div class="collab-grid">
+        <a class="collab-card" href="https://vegastorevzla.com/" target="_blank" rel="noopener">
+          <span class="cc-logo"><i data-lucide="store"></i></span>
+          <div class="cc-info">
+            <b>VEGA STORE VZLA<em>COLABORADOR OFICIAL</em></b>
+            <span>Centro de recarga venezolano: VP de Valorant, Robux, Steam, gift cards y streaming. Calidad y buenos precios en un solo lugar.</span>
+          </div>
+          <i data-lucide="external-link" class="cc-go"></i>
+        </a>
+        <div class="collab-card join">
+          <span class="cc-logo"><i data-lucide="badge-plus"></i></span>
+          <div class="cc-info">
+            <b>TU MARCA ACÁ<em>PATROCINIO DISPONIBLE</em></b>
+            <span>Tu logo en brackets, transmisiones y toda la temporada. Escribinos para recibir el kit de patrocinio de la Temporada 4.</span>
+          </div>
+          <button class="btn btn-cut btn-sm" id="sponsorsCtaBtn" style="flex:none"><i data-lucide="send"></i>QUIERO PATROCINAR</button>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -383,11 +470,11 @@
         <p>La arena competitiva de VALORANT y Counter-Strike 2: torneos con premio, rangos propios, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</p>
       </div>
       <div class="f-col"><h5>COMPETIR</h5><a href="#torneos">Torneos abiertos</a><a href="#bracket">Brackets</a><a href="#ranking">Ranking global</a><a href="#rangos">VANTS RANKED</a></div>
-      <div class="f-col"><h5>IDENTIDAD</h5><a href="#jugadores">Sala de jugadores</a><a href="#historia">Historia de la marca</a><a href="#historia">Sistema de insignias</a><a href="#pro">Programa de socios</a></div>
-      <div class="f-col"><h5>MEMBRESÍA</h5><a href="#pro">VANTS PRO</a><a href="#pro">VANTS CREATOR</a><a href="#pase">Pase de temporada</a><a href="#torneos">Fees de inscripción</a></div>
+      <div class="f-col"><h5>IDENTIDAD</h5><a href="#jugadores">Sala de jugadores</a><a href="#equipo">Equipo VANTS DE 5</a><a href="#historia">Historia de la marca</a><a href="#pro">Programa de socios</a></div>
+      <div class="f-col"><h5>MEMBRESÍA</h5><a href="#pro">VANTS PRO</a><a href="#pro">VANTS CREATOR</a><a href="#torneos">Torneos abiertos</a><a href="#tienda">Tienda oficial × VegaStore</a><a href="#patrocinios">Patrocinios y colaboradores</a></div>
     </div>
     <div class="f-bottom">
-      <span>© 2025 VANTS GAMES — Donde nace la ventaja. No afiliado a Riot Games ni a Valve.</span>
+      <span>© 2026 VANTS GAMES — Donde nace la ventaja. No afiliado a Riot Games ni a Valve.</span>
       <span>Pagos seguros procesados por Stripe · Tarjeta, Klarna, Link y más.</span>
     </div>
   </div>
@@ -414,7 +501,7 @@
     </div>
   </div>
   <button class="cin-skip" id="cinSkip">SALTAR FILM →</button>
-  <div class="cin-meta">VANTS GAMES — BRAND FILM 2025</div>
+  <div class="cin-meta">VANTS GAMES — BRAND FILM 2026</div>
 </div>
 
 <!-- OVERLAYS -->
@@ -423,11 +510,22 @@
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="./assets/js/arena.js?v=13"></script>
+<script src="./assets/js/arena.js?v=14"></script>
+<script>
+/* Apartados nuevos: Tienda × VegaStore + Equipo VANTS DE 5 + Patrocinios */
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var t=function(msg){if(typeof window.toast==='function'){window.toast(msg,'ok')}else{console.log(msg)}};
+  var shop=$('#shopNotifyBtn');
+  if(shop)shop.addEventListener('click',function(){t('📌 Te avisamos cuando la tienda VANTS × VEGASTORE abra. Quedate atento en redes.')});
+  var sp=$('#sponsorsCtaBtn');
+  if(sp)sp.addEventListener('click',function(){t('📨 Escribinos por Discord para recibir el kit de patrocinio de la Temporada 4.')});
+})();
+</script>
 <!-- Capa viva: Auth0 (login) + Neon (torneos reales) -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
 <script src="./assets/js/vants-supervisor.js?v=1" defer></script>
-<script src="./assets/js/arena-live.js?v=18" defer></script>
+<script src="./assets/js/arena-live.js?v=19" defer></script>
 </body>
 </html>
