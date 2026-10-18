@@ -55,16 +55,26 @@ jobs:
       # URL corta de marca: workers.dev exige el formato <worker>.<subdominio>.
       # Con subdominio "vants" la web queda en https://vants.vants.workers.dev
       # (el dominio exacto vants.workers.dev no existe como URL de Worker).
-      # Si el nombre está ocupado, el paso se registra y no rompe el deploy.
+      # Seguro e idempotente: solo cambia si el subdominio actual es otro, y si
+      # el nuevo nombre estuviera ocupado restaura el anterior para que la
+      # cuenta nunca quede sin URL.
       - name: Subdominio workers.dev → vants (URL corta)
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 8f2424e95fec4860e19257226f209fbc
         run: |
-          code=$(curl -s -o /tmp/sub.json -w '%{http_code}' -X PUT \
-            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
-            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data '{"subdomain":"vants"}')
-          echo "HTTP $code → $(cat /tmp/sub.json)"
+          api() { curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                       -H "Content-Type: application/json" "$@"; }
+          BASE="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain"
+          CUR=$(api "$BASE" | python3 -c "import json,sys;print(json.load(sys.stdin).get('result',{}).get('subdomain',''))")
+          echo "Subdominio actual: '$CUR'"
+          if [ "$CUR" = "vants" ]; then echo "Ya es 'vants': nada que hacer."; exit 0; fi
+          [ -n "$CUR" ] && { echo "Liberando '$CUR'..."; api -X DELETE "$BASE"; }
+          for N in vants vantsgg "$CUR"; do
+            [ -z "$N" ] && continue
+            CODE=$(api -o /tmp/sub.json -w '%{http_code}' -X PUT "$BASE" --data "{\"subdomain\":\"$N\"}")
+            echo "PUT '$N' → HTTP $CODE $(cat /tmp/sub.json | tr -d '\n' | head -c 200)"
+            [ "$CODE" = "200" ] && { echo "SUBDOMINIO FINAL: $N"; exit 0; }
+          done
+          echo "No se pudo fijar 'vants' (quizá ocupado); se conserva '$CUR'"

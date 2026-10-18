@@ -10,7 +10,7 @@ const icons=()=>{if(window.lucide)lucide.createIcons();};
    automático si el subdominio de cuenta de workers.dev cambia a "vants"
    (https://vants.vants.workers.dev). Así el puente Discord y la agenda
    sobreviven al cambio de subdominio sin tocar código. */
-const WORKER_BASES=['https://vants.geimerjhoan099.workers.dev','https://vants.vants.workers.dev'];
+const WORKER_BASES=['https://vants.vants.workers.dev','https://vants.geimerjhoan099.workers.dev'];
 async function fetchWorker(path,opts){
   let err=null;
   for(let i=0;i<WORKER_BASES.length;i++){
