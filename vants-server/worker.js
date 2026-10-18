@@ -476,8 +476,10 @@ export default {
       if (method !== 'GET') {
         return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
       }
+      /* Origen vacío = fetch same-origin (el navegador no manda Origin en un GET
+         same-origin): se permite. Origen presente y ajeno → fuera. */
       const origin = request.headers.get('origin') || '';
-      if (!SITE_ORIGINS.has(origin)) {
+      if (origin && !SITE_ORIGINS.has(origin)) {
         return json({ ok: false, error: 'Origen no permitido' }, 403);
       }
       const e = rateLimit(rlEsports, ip, LIMIT_ESPORTS);
@@ -491,7 +493,7 @@ export default {
       const now = Date.now();
       if (esportsCache.body && now - esportsCache.at < ESPORTS_TTL_MS) {
         const c = json(esportsCache.body, esportsCache.status);
-        c.headers.set('Access-Control-Allow-Origin', origin);
+        c.headers.set('Access-Control-Allow-Origin', origin || '*');
         c.headers.set('Cache-Control', 'public, max-age=120');
         return c;
       }
@@ -506,7 +508,7 @@ export default {
           esportsCache = { at: now, body: payload, status: 200 };
         }
         const res = json(payload, status);
-        res.headers.set('Access-Control-Allow-Origin', origin);
+        res.headers.set('Access-Control-Allow-Origin', origin || '*');
         return res;
       } catch (err) {
         return json({ ok: false, error: 'No se pudo contactar api.henrikdev.xyz: ' + err.message }, 502);
@@ -518,8 +520,10 @@ export default {
       if (method !== 'GET') {
         return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
       }
+      /* Origen vacío = fetch same-origin (el navegador no manda Origin en un GET
+         same-origin): se permite. Origen presente y ajeno → fuera. */
       const origin = request.headers.get('origin') || '';
-      if (!SITE_ORIGINS.has(origin)) {
+      if (origin && !SITE_ORIGINS.has(origin)) {
         return json({ ok: false, error: 'Origen no permitido' }, 403);
       }
       const t = rateLimit(rlTeams, ip, LIMIT_TEAMS);
@@ -528,7 +532,7 @@ export default {
       }
       const payload = await handleTeams(env);
       const res = json(payload);
-      res.headers.set('Access-Control-Allow-Origin', origin);
+      res.headers.set('Access-Control-Allow-Origin', origin || '*');
       res.headers.set('Cache-Control', 'public, max-age=60');
       return res;
     }
@@ -538,8 +542,10 @@ export default {
       if (method !== 'GET') {
         return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
       }
+      /* Origen vacío = fetch same-origin (el navegador no manda Origin en un GET
+         same-origin): se permite. Origen presente y ajeno → fuera. */
       const origin = request.headers.get('origin') || '';
-      if (!SITE_ORIGINS.has(origin)) {
+      if (origin && !SITE_ORIGINS.has(origin)) {
         return json({ ok: false, error: 'Origen no permitido' }, 403);
       }
       const g = rateLimit(rlGpr, ip, LIMIT_GPR);
@@ -548,7 +554,7 @@ export default {
       }
       const payload = await handleGpr();
       const res = json(payload, payload.ok ? 200 : 502);
-      res.headers.set('Access-Control-Allow-Origin', origin);
+      res.headers.set('Access-Control-Allow-Origin', origin || '*');
       res.headers.set('Cache-Control', 'public, max-age=3600');
       return res;
     }
