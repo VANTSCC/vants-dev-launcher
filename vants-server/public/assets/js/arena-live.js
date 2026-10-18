@@ -337,6 +337,65 @@
       rankSVG(rkKey, 92, 'remblem') + '</div>';
   }
 
+  /* -------- MI EQUIPO (datos + foto editables por el dueño del perfil).
+     Vive en stats.equipo={nombre,tag,foto} de la fila del jugador: sin
+     migración, el PATCH autenticado ya lo guarda (RLS own-row). ---- */
+  function equipoDe(p) {
+    try {
+      var e = p && p.stats && p.stats.equipo;
+      if (e && typeof e === 'object' && e.nombre) {
+        return {
+          nombre: String(e.nombre).slice(0, 40),
+          tag: String(e.tag || '').slice(0, 5).toUpperCase(),
+          foto: (typeof e.foto === 'string' && e.foto.indexOf('data:image') === 0) ? e.foto : null
+        };
+      }
+    } catch (eX) {}
+    return null;
+  }
+  function fotoEquipoHTML(eq) {
+    if (eq && eq.foto) return '<img src="' + eq.foto + '" alt="" style="width:100%;height:100%;object-fit:cover">';
+    return escHtml(((eq && eq.tag) || 'EQ').slice(0, 3));
+  }
+  function equipoRealHTML(p) {
+    var eq = equipoDe(p);
+    if (!eq) return '';
+    return '<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line2,#303039);background:rgba(255,13,46,.05);padding:10px 12px;margin-bottom:14px">'
+      + '<span style="width:44px;height:44px;flex:none;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 13px var(--mono);color:var(--accent)">' + fotoEquipoHTML(eq) + '</span>'
+      + '<div style="min-width:0"><div style="font:800 12px var(--mono);letter-spacing:.08em;color:var(--ink,#EDEDE7)">' + escHtml(eq.nombre.toUpperCase()) + '</div>'
+      + '<div style="font:600 9px var(--mono);color:var(--mut,#93939D);margin-top:2px">MI EQUIPO' + (eq.tag ? ' · ' + escHtml(eq.tag) : '') + '</div></div></div>';
+  }
+  /* foto del equipo: recorte cuadrado + redimensionado local (≤170KB como dataURL) */
+  function fotoEquipoDataURL(file, cb) {
+    try {
+      var fr = new FileReader();
+      fr.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var S = 256, cv = document.createElement('canvas');
+            cv.width = S; cv.height = S;
+            var cx = cv.getContext('2d');
+            var lado = Math.min(img.width, img.height);
+            cx.drawImage(img, (img.width - lado) / 2, (img.height - lado) / 2, lado, lado, 0, 0, S, S);
+            var url = cv.toDataURL('image/jpeg', 0.82);
+            if (url.length > 170000) url = cv.toDataURL('image/jpeg', 0.6);
+            if (url.length > 170000) {
+              var cv2 = document.createElement('canvas'); cv2.width = 128; cv2.height = 128;
+              cv2.getContext('2d').drawImage(cv, 0, 0, 128, 128);
+              url = cv2.toDataURL('image/jpeg', 0.6);
+            }
+            cb(url);
+          } catch (eC) { cb(null); }
+        };
+        img.onerror = function () { cb(null); };
+        img.src = fr.result;
+      };
+      fr.onerror = function () { cb(null); };
+      fr.readAsDataURL(file);
+    } catch (eF) { cb(null); }
+  }
+
   function perfilRealHTML() {
     var p = ME.player;
     var stats = p.stats || {};
@@ -390,6 +449,7 @@
         '<span class="ava s2" style="--rc:' + rc.c1 + '">' + ava + '</span>' +
         '<div class="pf-id"><div class="pf-name">' + escHtml((p.display_name || p.username || 'JUGADOR').toUpperCase()) + '</div>' +
         '<p class="pf-sub">@' + escHtml(p.username || '') + ' · ' + escHtml(p.country || '—') + (p.region ? ' · ' + escHtml(p.region) : '') + ' · ' + membre + '</p></div></div>' +
+      equipoRealHTML(p) +
       '<div class="pf-badges">' + (badges.length ? badges.map(function (b) { return badgeChip(b); }).join('') : '<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>') + '</div>' +
       '<p class="pf-bio">' + escHtml(bio) + '</p>' +
       statsGrid +
@@ -411,6 +471,19 @@
       '<input id="rp-dc" placeholder="Tu tag de Discord (usuario#1234)" value="' + escHtml(stats.discord_tag || '') + '" style="' + inp + 'margin-bottom:12px">' +
       '<button class="btn btn-sm" id="rp-guardar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">GUARDAR MIS DATOS</button>' +
       '<div id="rp-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
+      '<p class="d-sec">MI EQUIPO · NOMBRE Y FOTO</p>' +
+      '<input type="file" id="rp-eq-file" accept="image/*" hidden>' +
+      '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">' +
+        '<span id="rp-eq-prev" style="width:56px;height:56px;flex:none;border-radius:10px;border:1px solid var(--line2,#303039);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 15px var(--mono);color:var(--accent)">' + fotoEquipoHTML(equipoDe(p)) + '</span>' +
+        '<div style="flex:1;display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button class="btn btn-sm" id="rp-eq-foto" style="' + bs + '">SUBIR FOTO</button>' +
+          (equipoDe(p) && equipoDe(p).foto ? '<button class="btn btn-sm" id="rp-eq-sinfoto" style="' + bs + '">QUITAR FOTO</button>' : '') +
+        '</div>' +
+      '</div>' +
+      '<input id="rp-eq-nombre" placeholder="Nombre del equipo" maxlength="40" value="' + escHtml(equipoDe(p) ? equipoDe(p).nombre : '') + '" style="' + inp + 'margin-bottom:10px">' +
+      '<input id="rp-eq-tag" placeholder="Tag del equipo (2-5 letras)" maxlength="5" value="' + escHtml(equipoDe(p) ? equipoDe(p).tag : '') + '" style="' + inp + 'margin-bottom:12px">' +
+      '<button class="btn btn-sm" id="rp-eq-guardar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">GUARDAR MI EQUIPO</button>' +
+      '<div id="rp-eq-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
       '<p class="d-sec">CUENTA</p>' +
       '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">Rol en VANTS: <b style="color:var(--ink)">' + (p.role ? p.role.toUpperCase() : 'JUGADOR') + '</b><br>Verificado: <b style="color:' + (p.verified ? 'var(--grn)' : 'var(--dim)') + '">' + (p.verified ? 'SÍ' : 'NO') + '</b><br>Correo: ' + ((user && user.email) || '—') + '</div>' +
       '<button class="btn btn-ghost btn-sm" id="rp-ajustes" style="margin-top:14px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button>' +
@@ -599,6 +672,72 @@
         }
       } catch (e) { if (msg) msg.textContent = 'Error de red: ' + e; }
       setTimeout(function () { g.disabled = false; g.textContent = 'GUARDAR MIS DATOS'; }, 1800);
+    };
+    /* ---- MI EQUIPO: subir/quitar foto (se redimensiona localmente), nombre, tag ---- */
+    var eqFile = document.getElementById('rp-eq-file');
+    var eqFotoBtn = document.getElementById('rp-eq-foto');
+    var eqPrev = document.getElementById('rp-eq-prev');
+    var EQ_FOTO = (equipoDe(p) || {}).foto || null;
+    function eqMsg(t) { var m = document.getElementById('rp-eq-msg'); if (m) m.textContent = t || ''; }
+    function wireQuitar(q) {
+      if (!q) return;
+      q.onclick = function () {
+        EQ_FOTO = null;
+        if (eqPrev) eqPrev.textContent = 'EQ';
+        q.remove();
+      };
+    }
+    if (eqFotoBtn && eqFile) eqFotoBtn.onclick = function () { eqFile.click(); };
+    if (eqFile) eqFile.onchange = function () {
+      var f = eqFile.files && eqFile.files[0];
+      if (!f) return;
+      if (!/^image\//.test(f.type || '')) { eqMsg('Ese archivo no es una imagen'); return; }
+      if (eqFotoBtn) { eqFotoBtn.disabled = true; eqFotoBtn.textContent = 'PROCESANDO…'; }
+      fotoEquipoDataURL(f, function (url) {
+        if (eqFotoBtn) { eqFotoBtn.disabled = false; eqFotoBtn.textContent = 'SUBIR FOTO'; }
+        if (!url) { eqMsg('No se pudo leer la imagen'); return; }
+        EQ_FOTO = url;
+        if (eqPrev) eqPrev.innerHTML = '<img src="' + url + '" alt="" style="width:100%;height:100%;object-fit:cover">';
+        var q = document.getElementById('rp-eq-sinfoto');
+        if (!q && eqFotoBtn && eqFotoBtn.parentNode) {
+          q = document.createElement('button');
+          q.id = 'rp-eq-sinfoto'; q.className = 'btn btn-sm';
+          q.style.cssText = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
+          q.textContent = 'QUITAR FOTO';
+          eqFotoBtn.parentNode.appendChild(q);
+        }
+        wireQuitar(q);
+      });
+    };
+    wireQuitar(document.getElementById('rp-eq-sinfoto'));
+    var eqG = document.getElementById('rp-eq-guardar');
+    if (eqG) eqG.onclick = async function () {
+      var nombre = (((document.getElementById('rp-eq-nombre') || {}).value) || '').trim();
+      var tag = (((document.getElementById('rp-eq-tag') || {}).value) || '').trim().toUpperCase();
+      eqG.disabled = true; eqG.textContent = 'GUARDANDO…';
+      try {
+        var tEq = await jwt();
+        var statsEq = Object.assign({}, p.stats || {});
+        if (!nombre && !tag && !EQ_FOTO) {
+          delete statsEq.equipo; /* sin nada: se quita el equipo del perfil */
+        } else {
+          if (!nombre) { eqG.disabled = false; eqG.textContent = 'GUARDAR MI EQUIPO'; eqMsg('Escribí el nombre del equipo'); return; }
+          statsEq.equipo = { nombre: nombre.slice(0, 40), tag: tag.slice(0, 5), foto: EQ_FOTO };
+        }
+        var rEq = await fetch(API + '/players?id=eq.' + ME.pid, { method: 'PATCH', headers: authHeaders(tEq), body: JSON.stringify({ stats: statsEq }) });
+        if (rEq.ok) {
+          p.stats = statsEq;
+          eqG.textContent = '✓ EQUIPO GUARDADO EN NEON';
+          eqMsg('');
+          if (typeof toast === 'function') { try { toast(statsEq.equipo ? 'Mi equipo guardado: la foto ya vive en tu perfil' : 'Equipo quitado del perfil'); } catch (eE1) {} }
+          renderPerfilReal();
+        } else {
+          var jEq = await rEq.json().catch(function () { return {}; });
+          eqMsg('La base rechazó el guardado (HTTP ' + rEq.status + '): ' + (jEq.message || ''));
+          eqG.textContent = 'ERROR — ver mensaje';
+        }
+      } catch (eEq) { eqMsg('Error de red: ' + eEq); eqG.textContent = 'GUARDAR MI EQUIPO'; }
+      setTimeout(function () { var gg = document.getElementById('rp-eq-guardar'); if (gg) { gg.disabled = false; gg.textContent = 'GUARDAR MI EQUIPO'; } }, 1800);
     };
     var s = document.getElementById('rp-salir');
     if (s) s.onclick = function () { A0.logout({ logoutParams: { returnTo: RAIZ } }); };

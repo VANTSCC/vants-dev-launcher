@@ -777,11 +777,16 @@ function renderProfileGrid(){
     const badges=badgesDeRol(p),mmr=(st.mmr!=null)?st.mmr:null;
     const live=!!(p.twitch_channel||p.kick_channel);
     const ava=p.avatar_url?'<img alt="" src="'+escHtml(p.avatar_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.display_name||p.username||'V').slice(0,2).toUpperCase());
+    const eq=(p.stats&&p.stats.equipo&&p.stats.equipo.nombre)?p.stats.equipo:null;
+    const eqChip=eq?'<div style="display:flex;align-items:center;gap:7px;margin-top:9px;border:1px solid var(--line2,#303039);background:#0d0d10;padding:5px 8px">'
+      +'<span style="width:22px;height:22px;flex:none;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 8px var(--mono);color:var(--accent)">'+(eq.foto?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
+      +'<span style="font:700 9px var(--mono);letter-spacing:.08em;color:var(--mut,#93939D);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(String(eq.nombre).toUpperCase())+'</span></div>':'';
     return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openPlayerProfile(\''+p.id+'\')">'
       +'<div class="pc-banner">'+rankSVG(k,64,'remblem')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
       +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+ava+'</span>'
       +'<div class="pc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'<small>'+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+'</small></div>'
       +'<div class="pc-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
+      +eqChip
       +'<div class="pc-rank">'+rankSVG(k,30)+'<div class="rk-name">'+rc.name+'<small>VANTS RANKED</small></div><span class="rr mono">'+(mmr!=null?mmr:'—')+' MMR</span></div>'
       +'</div></div>';
   }).join('');
@@ -849,6 +854,11 @@ function openPlayerProfile(pid){
   const mKd=(stats.kd!=null)?stats.kd:null;
   const badges=badgesDeRol(p);
   const handles={discord:stats.discord_tag||null,twitch:p.twitch_channel||null,kick:p.kick_channel||null,youtube:stats.youtube||null,tiktok:stats.tiktok||null,x:stats.x||null,riot:stats.riot||null,steam:stats.steam||null,faceit:stats.faceit||null};
+  const eq=(stats&&stats.equipo&&stats.equipo.nombre)?stats.equipo:null;
+  const eqStrip=eq?'<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line2,#303039);background:rgba(255,13,46,.05);padding:10px 12px;margin-bottom:14px">'
+    +'<span style="width:44px;height:44px;flex:none;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 13px var(--mono);color:var(--accent)">'+(eq.foto?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
+    +'<div style="min-width:0"><div style="font:800 12px var(--mono);letter-spacing:.08em;color:var(--ink,#EDEDE7)">'+escHtml(String(eq.nombre).toUpperCase())+'</div>'
+    +'<div style="font:600 9px var(--mono);color:var(--mut,#93939D);margin-top:2px">EQUIPO DEL JUGADOR'+(eq.tag?' · '+escHtml(String(eq.tag).toUpperCase()):'')+'</div></div></div>':'';
   const canales=[];
   if(p.twitch_channel)canales.push({k:'twitch',h:String(p.twitch_channel).replace(/[^A-Za-z0-9_\-.]/g,'')});
   if(p.kick_channel)canales.push({k:'kick',h:String(p.kick_channel).replace(/[^A-Za-z0-9_\-.]/g,'')});
@@ -861,6 +871,7 @@ function openPlayerProfile(pid){
     +'<div class="pf-head"><span class="ava s2" style="--rc:'+rc.c1+'">'+(p.avatar_url?'<img src="'+escHtml(p.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.username||'V').slice(0,2).toUpperCase()))+'</span>'
       +'<div class="pf-id"><div class="pf-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div>'
       +'<p class="pf-sub">@'+escHtml(p.username||'')+' · '+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+' · MIEMBRO DESDE '+String(p.created_at||'2024').slice(0,4)+'</p></div></div>'
+    +eqStrip
     +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Sin insignias todavía.</span>')+'</div>'
     +'<p class="pf-bio">'+escHtml(stats.bio||'Jugador del circuito VANTS.')+'</p>'
     +'<div class="pf-stats"><div><b>'+(mPart==null?'—':mPart)+'</b><span>PARTIDOS</span></div><div><b>'+(mWr==null?'—':mWr+'%')+'</b><span>WINRATE</span></div><div><b>'+(mRtg==null?'—':(typeof mRtg==='number'?mRtg.toFixed(2):mRtg))+'</b><span>RATING</span></div><div><b>'+(mKd==null?'—':(typeof mKd==='number'?mKd.toFixed(2):mKd))+'</b><span>K/D</span></div></div>'
