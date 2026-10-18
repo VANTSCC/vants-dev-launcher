@@ -906,15 +906,6 @@ function openPlanCheckout(plan){
   $('#mClose').onclick=closeModal;
   $('#payBtn').onclick=e=>pagarO(e.currentTarget,{plan,period:state.period},()=>activatePlan(plan));
 }
-function activatePlan(plan){
-  if(plan==='pro'){state.isPro=true;addBadge('pro');addBadge('streamer');successBadge('VANTS PRO','Tu insignia PRO quedó emitida y es visible en tu perfil, brackets y rankings. Incluye la insignia STREAMER.','pro');}
-  else{state.isPro=true;addBadge('pro');addBadge('creator');addBadge('streamer');
-    successBadge('VANTS CREATOR','Insignia CREADOR activa. Cuando transmitás en Twitch, Kick o YouTube, tu cartel EN DIRECTO aparece en la sala de jugadores. Incluye la insignia STREAMER.','creator');}
-  document.body.classList.add('has-plan');
-  const pb=$('#proBadge');pb.innerHTML='<i data-lucide="'+(plan==='creator'?'play':'zap')+'"></i>'+(plan==='creator'?'CREATOR':'PRO');
-  renderLbHead();renderLbBody();renderAccount();icons();
-  vantsDiscord('membresia',{user:me.name,plan});
-}
 function successBadge(title,txt,badge){
   openModal('<div class="success"><div class="ok">'+SVG_CHECK+'</div><h4>Bienvenido a '+title+'</h4><p>'+txt+'</p><div class="badge-reveal">'+badgeChip(badge,true)+'</div></div>');
   toast('Membresía activada: insignia emitida');

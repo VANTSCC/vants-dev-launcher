@@ -1,7 +1,9 @@
-name: "Neon · deploy de funciones (linker)"
+name: "Neon · deploy de funciones (linker + vantsdata)"
 
-# Despliega la Neon Function "linker" (conectores OAuth de cuentas) con sus
-# variables de entorno. Requiere los secretos del repo:
+# Despliega las Neon Functions públicas con sus variables de entorno:
+#   · linker    — conectores OAuth de cuentas (FACEIT, Twitch, Kick...)
+#   · vantsdata — proxy público de lectura (lecturas anónimas de la web)
+# Requiere los secretos del repo:
 #   NEON_API_KEY      — API key de Neon (ya existente, la usa neon-migrate)
 #   FACEIT_CLIENT_ID  — client ID OAuth PKCE de FACEIT (faceit.com/developers)
 #   FACEIT_API_KEY    — API key server-side de FACEIT (Data API v4)
@@ -54,8 +56,32 @@ jobs:
             ${FACEIT_CLIENT_ID:+--env FACEIT_CLIENT_ID=$FACEIT_CLIENT_ID} \
             ${FACEIT_API_KEY:+--env FACEIT_API_KEY=$FACEIT_API_KEY}
 
+      - name: Desplegar vantsdata (proxy público de lectura)
+        run: |
+          neon functions deploy vantsdata \
+            --project-id square-surf-41242074 \
+            --branch br-sweet-shape-b42xhogj \
+            --src neon-functions/vantsdata \
+            --api-key "$NK" \
+            --wait
+
       - name: Verificación (diagnóstico público del linker)
         run: |
           sleep 5
           curl -s --max-time 20 "$LINKER_URL/" | head -c 900
           echo
+
+      - name: "Verificación vantsdata (diagnóstico + lectura real)"
+        env:
+          VANTSDATA_URL: https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech
+        run: |
+          sleep 5
+          echo "--- GET / (debe responder {\"ok\":true,...}) ---"
+          curl -s --max-time 20 "$VANTSDATA_URL/" | head -c 300; echo
+          echo "--- GET /?table=players&limit=1 (lectura real) ---"
+          RESP=$(curl -s --max-time 30 -w "\nHTTP:%{http_code}" "$VANTSDATA_URL/?table=players&limit=1&select=username,verified")
+          echo "$RESP" | head -c 400; echo
+          CODE=$(echo "$RESP" | tail -1 | sed 's/HTTP://')
+          if [ "$CODE" != "200" ]; then
+            echo "::warning::vantsdata devolvió HTTP $CODE en la verificación (puede necesitar un reintento si el compute acaba de arrancar)"
+          fi
