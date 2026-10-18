@@ -16,6 +16,10 @@
  *    anuncios "🏆 Nueva inscripción" y "👑 Nuevo campeón" que el propio Worker
  *    publica en el canal de Discord (mismo bot, sin storage adicional). El
  *    resultado se cachea 60 s para no golpear la API de Discord en cada visita.
+ *  - Endpoint /api/gpr (GET): Global Power Rankings EN VIVO. Lee la página
+ *    oficial de Riot (valorantesports.com), extrae los puntos GPR de los 48
+ *    equipos por liga y los sirve como JSON. Caché de 1 h: Riot recalcula cada
+ *    pocos días; si Riot falla, la web usa su snapshot embebido.
  */
 
 const COLORS = {
@@ -70,6 +74,7 @@ const LIMIT_GENERAL = 240;   // peticiones por minuto por IP (navegar gasta ~20)
 const LIMIT_NOTIFY = 8;      // peticiones por minuto por IP a la API de Discord
 const LIMIT_ESPORTS = 30;    // peticiones por minuto por IP a la agenda Valorant
 const LIMIT_TEAMS = 30;      // peticiones por minuto por IP a /api/teams
+const LIMIT_GPR = 20;        // peticiones por minuto por IP a /api/gpr
 const WINDOW_MS = 60_000;    // ventana de 1 minuto
 const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
 
@@ -81,10 +86,15 @@ let esportsCache = { at: 0, body: null, status: 200 };
 const TEAMS_TTL_MS = 60_000;
 let teamsCache = { at: 0, body: null };
 
+// Caché del GPR (1 h): Riot recalcula cada pocos días; la página pesa ~2 MB.
+const GPR_TTL_MS = 60 * 60_000;
+let gprCache = { at: 0, body: null };
+
 const rlGeneral = new Map();
 const rlNotify = new Map();
 const rlEsports = new Map();
 const rlTeams = new Map();
+const rlGpr = new Map();
 
 function rateLimit(bucket, ip, max) {
   const now = Date.now();
@@ -303,6 +313,87 @@ async function handleTeams(env) {
   return payload;
 }
 
+/* ==================== GPR · GLOBAL POWER RANKINGS EN VIVO ====================
+ * La página https://valorantesports.com/es-ES/gpr/2026/current es SSR y trae
+ * embebido el payload de datos (objetos TeamGPR de Riot con gprScore, código,
+ * nombre y liga de cada equipo). Extraemos el ÚLTIMO cálculo por equipo y lo
+ * agrupamos por liga. Sin claves ni APIs privadas: es la misma página que
+ * carga un navegador.
+ */
+const GPR_PAGE_URL = 'https://valorantesports.com/es-ES/gpr/2026/current';
+const GPR_LEAGUES = {
+  vct_americas: 'VCT AMÉRICAS',
+  vct_pacific: 'VCT PACIFIC',
+  vct_emea: 'VCT EMEA',
+  vct_china: 'VCT CHINA',
+};
+
+function parseGprHtml(html) {
+  const parts = String(html).split('{"__typename":"TeamGPR"');
+  const byLeague = new Map(); // liga → (code → registro con fecha más reciente)
+  let lastDate = '';
+  for (let i = 1; i < parts.length; i++) {
+    const next = parts[i].indexOf('{"__typename":"TeamGPR"');
+    const chunk = next > 0 ? parts[i].slice(0, next) : parts[i].slice(0, 60000);
+    const name = chunk.match(/"name":"([^"]+)","homeLeague"/);
+    if (!name) continue;
+    const code = chunk.match(/"code":"([A-Z0-9]{1,6})"/);
+    const league = chunk.match(/"homeLeague":\{"__typename":"HomeLeague"[^}]*?"slug":"([a-z_]+)"/);
+    const gpr = chunk.match(/\{"__typename":"GPR","gprScore":(\d+),"elo":\d+,"rank":\d+,"dateCalculated":"([^"]+)"/);
+    if (!code || !league || !gpr) continue;
+    const lid = league[1];
+    if (!(lid in GPR_LEAGUES)) continue;
+    if (!byLeague.has(lid)) byLeague.set(lid, new Map());
+    const bucket = byLeague.get(lid);
+    const rec = { n: name[1], t: code[1], p: parseInt(gpr[1], 10), date: gpr[2] };
+    const prev = bucket.get(rec.t);
+    if (!prev || rec.date > prev.date) bucket.set(rec.t, rec);
+    if (rec.date > lastDate) lastDate = rec.date;
+  }
+  const regionsOut = [];
+  for (const [lid, label] of Object.entries(GPR_LEAGUES)) {
+    const bucket = byLeague.get(lid);
+    if (!bucket || !bucket.size) continue;
+    const equipos = [...bucket.values()]
+      .sort((a, b) => b.p - a.p)
+      .map(({ n, t, p }) => ({ n, t, p }));
+    regionsOut.push({ id: lid, n: label, equipos });
+  }
+  return { regions: regionsOut, calculated: lastDate || null, total: regionsOut.reduce((s, r) => s + r.equipos.length, 0) };
+}
+
+async function handleGpr() {
+  const now = Date.now();
+  if (gprCache.body && now - gprCache.at < GPR_TTL_MS) return gprCache.body;
+  let payload;
+  try {
+    const up = await fetch(GPR_PAGE_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml',
+        'Accept-Language': 'es-ES,es;q=0.9',
+      },
+      signal: AbortSignal.timeout(9000),
+    });
+    if (!up.ok) {
+      payload = { ok: false, error: 'valorantesports respondió ' + up.status, source: 'riot' };
+    } else {
+      const html = await up.text();
+      const parsed = parseGprHtml(html);
+      if (parsed.total >= 40) {
+        payload = { ok: true, source: 'riot', calculated: parsed.calculated, total: parsed.total, regions: parsed.regions };
+      } else {
+        payload = { ok: false, error: 'La página de Riot no trajo los equipos esperados', source: 'riot' };
+      }
+    }
+  } catch (err) {
+    payload = { ok: false, error: 'No se pudo contactar valorantesports.com: ' + err.message, source: 'riot' };
+  }
+  // Solo cacheamos respuestas buenas; los errores se reintentan en la próxima visita.
+  if (payload.ok) gprCache = { at: now, body: payload };
+  return payload;
+}
+
 /* ==================== WORKER PRINCIPAL ==================== */
 
 export default {
@@ -322,7 +413,7 @@ export default {
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams';
+      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr';
       if ((url.pathname === '/api/discord/notify' || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
@@ -439,6 +530,26 @@ export default {
       const res = json(payload);
       res.headers.set('Access-Control-Allow-Origin', origin);
       res.headers.set('Cache-Control', 'public, max-age=60');
+      return res;
+    }
+
+    // --- 7c) GPR · Global Power Rankings en vivo (página oficial de Riot)
+    if (url.pathname === '/api/gpr') {
+      if (method !== 'GET') {
+        return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403);
+      }
+      const g = rateLimit(rlGpr, ip, LIMIT_GPR);
+      if (!g.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(g.retry) });
+      }
+      const payload = await handleGpr();
+      const res = json(payload, payload.ok ? 200 : 502);
+      res.headers.set('Access-Control-Allow-Origin', origin);
+      res.headers.set('Cache-Control', 'public, max-age=3600');
       return res;
     }
 

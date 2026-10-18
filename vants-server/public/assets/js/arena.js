@@ -30,10 +30,10 @@ function toast(msg,type='ok'){
 }
 function openModal(html){$('#modalCard').innerHTML=html;$('#modal').classList.add('show');icons();}
 function closeModal(){if(paying)return;$('#modal').classList.remove('show');}
- $('#modalBg').addEventListener('click',closeModal);
+const modalBg=$('#modalBg');if(modalBg)modalBg.addEventListener('click',closeModal);
 function openDrawer(html){$('#drawer').innerHTML=html;$('#drawerOv').classList.add('show');$('#drawer').classList.add('show');icons();}
 function closeDrawer(){$('#drawerOv').classList.remove('show');$('#drawer').classList.remove('show');}
- $('#drawerOv').addEventListener('click',closeDrawer);
+const drawerOv=$('#drawerOv');if(drawerOv)drawerOv.addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();closeMenu();closeCin();}});
 
 /* encabezado de sesión (fragmentado, mismo patrón que arena-live.js) */
@@ -357,8 +357,9 @@ function addBadge(b){if(!me.badges.includes(b))me.badges.push(b);}
 
 /* ================= TICKER ================= */
 function renderTicker(){
+  const tt=$('#tickerTrack');if(!tt)return;
   const items=D().ticker.map(t=>'<span>'+t+'</span>').join('');
-  $('#tickerTrack').innerHTML=items+items;
+  tt.innerHTML=items+items;
 }
 
 /* ================= PARTIDO EN VIVO =================
@@ -371,6 +372,7 @@ function renderLive(){
   renderLiveIdle();
 }
 function renderLiveIdle(){
+  if(!document.getElementById('liveEvent'))return;
   const L=D().live;
   const bd=$('#liveBadge');if(bd)bd.innerHTML='<i class="dot"></i>PRÓXIMO PARTIDO';
   const lb=$('#liveSpecLbl');if(lb)lb.textContent=L.horaLbl||'INICIO';
@@ -388,6 +390,7 @@ function renderMatches(){
   if(nota)nota.innerHTML=D().matches.some(m=>m.real)
     ?'Resultados y horarios <b>REALES</b> de vlr.gg · hora de Caracas (VET). Clic en un partido para el detalle y el enlace a la fuente oficial.'
     :'Cobertura real de partidos aún no disponible para este juego. La agenda de <b>VALORANT</b> se alimenta de vlr.gg.';
+  if(!document.getElementById('matchList'))return;
   const list=D().matches;
   $('#matchList').innerHTML=list.length?list.map((m,i)=>{
     const chip=m.status==='live'?'<span class="chip live"><i class="dot"></i>LIVE</span>':m.status==='final'?'<span class="chip fin">FINAL</span>':'<span class="chip up">'+m.t+'</span>';
@@ -402,7 +405,8 @@ function renderMatches(){
       +'<span class="m-go"><i data-lucide="chevron-right"></i></span></div>';
   }).join(''):'<div style="grid-column:1/-1;border:1px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;font:600 11px/1.8 var(--mono);letter-spacing:.12em;color:var(--dim)">SIN PARTIDOS CARGADOS PARA ESTE JUEGO · COBERTURA PRO REAL EN LA AGENDA DE VALORANT (VLR.GG)</div>';icons();
 }
- $('#matchList').addEventListener('click',e=>{const r=e.target.closest('.mrow');if(r)openMatchDetail(D().matches[+r.dataset.idx]);});
+const matchListEl=$('#matchList');
+if(matchListEl)matchListEl.addEventListener('click',e=>{const r=e.target.closest('.mrow');if(r)openMatchDetail(D().matches[+r.dataset.idx]);});
 
 function openMatchDetail(m){
   /* Partidos REALES (vlr.gg): sin round a round simulado ni stats inventadas */
@@ -430,7 +434,8 @@ function openMatchDetail(m){
     +'<p class="d-empty">VANTS no inventa round a round ni estadísticas: el detalle completo de cada serie del circuito se publica con el resultado confirmado por ambos capitanes.</p>'
     +'</div>');
 }
- $('#liveMore').addEventListener('click',()=>{const L=D().live;
+const liveMoreEl=$('#liveMore');
+if(liveMoreEl)liveMoreEl.addEventListener('click',()=>{const L=D().live;
   openMatchDetail({real:true,status:'up',a:L.a,b:L.b,map:L.map,bo:L.bo||'BO5',ev:L.ev,url:L.url,t:L.hora});});
 
 /* ================= RANKING ================= */
@@ -442,6 +447,7 @@ const COLS=[
   {key:'x',label:'ACS',num:true,dynamic:true},
   {key:'impact',label:'IMPACTO',num:true,pro:true},{key:'clutch',label:'CLUTCH',num:true,pro:true}];
 function renderLbHead(){
+  if(!document.getElementById('lbHead'))return;
   const reales=usandoJugadoresReales();
   const cols=reales?REAL_COLS:COLS;
   const eff=reales&&!cols.some(c=>c.key===state.sort.key)?'mmr':state.sort.key;
@@ -474,6 +480,7 @@ function filasRealesLb(q){
   }).filter(p=>!q||p.name.toLowerCase().includes(q)||(p.username||'').toLowerCase().includes(q)||(p.team||'').toLowerCase().includes(q));
 }
 function renderLbBody(){
+  if(!document.getElementById('lbBody'))return;
   const q=state.search.toLowerCase();
   if(usandoJugadoresReales()){
     let rows=filasRealesLb(q);
@@ -517,14 +524,16 @@ function renderLbBody(){
   }).join(''):'<tr><td colspan="11" style="text-align:center;color:var(--dim);padding:34px">'+(state.search?('Sin resultados para "'+state.search+'"'):'Todavía no hay jugadores rankeados: creá tu perfil y reportá tu primera serie')+'</td></tr>';
   icons();
 }
- $('#lbHead').addEventListener('click',e=>{
+const lbHeadEl=$('#lbHead');
+if(lbHeadEl)lbHeadEl.addEventListener('click',e=>{
   const b=e.target.closest('button[data-key]');if(!b)return;
   const key=b.dataset.key;
   if((key==='impact'||key==='clutch')&&!state.isPro){toast('Columnas exclusivas de miembros PRO','info');return;}
   if(state.sort.key===key)state.sort.dir*=-1;else{state.sort.key=key;state.sort.dir=-1;}
   renderLbHead();renderLbBody();
 });
- $('#lbSearch').addEventListener('input',e=>{state.search=e.target.value;renderLbBody();});
+const lbSearchEl=$('#lbSearch');
+if(lbSearchEl)lbSearchEl.addEventListener('input',e=>{state.search=e.target.value;renderLbBody();});
 
 /* ================= BRACKET ================= */
 function bMatch(m,r,i){
@@ -539,6 +548,7 @@ function bMatch(m,r,i){
     +'<div class="b-meta">'+m.meta+'</div></div>';
 }
 function renderBracket(){
+  if(!document.getElementById('bracketGrid'))return;
   const b=D().bracket;
   const up='<div class="round"><p class="r-title">CUARTOS DE FINAL</p>'+b.quarters.map((m,i)=>bMatch(m,'q',i)).join('')+'</div>'
     +'<div class="round"><p class="r-title">SEMIFINALES</p>'+b.semis.map((m,i)=>bMatch(m,'s',i)).join('')+'</div>'
@@ -550,7 +560,8 @@ function renderBracket(){
     +'<p class="brk-sep">LLAVES INFERIORES · el perdedor cruza aqui y pelea la revancha</p>'
     +'<div class="bracket-rounds">'+lo+'</div>';
 }
- $('#bracketGrid').addEventListener('click',e=>{
+const bracketGridEl=$('#bracketGrid');
+if(bracketGridEl)bracketGridEl.addEventListener('click',e=>{
   const el=e.target.closest('.b-match[data-r]');if(!el)return;
   const b=D().bracket,r=el.dataset.r,i=+el.dataset.i;
   const m=r==='q'?b.quarters[i]:r==='s'?b.semis[i]:r==='l1'?b.lb1[i]:r==='l2'?b.lb2[i]:r==='lf'?b.lbf:b.final;
@@ -561,6 +572,7 @@ function renderBracket(){
 
 /* ================= TORNEOS ================= */
 function renderTournaments(){
+  if(!document.getElementById('tournList'))return;
   $('#tournList').innerHTML=D().tournaments.map(t=>{
     const done=state.entered[t.id],full=t.slots!=null&&t.filled>=t.slots;
     const prizeTxt=(t.prize==null)?'POR ANUNCIAR':money(t.prize);
@@ -577,11 +589,13 @@ function renderTournaments(){
       +'<span class="t-entered"><i data-lucide="badge-check"></i>INSCRITO</span></div></div>';
   }).join('');icons();
 }
- $('#tournList').addEventListener('click',e=>{
+const tournListEl=$('#tournList');
+if(tournListEl)tournListEl.addEventListener('click',e=>{
   const b=e.target.closest('.btn-join');if(!b||b.disabled)return;
   openEnroll(D().tournaments.find(x=>x.id===b.dataset.tid));
 });
- $('#heroJoin').addEventListener('click',()=>openEnroll(D().tournaments[0]));
+const heroJoinEl=$('#heroJoin');
+if(heroJoinEl)heroJoinEl.addEventListener('click',()=>openEnroll(D().tournaments[0]));
 function openEnroll(t){
   const fee=t.fee||0;
   openModal('<div class="mc-head"><h3>Inscripción · '+t.name+'</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
@@ -638,9 +652,13 @@ function finishEnroll(t,team,tag){
   if(p==='free'){toast('El plan FREE ya está activo en tu cuenta','info');return;}
   openPlanCheckout(p);
 }));
- $('#plansBtn').addEventListener('click',()=>document.getElementById('pro').scrollIntoView({behavior:'smooth'}));
- $('#tableProBtn').addEventListener('click',()=>state.isPro?null:document.getElementById('pro').scrollIntoView({behavior:'smooth'}));
- $('#partnerBtn').addEventListener('click',e=>{
+const irAPro=()=>{const p=document.getElementById('pro');if(p)p.scrollIntoView({behavior:'smooth'});else location.href='index.html#pro';};
+const plansBtnEl=$('#plansBtn');
+if(plansBtnEl)plansBtnEl.addEventListener('click',irAPro);
+const tableProBtnEl=$('#tableProBtn');
+if(tableProBtnEl)tableProBtnEl.addEventListener('click',()=>state.isPro?null:irAPro());
+const partnerBtnEl=$('#partnerBtn');
+if(partnerBtnEl)partnerBtnEl.addEventListener('click',e=>{
   const b=e.currentTarget;
   if(!b.dataset.real){
     /* paso 1: pedir email/canal y registrar la solicitud */
@@ -856,7 +874,8 @@ function openPlayerProfile(pid){
 }
 /* VER MI PERFIL abre SIEMPRE el perfil real (CUENTA REAL VANTS, ver
    arena-live.js); sin sesión, manda al login */
- $('#meStripBtn').addEventListener('click',()=>{
+const meStripBtnEl=$('#meStripBtn');
+if(meStripBtnEl)meStripBtnEl.addEventListener('click',()=>{
   const acc=$('#accBtn'),lb=$('#arenaLoginBtn');
   if(acc&&!acc.hidden){acc.click();return;}
   if(lb&&!lb.hidden){lb.click();return;}
@@ -895,6 +914,7 @@ function platRow(k,handle,own){
 
 /* ================= SECCIÓN RANGOS ================= */
 function renderRanks(){
+  if(!document.getElementById('rankGrid'))return;
   $('#rankGrid').innerHTML=TIER_ORDER.map(k=>{
     const r=RANKS[k];
     const lo=k==='fundicion'?'0':Math.round(r.lo*100)+' RR';
@@ -925,20 +945,25 @@ function startCinCanvas(){
 }
 function stopCinCanvas(){if(cinRAF)cancelAnimationFrame(cinRAF);cinRAF=null;}
 function openCin(){
-  const c=$('#cin');c.classList.add('show');
+  const c=$('#cin');if(!c)return;c.classList.add('show');
   requestAnimationFrame(()=>c.classList.add('play'));
   startCinCanvas();
 }
 function closeCin(){
-  const c=$('#cin');if(!c.classList.contains('show'))return;
+  const c=$('#cin');if(!c||!c.classList.contains('show'))return;
   c.classList.remove('play');stopCinCanvas();
   setTimeout(()=>c.classList.remove('show'),200);
 }
- $('#cinSkip').addEventListener('click',closeCin);
- $('#cinEnter').addEventListener('click',()=>{closeCin();document.getElementById('inicio').scrollIntoView({behavior:'smooth'});});
- $('#cinStory').addEventListener('click',()=>{closeCin();document.getElementById('historia').scrollIntoView({behavior:'smooth'});});
- $('#filmBtn').addEventListener('click',openCin);
- $('#filmCard').addEventListener('click',openCin);
+const cinSkipEl=$('#cinSkip');
+if(cinSkipEl)cinSkipEl.addEventListener('click',closeCin);
+const cinEnterEl=$('#cinEnter');
+if(cinEnterEl)cinEnterEl.addEventListener('click',()=>{closeCin();const h=document.getElementById('inicio');if(h)h.scrollIntoView({behavior:'smooth'});});
+const cinStoryEl=$('#cinStory');
+if(cinStoryEl)cinStoryEl.addEventListener('click',()=>{closeCin();const h=document.getElementById('historia');if(h)h.scrollIntoView({behavior:'smooth'});else location.href='historia.html';});
+const filmBtnEl=$('#filmBtn');
+if(filmBtnEl)filmBtnEl.addEventListener('click',openCin);
+const filmCardEl=$('#filmCard');
+if(filmCardEl)filmCardEl.addEventListener('click',openCin);
 
 /* ================= AGENDA EN VIVO (opcional) =================
    Si el Worker tiene el secret HENRIKDEV_API_KEY, /api/valorant/esports
@@ -973,6 +998,7 @@ async function agendaEnVivo(){
 
 /* ================= CAMBIO DE JUEGO ================= */
 function renderAll(){
+  if(!document.getElementById('heroTitle'))return;
   const d=D();
   document.body.dataset.game=state.game;
   renderTicker();
@@ -996,7 +1022,7 @@ function renderAll(){
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.08});
  $$('.reveal').forEach(el=>io.observe(el));
 renderRanks();renderProfileGrid();renderAccount();renderAll();renderLive();cargarJugadores();agendaEnVivo();
-if(!sessionStorage.getItem('vants_film')){sessionStorage.setItem('vants_film','1');setTimeout(openCin,700);}
+if(document.getElementById('cin')&&!sessionStorage.getItem('vants_film')){sessionStorage.setItem('vants_film','1');setTimeout(openCin,700);}
 
 /* ================= FOTO DE PERFIL + DISCORD ================= */
 PICON.discord='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.8 13.8 0 0 0-.64 1.28 18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.64-1.28c-1.71.29-3.37.8-4.93 1.51A20.3 20.3 0 0 0 .1 18.06a19.9 19.9 0 0 0 6.07 3.06c.49-.66.93-1.37 1.3-2.1a12.9 12.9 0 0 1-2.05-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.16 0c.17.13.33.26.5.38-.65.38-1.34.71-2.05.98.37.73.8 1.44 1.3 2.1a19.8 19.8 0 0 0 6.07-3.06 20.2 20.2 0 0 0-3.58-13.69ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Zm7.96 0c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.95-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42Z"/></svg>';
@@ -1121,8 +1147,8 @@ window.disconnect=async k=>{
 
 /* nav con foto */
 function renderAccount(){
+  const a=$('#accAva');if(!a)return;
   const k=rankFor(0.96+me.rr/1000);
-  const a=$('#accAva');
   a.style.setProperty('--rc',RANKS[k].c1);
   a.innerHTML=me.avatar?'<img alt="" src="'+me.avatar+'">':me.name.slice(0,2).toUpperCase();
   $('#accName').textContent=me.name.toUpperCase();
@@ -1249,27 +1275,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
    estilo valorantesports: cabecera con ∇ que rota al abrir.
    ============================================================ */
 const GPR_DATA=[
- {id:'amer',n:'VCT AMÉRICAS',fz:1540,equipos:[
-   {n:'Leviatán Esports',t:'LEV',p:1498},{n:'NRG',t:'NRG',p:1482},{n:'LOUD',t:'LOUD',p:1481},
-   {n:'100 Thieves',t:'100T',p:1463},{n:'G2 Esports',t:'G2',p:1436},{n:'MIBR',t:'MIBR',p:1314},
-   {n:'ENVY',t:'ENVY',p:1238},{n:'Cloud9',t:'C9',p:1210},{n:'Sentinels',t:'SEN',p:1208},
-   {n:'KRÜ Visa',t:'KRU',p:1205},{n:'ULF Esports',t:'ULF',p:1200},{n:'Evil Geniuses',t:'EG',p:1188},
-   {n:'FURIA',t:'FUR',p:1180}]},
- {id:'pac',n:'VCT PACIFIC',fz:1440,equipos:[
-   {n:'Paper Rex',t:'PRX',p:1403},{n:'Global Esports',t:'GE',p:1403},{n:'T1',t:'T1',p:1386},
-   {n:'Nongshim RedForce',t:'NS',p:1364},{n:'Gen.G',t:'GEN',p:1292},{n:'Varrel',t:'VL',p:1274},
-   {n:'DetonatioN FocusMe',t:'DFM',p:1270},{n:'Kiwoom DRX',t:'KRX',p:1262},{n:'Rex Regum Qeon',t:'RRQ',p:1254},
-   {n:'Full Sense',t:'FS',p:1228},{n:'ZETA DIVISION',t:'ZETA',p:1197},{n:'Team Secret',t:'TS',p:1141}]},
- {id:'emea',n:'VCT EMEA',fz:1397,equipos:[
-   {n:'Team Vitality',t:'VIT',p:1405},{n:'Karmine Corp',t:'KC',p:1395},{n:'Team Liquid',t:'TL',p:1348},
-   {n:'Team Heretics',t:'TH',p:1271},{n:'FNATIC',t:'FNC',p:1260},{n:'BBL Esports',t:'BBL',p:1259},
-   {n:'FUT Esports',t:'FUT',p:1256},{n:'Eternal Fire',t:'EF',p:1247},{n:'NAVI',t:'NAVI',p:1207},
-   {n:'Gentle Mates',t:'M8',p:1199},{n:'GIANTX',t:'GX',p:1164},{n:'PCIFIC Esports',t:'PCF',p:1087}]},
- {id:'cn',n:'VCT CHINA',fz:1223,equipos:[
-   {n:'TYLOO Gaming',t:'TYL',p:1269},{n:'EDward Gaming',t:'EDG',p:1215},{n:'ALL GAMERS',t:'AG',p:1173},
-   {n:'Xi Lai Gaming',t:'XLG',p:1172},{n:'Bilibili Gaming',t:'BLG',p:1168},{n:'JD Gaming',t:'JDG',p:1164},
-   {n:'NOVA Esports',t:'NOVA',p:1148},{n:'Dragon Ranger Gaming',t:'DRG',p:1147},{n:'FunPlus Phoenix',t:'FPX',p:1114},
-   {n:'Wolves Esports',t:'WOL',p:1109},{n:'Trace Esports',t:'TE',p:1071},{n:'TITAN Esports Club',t:'TEC',p:1062}]}
+ {id:'vct_americas',n:'VCT AMÉRICAS',fz:1540,equipos:[
+   {n:"Leviatán Esports",t:"LEV",p:1498},{n:"NRG",t:"NRG",p:1482},{n:"LOUD",t:"LOUD",p:1481},
+   {n:"100 Thieves",t:"100T",p:1463},{n:"G2 Esports",t:"G2",p:1436},{n:"MIBR",t:"MIBR",p:1314},
+   {n:"ENVY",t:"ENVY",p:1238},{n:"Cloud9",t:"C9",p:1210},{n:"Sentinels",t:"SEN",p:1208},
+   {n:"KRÜ Visa",t:"KRU",p:1205},{n:"Evil Geniuses",t:"EG",p:1188},{n:"FURIA",t:"FUR",p:1180}
+]},
+ {id:'vct_pacific',n:'VCT PACIFIC',fz:1440,equipos:[
+   {n:"Paper Rex",t:"PRX",p:1403},{n:"GLOBAL ESPORTS",t:"GE",p:1403},{n:"T1",t:"T1",p:1386},
+   {n:"NONGSHIM REDFORCE",t:"NS",p:1364},{n:"Gen.G ",t:"GEN",p:1292},{n:"VARREL",t:"VL",p:1274},
+   {n:"DetonatioN FocusMe",t:"DFM",p:1270},{n:"Kiwoom DRX",t:"KRX",p:1262},{n:"Rex Regum Qeon",t:"RRQ",p:1254},
+   {n:"FULL SENSE",t:"FS",p:1228},{n:"ZETA DIVISION",t:"ZETA",p:1197},{n:"Team Secret",t:"TS",p:1141}
+]},
+ {id:'vct_emea',n:'VCT EMEA',fz:1397,equipos:[
+   {n:"Team Vitality",t:"VIT",p:1405},{n:"Karmine Corp",t:"KC",p:1395},{n:"Team Liquid",t:"TL",p:1348},
+   {n:"Team Heretics",t:"TH",p:1271},{n:"FNATIC",t:"FNC",p:1260},{n:"BBL Esports",t:"BBL",p:1259},
+   {n:"FUT Esports",t:"FUT",p:1256},{n:"Eternal Fire",t:"EF",p:1247},{n:"NAVI",t:"NAVI",p:1207},
+   {n:"Gentle Mates",t:"M8",p:1199},{n:"GIANTX",t:"GX",p:1164},{n:"PCIFIC Esports",t:"PCF",p:1087}
+]},
+ {id:'vct_china',n:'VCT CHINA',fz:1223,equipos:[
+   {n:"TYLOO GAMING",t:"TYL",p:1269},{n:"EDWARD Gaming",t:"EDG",p:1215},{n:"ALL GAMERS",t:"AG",p:1173},
+   {n:"Xi Lai Gaming",t:"XLG",p:1172},{n:"Bilibili Gaming",t:"BLG",p:1168},{n:"JD GAMING",t:"JDG",p:1164},
+   {n:"NOVA ESPORTS",t:"NOVA",p:1148},{n:"DRAGON RANGER GAMING",t:"DRG",p:1147},{n:"FunPlus Phoenix",t:"FPX",p:1114},
+   {n:"WOLVES ESPORTS",t:"WOL",p:1109},{n:"Trace Esports",t:"TE",p:1071},{n:"TITAN ESPORTS CLUB",t:"TEC",p:1062}
+]}
 ];
 function renderGpr(){
   const host=document.getElementById('gprRegions');if(!host)return;
@@ -1305,7 +1334,26 @@ function renderGpr(){
   }));
   icons();
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',renderGpr);else renderGpr();
+async function loadGpr(){
+  /* 1) pinta el snapshot embebido al instante */
+  renderGpr();
+  /* 2) actualiza en vivo con /api/gpr (Riot recalcula cada pocos días;
+        el Worker lee valorantesports.com y cachea 1 h). Si falla, queda el snapshot. */
+  try{
+    const r=await fetchWorker('/api/gpr',{headers:{Accept:'application/json'}});
+    const d=await r.json();
+    if(d&&d.ok&&Array.isArray(d.regions)&&d.regions.length){
+      d.regions.forEach(reg=>{
+        const local=GPR_DATA.find(x=>x.id===reg.id||x.n===reg.n);
+        if(local&&Array.isArray(reg.equipos)&&reg.equipos.length)local.equipos=reg.equipos;
+      });
+      renderGpr();
+      const s=document.getElementById('gprSrc');
+      if(s&&d.calculated)s.textContent='ACTUALIZADO EN VIVO · CÁLCULO RIOT '+String(d.calculated).slice(0,10)+' · FUENTE: GLOBAL POWER RANKINGS (RIOT GAMES)';
+    }
+  }catch(e){/* sin worker: queda el snapshot embebido */}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loadGpr);else loadGpr();
 
 /* ============================================================
    PRIVILEGIOS OWNER

@@ -229,7 +229,7 @@ function fmtMB(b){return(b/1048576).toFixed(1)+' MB'}
 function fmtFecha(ts){try{return new Date(ts).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return''}}
 
 /* ============ galería ============ */
-var urls={},showAll=false,cache=[];
+var urls={},showAll=false,cache=[],carpetaVacia=null;
 function urlFor(rec,file){
   if(urls[rec.id])return urls[rec.id];
   if(rec.blob){urls[rec.id]=URL.createObjectURL(rec.blob);return urls[rec.id]}
@@ -257,6 +257,16 @@ var EMPTY='<div class="empty"><h3>TODAVÍA NO HAY CLIPS ACÁ</h3>'
   +'<div class="st"><b>3 · O SUBE DIRECTO</b><span>¿Los tienes en otro lado? «SUBIR CLIP» los guarda en tu navegador (IndexedDB), sin nube.</span></div>'
   +'</div>'
   +'<p>Tip: los clips marcados <b style="color:var(--gold)">REFERENCIA</b> se leen directo de tu carpeta; los <b style="color:var(--grn)">CARGADO</b> viven dentro de la app.</p></div>';
+function emptyConectada(nombre){
+  return '<div class="empty"><h3>CARPETA CONECTADA · 0 CLIPS EN ESTA CARPETA</h3>'
+  +'<p>La carpeta <b style="color:var(--gold)">'+esc(nombre)+'</b> quedó conectada y vigilada, pero todavía no contiene ningún video (mp4, webm, mkv, mov, avi, m4v). Nada salió mal: lo más probable es que Cortex todavía no haya guardado clips ahí.</p>'
+  +'<div class="steps">'
+  +'<div class="st"><b>1 · RUTA DE CORTEX</b><span>Cortex guarda por defecto en: <b>C:\\Users\\TU_USUARIO\\AppData\\Local\\Razer\\Razer Cortex\\GameClips\\TU_USUARIO\\Videos\\VALORANT</b>. Si elegiste otra carpeta, conecta esa ruta (la de tu usuario y tu juego).</span></div>'
+  +'<div class="st"><b>2 · ACTIVA LOS CLIPS</b><span>Abre Razer Cortex → <b>CLIPS DE JUEGO</b>: activa la captura automática de highlights (o usa su tecla para guardar clip) y juega una partida. Al primer clip que Cortex grabe, aparece acá solo.</span></div>'
+  +'<div class="st"><b>3 · O SUBE DIRECTO</b><span>¿Ya tienes el video en otra carpeta? «SUBIR CLIP» lo guarda al instante en tu galería, sin nube y sin esperas.</span></div>'
+  +'</div>'
+  +'<p>La conexión queda guardada: cuando Cortex escriba un clip ahí, entra a esta app y aparecerá al instante.</p></div>';
+}
 async function render(){
   var list=cache.slice().sort(function(a,b){return (b.ts||0)-(a.ts||0)});
   $('#sCount').textContent=String(list.length);
@@ -271,7 +281,7 @@ async function render(){
       }catch(e){}
     }
   }
-  $('#grid').innerHTML=view.map(function(r){return cardHTML(r,urls[r.id])}).join('')||EMPTY;
+  $('#grid').innerHTML=view.map(function(r){return cardHTML(r,urls[r.id])}).join('')||(carpetaVacia?emptyConectada(carpetaVacia):EMPTY);
   Array.prototype.forEach.call($('#grid').querySelectorAll('.clip-card'),function(card){
     card.addEventListener('click',function(){openPlayer(card.getAttribute('data-id'))});
     var v=card.querySelector('video');
@@ -310,13 +320,13 @@ $('#fileIn').addEventListener('change',async function(e){
 /* ============ carpeta de Cortex ============ */
 var FOLDER_OK='Carpeta Cortex: <b>conectada</b>',FOLDER_NO='Carpeta Cortex: <b>no conectada</b>';
 async function scanDir(dir,depth,added){
-  if(depth>2)return;
+  if(depth>4)return;
   try{
     var it=dir.entries();
     while(true){
       var n=await it.next();if(n.done)break;
       var name=n.value[0],h=n.value[1];
-      if(h.kind==='directory'){await scanDir(h,depth+1,added);continue}
+      if(h.kind==='directory'){if(name.charAt(0)!=='.'&&name.charAt(0)!=='$')await scanDir(h,depth+1,added);continue}
       if(h.kind!=='file'||!esVideo(name))continue;
       var id='cx:'+name+':'+(h.size||0);
       var existing=cache.find(function(r){return r.id===id});
@@ -324,7 +334,7 @@ async function scanDir(dir,depth,added){
       var f=null;
       try{if(await h.queryPermission({mode:'read'})==='granted')f=await h.getFile()}catch(e){}
       await idbPut({id:id,name:name,mime:(f&&f.type)||'video/mp4',size:(f&&f.size)||h.size||0,ts:(f&&f.lastModified)||Date.now(),blob:null,handle:h,kills:null,src:'cortex'});
-      added++;
+      added.v=(added.v||0)+1;
     }
   }catch(e){}
 }
@@ -335,14 +345,22 @@ async function connectCortex(silent){
   }
   try{
     var dir=await window.showDirectoryPicker({id:'vants-cortex',mode:'read',startIn:'videos'});
-    var added=0;await scanDir(dir,0,{v:0});
+    var added={v:0};await scanDir(dir,0,added);
     await idbMetaSet('cortexDir',dir);
-    $('#stFolder').innerHTML=FOLDER_OK;
-    await reload();
+    cache=await idbAll();
     var cx=cache.filter(function(r){return r.src==='cortex'}).length;
-    toast('Carpeta conectada · '+cx+' clips encontrados en tu galería');
+    $('#stFolder').innerHTML='Carpeta Cortex: <b>'+esc(dir.name)+'</b> conectada'+(added.v?' · +'+added.v+' nuevos':'');
+    carpetaVacia=null;
+    await reload();
+    if(cx){
+      toast('Carpeta conectada · '+cx+' clips en tu galería');
+    }else{
+      carpetaVacia=dir.name;
+      render();
+      toast('Carpeta conectada, pero todavía no tiene clips: mira la guía en la galería');
+    }
   }catch(e){
-    if(e&&e.name!=='AbortError'&&!silent)toast('No se pudo conectar la carpeta');
+    if(e&&e.name!=='AbortError'&&!silent)toast('No se pudo leer esa carpeta: prueba de nuevo o elige otra carpeta');
   }
 }
 $('#btnCortex').addEventListener('click',function(){connectCortex(false)});
@@ -400,8 +418,10 @@ $('#sAjustes').addEventListener('click',function(){connectCortex(false)});
     var perm='prompt';
     try{perm=await dir.queryPermission({mode:'read'})}catch(e){}
     if(perm==='granted'){
-      $('#stFolder').innerHTML=FOLDER_OK;
-      var added=0;await scanDir(dir,0,added);cache=await idbAll();
+      var added={v:0};await scanDir(dir,0,added);cache=await idbAll();
+      var cx0=cache.filter(function(r){return r.src==='cortex'}).length;
+      $('#stFolder').innerHTML='Carpeta Cortex: <b>'+esc(dir.name)+'</b> conectada';
+      if(!cx0)carpetaVacia=dir.name;
     }else{
       $('#stFolder').innerHTML='Carpeta Cortex: <b>reconectar permiso</b>';
       $('#btnCortex').innerHTML='<i data-lucide="refresh-cw"></i>RECONECTAR CARPETA DE CORTEX';
