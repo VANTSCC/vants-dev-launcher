@@ -198,6 +198,14 @@ const encolar = (sub, game, mode, region = 'EU') =>
     // Historial es privado: sin token → 401
     const hs = await req('GET', '/api/v1/matchmaking/history', { sinToken: true });
     ok(hs.statusCode === 401, 'GET history sin token → 401');
+    // Historial RR completo (migración 27): /api/v1/matchmaking/rr
+    const rr = await req('GET', '/api/v1/matchmaking/rr', { sub: 'auth0|AAA' });
+    ok(rr.statusCode === 200 && Array.isArray(rr.json().data), 'GET rr → 200 lista');
+    const owRR = rr.json().data.find((e) => e.partida_id === mid);
+    ok(owRR && owRR.motivo === 'match_interno' && owRR.fuente === 'interno' && owRR.rr_delta === 2 && !!owRR.fecha,
+      `rr: match_interno +2 con fecha (${JSON.stringify(owRR && { m: owRR.motivo, f: owRR.fuente, d: owRR.rr_delta })})`);
+    const rrs = await req('GET', '/api/v1/matchmaking/rr', { sinToken: true });
+    ok(rrs.statusCode === 401, 'GET rr sin token → 401');
   }
 
   // ---------- validación de score (par fresco en 'rocket') ----------

@@ -192,6 +192,20 @@ function crearStoreMemoria(opts = {}) {
       out.sort((x, y) => (x.played_at < y.played_at ? 1 : -1));
       return out.slice(0, Math.max(1, Math.min(limite, 100)));
     },
+    // Historial RR COMPLETO (migración 27: motivo·partida·temporada·fecha).
+    // En memoria solo existen los internos; el store PG añade los de FACEIT
+    // con la vista rr_historial_jugador. Mismo contrato + campos fuente.
+    async rrHistorial(sub, limite = 50) {
+      const base = await this.historial(sub, limite);
+      return base.map((e) => ({
+        ...e,
+        motivo: 'match_interno',
+        fuente: 'interno',
+        partida_id: e.match_id || '',
+        temporada: null,
+        fecha: e.played_at,
+      }));
+    },
     async encolados() {
       let n = 0;
       for (const f of tickets.values()) if (esViva(f)) n += 1;
@@ -300,6 +314,19 @@ function crearStorePg(pool) {
     async historial(sub, limite = 50) {
       const r = await pool.query(
         'SELECT * FROM mm_historial WHERE sub = $1 LIMIT $2',
+        [sub, Math.max(1, Math.min(limite, 100))],
+      );
+      return r.rows;
+    },
+    // Historial RR completo (migración 27): motivo · partida · temporada ·
+    // fecha, incluyendo cambios aplicados por partidas FACEIT.
+    async rrHistorial(sub, limite = 50) {
+      const r = await pool.query(
+        `SELECT h.* FROM rr_historial_jugador h
+         JOIN players p ON p.id = h.player_id
+         WHERE p.auth0_sub = $1
+         ORDER BY h.fecha DESC
+         LIMIT $2`,
         [sub, Math.max(1, Math.min(limite, 100))],
       );
       return r.rows;

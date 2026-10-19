@@ -235,6 +235,16 @@ function construir(opts = {}) {
     return { ok: true, data: rows };
   }));
 
+  // Historial RR COMPLETO del jugador (migración 27): partidas FACEIT +
+  // matches internos, cada cambio con motivo, partida, temporada y fecha
+  // (vista rr_historial_jugador). ?limite=1..100 (default 50).
+  app.get('/api/v1/matchmaking/rr', guard(async (req, reply) => {
+    if (!(await requireAuth(req, reply))) return;
+    const limite = parseInt((req.query && req.query.limite) || '50', 10) || 50;
+    const rows = await store.rrHistorial(req.sub, limite);
+    return { ok: true, data: rows };
+  }));
+
   // ¿Quién soy? (diagnóstico de sesión para el hub/launcher)
   app.get('/api/v1/me', guard(async (req, reply) => {
     if (!(await requireAuth(req, reply))) return;
