@@ -16,4 +16,9 @@
   <url><loc>https://vants.vants.workers.dev/guia.html</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://vants.vants.workers.dev/descargar.html</loc><changefreq>monthly</changefreq></url>
   <url><loc>https://feispla.github.io/Vants/descargar.html</loc></url>
+  <url><loc>https://vants.vants.workers.dev/partidos.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/ranking.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/llaves.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/torneos.html</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://vants.vants.workers.dev/membresias.html</loc><changefreq>weekly</changefreq></url>
 </urlset>
