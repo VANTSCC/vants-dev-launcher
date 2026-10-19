@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "VANTS",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "identifier": "gg.vants.app",
   "build": {
     "frontendDist": "../ui",
@@ -12,14 +12,14 @@
       {
         "label": "main",
         "title": "VANTS",
-        "url": "https://feispla.github.io/Vants/",
+        "url": "https://vants.vants.workers.dev/",
         "width": 1280,
         "height": 800,
         "minWidth": 960,
         "minHeight": 600,
         "resizable": true,
         "fullscreen": false,
-        "decorations": false,
+        "decorations": true,
         "backgroundColor": "#0e0e10"
       }
     ],
@@ -45,10 +45,10 @@
     ],
     "category": "Game",
     "shortDescription": "VANTS",
-    "longDescription": "VANTS: Ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends.",
+    "longDescription": "VANTS: Ranked con MMR real, torneos con premios y ligas de VALORANT, CS2 y League of Legends. Launcher oficial de la arena para Windows.",
     "windows": {
       "nsis": {
-        "installMode": "perMachine"
+        "installMode": "currentUser"
       }
     }
   }

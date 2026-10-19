@@ -76,6 +76,7 @@ const LIMIT_ESPORTS = 30;    // peticiones por minuto por IP a la agenda Valoran
 const LIMIT_TEAMS = 30;      // peticiones por minuto por IP a /api/teams
 const LIMIT_GPR = 20;        // peticiones por minuto por IP a /api/gpr
 const LIMIT_ACCOUNT = 10;    // peticiones por minuto por IP a /api/account/*
+const LIMIT_TORNEO = 15;     // peticiones por minuto por IP a /api/torneos/*
 const LIMIT_CLIPS = 6;       // peticiones por minuto por IP a /api/clips/* (subidas/bajas)
 const WINDOW_MS = 60_000;    // ventana de 1 minuto
 const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
@@ -123,10 +124,39 @@ const rlEsports = new Map();
 const rlTeams = new Map();
 const rlGpr = new Map();
 const rlAccount = new Map();
+const rlTorneo = new Map();
+// Caché de /api/en-vivo (a nivel de módulo: sobrevive entre peticiones)
+let enVivoCache = { at: 0, body: null };
 
 // Tenant Auth0 del sitio (misma configuración que assets/js/auth0-config.js)
 const AUTH0_TENANT = 'vants.eu.auth0.com';
-const AUTH0_SPA_CLIENT_ID = 'oaOmNizh7HrASWfmfM29bN284IMJvqPG';
+// Neon Data API (PostgREST): el Worker NUNCA guarda credenciales de la base;
+// reenvía el JWT del usuario y las RLS/policies de cada tabla deciden.
+const NEON_API = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
+
+// Valida el JWT de la sesión contra Auth0 /userinfo → { sub, email } | null
+async function infoDeSesion(token) {
+  if (!token) return null;
+  try {
+    const ui = await fetch('https://' + AUTH0_TENANT + '/userinfo', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    if (!ui.ok) return null;
+    const info = await ui.json();
+    return info && info.sub ? info : null;
+  } catch (e) { return null; }
+}
+
+// GET a la Data API con el token del usuario si hay; si no, anónimo
+// (las vistas públicas tienen GRANT a PUBLIC).
+async function neonGet(rutaRelativa, token) {
+  const headers = { Accept: 'application/json' };
+  if (token) headers.Authorization = 'Bearer ' + token;
+  const r = await fetch(NEON_API + rutaRelativa, { headers });
+  if (!r.ok) return { ok: false, status: r.status, body: [] };
+  const arr = await r.json().catch(() => []);
+  return { ok: true, status: r.status, body: Array.isArray(arr) ? arr : [] };
+}
 
 function rateLimit(bucket, ip, max) {
   const now = Date.now();
@@ -560,8 +590,8 @@ export default {
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured';
-      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured';
+      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo';
+      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/inscribir' || url.pathname === '/api/torneos/gestionar';
       if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
@@ -683,6 +713,235 @@ export default {
       res.headers.set('Access-Control-Allow-Origin', origin || '*');
       res.headers.set('Cache-Control', 'public, max-age=60');
       return res;
+    }
+
+    // --- 7b1b) EN VIVO: jugadores conectados / jugando AHORA (presencia).
+    // Fuente: vista v_en_vivo (presence actualizado hace < 2 min). Lectura
+    // pública; con sesión el token va y RLS confirma. Caché 10 s.
+    if (url.pathname === '/api/en-vivo') {
+      if (method !== 'GET') {
+        return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (origin && !SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const t = rateLimit(rlTorneo, ip, LIMIT_TORNEO);
+      if (!t.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(t.retry), 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const now2 = Date.now();
+      if (enVivoCache.body && now2 - enVivoCache.at < 10000) {
+        const resC = json(enVivoCache.body);
+        resC.headers.set('Access-Control-Allow-Origin', origin || '*');
+        resC.headers.set('Cache-Control', 'public, max-age=10');
+        return resC;
+      }
+      const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+      let payload2 = null;
+      try {
+        const r = await neonGet('/v_en_vivo?order=actualizado.desc&limit=50', token || null);
+        if (r.ok) payload2 = { ok: true, jugadores: r.body, ahora: new Date().toISOString() };
+      } catch (e) { payload2 = null; }
+      if (!payload2) payload2 = { ok: false, motivo: 'base_no_disponible', jugadores: [] };
+      enVivoCache = { at: now2, body: payload2 };
+      const res2 = json(payload2);
+      res2.headers.set('Access-Control-Allow-Origin', origin || '*');
+      res2.headers.set('Cache-Control', 'public, max-age=10');
+      return res2;
+    }
+
+    // --- 7b1c) TORNEOS: bracket + equipos inscritos (lectura pública).
+    if (url.pathname === '/api/torneos/bracket') {
+      if (method !== 'GET') {
+        return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (origin && !SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const t = rateLimit(rlTorneo, ip, LIMIT_TORNEO);
+      if (!t.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(t.retry), 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const torneo = (url.searchParams.get('torneo') || '').trim().slice(0, 40);
+      if (!torneo || !/^[a-z0-9_-]{1,40}$/i.test(torneo)) {
+        return json({ ok: false, error: 'torneo_invalido' }, 400, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+      let equipos = [], llaves = [];
+      try {
+        const [re, rb] = await Promise.all([
+          neonGet('/v_torneo_equipos?tournament_id=eq.' + encodeURIComponent(torneo) + '&order=created_at', token || null),
+          neonGet('/v_torneo_bracket?tournament_id=eq.' + encodeURIComponent(torneo) + '&limit=100', token || null),
+        ]);
+        if (re.ok) equipos = re.body;
+        if (rb.ok) llaves = rb.body;
+      } catch (e) { /* abajo se informa */ }
+      const okRead = (equipos.length + llaves.length) > 0;
+      const payload3 = okRead
+        ? { ok: true, torneo, equipos, bracket: llaves }
+        : { ok: false, motivo: 'sin_datos', torneo, equipos: [], bracket: [] };
+      const res3 = json(payload3);
+      res3.headers.set('Access-Control-Allow-Origin', origin || '*');
+      res3.headers.set('Cache-Control', 'public, max-age=15');
+      return res3;
+    }
+
+    // --- 7b1d) TORNEOS: inscripción REAL del equipo (requiere sesión).
+    // Guarda la fila en Neon (tournament_teams) con el JWT del jugador;
+    // RLS exige que auth0_sub sea el de la sesión. Estado: pendiente.
+    if (url.pathname === '/api/torneos/inscribir') {
+      if (method !== 'POST') {
+        return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const t = rateLimit(rlTorneo, ip, LIMIT_TORNEO);
+      if (!t.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(t.retry), 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+      if (!token) {
+        return json({ ok: false, error: 'sin_sesion' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const info = await infoDeSesion(token);
+      if (!info || !info.sub) {
+        return json({ ok: false, error: 'token_invalido' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const body = await request.json().catch(() => ({}));
+      const torneo = String((body && body.torneo) || '').trim().slice(0, 40);
+      const juego = String((body && body.juego) || 'valorant').trim() === 'cs2' ? 'cs2' : 'valorant';
+      const equipo = String((body && body.equipo) || '').trim().replace(/[<>\\]/g, '').slice(0, 32);
+      const tag = String((body && body.tag) || '').trim().replace(/[^A-Za-z0-9]/g, '').slice(0, 4);
+      const capitan = String((body && body.capitan) || '').trim().replace(/[<>\\]/g, '').slice(0, 40);
+      const region = String((body && body.region) || '').trim().slice(0, 40);
+      const ACAO = { 'Access-Control-Allow-Origin': origin || '*' };
+      if (!torneo || !/^[a-z0-9_-]{1,40}$/i.test(torneo)) {
+        return json({ ok: false, error: 'torneo_invalido' }, 400, ACAO);
+      }
+      if (equipo.length < 2 || tag.length < 2) {
+        return json({ ok: false, error: 'datos_invalidos' }, 400, ACAO);
+      }
+      // Fila real del jugador (por sub) para ligar la inscripción
+      let pid = null;
+      try {
+        const pr = await neonGet('/players?auth0_sub=eq.' + encodeURIComponent(info.sub) + '&select=id&limit=1', token);
+        if (pr.ok && pr.body[0]) pid = pr.body[0].id;
+      } catch (e) { pid = null; }
+      const fila = {
+        tournament_id: torneo,
+        game: juego,
+        name: equipo,
+        tag: tag,
+        captain: capitan || null,
+        region: region || null,
+        auth0_sub: info.sub,
+        player_id: pid,
+        status: 'pendiente',
+      };
+      let ins;
+      try {
+        ins = await fetch(NEON_API + '/tournament_teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, Prefer: 'return=representation' },
+          body: JSON.stringify(fila),
+        });
+      } catch (e) {
+        return json({ ok: false, error: 'base_inaccesible' }, 502, ACAO);
+      }
+      if (!ins.ok) {
+        const det = await ins.text().catch(() => '');
+        const dup = /duplicate key|unique/i.test(det);
+        return json({ ok: false, error: dup ? 'equipo_ya_inscrito' : 'base_rechazo', detalle: det.slice(0, 300) }, dup ? 409 : 502, ACAO);
+      }
+      const creada = await ins.json().catch(() => []);
+      return json({ ok: true, equipo: Array.isArray(creada) ? creada[0] : creada }, 200, ACAO);
+    }
+
+    // --- 7b1e) TORNEOS: gestión del OWNER (confirmar/rechazar equipos,
+    // resultados de llaves, sembrar bracket, reset). Solo la fila del
+    // dueño (players.role='owner') pasa; las RLS refuerzan lo mismo.
+    if (url.pathname === '/api/torneos/gestionar') {
+      if (method !== 'POST') {
+        return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (!SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: 'Origen no permitido' }, 403, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const t = rateLimit(rlTorneo, ip, LIMIT_TORNEO);
+      if (!t.ok) {
+        return json({ ok: false, error: 'Demasiadas peticiones' }, 429, { 'Retry-After': String(t.retry), 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+      if (!token) {
+        return json({ ok: false, error: 'sin_sesion' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const info = await infoDeSesion(token);
+      if (!info || !info.sub) {
+        return json({ ok: false, error: 'token_invalido' }, 401, { 'Access-Control-Allow-Origin': origin || '*' });
+      }
+      const ACAO = { 'Access-Control-Allow-Origin': origin || '*' };
+      let filaDueno = null;
+      try {
+        const pr = await neonGet('/players?auth0_sub=eq.' + encodeURIComponent(info.sub) + '&select=id,role&limit=1', token);
+        if (pr.ok && pr.body[0]) filaDueno = pr.body[0];
+      } catch (e) { filaDueno = null; }
+      if (!filaDueno || filaDueno.role !== 'owner') {
+        return json({ ok: false, error: 'solo_owner' }, 403, ACAO);
+      }
+      const body = await request.json().catch(() => ({}));
+      const accion = String((body && body.accion) || '');
+      const hAuth = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, Prefer: 'return=representation' };
+      try {
+        if (accion === 'equipo') {
+          const id = String(body.id || '');
+          const status = String(body.status || '');
+          if (!/^[0-9a-f-]{36}$/i.test(id) || !['pendiente', 'confirmado', 'rechazado'].includes(status)) {
+            return json({ ok: false, error: 'datos_invalidos' }, 400, ACAO);
+          }
+          const r = await fetch(NEON_API + '/tournament_teams?id=eq.' + id, { method: 'PATCH', headers: hAuth, body: JSON.stringify({ status }) });
+          if (!r.ok) return json({ ok: false, error: 'base_rechazo', detalle: (await r.text().catch(() => '')).slice(0, 300) }, 502, ACAO);
+          return json({ ok: true, accion }, 200, ACAO);
+        }
+        if (accion === 'resultado') {
+          const id = String(body.id || '');
+          if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ ok: false, error: 'datos_invalidos' }, 400, ACAO);
+          const g = await neonGet('/tournament_matches?id=eq.' + id + '&select=*', token);
+          const m = g.ok && g.body[0] ? g.body[0] : null;
+          if (!m) return json({ ok: false, error: 'partido_no_encontrado' }, 404, ACAO);
+          const sa = parseInt(body.score_a, 10);
+          const sb = parseInt(body.score_b, 10);
+          const estado = body.estado === 'en_curso' ? 'en_curso' : 'final';
+          if (estado === 'final' && (!Number.isFinite(sa) || !Number.isFinite(sb) || sa === sb)) {
+            return json({ ok: false, error: 'marcador_invalido' }, 400, ACAO);
+          }
+          const parche = { score_a: Number.isFinite(sa) ? sa : null, score_b: Number.isFinite(sb) ? sb : null, estado, ganador: estado === 'final' ? (sa > sb ? m.team_a : m.team_b) : null };
+          const r = await fetch(NEON_API + '/tournament_matches?id=eq.' + id, { method: 'PATCH', headers: hAuth, body: JSON.stringify(parche) });
+          if (!r.ok) return json({ ok: false, error: 'base_rechazo', detalle: (await r.text().catch(() => '')).slice(0, 300) }, 502, ACAO);
+          return json({ ok: true, accion, ganador: parche.ganador }, 200, ACAO);
+        }
+        if (accion === 'sembrar') {
+          const torneo = String(body.torneo || '').trim().slice(0, 40);
+          if (!torneo || !/^[a-z0-9_-]{1,40}$/i.test(torneo)) return json({ ok: false, error: 'torneo_invalido' }, 400, ACAO);
+          const r = await fetch(NEON_API + '/rpc/bracket_sembrar', { method: 'POST', headers: hAuth, body: JSON.stringify({ p_tournament: torneo }) });
+          if (!r.ok) return json({ ok: false, error: 'base_rechazo', detalle: (await r.text().catch(() => '')).slice(0, 300) }, 502, ACAO);
+          return json({ ok: true, accion }, 200, ACAO);
+        }
+        if (accion === 'reset_bracket') {
+          const torneo = String(body.torneo || '').trim().slice(0, 40);
+          if (!torneo || !/^[a-z0-9_-]{1,40}$/i.test(torneo)) return json({ ok: false, error: 'torneo_invalido' }, 400, ACAO);
+          const r = await fetch(NEON_API + '/tournament_matches?tournament_id=eq.' + encodeURIComponent(torneo), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+          if (!r.ok) return json({ ok: false, error: 'base_rechazo' }, 502, ACAO);
+          return json({ ok: true, accion }, 200, ACAO);
+        }
+        return json({ ok: false, error: 'accion_desconocida' }, 400, ACAO);
+      } catch (e) {
+        return json({ ok: false, error: 'base_inaccesible' }, 502, ACAO);
+      }
     }
 
     // --- 7b2) Cuenta: verificación/cambio de email vía Auth0 Management API.

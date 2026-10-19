@@ -1,6 +1,6 @@
 [package]
 name = "vants-desktop"
-version = "1.0.3"
+version = "2.1.0"
 description = "VANTS"
 authors = ["VANTS"]
 license = "MIT"

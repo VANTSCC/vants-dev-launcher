@@ -93,7 +93,7 @@ async function loadUserData() {
     const playerData = await invoke('neon_query', {
       table: 'players',
       select: 'id,username,display_name,avatar_url,region,main_game,verified,created_at',
-      filters: [`auth_user_id.eq.${userinfo.sub}`],
+      filters: [`auth0_sub.eq.${userinfo.sub}`],
     });
     const player = Array.isArray(playerData) ? playerData[0] : null;
 
@@ -136,7 +136,7 @@ async function loadRankedData() {
     const playerData = await invoke('neon_query', {
       table: 'players',
       select: 'id',
-      filters: [`auth_user_id.eq.${userinfo.sub}`],
+      filters: [`auth0_sub.eq.${userinfo.sub}`],
     });
     const player = Array.isArray(playerData) ? playerData[0] : null;
     if (!player) {
@@ -194,22 +194,19 @@ async function loadSocialsData() {
       headers: { Authorization: 'Bearer ' + session.accessToken },
     }).then((r) => r.json());
 
-    const accounts = await invoke('neon_query', {
-      table: 'user_game_accounts',
-      select: 'game,handle,display_name,avatar_url,profile_url,verified',
-      filters: [`user_id.eq.${userinfo.sub}`],
+    const links = await invoke('neon_query', {
+      table: 'vants_links',
+      select: 'platform,handle,verified',
+      filters: [`auth0_sub.eq.${userinfo.sub}`],
     });
-
-    const discordAccounts = await invoke('neon_query', {
-      table: 'player_discord_accounts',
-      select: 'discord_id,discord_username,avatar_url',
-      filters: [`player_id.in.(${userinfo.sub})`],
-    });
+    const lk = (pl) => (Array.isArray(links) ? links.find((l) => l.platform === pl) : null) || null;
 
     const socials = [
-      { id: 'discord', name: 'Discord', color: '#5865F2', data: discordAccounts[0] || null },
-      { id: 'steam', name: 'Steam', color: '#1b2838', data: accounts.find((a) => a.game === 'steam') || null },
-      { id: 'kick', name: 'Kick', color: '#53FC18', data: accounts.find((a) => a.game === 'kick') || null },
+      { id: 'google', name: 'Google', color: '#4CC9F0', data: { handle: userinfo.email || 'CONECTADO' } },
+      { id: 'faceit', name: 'FACEIT', color: '#FF5500', data: lk('faceit') },
+      { id: 'discord', name: 'Discord', color: '#5865F2', data: lk('discord') },
+      { id: 'twitch', name: 'Twitch', color: '#9146FF', data: lk('twitch') },
+      { id: 'kick', name: 'Kick', color: '#53FC18', data: lk('kick') },
     ];
 
     socialsContent.innerHTML = socials.map((s) => `
@@ -217,9 +214,9 @@ async function loadSocialsData() {
         <div style="width:32px;height:32px;border-radius:8px;background:${s.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;">${s.name[0]}</div>
         <div style="flex:1">
           <div style="font-weight:700;color:#fff">${s.name}</div>
-          <div style="font-size:12px;color:#8b97a3">${s.data ? (s.data.display_name || s.data.discord_username || s.data.handle || 'Vinculado') : 'No vinculado'}</div>
+          <div style="font-size:12px;color:#8b97a3">${s.data ? (s.data.handle || 'Vinculado') : 'No vinculado'}</div>
         </div>
-        <div style="font-size:12px;font-weight:700;color:${s.data ? '#3ddc84' : '#8b97a3'}">${s.data ? 'VINCULADO' : 'NO VINCULADO'}</div>
+        <div style="font-size:12px;font-weight:700;color:${s.data ? '#3ddc84' : '#8b97a3'}">${s.data ? (s.data.verified ? 'VERIFICADO' : 'VINCULADO') : 'NO VINCULADO'}</div>
       </div>
     `).join('');
   } catch (e) {
@@ -240,6 +237,26 @@ document.querySelectorAll('.nav button').forEach((btn) => {
     });
   });
 });
+
+// ---------- Presencia: latido cada 60 s (quién está en línea) ----------
+const NEON_API_UI = 'https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
+setInterval(async () => {
+  if (!session || !session.accessToken) return;
+  try {
+    const ui = await fetch('https://vants.eu.auth0.com/userinfo', {
+      headers: { Authorization: 'Bearer ' + session.accessToken },
+    }).then((r) => r.json());
+    if (!ui || !ui.sub) return;
+    const p = await invoke('neon_query', { table: 'players', select: 'id', filters: [`auth0_sub.eq.${ui.sub}`] });
+    const pid = Array.isArray(p) && p[0] && p[0].id;
+    if (!pid) return;
+    await fetch(NEON_API_UI + '/presence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.accessToken, Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ player_id: pid, estado: 'online', juego: 'valorant' }),
+    });
+  } catch (e) { /* silencio: el latido reintenta en 60 s */ }
+}, 60000);
 
 // ---------- Logout ----------
 logoutBtn.addEventListener('click', async () => {

@@ -75,6 +75,7 @@ const PICON={
   twitch:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.64 5.93h1.43v4.28h-1.43m3.93-4.28H17v4.28h-1.43M7 2 3.43 5.57v12.86h4.28V22l3.58-3.57h2.85L20.57 12V2m-1.43 9.29-2.85 2.85h-2.86l-2.5 2.5v-2.5H7.71V3.43h11.43z"/></svg>',
   youtube:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.85-.49-5.68a2.98 2.98 0 0 0-2.1-2.11C18.56 3.72 12 3.72 12 3.72s-6.56 0-8.4.49A2.98 2.98 0 0 0 1.49 6.3C1 8.15 1 12 1 12s0 3.85.49 5.68a2.98 2.98 0 0 0 2.11 2.11c1.84.49 8.4.49 8.4.49s6.56 0 8.4-.49a2.98 2.98 0 0 0 2.11-2.11C23 15.85 23 12 23 12M9.75 15.56V8.44L15.5 12z"/></svg>',
   kick:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.33 0h8v5.33H12V2.67h2.67V0h8v8H20v2.67h-2.67v2.66H20V16h2.67v8h-8v-2.67H12v-2.66H9.33V24h-8Z"/></svg>',
+  discord:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.6 1.25a18.27 18.27 0 0 0-5.5 0 12.6 12.6 0 0 0-.61-1.25.08.08 0 0 0-.08-.04 19.74 19.74 0 0 0-4.88 1.52.07.07 0 0 0-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.22-2a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.87-.9.08.08 0 0 1-.01-.13c.13-.09.25-.19.37-.29a.07.07 0 0 1 .08-.01c3.93 1.8 8.18 1.8 12.06 0a.07.07 0 0 1 .08.01c.12.1.25.2.38.29a.08.08 0 0 1-.01.13c-.6.35-1.22.64-1.87.9a.08.08 0 0 0-.04.1c.36.7.77 1.37 1.22 2a.08.08 0 0 0 .08.03 19.84 19.84 0 0 0 6.02-3.03.08.08 0 0 0 .03-.05c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03ZM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42s.95-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42Zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42s.95-2.42 2.15-2.42c1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42Z"/></svg>',
   tiktok:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48"/></svg>',
   x:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.03 8.03L23.2 22h-6.4l-5.01-6.55L6.1 22H3l7.52-8.6L2.4 2h6.4l4.53 6z"/></svg>',
   steam:'<span class="pletter">S</span>',
@@ -85,6 +86,7 @@ const PLAT={
   twitch:{n:'TWITCH',c:'#9146FF',k:'social'},kick:{n:'KICK',c:'#53FC18',k:'social'},
   youtube:{n:'YOUTUBE',c:'#FF0033',k:'social'},tiktok:{n:'TIKTOK',c:'#EDEDE7',k:'social'},
   x:{n:'X / TWITTER',c:'#EDEDE7',k:'social'},
+  discord:{n:'DISCORD',c:'#5865F2',k:'social'},
   riot:{n:'RIOT GAMES',c:'#FF4655',k:'game'},steam:{n:'STEAM',c:'#66C0F4',k:'game'},faceit:{n:'FACEIT',c:'#FF5500',k:'game'}
 };
 const platIc=k=>'<span class="plat-ic" style="--plc:'+PLAT[k].c+'">'+PICON[k]+'</span>';
@@ -491,7 +493,7 @@ function renderLbBody(){
       const idx=i+1;
       return '<tr'+(idx===1&&!q?' class="top"':'')+'>'
         +'<td class="p-pos mono">'+String(idx).padStart(2,'0')+'</td>'
-        +'<td class="p-name">'+escHtml(p.name)+(p.badges&&p.badges.length?badgeDots(p.badges):'')+'<small>@'+escHtml(p.username||'—')+'</small></td>'
+        +'<td class="p-name">'+(vivoDe(p.id)?vivoChipHTML(vivoDe(p.id)):'')+escHtml(p.name)+(p.badges&&p.badges.length?badgeDots(p.badges):'')+'<small>@'+escHtml(p.username||'—')+'</small></td>'
         +'<td class="rank-cell">'+(p.rating>0?rankCell(p.rating):'<span class="mono" style="font:600 9px/1 var(--mono);color:var(--dim)">SIN RANGO</span>')+'</td>'
         +'<td class="mono" style="color:var(--muted)">'+escHtml(p.team)+'</td>'
         +'<td class="num mono hl">'+(p.rating>0?p.rating.toFixed(2):'—')+'</td>'
@@ -611,11 +613,11 @@ function openEnroll(t){
     const team=$('#fTeam').value.trim(),tag=$('#fTag').value.trim().toUpperCase(),cap=$('#fCap').value.trim();
     if(!team||!tag||!cap){toast('Completá equipo, tag y capitán','info');return;}
     if(!$('#fTerms').checked){toast('Tenés que aceptar el reglamento','info');return;}
-    if(fee&&!vantsEsOwner())openPayStep(t,team,tag);else finishEnroll(t,team,tag);
+    if(fee&&!vantsEsOwner())openPayStep(t,team,tag);else inscribirReal(t,team,tag);
   };
 }
 function openPayStep(t,team,tag){
-  if(vantsEsOwner()){finishEnroll(t,team,tag);toast('Privilegio OWNER: inscripción gratuita');return;}
+  if(vantsEsOwner()){inscribirReal(t,team,tag);toast('Privilegio OWNER: inscripción gratuita');return;}
   openModal('<div class="mc-head"><h3>Confirmar pago</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
     +'<div class="mc-sum"><span>'+t.name+'</span><span>'+(D().gameLabel||(state.game==='valorant'?'VALORANT':'CS2'))+'</span></div>'
     +'<div class="mc-sum"><span>Equipo</span><span>'+team+' ['+tag+']</span></div>'
@@ -625,11 +627,12 @@ function openPayStep(t,team,tag){
     +'<button class="btn btn-cut" id="payBtn"><i data-lucide="credit-card"></i>PAGAR '+money(t.fee)+'</button>'
     +'<p class="mono" style="margin-top:14px;font:500 10px/1.7 var(--mono);color:var(--dim);text-align:center">'+notaPago()+'</p></div>');
   $('#mClose').onclick=closeModal;
-  $('#payBtn').onclick=e=>pagarO(e.currentTarget,{plan:'fee',fee_cents:Math.round(t.fee*100),name:t.name},()=>finishEnroll(t,team,tag));
+  $('#payBtn').onclick=e=>pagarO(e.currentTarget,{plan:'fee',fee_cents:Math.round(t.fee*100),name:t.name},()=>inscribirReal(t,team,tag));
 }
 function finishEnroll(t,team,tag){
   state.entered[t.id]=true;
-  const tt=D().tournaments.find(x=>x.id===t.id);if(tt)tt.filled=Math.min(tt.slots,tt.filled+1);
+  const tt=D().tournaments.find(x=>x.id===t.id);if(tt)tt.filled=Math.min(tt.slots||64,(tt.filled||0)+1);
+  torneosCargar(true);
   openModal('<div class="success"><div class="ok">'+SVG_CHECK+'</div><h4>Tu equipo está dentro</h4><p>'+team+' ['+tag+'] · '+t.name+'<br>Fixture 24 h antes del inicio.<br>¡Nos vemos en el servidor!</p></div>');
   renderTournaments();toast('Inscripción confirmada: '+team+' ['+tag+']');
   vantsDiscord('torneo_inscripcion',{team,tag,tournament:t.name});
@@ -791,7 +794,7 @@ function renderProfileGrid(){
     const bFoto=(p.stats&&p.stats.banner_foto)?String(p.stats.banner_foto):'';
     const bImg=(bFoto&&/^data:image\//.test(bFoto))?'<img src="'+bFoto+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62"><span style="position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,9,12,.78),rgba(8,9,12,.18) 55%,rgba(8,9,12,.66))"></span>':'';
     return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openPlayerProfile(\''+p.id+'\')">'
-      +'<div class="pc-banner">'+bImg+rankSVG(k,64,'remblem')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
+      +'<div class="pc-banner">'+bImg+rankSVG(k,64,'remblem')+(vivoDe(p.id)?vivoChipHTML(vivoDe(p.id),true):'')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
       +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+ava+'</span>'
       +'<div class="pc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'<small>'+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+'</small></div>'
       +'<div class="pc-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
@@ -863,7 +866,7 @@ function openPlayerProfile(pid){
   const mRtg=(raw!=null)?raw:(stats.rtg!=null?stats.rtg:null);
   const mKd=(stats.kd!=null)?stats.kd:null;
   const badges=badgesDeRol(p);
-  const handles={discord:stats.discord_tag||null,twitch:p.twitch_channel||null,kick:p.kick_channel||null,youtube:stats.youtube||null,tiktok:stats.tiktok||null,x:stats.x||null,riot:stats.riot||null,steam:stats.steam||null,faceit:stats.faceit||null};
+  const handles={discord:stats.discord_tag||((window.VANTS_LINKS&&window.VANTS_LINKS.discord)?window.VANTS_LINKS.discord.handle:null),twitch:p.twitch_channel||null,kick:p.kick_channel||null,youtube:stats.youtube||null,tiktok:stats.tiktok||null,x:stats.x||null,riot:stats.riot||null,steam:stats.steam||null,faceit:stats.faceit||((window.VANTS_LINKS&&window.VANTS_LINKS.faceit)?window.VANTS_LINKS.faceit.handle:null)};
   const eq=(stats&&stats.equipo&&stats.equipo.nombre)?stats.equipo:null;
   const eqStrip=eq?'<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line2,#303039);background:rgba(255,13,46,.05);padding:10px 12px;margin-bottom:14px">'
     +'<span style="width:44px;height:44px;flex:none;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 13px var(--mono);color:var(--accent)">'+(eq.foto?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
@@ -891,12 +894,14 @@ function openPlayerProfile(pid){
       +'<div class="rc-top">'+platIc(c.k)+'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div><p class="rc-title">Canal vinculado · '+escHtml(c.h)+'</p></div></div>'
       +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+PLAT[c.k].n+'</b></span><span class="rc-game">VER CANAL</span></div></div>':'')
     +(esMio?'<p class="d-sec">TU CUENTA</p><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px">'
+      +'<button class="btn btn-ghost btn-sm" id="pfMiCuenta" style="width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em"><i data-lucide="layout-dashboard"></i>MI CUENTA · DASHBOARD COMPLETO</button>'
       +'<button class="btn btn-ghost btn-sm" id="pfEditar" style="width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em"><i data-lucide="pencil"></i>EDITAR PERFIL · BANNER · DATOS · EQUIPO</button>'
       +'<button class="btn btn-ghost btn-sm" id="pfAjustes" style="width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em"><i data-lucide="settings"></i>AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button></div>'
     :'')
     +'</div>');
   icons();
   if(esMio){
+    const eMc=document.querySelector('#pfMiCuenta');if(eMc)eMc.onclick=()=>{closeDrawer();if(window.abrirMiCuenta)window.abrirMiCuenta();};
     const eEd=document.querySelector('#pfEditar');if(eEd)eEd.onclick=()=>{if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();else toast('Iniciá sesión para editar tu perfil','info');};
     const eAj=document.querySelector('#pfAjustes');if(eAj)eAj.onclick=()=>{if(window.openAjustesCuenta)window.openAjustesCuenta();};
   }
@@ -1667,3 +1672,302 @@ window.openAjustesCuenta=function(){
   };
   icons();
 };
+
+/* ============================================================
+   MI CUENTA · DASHBOARD EN CAJONES + PRESENCIA EN VIVO
+   + TORNEOS EN LA BASE (inscripciones reales + bracket que se mueve)
+   Task 32 · v26
+   ------------------------------------------------------------
+   · MI CUENTA: dashboard estilo my-account en CAJONES separados
+     (perfil · membresía · partidos y resultados · equipos ·
+     conexiones · estado en vivo). Nada mezclado en una sola masa.
+   · PRESENCIA: con sesión activa, la pestaña (y la app de Windows)
+     laten cada 60 s → LÍDERES y la Sala muestran EN LÍNEA/JUGANDO.
+   · TORNEOS: la inscripción guarda el equipo EN LA BASE (Neon);
+     el bracket se siembra solo con 8 confirmados y avanza solo
+     con cada resultado (trigger SQL) — la web lo refleja cada 30 s.
+   ============================================================ */
+window.VANTS_LIVE={};          /* pid → fila de v_en_vivo */
+window.VANTS_LIVE_AT=0;
+window.VANTS_TORNEOS={};       /* id torneo → {equipos,bracket,at} */
+const LINKS_API_MQ='https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1';
+const fhCorta=iso=>{try{return new Date(iso).toLocaleDateString('es',{day:'2-digit',month:'short'})}catch(e){return''}};
+const vivoChipHTML=(v,abs)=>{const jug=v&&v.estado==='jugando';
+  return '<span class="vivo-chip '+(jug?'jugando':'linea')+(abs?' abs':'')+'" title="'+(jug?'JUGANDO AHORA':'EN LÍNEA')+'"><i></i>'+(jug?'JUGANDO':'EN LÍNEA')+'</span>';};
+const vivoDe=pid=>{try{return (window.VANTS_LIVE||{})[pid]||null;}catch(e){return null;}};
+
+/* ---------- LECTURA EN VIVO (quién está conectado ahora) ---------- */
+async function enVivoCargar(){
+  try{
+    const r=await fetchWorker('/api/en-vivo',{headers:{Accept:'application/json'}});
+    const j=await r.json().catch(()=>null);
+    const mapa={};
+    if(j&&j.ok&&Array.isArray(j.jugadores))j.jugadores.forEach(x=>{if(x&&x.player_id)mapa[x.player_id]=x;});
+    window.VANTS_LIVE=mapa;window.VANTS_LIVE_AT=Date.now();
+    pintarDotsEnVivo();
+  }catch(e){/* silencio: el chip desaparece y listo */}
+}
+function pintarDotsEnVivo(){
+  try{
+    const acc=$('#accLive');
+    const mio=(window.VANTS_AUTH&&window.VANTS_AUTH.playerId)?vivoDe(window.VANTS_AUTH.playerId):null;
+    if(acc){acc.style.display=mio?'block':'none';}
+  }catch(e){}
+  try{pintarFranjaEnVivo();}catch(e){}
+  try{if((window.VANTS_PLAYERS||[]).length)renderProfileGrid();}catch(e){}
+  try{renderLbBody();}catch(e){}
+}
+function pintarFranjaEnVivo(){
+  const hero=document.querySelector('.hero');if(!hero)return;
+  let f=document.getElementById('vivosFranja');
+  if(!f){f=document.createElement('div');f.id='vivosFranja';f.className='vivos-franja';
+    const anc=hero.querySelector('.hero-cta')||hero;
+    anc.parentNode.insertBefore(f,anc.nextSibling);}
+  const js=Object.values(window.VANTS_LIVE||{});
+  if(!js.length){f.style.display='none';return;}
+  const jug=js.filter(x=>x.estado==='jugando').length;
+  f.style.display='flex';
+  f.innerHTML='<span class="vf-dot"></span><span>EN LA ARENA AHORA</span><b>'+js.length+' CONECTADOS</b>'
+    +(jug?'<b class="jf">'+jug+' JUGANDO</b>':'')
+    +js.slice(0,5).map(x=>'<span class="vf-ava" title="'+escHtml(x.display_name||x.username||'')+'">'+escHtml(String(x.display_name||x.username||'V').slice(0,2).toUpperCase())+'</span>').join('');
+}
+
+/* ---------- PRESENCIA (latido propio: web y app de Windows) ---------- */
+let presTimer=null,presKicked=false;
+async function presenciaLatir(){
+  try{
+    const A=window.VantAuth0;if(!A||!A.client)return;
+    const u=await A.client.getUser().catch(()=>null);
+    if(!u||!u.sub)return;
+    const t=await A.getToken().catch(()=>null);if(!t)return;
+    let pid=(window.VANTS_AUTH&&window.VANTS_AUTH.playerId)||null;
+    if(!pid)pid=await playerPidActual();
+    if(!pid)return;
+    const estado=(localStorage.getItem('vants_presencia')||'online');
+    const h={'Content-Type':'application/json',Accept:'application/json',[AUTH_FIELD]:AUTH_SCHEME+t};
+    if(estado==='ausente'){
+      await fetch(LINKS_API_MQ+'/presence?player_id=eq.'+encodeURIComponent(pid),{method:'DELETE',headers:{Accept:'application/json',[AUTH_FIELD]:AUTH_SCHEME+t}}).catch(()=>{});
+      return;
+    }
+    await fetch(LINKS_API_MQ+'/presence',{method:'POST',headers:Object.assign(h,{'Prefer':'resolution=merge-duplicates'}),
+      body:JSON.stringify({player_id:pid,estado,juego:state.game||'valorant'})}).catch(()=>{});
+  }catch(e){}
+}
+function iniciarPresencia(){
+  if(presKicked)return;presKicked=true;
+  presenciaLatir();presTimer=setInterval(presenciaLatir,60000);
+  window.vantsPresenciaSet=function(est){
+    try{localStorage.setItem('vants_presencia',est);}catch(e){}
+    presenciaLatir();
+    const t=$('#presEstadoTxt');if(t)t.textContent=est==='ausente'?'INVISIBLE (nadie te ve)':(est==='jugando'?'JUGANDO':'EN LÍNEA');
+    $$('#presOpts [data-pres]').forEach(b=>b.classList.toggle('on',b.dataset.pres===est));
+  };
+}
+
+/* ---------- TORNEOS EN LA BASE: inscritos + bracket sincronizado ---------- */
+async function torneosCargar(force){
+  if(!document.getElementById('tournList'))return;
+  const tor=D().tournaments[0];
+  if(!tor||!tor.id)return;
+  const prev=window.VANTS_TORNEOS[tor.id];
+  if(!force&&prev&&Date.now()-prev.at<25000)return;
+  try{
+    const r=await fetchWorker('/api/torneos/bracket?torneo='+encodeURIComponent(tor.id),{headers:{Accept:'application/json'}});
+    const j=await r.json().catch(()=>null);
+    if(j&&j.ok){
+      window.VANTS_TORNEOS[tor.id]={equipos:j.equipos||[],bracket:j.bracket||[],at:Date.now()};
+      const tt=D().tournaments.find(x=>x.id===tor.id);
+      if(tt)tt.filled=(j.equipos||[]).length;
+      renderTournaments();renderTorneosInscritos();
+      bracketAplicar(j);
+    }
+  }catch(e){}
+}
+function renderTorneosInscritos(){
+  const tl=$('#tournList');if(!tl)return;
+  let c=$('#tInscritos');
+  if(!c){c=document.createElement('div');c.id='tInscritos';c.className='t-inscritos';tl.parentNode.insertBefore(c,tl.nextSibling);}
+  const tor=D().tournaments[0];const d=tor&&(window.VANTS_TORNEOS[tor.id]);
+  if(!d||!d.equipos.length){c.innerHTML='';return;}
+  const CH={pendiente:'PENDIENTE',confirmado:'CONFIRMADO',rechazado:'RECHAZADO'};
+  c.innerHTML='<p class="d-sec" style="margin:26px 0 12px">EQUIPOS INSCRITOS · SINCRONIZADO CON LA BASE</p>'
+    +'<div class="ti-grid">'+d.equipos.slice(0,12).map(e=>'<div class="ti-row'+(e.status==='confirmado'?' ok':'')+'">'
+      +'<span class="ti-tag">'+escHtml(String(e.tag||'VNT').slice(0,3).toUpperCase())+'</span>'
+      +'<div class="ti-info"><b>'+escHtml(String(e.name||'EQUIPO').toUpperCase())+'</b>'
+      +'<small>'+escHtml(e.captain||'—')+(e.region?' · '+escHtml(e.region):'')+' · '+fhCorta(e.created_at)+'</small></div>'
+      +'<span class="ti-st '+e.status+'">'+(CH[e.status]||e.status.toUpperCase())+'</span></div>').join('')+'</div>';
+}
+async function inscribirReal(t,team,tag){
+  const A=window.VantAuth0;
+  let tok=null;try{tok=A?await A.getToken():null;}catch(e){tok=null;}
+  if(!tok){toast('Iniciá sesión para inscribir tu equipo en la base','info');const lb=$('#arenaLoginBtn');if(lb)lb.click();return;}
+  toast('Registrando tu equipo en la base…','info');
+  try{
+    const r=await fetchWorker('/api/torneos/inscribir',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},
+      body:JSON.stringify({torneo:t.id,juego:state.game||'valorant',equipo:team,tag:tag,capitan:($('#fCap')?$('#fCap').value.trim():''),region:($('#fReg')?$('#fReg').value.trim():'')})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok){finishEnroll(t,team,tag);torneosCargar(true);return;}
+    if(j.error==='equipo_ya_inscrito'){toast('Ese nombre de equipo ya está inscrito en este torneo','info');return;}
+    if(j.error==='sin_sesion'||j.error==='token_invalido'){toast('Tu sesión venció: entrá de nuevo y repetí la inscripción','info');const lb=$('#arenaLoginBtn');if(lb)lb.click();return;}
+    toast('La inscripción no se pudo guardar'+(j.error?(' ('+j.error+')'):''),'error');
+  }catch(e){toast('Error de red al inscribir el equipo','error');}
+}
+function bracketAplicar(j){
+  const b=D().bracket;if(!b)return;
+  const por={};(j.bracket||[]).forEach(m=>{(por[m.ronda]=por[m.ronda]||[])[m.slot]=m;});
+  if(!por.q||!por.q.length)return;
+  const arma=m=>m?{a:m.team_a||null,b:m.team_b||null,
+    sa:m.estado==='final'?m.score_a:null,sb:m.estado==='final'?m.score_b:null,
+    meta:m.estado==='en_curso'?'EN CURSO · BO3':(m.estado==='final'?('FINAL '+m.score_a+':'+m.score_b):'POR DEFINIR')}:{a:null,b:null,meta:'POR DEFINIR'};
+  const sig=JSON.stringify([b.quarters.map(m=>[m.a,m.b,m.sa,m.sb]),b.semis.map(m=>[m.a,m.b,m.sa,m.sb]),[b.final.a,b.final.b,b.final.sa,b.final.sb]]);
+  b.quarters=[0,1,2,3].map(i=>arma((por.q||[])[i]));
+  b.semis=[0,1].map(i=>arma((por.s||[])[i]));
+  b.final=arma((por.f||[])[0]);
+  b.lb1=[0,1].map(i=>arma((por.l1||[])[i]));
+  b.lb2=[0,1].map(i=>arma((por.l2||[])[i]));
+  b.lbf=arma((por.lf||[])[0]);
+  renderBracket();
+  const sig2=JSON.stringify([b.quarters.map(m=>[m.a,m.b,m.sa,m.sb]),b.semis.map(m=>[m.a,m.b,m.sa,m.sb]),[b.final.a,b.final.b,b.final.sa,b.final.sb]]);
+  if(sig2!==sig)animarBracket();
+  window.VANTS_BRK_AT=Date.now();
+}
+function animarBracket(){
+  $$('#bracketGrid .b-match').forEach(el=>{
+    if(el.querySelector('.win')&&!el.dataset.f){el.dataset.f='1';el.classList.add('b-move');
+      setTimeout(()=>{el.classList.remove('b-move');},2400);}
+  });
+}
+
+/* ---------- LÍDERES: refresco automático con movimiento ---------- */
+async function lbRefrescoVivo(){
+  if(document.hidden)return;
+  if(!document.getElementById('lbBody'))return;
+  const antes={};
+  $$('#lbBody tr').forEach(tr=>{const sm=tr.querySelector('.p-name small');
+    if(sm)antes[sm.textContent]=tr.getBoundingClientRect().top;});
+  try{await cargarJugadores();}catch(e){return;}
+  try{enVivoCargar();}catch(e){}
+  requestAnimationFrame(()=>{
+    $$('#lbBody tr').forEach(tr=>{const sm=tr.querySelector('.p-name small');if(!sm)return;
+      const prev=antes[sm.textContent];if(prev==null)return;
+      const d=prev-tr.getBoundingClientRect().top;
+      if(Math.abs(d)>2){tr.style.transition='none';tr.style.transform='translateY('+d+'px)';
+        requestAnimationFrame(()=>{tr.style.transition='transform .7s cubic-bezier(.22,.61,.36,1)';tr.style.transform='';});}});
+  });
+  const chip=$('#lbRefresh');
+  if(chip)chip.textContent='AUTO · '+new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+(function lbChip(){const s=$('#lbSearch');if(s&&s.parentNode&&!$('#lbRefresh')){
+  const c=document.createElement('span');c.id='lbRefresh';c.className='lb-refresh mono';c.textContent='AUTO · EN VIVO';
+  s.parentNode.appendChild(c);}})();
+
+/* ---------- MI CUENTA · DASHBOARD EN CAJONES ---------- */
+window.abrirMiCuenta=async function(){
+  if(!(window.VANTS_AUTH&&window.VANTS_AUTH.sub)){
+    const lb=$('#arenaLoginBtn');
+    if(lb&&!lb.hidden){try{lb.click();}catch(e){}}
+    toast('Iniciá sesión para abrir MI CUENTA','info');return;
+  }
+  const A=window.VantAuth0;
+  const u=await A.client.getUser().catch(()=>null);
+  const sub=(u&&u.sub)||null;
+  const mio=(window.VANTS_ME&&window.VANTS_ME.player)||null;
+  const pid=(window.VANTS_ME&&window.VANTS_ME.pid)||((window.VANTS_AUTH&&window.VANTS_AUTH.playerId)||null);
+  openDrawer('<div class="d-head"><span class="kicker">MI CUENTA · DASHBOARD</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
+    +'<div class="d-body"><div class="cta-grid" id="ctaGrid"><div class="cta-loading"><span class="spin"></span>CARGANDO TUS CAJONES…</div></div></div>');
+  let links={};try{links=await linksCargar()||{};}catch(e){}
+  let tok=null;try{tok=await A.getToken();}catch(e){}
+  const hAuth=tok?{'Content-Type':'application/json',Accept:'application/json',[AUTH_FIELD]:AUTH_SCHEME+tok}:{};
+  let series=[],fme=[],equipos=[];
+  if(tok&&pid){
+    try{const or=encodeURIComponent('(retador_id.eq.'+pid+',rival_id.eq.'+pid+')');
+      series=await fetch(LINKS_API_MQ+'/series_ranked?or='+or+'&order=creado_at.desc&limit=6',{headers:hAuth}).then(r=>r.ok?r.json():[]).catch(()=>[]);}catch(e){series=[];}
+    try{fme=await fetch(LINKS_API_MQ+'/faceit_matches?player_id=eq.'+encodeURIComponent(pid)+'&order=played_at.desc&limit=6',{headers:hAuth}).then(r=>r.ok?r.json():[]).catch(()=>[]);}catch(e){fme=[];}
+  }
+  if(sub){try{equipos=await fetch(LINKS_API_MQ+'/tournament_teams?auth0_sub=eq.'+encodeURIComponent(sub)+'&order=created_at.desc&limit=10',{headers:hAuth}).then(r=>r.ok?r.json():[]).catch(()=>[]);}catch(e){equipos=[];}}
+  const mapaP={};(window.VANTS_PLAYERS||[]).forEach(p=>{mapaP[p.id]=p;});
+  const k=rankKeyDe(mio||{}),rc=RANKS[k];
+  const st=mio?(window.VANTS_STATS[mio.id]||{}):{};
+  const planTxt=vantsEsOwner()?'VANTS PRO · OWNER':(me.plan||'FREE');
+  const pres=localStorage.getItem('vants_presencia')||'online';
+  const serieRow=s=>{
+    const yoRet=s.retador_id===pid;
+    const otroId=yoRet?s.rival_id:s.retador_id;
+    const otro=(mapaP[otroId]&&(mapaP[otroId].display_name||mapaP[otroId].username))||'JUGADOR';
+    const gane=yoRet?s.gano_retador:!s.gano_retador;
+    const chip=s.estado!=='confirmada'?'<span class="sr-chip pend">PENDIENTE</span>':(gane?'<span class="sr-chip win">GANADA</span>':'<span class="sr-chip lose">PERDIDA</span>');
+    return '<div class="sr-row"><div class="sr-info"><b>VS '+escHtml(String(otro).toUpperCase())+'</b><small>'+(s.mapa?escHtml(s.mapa)+' · ':'')+fhCorta(s.creado_at)+'</small></div>'+chip+'</div>';
+  };
+  const fmRow=m=>'<div class="sr-row"><div class="sr-info"><b>FACEIT · '+escHtml((m.game||'cs2').toUpperCase())+'</b><small>'+fhCorta(m.played_at)+(m.xp_awarded?(' · +'+m.xp_awarded+' XP'):'')+'</small></div>'
+    +(m.result==='win'?'<span class="sr-chip win">VICTORIA</span>':(m.result==='loss'?'<span class="sr-chip lose">DERROTA</span>':'<span class="sr-chip pend">EMPATE</span>'))+'</div>';
+  const eqRow=e=>'<div class="sr-row"><div class="sr-info"><b>'+escHtml(String(e.name||'EQUIPO').toUpperCase())+' ['+escHtml(String(e.tag||'').toUpperCase())+']</b><small>'+escHtml(e.tournament_id||'')+' · '+fhCorta(e.created_at)+'</small></div>'
+    +'<span class="ti-st '+e.status+'">'+e.status.toUpperCase()+'</span></div>';
+  const conRow=k2=>{
+    const l=links[k2];const p=PLAT[k2];
+    return '<div class="cn-row" style="--plc:'+p.c+'">'+platIc(k2)
+      +'<div class="cn-info"><b>'+p.n+'</b><small>'+(l?('VINCULADO · '+escHtml(l.handle||'')):'NO VINCULADO')+'</small></div>'
+      +'<div class="cn-act">'+(l?'<button class="btn btn-ghost btn-sm" data-dis="'+k2+'">DESCONECTAR</button>':'<button class="btn btn-cut btn-sm" data-con="'+k2+'">CONECTAR</button>')+'</div></div>';
+  };
+  const g=(t2,inner)=>'<div class="cta-cajon"><p class="cta-k">'+t2+'</p>'+inner+'</div>';
+  const grid=''
+    +g('PERFIL'
+      ,'<div class="pf-mini"><span class="ava s2" style="--rc:'+rc.c1+'">'+(mio&&mio.avatar_url?'<img src="'+escHtml(mio.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml(((mio&&(mio.display_name||mio.username))||me.name||'V').slice(0,2).toUpperCase()))+'</span>'
+      +'<div class="pf-mini-i"><b>'+escHtml(((mio&&(mio.display_name||mio.username))||me.name||'JUGADOR').toUpperCase())+'</b>'
+      +'<small>@'+escHtml((mio&&mio.username)||'—')+' · '+(mio&&mio.verified?'VERIFICADO':'SIN VERIFICAR')+'</small>'
+      +'<div class="rk-wrap" style="margin-top:6px">'+rankSVG(k,26)+'<small>'+(RANKS[k].name+(k==='vants'?' APEX':''))+'</small><span class="rr mono">'+(st.mmr!=null?st.mmr+' MMR':'— MMR')+'</span></div></div></div>'
+      +'<div class="cta-btns"><button class="btn btn-ghost btn-sm" id="mcFicha">VER FICHA</button>'
+      +'<button class="btn btn-ghost btn-sm" id="mcEditar">EDITAR PERFIL</button>'
+      +'<button class="btn btn-ghost btn-sm" id="mcAjustes">AJUSTES</button></div>')
+    +g('MEMBRESÍA'
+      ,'<div class="plan-mini"><b>'+escHtml(planTxt)+'</b><span class="ti-st '+(planTxt==='FREE'?'pendiente':'confirmado')+'">'+(planTxt==='FREE'?'PLAN BASE':'ACTIVO')+'</span></div>'
+      +'<p class="cta-note">'+(vantsEsOwner()?'Tu cuenta es la dueña de la arena: todo el contenido premium desbloqueado.':(planTxt==='FREE'?'Subí a PRO para insignia verificable, columnas exclusivas del ranking y prioridad en torneos.':'Tu insignia ya acompaña a tu perfil en toda la arena.'))+'</p>'
+      +'<div class="cta-btns"><button class="btn btn-cut btn-sm" id="mcPlanes">VER MEMBRESÍAS</button></div>')
+    +g('PARTIDOS Y RESULTADOS'
+      ,(series.length?'<p class="cta-sub">VANTS RANKED · ÚLTIMAS SERIES</p>'+series.map(serieRow).join(''):'<p class="cta-note">Todavía no reportaste series. Gana series contra otros jugadores y subí de rango.</p>')
+      +(fme.length?'<p class="cta-sub" style="margin-top:12px">FACEIT · ÚLTIMAS PARTIDAS</p>'+fme.map(fmRow).join(''):'')
+      +'<div class="cta-btns"><button class="btn btn-ghost btn-sm" id="mcReportar">REPORTAR SERIE</button></div>')
+    +g('EQUIPOS · MIS INSCRIPCIONES'
+      ,(equipos.length?equipos.map(eqRow).join(''):'<p class="cta-note">Aún no inscribiste ningún equipo. Cuando lo hagas, tu equipo aparece acá y en el bracket.</p>')
+      +'<div class="cta-btns"><button class="btn btn-ghost btn-sm" id="mcTorneos">VER TORNEOS</button></div>')
+    +g('CONEXIONES · FACEIT · DISCORD · GOOGLE'
+      ,'<div class="cn-row" style="--plc:#4CC9F0"><span class="pletter">G</span>'
+      +'<div class="cn-info"><b>GOOGLE (CUENTA VANTS)</b><small>CONECTADO · '+escHtml((window.VANTS_AUTH&&window.VANTS_AUTH.email)||'—')+'</small></div>'
+      +'<div class="cn-act"><button class="btn btn-ghost btn-sm" id="mcGoogle">GESTIONAR</button></div></div>'
+      +['faceit','discord','twitch','kick','youtube','tiktok','x','riot','steam'].map(conRow).join(''))
+    +g('ESTADO EN VIVO'
+      ,'<p class="cta-note">Tus latidos marcan si estás EN LÍNEA o JUGANDO. La app de Windows también lo hace: los demás te ven brillar en LÍDERES y en la Sala.</p>'
+      +'<div class="pres-opts" id="presOpts">'
+      +'<button data-pres="online" class="'+(pres==='online'?'on':'')+'"><i class="dot"></i>EN LÍNEA</button>'
+      +'<button data-pres="jugando" class="'+(pres==='jugando'?'on':'')+'"><i class="dot"></i>JUGANDO</button>'
+      +'<button data-pres="ausente" class="'+(pres==='ausente'?'on':'')+'">INVISIBLE</button></div>'
+      +'<p class="cta-sub" style="margin-top:10px">ESTADO ACTUAL · <span id="presEstadoTxt">'+(pres==='ausente'?'INVISIBLE (nadie te ve)':(pres==='jugando'?'JUGANDO':'EN LÍNEA'))+'</span></p>');
+  const gd=$('#ctaGrid');if(gd)gd.innerHTML=grid;
+  icons();
+  const gb=id=>document.querySelector('#'+id);
+  if(gb('mcFicha'))gb('mcFicha').onclick=()=>{closeDrawer();if(mio)openPlayerProfile(mio);else if(pid)openPlayerProfile(pid);else toast('Abrí tu ficha desde la Sala de jugadores','info');};
+  if(gb('mcEditar'))gb('mcEditar').onclick=()=>{closeDrawer();if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();};
+  if(gb('mcAjustes'))gb('mcAjustes').onclick=()=>{closeDrawer();if(window.openAjustesCuenta)window.openAjustesCuenta();};
+  if(gb('mcPlanes'))gb('mcPlanes').onclick=()=>{closeDrawer();irAPro();};
+  if(gb('mcReportar'))gb('mcReportar').onclick=()=>{closeDrawer();const rb=$('#rankedReportBtn');if(rb){rb.click();}else{toast('El reporte de series vive en la portada · sección RANKING','info');}};
+  if(gb('mcTorneos'))gb('mcTorneos').onclick=()=>{closeDrawer();const p=document.getElementById('torneos');if(p)p.scrollIntoView({behavior:'smooth'});};
+  if(gb('mcGoogle'))gb('mcGoogle').onclick=()=>{closeDrawer();if(window.openAjustesCuenta)window.openAjustesCuenta();};
+  $$('#ctaGrid [data-con]').forEach(b=>b.onclick=async()=>{await window.connect(b.dataset.con);});
+  $$('#ctaGrid [data-dis]').forEach(b=>b.onclick=async()=>{await window.disconnect(b.dataset.dis);});
+  $$('#presOpts [data-pres]').forEach(b=>b.onclick=()=>{if(window.vantsPresenciaSet)window.vantsPresenciaSet(b.dataset.pres);});
+};
+
+/* ---------- ARRANQUE DEL MÓDULO ---------- */
+(function arranqueMiCuenta(){
+  const b=$('#miCuentaBtn');
+  if(b)b.addEventListener('click',()=>{try{window.abrirMiCuenta();}catch(e){}});
+  const iv=setInterval(()=>{if(b)b.hidden=!(window.VANTS_AUTH&&window.VANTS_AUTH.sub);},1200);
+  setTimeout(()=>clearInterval(iv),45000);
+  const iv2=setInterval(()=>{
+    if(window.VANTS_AUTH&&window.VANTS_AUTH.sub){clearInterval(iv2);iniciarPresencia();}
+  },1500);
+  setTimeout(()=>{clearInterval(iv2);},40000);
+  setTimeout(()=>{enVivoCargar();},3000);
+  setInterval(()=>{if(!document.hidden)enVivoCargar();},30000);
+  setInterval(()=>{if(!document.hidden)torneosCargar(true);},30000);
+  setInterval(()=>{if(!document.hidden)lbRefrescoVivo();},45000);
+})();

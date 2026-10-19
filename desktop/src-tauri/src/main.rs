@@ -69,6 +69,9 @@ fn build_auth_url() -> (Url, PkceCodeVerifier, CsrfToken) {
         .add_scope(Scope::new("profile".to_string()))
         .add_scope(Scope::new("email".to_string()))
         .add_scope(Scope::new("offline_access".to_string()))
+        // Audience de la Neon Data API: con esto el access token sirve
+        // tanto para /userinfo (identidad) como para leer la base del sitio.
+        .add_extra_param("audience", "https://api.vants.app")
         .set_pkce_challenge(pkce_challenge)
         .url();
     (auth_url, pkce_verifier, csrf_token)
