@@ -486,7 +486,7 @@
 
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
     var bs = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
-    return '<div class="d-head"><span class="kicker">EDITAR PERFIL · CUENTA REAL VANTS</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
+    return '<div class="d-head"><span class="kicker">PERFIL DE JUGADOR</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
       '<div class="d-body" style="--rc:' + rc.c1 + '">' +
       pfBannerHTML(bannerSel, raw) +
       '<div class="pf-head">' +
@@ -694,6 +694,7 @@
     if (window.lucide) lucide.createIcons();
     cargarSeriesReal();
     cargarFaceitReal();
+    if (typeof completarClipsFicha === 'function' && ME && ME.player) { try { completarClipsFicha(ME.player); } catch (eCl) {} }
     var p = ME.player;
     var msg = document.getElementById('rp-msg');
     var g = document.getElementById('rp-guardar');
@@ -878,6 +879,22 @@
     renderPerfilReal();
   };
 
+  /* PERFIL DE JUGADOR único (MI CUENTA): cuando tu propia ficha se abre desde
+     el chip de cuenta, la Sala o VER MI PERFIL, se muestra ESTA misma ficha
+     editable — sin drawer "EDITAR PERFIL" aparte. */
+  window.vantsFichaPropia = function (p) {
+    try {
+      if (!p) { if (window.vantsAbrirMiPerfil) window.vantsAbrirMiPerfil(); return; }
+      if (!ME) ME = { pid: null, player: null, extra: {} };
+      ME.player = p;
+      if (!ME.pid) ME.pid = p.id;
+      if (window.VANTS_AUTH && !window.VANTS_AUTH.playerId) window.VANTS_AUTH.playerId = p.id;
+      renderPerfilReal();
+    } catch (eFP) {
+      if (window.vantsAbrirMiPerfil) window.vantsAbrirMiPerfil();
+    }
+  };
+
   function renderCrearPerfil(nombreSugerido) {
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
     openDrawer('<div class="d-head"><span class="kicker">MI PERFIL · PRIMERA VEZ</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
@@ -939,8 +956,8 @@
     };
   }
 
-  /* el ÚNICO camino para abrir MI PERFIL: el drawer real (CUENTA REAL VANTS).
-     Lo usan el chip de la cuenta, VER MI PERFIL de la sala y los conectores. */
+  /* PERFIL DE JUGADOR: la ficha editable es el único perfil. Esta función
+     queda como respaldo (creación de perfil o carga inicial desde Neon). */
   window.vantsAbrirMiPerfil = function () {
     if (!user) {
       var lbm = document.getElementById('arenaLoginBtn');

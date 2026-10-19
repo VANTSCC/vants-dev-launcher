@@ -730,7 +730,7 @@ async function cargarJugadores(){
       try{
         const t0=await window.VantAuth0.getToken();
         if(t0){
-          const h={'Content-Type':'application/json',Authorization:'Bearer '+t0};
+          const h={'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+t0};
           const [ap,as]=await Promise.all([
             fetch('https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1/players?limit=200',{headers:h}).then(r=>r.ok?r.json():[]).catch(()=>[]),
             fetch('https://ep-autumn-scene-b4opu2ip.apirest.c-6.us-east-2.aws.neon.tech/neondb/rest/v1/season_player_stats?limit=500',{headers:h}).then(r=>r.ok?r.json():[]).catch(()=>[])
@@ -855,6 +855,9 @@ function openPlayerProfile(pid){
   const esMio=(function(){try{const a=window.VANTS_AUTH;if(!a||a.playerId==null)return false;const pidEf=(typeof pid==='object'&&pid)?pid.id:pid;return String(a.playerId)===String(pidEf);}catch(e){return false;}})();
   const p=(typeof pid==='object'&&pid)?pid:(window.VANTS_PLAYERS||[]).find(x=>String(x.id)===String(pid));
   if(!p){toast('No encontramos ese jugador','info');return;}
+  /* UN SOLO PERFIL (MI CUENTA): tu propia ficha abre la versión editable
+     completa — mismo drawer de PERFIL DE JUGADOR, sin editor aparte. */
+  if(esMio&&window.vantsFichaPropia){try{window.vantsFichaPropia(p);return;}catch(ePf){}}
   const stats=p.stats||{},st=(window.VANTS_STATS[(p&&p.id!=null)?p.id:pid])||null;
   const k=rankKeyDe(p),rc=RANKS[k];
   const mmr=(st&&st.mmr!=null)?st.mmr:null;
@@ -1311,6 +1314,7 @@ function closeMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.remove('s
   b.addEventListener('click',openMenu);
   const c=$('#menuClose');if(c)c.addEventListener('click',closeMenu);
   const ov=$('#menuOv');if(ov)ov.addEventListener('click',closeMenu);
+  const mp=$('#mdPerfil');if(mp)mp.addEventListener('click',function(e){e.preventDefault();closeMenu();const acc=$('#accBtn'),lb=$('#arenaLoginBtn');if(acc&&!acc.hidden){acc.click();return;}if(lb&&!lb.hidden){lb.click();return;}if(typeof toast==='function')toast('Iniciá sesión para abrir tu perfil de jugador','info');});
   $$('#menuDrawer [data-md-close]').forEach(el=>el.addEventListener('click',closeMenu));
 })();
 
@@ -1586,7 +1590,7 @@ window.openAjustesCuenta=function(){
       try{
         const t=await window.VantAuth0.getToken();
         if(t){
-          const r=await fetch(window.VANTS_API_BASE+'/players?id=eq.'+auth.playerId,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({username:v.toLowerCase().replace(/\s+/g,'_'),display_name:v})});
+          const r=await fetch(window.VANTS_API_BASE+'/players?id=eq.'+auth.playerId,{method:'PATCH',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+t},body:JSON.stringify({username:v.toLowerCase().replace(/\s+/g,'_'),display_name:v})});
           if(!r.ok)toast('El nick se guardó local, pero la base lo rechazó (HTTP '+r.status+')','info');
           /* un solo perfil: la ficha y la sala reflejan el nick guardado al instante */
           try{const mp=window.VANTS_ME&&window.VANTS_ME.player;if(mp){mp.display_name=v;mp.username=v.toLowerCase().replace(/\s+/g,'_');}}catch(eMP){}
@@ -1605,7 +1609,7 @@ window.openAjustesCuenta=function(){
     try{
       const t=await window.VantAuth0.getToken();
       const nuevo=($('#ajMailNvo')&&$('#ajMailNvo').value||'').trim();
-      const r=await fetchWorker('/api/account/email-verify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(t||'')},body:JSON.stringify(nuevo?{nuevo_email:nuevo}:{})});
+      const r=await fetchWorker('/api/account/email-verify',{method:'POST',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+(t||'')},body:JSON.stringify(nuevo?{nuevo_email:nuevo}:{})});
       const j=await r.json().catch(()=>null);
       if(j&&j.ok&&j.ticket){
         if(out){
@@ -1640,7 +1644,7 @@ window.openAjustesCuenta=function(){
     btn.disabled=true;btn.textContent='CREANDO ENLACE…';
     try{
       const t=await window.VantAuth0.getToken();
-      const r=await fetchWorker('/api/account/password-reset',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(t||'')},body:'{}'});
+      const r=await fetchWorker('/api/account/password-reset',{method:'POST',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+(t||'')},body:'{}'});
       const j=await r.json().catch(()=>null);
       if(j&&j.ok&&j.ticket){
         if(out){
