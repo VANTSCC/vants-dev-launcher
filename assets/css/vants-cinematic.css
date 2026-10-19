@@ -1,0 +1,117 @@
+/* ==========================================================================
+   VANTS CINEMATIC · v1 — Fase 1 de la arquitectura VANTS GAMES
+   Capa visual INDEPENDIENTE: no modifica arena.css, arena.js, Auth0,
+   torneos, ranking ni base de datos. Solo se activa donde se enlace.
+   Respeta prefers-reduced-motion (el JS omite intro/partículas; el CSS
+   de movimiento queda dentro de @media no-preference).
+   ========================================================================== */
+
+/* ---- 1 · AMBIENTE — brillos rojos fijos, muy sutiles ------------------- */
+.cin-ambient{
+  position:fixed;inset:0;z-index:0;pointer-events:none;mix-blend-mode:screen;
+  background:
+    radial-gradient(900px 520px at 12% -8%, rgba(255,13,46,.10), transparent 62%),
+    radial-gradient(1100px 600px at 96% 112%, rgba(255,13,46,.07), transparent 60%);
+}
+@media (max-width:760px){
+  .cin-ambient{
+    background:radial-gradient(680px 420px at 20% -6%, rgba(255,13,46,.09), transparent 60%);
+  }
+}
+
+/* ---- 2 · PARTÍCULAS — brasas flotantes (canvas, solo lectura) ---------- */
+#cinFx{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.85}
+
+/* ---- 3 · TILT 3D — solo elementos con atributo data-tilt --------------- */
+.cin-tilt{
+  transform:perspective(1100px) rotateX(var(--cin-rx,0deg)) rotateY(var(--cin-ry,0deg));
+  transition:transform .3s cubic-bezier(.2,.7,.2,1);
+  will-change:transform;
+}
+@media (pointer:coarse){.cin-tilt{transform:none;transition:none}}
+
+/* ---- 4 · ENTRADA DEL HERO — CSS puro, funciona sin JS ------------------ */
+@media (prefers-reduced-motion: no-preference){
+  .hero-left>*{animation:cin-hero .8s cubic-bezier(.2,.7,.2,1) backwards}
+  .hero-left>*:nth-child(1){animation-delay:.10s}
+  .hero-left>*:nth-child(2){animation-delay:.22s}
+  .hero-left>*:nth-child(3){animation-delay:.34s}
+  .hero-left>*:nth-child(4){animation-delay:.46s}
+  .hero-left>*:nth-child(5){animation-delay:.58s}
+  .hero-left>*:nth-child(6){animation-delay:.70s}
+  .hero-left>*:nth-child(7){animation-delay:.82s}
+  .hero .live-panel{animation:cin-panel 1s .45s cubic-bezier(.2,.7,.2,1) backwards}
+  @keyframes cin-hero{from{opacity:0;transform:translateY(26px)}}
+  @keyframes cin-panel{from{opacity:0;transform:translateY(18px) scale(.985)}}
+}
+
+/* ---- 5 · INTRO CINEMATOGRÁFICA -----------------------------------------
+   Nodo #cinIntro inyectado por vants-cinematic.js (si el JS no carga,
+   la intro no existe y la web funciona igual).
+   Failsafe: aunque el JS se congele, la intro se autodestruye a los 4.5s. */
+#cinIntro{
+  position:fixed;inset:0;z-index:9999;background:#08090c;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  animation:cin-selfdestruct 0s 4.5s both;
+}
+@keyframes cin-selfdestruct{to{visibility:hidden;pointer-events:none}}
+html.cin-lock{overflow:hidden}
+
+.cin-i-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(700px 420px at 50% 42%, rgba(255,13,46,.13), transparent 65%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, transparent 1px 3px);
+}
+.cin-i-core{
+  position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;
+  animation:cin-core .5s ease both;
+}
+.cin-i-mark{
+  width:96px;height:96px;
+  filter:drop-shadow(0 0 26px rgba(255,13,46,.45));
+  animation:cin-mark .8s cubic-bezier(.2,.7,.2,1) both;
+}
+.cin-i-word{display:flex;flex-direction:column;align-items:center;gap:7px}
+.cin-i-vants{
+  display:flex;font:400 46px/1 'Archivo Black','Archivo',sans-serif;
+  letter-spacing:.06em;color:#e8ecef;
+}
+.cin-i-vants b{display:inline-block;animation:cin-letter .5s cubic-bezier(.2,.7,.2,1) both}
+.cin-i-vants b:nth-child(1){animation-delay:.38s}
+.cin-i-vants b:nth-child(2){animation-delay:.44s}
+.cin-i-vants b:nth-child(3){animation-delay:.50s}
+.cin-i-vants b:nth-child(4){animation-delay:.56s}
+.cin-i-vants b:nth-child(5){animation-delay:.62s;color:#ff0d2e}
+.cin-i-games{
+  font:700 12px/1 'JetBrains Mono',monospace;letter-spacing:.62em;
+  color:#8d949e;text-indent:.62em;
+  animation:cin-games .6s .62s cubic-bezier(.2,.7,.2,1) both;
+}
+.cin-i-bar{
+  width:190px;height:3px;border-radius:2px;
+  background:linear-gradient(90deg,#ff0d2e,#ff5a68);
+  transform-origin:center;
+  animation:cin-bar .5s .85s cubic-bezier(.2,.7,.2,1) both;
+}
+.cin-i-skip{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);
+  font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.22em;color:#59606b;
+  animation:cin-skip .6s 1.15s ease both;
+}
+@keyframes cin-core{from{opacity:0}}
+@keyframes cin-mark{from{opacity:0;transform:scale(.72);filter:blur(10px)}}
+@keyframes cin-letter{from{opacity:0;transform:translateY(14px)}}
+@keyframes cin-games{from{opacity:0;letter-spacing:.9em}}
+@keyframes cin-skip{from{opacity:0}}
+@keyframes cin-bar{from{transform:scaleX(0);opacity:0}}
+
+/* salida en cortina (el JS añade .cin-out y retira el nodo) */
+#cinIntro.cin-out{animation:cin-curtain .62s cubic-bezier(.7,0,.3,1) both;pointer-events:none}
+@keyframes cin-curtain{to{clip-path:inset(0 0 100% 0)}}
+#cinIntro.cin-out .cin-i-core{animation:cin-fadeout .3s ease both}
+@keyframes cin-fadeout{to{opacity:0;transform:translateY(-12px)}}
+
+@media (prefers-reduced-motion: reduce){
+  #cinIntro{display:none} /* defensa extra: el JS ya no la crea */
+}
