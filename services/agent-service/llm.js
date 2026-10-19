@@ -1,49 +1,68 @@
 'use strict';
 // ============================================================
-// LLM del AGENTE VANTS — la capa de IA (OPCIONAL, enchufable).
-// Si el dueno define AGENT_LLM_URL + AGENT_LLM_KEY (+ AGENT_LLM_MODEL),
-// el agente interpreta ordenes en lenguaje libre y narra los informes
-// con un modelo real (GLM, OpenAI, Groq, Ollama local... cualquiera
-// compatible con /chat/completions). Sin key -> null y el cerebro
-// funciona en modo reglas (siempre disponible, 0 dependencias).
+// LLM del AGENTE VANTS v2 — CEREBRO AGÉNTICO con function calling.
+// Si el dueño define AGENT_LLM_URL + AGENT_LLM_KEY (+ AGENT_LLM_MODEL),
+// el agente funciona en MODO AGENTE con GLM (o cualquier API OpenAI-
+// compatible con tools): el modelo ELIGE y ENCADENA herramientas reales
+// (estado, informe, incidentes, resolver, ciclo, desplegar_web, migrar)
+// hasta responder. Sin key -> null y el cerebro cae al modo reglas
+// (NLU local en español, siempre disponible, 0 dependencias).
+// Endpoints GLM: https://api.z.ai/api/paas/v4 (global) o
+//                https://open.bigmodel.cn/api/paas/v4 (CN).
 // ============================================================
 
 const TIMEOUT_MS = 20000;
+const MAX_PASOS = 5; // máximo de vueltas del bucle de herramientas (anti-bucle)
 
 function crearLlm(env = process.env, fetchImpl = fetch) {
   const url = env.AGENT_LLM_URL || '';
   const key = env.AGENT_LLM_KEY || '';
-  const model = env.AGENT_LLM_MODEL || 'glm-4-flash';
+  const model = env.AGENT_LLM_MODEL || 'glm-5.3-flash';
   if (!url || !key) return null;
 
+  // prompt del modo clásico (intención JSON) — usado por interpretar()
   const SISTEMA = [
     'Eres el Agente VANTS, el asistente de control de la plataforma VANTS GAMES (web en Cloudflare Workers, launcher Electron con auto-update, matchmaking en Neon, bot de Discord).',
     'Devuelve SIEMPRE un JSON valido con esta forma exacta: {"intencion":"estado|informe|ciclo|desplegar_web|migrar|incidentes|resolver|ayuda|desconocido","args":{}}.',
     'Para "resolver" usa args.id con el numero del incidente. Si no entiendes la orden usa "desconocido". No expliques nada fuera del JSON.',
   ].join(' ');
 
-  async function chat(mensajes) {
+  // prompt del modo agéntico — el modelo decide qué herramientas usar
+  const SISTEMA_AGENTE = [
+    'Eres el Agente VANTS, el agente de control de la plataforma VANTS GAMES (web en Cloudflare Workers, worker de FACEIT, launcher Electron con auto-update, matchmaking en Neon, bot de Discord).',
+    'Tienes HERRAMIENTAS REALES: cuando necesites datos o ejecutar una acción, LLAMA a la herramienta en vez de inventarte la respuesta. Puedes encadenar varias antes de responder.',
+    'Reglas: responde SIEMPRE en español, directo y útil, máximo 8 líneas; marca con [!] lo crítico; si una herramienta devuelve un error, explícalo breve y sugiere qué hacer.',
+    'Nunca reveles claves, tokens ni contenido de secretos. No inventes URLs ni números de incidente: usa los que devuelvan las herramientas.',
+  ].join(' ');
+
+  // llamada cruda /chat/completions. Devuelve el MESSAGE completo
+  // (content + tool_calls) para soportar function calling.
+  async function chat(mensajes, extra = {}) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
     try {
+      const cuerpo = { model, messages: mensajes, temperature: 0.2, max_tokens: 700 };
+      if (extra.tools && extra.tools.length) cuerpo.tools = extra.tools;
+      if (extra.forzarTexto) { cuerpo.tools = undefined; cuerpo.max_tokens = 400; }
       const r = await fetchImpl(url.replace(/\/$/, '') + '/chat/completions', {
         method: 'POST',
         signal: ctrl.signal,
         headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-        body: JSON.stringify({ model, messages: mensajes, temperature: 0.2, max_tokens: 400 }),
+        body: JSON.stringify(cuerpo),
       });
       const j = await r.json().catch(() => null);
-      return j && j.choices && j.choices[0] && j.choices[0].message ? j.choices[0].message.content : null;
+      return j && j.choices && j.choices[0] && j.choices[0].message ? j.choices[0].message : null;
     } catch { return null; } finally { clearTimeout(timer); }
   }
 
   return {
     activo: () => true,
     modelo: () => model,
-    // orden libre -> intencion del cerebro
+    // ── modo clásico: orden libre -> intención del cerebro ──
     async interpretar(texto) {
-      const crudo = await chat([{ role: 'system', content: SISTEMA }, { role: 'user', content: String(texto || '') }]);
-      if (!crudo) return null; // el nucleo cae al NLU local
+      const msg = await chat([{ role: 'system', content: SISTEMA }, { role: 'user', content: String(texto || '') }], { forzarTexto: true });
+      const crudo = msg && msg.content;
+      if (!crudo) return null; // el núcleo cae al NLU local
       const m = crudo.match(/\{[\s\S]*\}/);
       try {
         const j = JSON.parse(m[0]);
@@ -51,15 +70,52 @@ function crearLlm(env = process.env, fetchImpl = fetch) {
       } catch {}
       return null;
     },
-    // informe tecnico -> texto amable para el dueno
+    // ── informe técnico -> texto amable para el dueño ──
     async narrar(informeTecnico) {
-      const crudo = await chat([
+      const msg = await chat([
         { role: 'system', content: 'Eres el Agente VANTS. Resume el estado de la plataforma en maximo 6 lineas, tono directo y util, en espanol. Marca con [!] lo critico.' },
         { role: 'user', content: String(informeTecnico).slice(0, 3000) },
-      ]);
-      return crudo;
+      ], { forzarTexto: true });
+      return msg && msg.content ? msg.content : null;
+    },
+    // ── modo AGÉNTICO: bucle de herramientas reales ──
+    // conversar(texto, herramientas, ctx) -> respuesta final en texto.
+    // herramientas = { catalogo(), obtener(nombre) } (ver herramientas.js);
+    // ctx = el contexto del núcleo (memoria, chequeos, acciones...).
+    async conversar(texto, herramientas, ctx) {
+      if (!herramientas || typeof herramientas.catalogo !== 'function') return null;
+      const catalogo = herramientas.catalogo();
+      const mensajes = [
+        { role: 'system', content: SISTEMA_AGENTE },
+        { role: 'user', content: String(texto || '') },
+      ];
+      for (let paso = 0; paso < MAX_PASOS; paso++) {
+        const msg = await chat(mensajes, { tools: catalogo });
+        if (!msg) return null; // API caída -> el núcleo cae al modo reglas
+        const llamadas = Array.isArray(msg.tool_calls) ? msg.tool_calls : [];
+        if (!llamadas.length) {
+          return typeof msg.content === 'string' && msg.content.trim() ? msg.content : null;
+        }
+        mensajes.push({ role: 'assistant', content: msg.content || null, tool_calls: llamadas });
+        for (const tc of llamadas) {
+          const nombre = tc && tc.function && tc.function.name;
+          let args = {};
+          try { args = JSON.parse((tc.function && tc.function.arguments) || '{}') || {}; } catch {}
+          let salida;
+          const h = herramientas.obtener(nombre);
+          if (!h) salida = `Error: herramienta desconocida "${nombre}".`;
+          else {
+            try { salida = await h.ejecutar(args, ctx); }
+            catch (e) { salida = `Error al ejecutar ${nombre}: ${String(e.message).slice(0, 200)}`; }
+          }
+          mensajes.push({ role: 'tool', tool_call_id: (tc && tc.id) || `c${paso}`, content: String(salida).slice(0, 3000) });
+        }
+      }
+      // agotado el bucle: última llamada SIN tools para forzar respuesta final
+      const final = await chat(mensajes, { forzarTexto: true });
+      return final && typeof final.content === 'string' && final.content.trim() ? final.content : null;
     },
   };
 }
 
-module.exports = { crearLlm };
+module.exports = { crearLlm, MAX_PASOS };

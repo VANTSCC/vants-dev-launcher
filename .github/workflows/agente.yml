@@ -49,6 +49,11 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPOSITORY: ${{ github.repository }}
       VANTS_DISCORD_WEBHOOK: ${{ secrets.VANTS_DISCORD_WEBHOOK }}
+      # Cerebro agéntico GLM (opcionales): si existen, el agente interpreta
+      # órdenes libres y encadena herramientas reales vía function calling.
+      AGENT_LLM_URL: ${{ secrets.AGENT_LLM_URL }}
+      AGENT_LLM_KEY: ${{ secrets.AGENT_LLM_KEY }}
+      AGENT_LLM_MODEL: ${{ secrets.AGENT_LLM_MODEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

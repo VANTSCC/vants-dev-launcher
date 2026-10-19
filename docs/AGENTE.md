@@ -93,25 +93,42 @@ necesario para controlar el agente** — nada de Railway/Render.
   publica el resumen en GitHub, y si el dueño crea el secret
   `VANTS_DISCORD_WEBHOOK` el propio ciclo avisa a un canal. Nada se pierde.
 
-## 6. La capa de IA (enchufable, hoy en modo reglas)
+## 6. La capa de IA — MODO AGÉNTICO (GLM con function calling)
 
 El cerebro **siempre** entiende órdenes en español sin depender de nadie
 (NLU local, 0 dependencias): `estado`, `informe`, `revisa todo`,
 `despliega la web`, `migraciones`, `incidentes`, `resuelve 12`, `ayuda`.
 
-Para convertirlo en un agente LLM de verdad solo falta enchufar cualquier API
-compatible con OpenAI (`/chat/completions`):
+Pero desde v2, si se enchufa una API OpenAI-compatible **con tools**, el agente
+funciona en **MODO AGÉNTICO REAL**: GLM recibe el catálogo de herramientas
+(`services/agent-service/herramientas.js`) y **él mismo decide cuáles ejecutar y
+en qué orden**, encadenándolas hasta responder con datos reales (nunca inventados).
+
+```
+Tú (Discord):   "mira cómo está todo y cierra el incidente si ya se arregló"
+GLM:            → llama a estado()  → ve el incidente #3  → llama a resolver(3)
+                → "Estado UP. Cerré el #3. Todo en orden (5 chequeos OK)."
+```
+
+Herramientas expuestas al modelo (envuelven 1:1 el núcleo, cero duplicación):
+`estado` · `informe` · `incidentes` · `resolver(id)` · `ciclo` ·
+`desplegar_web` · `migrar` · `ayuda`.
+
+Protecciones del bucle agéntico: máximo **5 pasos** (`MAX_PASOS`) y una última
+llamada forzada sin tools para cerrar la respuesta; si la API falla o no hay
+key, el núcleo cae al modo reglas (degradación elegante, nunca se queda mudo).
 
 | Variable | Ejemplo |
 |----------|---------|
-| `AGENT_LLM_URL` | `https://open.bigmodel.cn/api/paas/v4` (GLM) · `https://api.openai.com/v1` · `http://localhost:11434/v1` (Ollama) |
-| `AGENT_LLM_KEY` | la key del proveedor |
-| `AGENT_LLM_MODEL` | `glm-4-flash` por defecto |
+| `AGENT_LLM_URL` | `https://api.z.ai/api/paas/v4` (GLM global) · `https://open.bigmodel.cn/api/paas/v4` (GLM CN) · `https://api.openai.com/v1` · `http://localhost:11434/v1` (Ollama) |
+| `AGENT_LLM_KEY` | la key del proveedor (Z.ai → API Keys) |
+| `AGENT_LLM_MODEL` | `glm-5.3-flash` por defecto (rápido/económico) · `glm-5.3` máxima calidad |
 
-Con eso el agente interpreta **cualquier frase** (no solo patrones) y narra
-los informes con voz propia. Funciona igual en local (`node cli.js comando "..."`),
-en el servicio HTTP y en CI (añadir los tres secrets en GitHub si se quiere en
-el ciclo programado).
+Funciona igual en local (`node cli.js comando "..."`), en el servicio HTTP
+(`POST /api/v1/comando` → `via: "llm-herramientas"`) y en Discord
+(`/agente comando ...` → cola en Neon → el ciclo lo ejecuta agénticamente).
+Para CI: añadir `AGENT_LLM_URL` y `AGENT_LLM_KEY` como secrets de GitHub
+(`AGENT_LLM_MODEL` opcional) y el ciclo programado ya piensa con GLM.
 
 ## 7. Uso rápido
 

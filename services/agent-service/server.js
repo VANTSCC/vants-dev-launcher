@@ -17,6 +17,7 @@ const cerebro = require('./cerebro');
 const { crearAcciones } = require('./acciones');
 const { crearLlm } = require('./llm');
 const { ejecutarCiclo, ejecutarIntencion } = require('./nucleo');
+const { crearHerramientas } = require('./herramientas');
 
 function construir(opts = {}) {
   const fastify = opts.fastifyFactory ? opts.fastifyFactory() : require('fastify')({ logger: false });
@@ -32,6 +33,7 @@ function construir(opts = {}) {
   const allowOrigin = process.env.ALLOW_ORIGIN || 'https://vants.vants.workers.dev';
 
   const ctx = { memoria, chequeos, cerebro, acciones, llm };
+  const herramientas = crearHerramientas(ejecutarIntencion);
 
   fastify.addHook('onRequest', async (req, reply) => {
     reply.header('access-control-allow-origin', allowOrigin);
@@ -64,6 +66,13 @@ function construir(opts = {}) {
     const texto = String((req.body || {}).texto || '').trim();
     if (!texto) return reply.code(400).send({ ok: false, error: { message: 'falta texto' } });
     const creado_por = String((req.body || {}).creado_por || 'api');
+    // camino AGÉNTICO: GLM elige y encadena herramientas reales
+    if (llm && typeof llm.conversar === 'function') {
+      try {
+        const agente = await llm.conversar(texto, herramientas, ctx);
+        if (agente) return { ok: true, intencion: 'agente', via: 'llm-herramientas', respuesta: agente };
+      } catch {}
+    }
     let interpretado = null;
     if (llm) { try { interpretado = await llm.interpretar(texto); } catch {} }
     if (!interpretado) interpretado = cerebro.interpretar(texto);

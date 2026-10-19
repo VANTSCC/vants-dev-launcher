@@ -9,6 +9,10 @@
 // ============================================================
 
 const { AYUDA } = require('./cerebro');
+const { crearHerramientas } = require('./herramientas');
+
+// catálogo de herramientas del cerebro (GLM function calling)
+const herramientas = crearHerramientas((ctx, intencion, args) => ejecutarIntencion(ctx, intencion, args));
 
 async function ejecutarChequeos(chequeos) {
   const resultados = [];
@@ -78,12 +82,19 @@ async function procesarComandos(ctx) {
   const pendientes = await memoria.comandosPendientes(10);
   const hechos = [];
   for (const cmd of pendientes) {
-    let intento = null;
-    if (llm) { try { intento = await llm.interpretar(cmd.texto); } catch {} }
-    const interpretado = intento || cerebro.interpretar(cmd.texto);
-    let respuesta;
-    try { respuesta = await ejecutarIntencion(ctx, interpretado.intencion, interpretado.args || {}); }
-    catch (e) { respuesta = `Error al procesar: ${String(e.message).slice(0, 140)}`; await memoria.responderComando(cmd.id, respuesta, false); hechos.push(cmd.id); continue; }
+    let respuesta = null;
+    // 1) camino AGÉNTICO: GLM con herramientas reales (si hay key configurada)
+    if (llm && typeof llm.conversar === 'function') {
+      try { respuesta = await llm.conversar(cmd.texto, herramientas, ctx); } catch {}
+    }
+    // 2) camino clásico: intención fija + ejecución (modo reglas)
+    if (respuesta == null) {
+      let intento = null;
+      if (llm) { try { intento = await llm.interpretar(cmd.texto); } catch {} }
+      const interpretado = intento || cerebro.interpretar(cmd.texto);
+      try { respuesta = await ejecutarIntencion(ctx, interpretado.intencion, interpretado.args || {}); }
+      catch (e) { respuesta = `Error al procesar: ${String(e.message).slice(0, 140)}`; await memoria.responderComando(cmd.id, respuesta, false); hechos.push(cmd.id); continue; }
+    }
     await memoria.responderComando(cmd.id, respuesta, true);
     hechos.push(cmd.id);
   }
