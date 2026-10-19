@@ -16,6 +16,7 @@ const { crearChequeos, VERSION } = require('./chequeos');
 const cerebro = require('./cerebro');
 const { crearAcciones } = require('./acciones');
 const { crearLlm } = require('./llm');
+const { crearSandbox } = require('./sandbox');
 const { ejecutarCiclo, ejecutarIntencion } = require('./nucleo');
 const { crearHerramientas } = require('./herramientas');
 
@@ -33,6 +34,7 @@ function construir(opts = {}) {
   const allowOrigin = process.env.ALLOW_ORIGIN || 'https://vants.vants.workers.dev';
 
   const ctx = { memoria, chequeos, cerebro, acciones, llm };
+  ctx.sandbox = crearSandbox({ memoria, cwd: process.cwd() });
   const herramientas = crearHerramientas(ejecutarIntencion);
 
   fastify.addHook('onRequest', async (req, reply) => {
@@ -49,7 +51,7 @@ function construir(opts = {}) {
     if (h !== `Bearer ${token}`) return reply.code(401).send({ ok: false, error: { message: 'token del agente requerido' } });
   });
 
-  fastify.get('/healthz', async () => ({ ok: true, service: 'agent-service', version: VERSION, uptime: Math.round(process.uptime()), memoria: memoria.tipo(), cerebro: llm ? 'reglas+llm' : 'reglas' }));
+  fastify.get('/healthz', async () => ({ ok: true, service: 'agent-service', version: VERSION, uptime: Math.round(process.uptime()), memoria: memoria.tipo(), cerebro: llm ? 'reglas+llm' : 'reglas', sandbox: 'activa' }));
 
   fastify.get('/api/v1/estado', async () => {
     const ultimo = await memoria.ultimoRun();
@@ -82,6 +84,22 @@ function construir(opts = {}) {
 
   fastify.get('/api/v1/incidentes', async () => ({ ok: true, incidentes: await memoria.incidentesAbiertos(50) }));
 
+  // SANDBOX AGENT — almacenes de memoria
+  fastify.get('/api/v1/memoria', async (req) => {
+    const consulta = String((req.query || {}).q || '');
+    return { ok: true, recuerdos: consulta ? await memoria.recordarBuscar(consulta, 25) : await memoria.memoriaListar(50) };
+  });
+  fastify.post('/api/v1/memoria', async (req, reply) => {
+    const b = req.body || {};
+    if (!b.clave || b.valor == null) return reply.code(400).send({ ok: false, error: { message: 'falta clave y/o valor' } });
+    const id = await memoria.recordar(b.clave, b.valor, { tipo: b.tipo, importancia: Number(b.importancia) || 3, creadoPor: 'dueno' });
+    return { ok: true, id };
+  });
+  fastify.get('/api/v1/archivos', async (req) => {
+    const prefijo = String((req.query || {}).prefijo || '');
+    return { ok: true, archivos: await memoria.archivoListar(prefijo, 100) };
+  });
+
   fastify.post('/api/v1/incidentes/:id/resolver', async (req, reply) => {
     const resolucion = String((req.body || {}).resolucion || 'resuelto via API');
     const ok = await memoria.resolverIncidente(req.params.id, resolucion);
@@ -105,6 +123,7 @@ function construirContexto(opts = {}) {
     cerebro,
     acciones: opts.acciones || crearAcciones({ memoria }),
     llm: opts.llm !== undefined ? opts.llm : crearLlm(process.env),
+    sandbox: opts.sandbox || crearSandbox({ memoria, cwd: process.cwd() }),
   };
 }
 

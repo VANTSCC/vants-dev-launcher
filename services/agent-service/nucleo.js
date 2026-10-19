@@ -66,6 +66,39 @@ async function ejecutarIntencion(ctx, intencion, args = {}) {
       return ok ? `Incidente #${args.id} marcado como resuelto.` : `No encontre un incidente abierto #${args.id}.`;
     }
     case 'ayuda': return AYUDA;
+    // ── SANDBOX AGENT (migración 26): memoria semántica + disco + ejecución ──
+    case 'recordar': {
+      if (!args.clave || args.valor == null) return 'Formato: recuerda clave = valor';
+      const id = await memoria.recordar(args.clave, args.valor, { creadoPor: 'dueno' });
+      return `Guardado en mi memoria: "${args.clave}" → ${String(args.valor).slice(0, 120)}`;
+    }
+    case 'buscar_memoria': {
+      const filas = await memoria.recordarBuscar(args.consulta || '', 10);
+      if (!filas.length) return 'No tengo recuerdos que coincidan con eso.';
+      return 'Mi memoria:\n' + filas.map((f) => `• [${f.tipo}·${f.importancia}] ${f.clave}: ${String(f.valor).slice(0, 140)}`).join('\n');
+    }
+    case 'olvidar': {
+      if (!args.clave) return 'Dime la clave del recuerdo a borrar: "olvida clave".';
+      const ok = await memoria.olvidar(args.clave);
+      return ok ? `Recuerdo "${args.clave}" borrado.` : `No tenía ningún recuerdo con clave "${args.clave}".`;
+    }
+    case 'archivos': {
+      const filas = await memoria.archivoListar('', 50);
+      if (!filas.length) return 'El disco de la sandbox está vacío.';
+      return 'Ficheros de la sandbox:\n' + filas.map((f) => `• ${f.ruta} (${f.bytes} B)`).join('\n');
+    }
+    case 'leer_archivo': {
+      if (!args.ruta) return 'Dime la ruta del fichero: "lee el archivo informes/x.md".';
+      const f = await memoria.archivoLeer(args.ruta);
+      if (!f) return `No existe el fichero "${args.ruta}".`;
+      return `--- ${f.ruta} (${f.bytes} B) ---\n${String(f.contenido).slice(0, 6000)}`;
+    }
+    case 'sandbox': {
+      if (!ctx.sandbox) return 'La sandbox no está disponible en este entorno.';
+      if (!args.comando) return 'Dime el comando entre comillas: "ejecuta \\"node -v\\"".';
+      const r = await ctx.sandbox.ejecutar(args.comando, {});
+      return r.texto;
+    }
     default: {
       if (llm && args.texto) {
         const narrado = await llm.narrar(`El dueno de VANTS dice: "${args.texto}". Contexto: eres el agente de control; explica breve que no puedes con eso o da una opinion util del estado.`);

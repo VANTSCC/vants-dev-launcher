@@ -98,6 +98,14 @@ function interpretar(texto) {
   const t = normalizar(texto);
   if (!t) return { intencion: 'ayuda', args: {} };
   let m;
+  // ── sandbox agent (memoria + archivos + ejecución aislada) ──
+  if ((m = t.match(/(?:recuerda|recordar)(?:\s+que)?\s+([^=]+?)\s*=\s*(.+)/))) return { intencion: 'recordar', args: { clave: m[1].trim(), valor: m[2].trim() } };
+  if ((m = t.match(/^(?:olvida|borra de la memoria|borra el recuerdo)\s+(?:el\s+recuerdo\s+)?(.+)/))) return { intencion: 'olvidar', args: { clave: m[1].trim() } };
+  if ((m = t.match(/(?:que recuerdas|que sabes de|busca en tu memoria|tu memoria)(?:\s+(?:de|sobre|esto))?:?\s*(.*)/))) return { intencion: 'buscar_memoria', args: { consulta: (m[1] || '').trim() } };
+  if (/^(lista|listar|ver)\s+(los\s+)?(ficheros|archivos)/.test(t)) return { intencion: 'archivos', args: {} };
+  if ((m = t.match(/^lee(?:\s+el)?\s+(?:archivo|fichero)\s+(.+)/))) return { intencion: 'leer_archivo', args: { ruta: m[1].trim() } };
+  if ((m = t.match(/^(?:ejecuta|corre|run)\s+(?:en\s+la\s+sandbox\s+)?"?([^"].*?)"?$/))) return { intencion: 'sandbox', args: { comando: m[1].trim() } };
+  // ── vigilancia clásica ──
   if ((m = t.match(/(?:resuelve|resolver|cierra|cerrar)[^0-9]*#?(\d+)/))) return { intencion: 'resolver', args: { id: Number(m[1]) } };
   if (/(despliega|deploy|publica|redespliega|redeploy).{0,20}(web|worker|pagina|site)|^despliega$/.test(t)) return { intencion: 'desplegar_web', args: {} };
   if (/(migra|migracion|migraciones|migrate)/.test(t)) return { intencion: 'migrar', args: {} };
@@ -118,6 +126,9 @@ const AYUDA = [
   '• migraciones → re-lanza neon-migrate',
   '• incidentes → lista lo que hay abierto',
   '• resuelve 12 → marca el incidente 12 como resuelto',
+  '• recuerda clave = valor / ¿qué sabes de X? / olvida clave → memoria semántica',
+  '• guarda el archivo X / lee el archivo X / lista archivos → disco de la sandbox',
+  '• ejecuta "node -v" en la sandbox → comando aislado y auditado',
 ].join('\n');
 
 module.exports = { evaluar, informe, interpretar, AYUDA, REGLAS };

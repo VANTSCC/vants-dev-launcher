@@ -185,3 +185,42 @@ Railway/Render y desplegada automáticamente al hacer push (workflow
 El bot Python (`bot/`) queda como refuerzo opcional para comandos de
 comunidad (perfil, torneos, moderación) cuando quieras tenerlo encendido;
 para el control del agente ya no hace falta ningún host.
+
+## 10. SANDBOX AGENT — almacenes de memoria autoalojados (migración 26)
+
+El agente ya no solo vigila: **recuerda, guarda ficheros y ejecuta código** en
+una sandbox autoalojada, sin servicios de pago (nada de Railway/Render).
+
+### Dónde vive todo (0 €)
+| Almacén | Motor | Qué guarda |
+|---------|-------|------------|
+| Memoria semántica | Neon `agent_memoria` | hechos, aprendizajes y preferencias (clave única, importancia 1-5, expiración opcional) |
+| Memoria episódica | Neon `agent_runs` | cada ciclo: qué vio, qué decidió, qué hizo (migración 25) |
+| Disco de la sandbox | Neon `agent_archivos` | informes, notas y scripts del agente (hasta 256 KB por fichero, sha256, upsert por ruta) |
+| Auditoría de ejecución | Neon `agent_sandbox_execs` | cada comando ejecutado: exit, salida, duración (poda > 7 días) |
+| Ejecución | Runner efímero de GitHub Actions (o local) | la "máquina" de la sandbox: VM desechable, sin estado |
+
+### Las 7 herramientas nuevas que GLM puede usar
+`memoria_guardar(clave,valor,tipo,importancia)` · `memoria_buscar(consulta)` ·
+`memoria_olvidar(clave)` · `archivo_guardar(ruta,contenido)` ·
+`archivo_leer(ruta)` · `archivo_listar(prefijo)` · `sandbox_exec(comando)`.
+
+El catálogo completo del cerebro pasa de 8 a **15 herramientas**; el modo reglas
+(sin key GLM) también entiende las órdenes básicas: `recuerda X = Y`,
+`¿qué recuerdas de X?`, `olvida X`, `lista archivos`, `lee el archivo X`,
+`ejecuta "node -v"`.
+
+### Seguridad de `sandbox_exec` (defensa en profundidad)
+1. **Allowlist** por segmento de pipeline: solo lectura y diagnóstico
+   (`node`, `npm test`, `python3`, `ls`, `cat`, `grep`, `awk`, `jq`, `df`...).
+2. **Denylist dura**: `rm -rf`, `sudo`, `ssh`, `git push`, `npm publish`,
+   `curl -X POST`...
+3. Prohibidos: varios comandos (`;` `&&`), sustituciones (`` ` `` `$()`),
+   redirecciones (`>` `<`) y **cualquier string que parezca un secreto**.
+4. Timeout (10 s por defecto, 30 s máx) + salida recortada a 32 KB.
+5. Todo queda auditado en `agent_sandbox_execs` (Neon), nunca en RAM sola.
+
+### API nueva (con `AGENT_TOKEN` si está definido)
+- `GET /api/v1/memoria?q=texto` → busca recuerdos
+- `POST /api/v1/memoria {clave,valor,tipo,importancia}` → guarda (creado_por: dueno)
+- `GET /api/v1/archivos?prefijo=informes/` → lista el disco de la sandbox

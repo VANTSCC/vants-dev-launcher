@@ -80,7 +80,7 @@ async function principal() {
   {
     const herramientas = crearHerramientas(ejecutarIntencion);
     const catalogo = herramientas.catalogo();
-    ok(catalogo.length === 8, `catálogo expone 8 herramientas (hay ${catalogo.length})`);
+    ok(catalogo.length === 15, `catálogo expone 15 herramientas (hay ${catalogo.length})`);
     ok(catalogo.every((t) => t.type === 'function' && t.function.name && t.function.description), 'todas con formato function válido');
     ok(herramientas.obtener('resolver').ejecutar && herramientas.obtener('no_existe') === null, 'obtener() resuelve conocidas y null en desconocidas');
   }
@@ -96,7 +96,7 @@ async function principal() {
     const herramientas = crearHerramientas(ejecutarIntencion);
     const respuesta = await llm.conversar('¿qué incidentes hay?', herramientas, ctx);
     ok(respuesta === 'Tienes 1 incidente abierto: #3 [aviso] web lenta. ¿Lo resuelvo?', 'devuelve la respuesta final del modelo');
-    ok(srv.peticiones[0].tools && srv.peticiones[0].tools.length === 8, '1ª llamada envía el catálogo tools');
+    ok(srv.peticiones[0].tools && srv.peticiones[0].tools.length === 15, '1ª llamada envía el catálogo tools completo');
     const mensajes2 = srv.peticiones[1].messages;
     ok(mensajes2.some((m) => m.role === 'tool' && m.tool_call_id === 'c1'), '2ª llamada incluye role:tool con el id de la llamada');
     const contenidoTool = mensajes2.find((m) => m.role === 'tool').content;
