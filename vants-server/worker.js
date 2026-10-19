@@ -299,6 +299,16 @@ async function paginaTorneos(env, request, url, lang, juego, estado) {
         for (const l of otros) el.append('<link rel="alternate" hreflang="' + l + '" href="' + urlTorneos(l, juego, estado) + '">', { html: true });
       },
     })
+    /* los hreflang que ya trae el index apuntan a la home → reescribirlos
+       a la equivalencia de esta ruta (evita duplicados es/en/x-default) */
+    .on('link[rel="alternate"][hreflang]', {
+      element(el) {
+        const hl = el.getAttribute('hreflang');
+        if (hl === lang) el.setAttribute('href', can);
+        else if (hl === 'x-default') el.setAttribute('href', urlTorneos('es', juego, estado));
+        else if (hl === 'en' || hl === 'es') el.setAttribute('href', urlTorneos(hl, juego, estado));
+      },
+    })
     .on('#heroTitle', { element(el) { el.setInnerContent(t.h + ' ' + g); } })
     .on('#heroSub', { element(el) { el.setInnerContent(t.desc(g)); } })
     .on('#sfCrumbGame', { element(el) { el.setInnerContent(g); } })
