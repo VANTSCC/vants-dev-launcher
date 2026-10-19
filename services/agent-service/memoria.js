@@ -138,9 +138,11 @@ function crearMemoriaPg(pg) {
 
 // Fabrica unica: pg solo con DATABASE_URL postgres:// real (evita el
 // DATABASE_URL fantasma no-postgres que ya mordio antes en este proyecto).
+// El modulo pg se carga aquí dentro para que cualquier consumidor (cli, api,
+// CI) no tenga que inyectarlo.
 function crearMemoria(pg) {
   if (typeof process !== 'undefined' && /^postgres(ql)?:\/\//.test(String(process.env.DATABASE_URL || ''))) {
-    return crearMemoriaPg(pg);
+    return crearMemoriaPg(pg || require('pg'));
   }
   return crearMemoriaMemoria();
 }
