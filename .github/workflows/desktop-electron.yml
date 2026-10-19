@@ -13,6 +13,11 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# Fase 6 · despliegues controlados: un build/Release a la vez
+concurrency:
+  group: deploy-desktop-electron
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

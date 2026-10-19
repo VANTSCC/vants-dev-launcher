@@ -18,6 +18,7 @@ on:
       - ".github/workflows/neon-migrate.yml"
       - "docs/estado-db.sql"
 
+# Fase 6 · despliegues controlados: migraciones de a una, el resto en cola
 concurrency:
   group: neon-migrate
   cancel-in-progress: false

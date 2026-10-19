@@ -1,0 +1,46 @@
+name: "VANTS · pruebas automáticas"
+
+# Fase 6 · Pruebas automáticas: la suite del matchmaking (51 asserts:
+# auth JWT, validaciones, elegibilidad, duplicados, emparejamiento
+# atómico, reporte, RR, historial) corre en cada push/PR que toque
+# backend o scripts. Rojo = no se despliega con confianza.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/**"
+      - "scripts/**"
+      - ".github/workflows/tests.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/**"
+      - "scripts/**"
+      - ".github/workflows/tests.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matchmaking:
+    name: Matchmaking service (51 asserts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Dependencias
+        working-directory: services/matchmaking-service
+        run: npm install --no-audit --no-fund
+
+      - name: Suite completa (memoria, sin red)
+        working-directory: services/matchmaking-service
+        env:
+          LOG_LEVEL: silent
+        run: npm test

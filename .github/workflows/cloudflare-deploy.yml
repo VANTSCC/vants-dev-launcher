@@ -10,6 +10,7 @@ on:
       - ".github/workflows/cloudflare-deploy.yml"
   workflow_dispatch:
 
+# Fase 6 · despliegues controlados: un deploy a la vez, el resto en cola
 concurrency:
   group: cloudflare-deploy
   cancel-in-progress: false
