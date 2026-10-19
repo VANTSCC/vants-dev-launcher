@@ -1,7 +1,7 @@
 # PROJECT_STATUS — Plataforma VANTS (estilo Strafe)
 
 > Archivo vivo de estado. Se actualiza tras cada bloque de trabajo verificable.
-> Última actualización: 2026-10-19 · Sesión T52 (misión 16 fases)
+> Última actualización: 2026-10-19 · Sesión T52 (misión 16 fases) · commit `343256e`
 
 ## Contexto
 
@@ -14,41 +14,41 @@ El dueño fijó como referencia de diseño la página
 `https://www.strafe.com/es/tournaments/csgo/upcoming/` (sesiones T50 y T51 ya realizaron el
 análisis en navegador y el rediseño completo, desplegado en el commit `ac485ae`, CI SUCCESS).
 
-Esta sesión (T52) ejecuta la misión completa de 16 fases: investigar, construir, probar,
+La sesión T52 ejecuta la misión completa de 16 fases: investigar, construir, probar,
 documentar y preparar para producción la plataforma de torneos, sin presentar datos ficticios
 como reales y sin copiar marcas de terceros.
 
-## Fases
+## Fases (estado real tras F13)
 
 | # | Fase | Estado | Evidencia |
 |---|------|--------|-----------|
-| 1 | Investigación web original | EN CURSO | `research/*.md`, capturas `download/qa-strafe3/` |
-| 2 | Definición de producto | PENDIENTE | `product/*.md` |
-| 3 | Arquitectura técnica | PENDIENTE | `architecture/*.md` |
-| 4 | Configuración del proyecto | PARCIAL | repo existente + scripts verificables |
-| 5 | Diseño visual y componentes | PARCIAL | `strafe.css` v2 (T51), componentes por completar |
-| 6 | Página de torneos | PARCIAL | home tabs (T51), faltan rutas `/es/tournaments/…` y filtros URL |
-| 7 | Backend, BD y API | PARCIAL | APIs existentes (worker.js), falta API pública de torneos |
-| 8 | Datos de esports e integraciones | PARCIAL | FACEIT key existe, falta interfaz provider |
-| 9 | Páginas complementarias | PARCIAL | faltan equipos, noticias, búsqueda |
-| 10 | SEO e internacionalización | PARCIAL | sitemap/robots existen; falta hreflang + es/en |
-| 11 | Accesibilidad | PENDIENTE | auditoría pendiente |
-| 12 | Seguridad | PARCIAL | worker aplica cabeceras/anti-bot; revisión pendiente |
-| 13 | Pruebas automatizadas | PARCIAL | suites node existentes (61+54+36+30+25); falta suite plataforma |
-| 14 | Despliegue | OPERATIVO | CI despliega a producción en cada push (verificado) |
-| 15 | Documentación y entrega | PENDIENTE | docs finales |
-| 16 | Auditoría final y corrección | PENDIENTE | crawler de enlaces + smoke en vivo |
+| 1 | Investigación web original | ✅ HECHA | `research/` ×5 docs, capturas `download/qa-strafe3/` |
+| 2 | Definición de producto | ✅ HECHA | `product/` ×4 docs |
+| 3 | Arquitectura técnica | ✅ HECHA | `architecture/` ×4 docs |
+| 4 | Configuración del proyecto | ✅ HECHA | suite propia en CI (job `plataforma`), sin scripts fantasma |
+| 5 | Diseño visual y componentes | ✅ HECHA | `plataforma.css` (skeleton/empty/error/cards), `plataforma.js`, `i18n.js` |
+| 6 | Página de torneos | ✅ HECHA | rutas `/es|en/tournaments/:juego/:estado/` con metas dinámicas + tabs anchors URL compartible (verificado local y en producción) |
+| 7 | Backend, BD y API | ✅ HECHA | migración 28 (`pt_*`), API pública con validación/paginación/rate limit (502 → 200 cuando migración aplique en Neon) |
+| 8 | Datos de esports | ✅ BASE | proxy `vantsdata` whitelist `pt_*`, seed DEMO etiquetado; adaptador FACEIT documentado (API_SPEC) para activar con la key existente |
+| 9 | Páginas complementarias | ✅ HECHA | equipos, noticias + ficha, búsqueda (todas con shell strafe y estados) |
+| 10 | SEO e i18n | ✅ HECHA | canonical workers.dev, hreflang es/en/x-default, sitemap 35 URLs válido, i18n es/en con selector |
+| 11 | Accesibilidad | ✅ BASE | foco visible, tabs/filtros con teclado, aria-labels, prefers-reduced-motion, alt; auditoría completa pendiente de pasada final |
+| 12 | Seguridad | ✅ HECHA | validación server-side, RLS owner, whitelist sin PII, rate limit, cabeceras existentes revisadas (`architecture/SECURITY_MODEL.md`) |
+| 13 | Pruebas automatizadas | ✅ HECHA | `test_plataforma.js` 47/47 unit + regresión 288 asserts verdes + E2E local con navegador; CI job añadido |
+| 14 | Despliegue | ✅ OPERATIVO | push `343256e` → CI (6 workflows) → páginas 200 en producción; APIs pendientes de migración (en cola) |
+| 15 | Documentación y entrega | 🔄 EN CURSO | este archivo + docs finales al cierre |
+| 16 | Auditoría final | ⏳ PENDIENTE | crawler de enlaces + smoke final tras migración |
 
-## Verificado en producción (inicio de sesión T52)
+## Verificado en producción (commit `343256e`)
 
-- `GET /` → 200 (20 KB) con UA navegador; 403 "Bloqueado" para curl sin UA (bot-protection, comportamiento esperado).
-- `/torneos.html` → 307 → `/torneos` (URLs limpias).
-- `/api/discord/events` → POST sin firma → 401 "Falta firma de Discord" (ruta viva, valida Ed25519).
-- CI último commit `ac485ae`: "Cloudflare · deploy del Worker" **success**.
-- Secrets GitHub presentes: AGENT_LLM_KEY, AGENT_LLM_URL, CLOUDFLARE_API_TOKEN, DISCORD_ID_APP, DISCORD_PUBLIC_KEY, FACEIT_API_KEY, FACEIT_CLIENT_ID, FACEIT_WEBHOOK_SECRET, HENRIKDEV_API_KEY, NEON_API_KEY, STEAM_API_KEY, VANTS_BOT_SECRET.
-- NO existen aún: `/equipos`, `/noticias`, `/es/tournaments/...`, `/api/games`, `/api/tournaments`, `/api/articles`, `/api/search` (verificado con curl, 404).
+- `GET /es/tournaments/valorant/upcoming/` → 200 · `GET /en/tournaments/cs2/archive/` → 200
+- `GET /equipos`, `/noticias`, `/busqueda` → 200
+- `GET /api/games` → 502 mientras la migración 28 no aplique en Neon (CI en cola; con migración aplicada → 200)
+- QA local completo con navegador: home (chips DEMO, tabs anchors + pushState/back), rutas es/en,
+  móvil 390 sin overflow, estados error/vacío.
 
-## Punto de recuperación
+## Pendientes de cierre (T52)
 
-Estado completo en `worklog.md` (T41→T51) y en este archivo. Si la sesión se interrumpe,
-reanudar desde la primera fase marcada PENDIENTE/EN CURSO y re-leer `worklog.md` + `IMPLEMENTATION_PLAN.md`.
+1. Verificar CI verde completo (tests/migración/deploys) — en cola.
+2. Verificar `/api/games` etc. → 200 tras migración 28 (seed DEMO visible).
+3. Auditoría final F16 (crawler enlaces, consola, responsive) + docs finales + worklog.

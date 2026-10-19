@@ -1,60 +1,108 @@
-# VANTS GAMES — Arena competitiva
+# VANTS GAMES — Arena competitiva · Plataforma de esports
 
-Web de torneos de VALORANT y CS2: partidos en vivo, ranking, bracket, pase de
-temporada, login con **Auth0** y datos en **Neon**. Despliegue automático en
-**GitHub Pages**.
+Plataforma de esports estilo torneos (referencia de UX: strafe.com): calendario de torneos
+por juego y estado, partidas en vivo, ranking, brackets, equipos, jugadores, noticias,
+búsqueda, tienda y membresías — con login **Auth0**, datos en **Neon Postgres** y despliegue
+automático en **Cloudflare Workers**.
 
-**Web:** https://feispla.github.io/Vants/
+**Web:** https://vants.vants.workers.dev
+**Plataforma de torneos:** https://vants.vants.workers.dev/es/tournaments/valorant/upcoming/
 
 ## Estructura
 
 ```
-├── index.html            ← LA WEB (VANTS GAMES): arena completa, login, pase
-├── 404.html              ← página 404 (autónoma)
-├── sw.js                 ← stub de migración: elimina el service worker de la
-│                            web antigua y sus cachés en los visitantes
-├── robots.txt, sitemap.xml, netlify.toml, .nojekyll, .well-known/
-├── assets/
-│   ├── js/arena.js       ← motor de la arena (simulador live, bracket, pase,
-│   │                        perfiles, insignias — SVG propios)
-│   ├── js/arena-live.js  ← capa viva: Auth0 (login) + torneos reales de Neon
-│   ├── js/auth0-config.js← Auth0 SPA SDK + cliente PostgREST de Neon
-│   │                        (window.VantAuth0 / window.VantDB)
-│   ├── css/arena.css     ← estilos de la arena
-│   └── brand/            ← logos y assets de marca
-├── docs/CONFIGURACION.md ← dónde va cada clave (Auth0, Neon, bot)
-├── vants-server/         ← servidor Node: web + bot de Discord
-│                            (POST /api/discord/notify)
-├── bot/                  ← bot ORION de Discord (Python)
-├── neon-functions/       ← vantsdata (proxy público), steam-login,
-│                            discord-notify, stripe-webhook
-├── desktop/, android/    ← wrappers de escritorio y móvil
-└── .github/workflows/    ← android-build, desktop-build
+├── index.html                  ← home (layout strafe: tabs EN CURSO/PRÓXIMOS/ARCHIVO)
+├── equipos.html                ← equipos de la arena (API /api/teams)
+├── noticias.html, noticia.html ← noticias + ficha de artículo (API /api/articles)
+├── busqueda.html               ← búsqueda global (API /api/search)
+├── torneos.html / torneo.html  ← inscripción real + ficha de torneo
+├── partidos/ranking/jugadores/llaves/clips/membresías/tienda/…
+├── research/                   ← F1: análisis real de la referencia (strafe.com)
+├── product/                    ← F2: requisitos, flujos, criterios de aceptación
+├── architecture/               ← F3: sistema, esquema BD, API, seguridad
+├── PROJECT_STATUS.md           ← estado vivo de la misión (fases con evidencia)
+├── IMPLEMENTATION_PLAN.md      ← plan de 16 fases
+├── DECISIONS.md                ← decisiones técnicas y sus motivos
+├── db/migrations/              ← SQL idempotente (01…28; 28 = plataforma pt_*)
+├── vants-server/
+│   ├── worker.js               ← Worker Cloudflare: seguridad, rutas /es|en/tournaments/…,
+│   │                              API pública JSON, Discord events, inscripciones
+│   ├── plataforma-core.js      ← lógica pura compartida Worker↔tests (ESM)
+│   └── public/                 ← frontend servido (espejo ×3 con raíz y public/)
+├── neon-functions/             ← vantsdata (proxy lectura), mm, vantsbot, stripe…
+├── services/                   ← agent-service (cerebro agéntico GLM), matchmaking
+├── bot/                        ← bot ORION de Discord (Python)
+├── desktop-electron/           ← HUB/launcher Electron con auto-update
+├── scripts/                    ← tests (test_plataforma, test_agente, …), auditoría
+├── docs/                       ← TESTING.md, DEPLOYMENT.md, TROUBLESHOOTING.md, …
+└── .github/workflows/          ← tests, neon-migrate, neon-deploy-functions,
+                                   cloudflare-deploy, agente, electron, android
 ```
 
-> La web antigua (SPA oscura + páginas SEO) fue eliminada del repo a petición
-> del propietario. Todo sigue recuperable desde el historial de git.
+## Requisitos previos
 
-## Login
+- Node 20+ (para tests y wrangler).
+- Cuenta Cloudflare con el Worker `vants` configurado (deploy automático por CI).
+- Proyecto Neon con las migraciones aplicadas (CI las aplica en cada cambio).
+- Opcional en local: `wrangler` (`npm i -g wrangler` o usar el de `vants-server`).
 
-`auth0-config.js` inicializa Auth0 SPA SDK y expone `window.VantAuth0`;
-`arena-live.js` monta el botón ENTRAR → Universal Login de Auth0 y procesa el
-retorno en la raíz. Las conexiones (Google, Discord, GitHub, Kick, correo) se
-activan en el panel de Auth0 — guía y errores comunes en
-**docs/CONFIGURACION.md**. La sesión se comparte por `localStorage`.
-
-## Datos (Neon)
-
-Sin sesión, las lecturas pasan por el proxy público `vantsdata`; con sesión,
-directo a la Data API con el JWT. Si la tabla `tournaments` tiene filas, la
-arena sustituye la demo por torneos reales y enciende el chip
-"DATOS EN VIVO · NEON".
-
-## Vista previa local
+## Instalación y arranque local
 
 ```bash
-python -m http.server 8788     # → http://localhost:8788
+# clonar y entrar
+git clone https://github.com/feispla/Vants.git && cd Vants
+
+# servidor local del Worker (sirve el frontend + API con las rutas reales)
+cd vants-server
+npm install
+npx wrangler dev --port 8787
+# → http://127.0.0.1:8787
 ```
 
-O abre `index.html` directamente (doble clic): todo el diseño funciona, solo
-el login real requiere un servidor o el dominio publicado.
+No hay build del frontend: los archivos estáticos se sirven tal cual (espejo ×3:
+raíz / `public/` / `vants-server/public/` — mantener los tres sincronizados).
+
+## Variables de entorno
+
+Todo lo sensible va en GitHub Secrets / Secretos del Worker (ver `docs/DEPLOYMENT.md`).
+Referencia sin secretos: `vants-server/.env.example`, `bot/.env.example`,
+`services/*/.env.example`. El Worker NO guarda credenciales de la base: lee por el proxy
+público `vantsdata` y reenvía el JWT del usuario cuando hay sesión.
+
+## Ejecución de pruebas
+
+```bash
+node scripts/test_plataforma.js    # 47 asserts (lógica de la plataforma + integración)
+node scripts/audit_enlaces.js      # crawler interno (603 enlaces, 0 rotos)
+node scripts/test_agente.js        # 61 asserts (agente)
+node scripts/test_mm_fase4.js      # 54 asserts (matchmaking)
+# suite completa: ver docs/TESTING.md
+```
+
+## Migraciones
+
+Las aplica el CI (`neon-migrate.yml`) en orden por nombre de archivo; son idempotentes.
+En manual: ejecutar los `db/migrations/NN-*.sql` en orden contra la rama principal de Neon.
+
+## Integraciones externas
+
+- **Auth0** (`vants.eu.auth0.com`): login SPA; el JWT decide RLS en Neon.
+- **Neon Postgres + Data API/proxy**: torneos, equipos, jugadores, artículos, presencia.
+- **FACEIT Data API** (`FACEIT_API_KEY`): pipeline de resultados/RR (webhook + poller).
+- **Discord**: events endpoint del Worker (Ed25519) + bot ORION.
+- **Stripe**: membresías (checkout + webhook en Neon Functions).
+- **vlr.gg/HenrikDev**: agenda esports Valorant y panel EN VIVO.
+
+## Despliegue
+
+Push a `main` → CI (tests → migraciones → funciones → Worker). Detalles y verificación
+post-deploy: `docs/DEPLOYMENT.md`. Rollback: `git revert` + push.
+
+## Limitaciones conocidas
+
+- Datos del calendario: mientras no existan torneos reales publicados, la plataforma muestra
+  la semilla **DEMO claramente etiquetada** (chip DEMO + prefijo "DEMO ·"); nunca presenta
+  datos ficticios como reales.
+- i18n: la interfaz está traducida es/en; el contenido editorial (artículos) se publica en
+  el idioma en que el equipo lo escriba.
+- Sin analítica/publicidad de terceros por decisión de producto (`DECISIONS.md` D6).

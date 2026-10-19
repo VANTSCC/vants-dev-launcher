@@ -194,7 +194,7 @@ ON CONFLICT (source, external_id) DO NOTHING;
 
 INSERT INTO pt_matches
   (source, external_id, game_slug, equipo_a, equipo_b, score_a, score_b, estado, best_of, empieza_at, termino_at, is_demo)
-VALUES ('demo','demo-m3','cs2',NULL,'DEMO · Equipo Stratos','DEMO · Equipo Nova',2,1,'finished',3,
+VALUES ('demo','demo-m3','cs2','DEMO · Equipo Stratos','DEMO · Equipo Nova',2,1,'finished',3,
         now() - interval '1 day', now() - interval '22 hours', true)
 ON CONFLICT (source, external_id) DO NOTHING;
 
