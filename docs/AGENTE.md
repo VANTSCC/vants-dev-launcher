@@ -1,0 +1,150 @@
+# AGENTE VANTS — el cerebro de control total
+
+> *"el mejor agente de IA… que maneje todo la web y el Launcher… si Discord no
+> te funciona… crea uno que sea máximo para el control de todo"*
+
+El Agente VANTS es el servicio que **vigila, decide, actúa y reporta** sobre
+toda la plataforma. Reúne en un solo cerebro lo que antes estaba suelto
+(`monitor/` de un lado, `supervisor.py` de otro) y añade lo que faltaba:
+**memoria persistente**, **acciones automáticas con guardas**, **órdenes en
+lenguaje natural** y **canal Discord** vía el bot VANTCALL ya conectado.
+
+## 1. Arquitectura
+
+```
+┌────────────────────────── CEREBRO (services/agent-service) ──────────────────────────┐
+│  chequeos.js ──► cerebro.js ──► acciones.js                                          │
+│  (los ojos)      (reglas + NLU       (las manos: re-despliegues GitHub              │
+│                   + LLM opcional)     con guarda anti-bucle)                        │
+│        ▲                │                        │                                   │
+│        │                ▼                        ▼                                   │
+│  web · worker FACEIT ·  memoria.js ─────────► Neon: agent_runs / agent_events /     │
+│  launcher · workflows   (RAM o PG)            agent_comandos  (migración 25)        │
+└──────────────────────────────┬───────────────────────────────┬───────────────────────┘
+                               │                               │
+        CI cada 30 min (agente.yml)                    bot VANTCALL (Python)
+        + resumen en GitHub + Discord                  /agente estado·informe·incidentes·
+        webhook opcional (VANTS_DISCORD_WEBHOOK)       resolver·comando  + DMs (agent_bridge)
+```
+
+**Dónde corre el agente** — dos modos, mismo código:
+
+| Modo | Cómo | Cuándo usarlo |
+|------|------|---------------|
+| **CI (por defecto, 0 €)** | `.github/workflows/agente.yml` — cron cada 30 min + manual | Ya funcionando. Vigila, actúa, escribe en Neon y publica resumen. |
+| **Servicio HTTP (instantáneo)** | `node server.js` (:8082) en Railway/Render junto al bot | Si el dueño quiere `/agente comando` con respuesta inmediata (definir `AGENT_URL` en el bot). |
+
+## 2. Lo que vigila (chequeos)
+
+| Chequeo | Qué mira | Severidad si falla |
+|---------|----------|--------------------|
+| `web` | `https://vants.vants.workers.dev` responde 200 con contenido VANTS | **critical** (→ DOWN) |
+| `worker_faceit` | `/healthz` del webhook worker (v2) | error |
+| `launcher` | última release de GitHub: instalador `.exe` + `latest.yml` + versión coherente + borradores sin publicar (cadena auto-update del HUB) | error |
+| `workflows` | último run de cloudflare-deploy, neon-migrate, desktop-electron, faceit-xp, tests (clasifica por **ruta** del workflow, no por nombre) | warn |
+| `neon` | web_events pendientes, FACEIT sin procesar, cola de matchmaking, incidentes abiertos (solo con acceso a datos) | error |
+| `matchmaking` | `/healthz` del matchmaking-service (opcional, con `URLS_MATCHMAKING`) | warn |
+
+## 3. Lo que hace solo (acciones con guarda anti-bucle)
+
+Cada acción automática se ejecuta **una sola vez por commit/run** (guarda
+persistida en `agent_events` con `dedupe_key`); si vuelve a fallar, el agente
+re-intenta en el siguiente ciclo. Sin `GITHUB_TOKEN` las acciones quedan
+propuestas, nunca a medias:
+
+| Situación | Acción | Mecanismo |
+|-----------|--------|-----------|
+| Web caída o `cloudflare-deploy` fallido | `redispatch_cloudflare` → re-lanza el deploy (1 vez por SHA) | workflow dispatch |
+| `neon-migrate` fallido | `redispatch_neon_migrate` (1 vez por SHA) | workflow dispatch |
+| Otro workflow fallido (desktop-electron, faceit-xp, tests) | `rerun_fallidos` (1 vez por run) | run re-run |
+| Cualquier otra cosa | incidente en Neon con `accion_sugerida` | el dueño decide |
+
+## 4. La memoria (Neon, migración 25)
+
+- **`agent_runs`** — cada ciclo: estado global, hallazgos JSON, acciones, resumen.
+- **`agent_events`** — incidentes con `dedupe_key` (no se duplican; si un
+  incidente resuelto reaparece se **reabre** y vuelve a notificar), severidad,
+  acción sugerida, `notificado` para el puente de DMs.
+- **`agent_comandos`** — órdenes del dueño en cola (ruta **Discord → Neon →
+  agente → respuesta → DM**), sin necesidad de servidor encendido.
+- Vista **`agent_resumen`** para paneles; interruptor `bot_settings.agente`.
+
+## 5. Discord (el bot ya conectado)
+
+El bot VANTCALL ahora registra el grupo **`/agente`** y arranca
+`agent_bridge.py` (bucle cada 25 s):
+
+- **DMs automáticos**: incidentes nuevos/reabiertos de severidad
+  warn/error/critical + respuestas a sus órdenes.
+- **Comandos**:
+  - `/agente estado` — último ciclo + incidentes abiertos (embed con colores).
+  - `/agente informe` — diagnóstico completo.
+  - `/agente incidentes` — lista numerada.
+  - `/agente resolver <id>` — cierra un incidente.
+  - `/agente comando <texto>` — orden libre. Con `AGENT_URL` responde al
+    instante; sin él encola en Neon y la respuesta llega por DM tras el ciclo.
+- Si **Discord no funciona** (caída del bot, DMs cerrados): la memoria queda
+  íntegra en Neon, el workflow publica el resumen en GitHub, y si el dueño
+  crea el secret `VANTS_DISCORD_WEBHOOK` el propio ciclo avisa a un canal.
+  Nada se pierde.
+
+## 6. La capa de IA (enchufable, hoy en modo reglas)
+
+El cerebro **siempre** entiende órdenes en español sin depender de nadie
+(NLU local, 0 dependencias): `estado`, `informe`, `revisa todo`,
+`despliega la web`, `migraciones`, `incidentes`, `resuelve 12`, `ayuda`.
+
+Para convertirlo en un agente LLM de verdad solo falta enchufar cualquier API
+compatible con OpenAI (`/chat/completions`):
+
+| Variable | Ejemplo |
+|----------|---------|
+| `AGENT_LLM_URL` | `https://open.bigmodel.cn/api/paas/v4` (GLM) · `https://api.openai.com/v1` · `http://localhost:11434/v1` (Ollama) |
+| `AGENT_LLM_KEY` | la key del proveedor |
+| `AGENT_LLM_MODEL` | `glm-4-flash` por defecto |
+
+Con eso el agente interpreta **cualquier frase** (no solo patrones) y narra
+los informes con voz propia. Funciona igual en local (`node cli.js comando "..."`),
+en el servicio HTTP y en CI (añadir los tres secrets en GitHub si se quiere en
+el ciclo programado).
+
+## 7. Uso rápido
+
+```bash
+# Local (sin credenciales → memoria RAM, acciones propuestas)
+cd services/agent-service && npm install
+node cli.js ciclo                 # vigilancia completa
+node cli.js estado                # último estado
+node cli.js informe               # diagnóstico legible
+node cli.js comando "despliega la web"
+
+# Servidor de control (respuesta instantánea para el bot)
+node --env-file=.env server.js    # :8082
+
+# CI: manual desde GitHub → Actions → "AGENTE VANTS · vigilancia y control"
+#     (modo ciclo | informe | comando con texto libre)
+
+# Tests
+node scripts/test_agente.js       # 61 asserts
+```
+
+## 8. Variables de entorno (`services/agent-service/.env.example`)
+
+`PORT` (8082) · `ALLOW_ORIGIN` · `AGENT_TOKEN` (auth Bearer de la API) ·
+`DATABASE_URL` (memoria Neon; si falta → RAM) · `URLS_WEB` / `URLS_WORKER_FACEIT`
+/ `URLS_MATCHMAKING` · `GITHUB_TOKEN` + `GITHUB_REPOSITORY` (acciones) ·
+`AGENT_LLM_URL` / `AGENT_LLM_KEY` / `AGENT_LLM_MODEL` (IA opcional).
+
+En CI el workflow ya inyecta `GITHUB_TOKEN` (permiso `actions: write`) y
+resuelve `DATABASE_URL` con `NEON_API_KEY` — no se necesita ningún secret
+nuevo para el modo básico.
+
+## 9. Despliegue del bot (para el dueño)
+
+El bot ya tiene el grupo `/agente` y el puente integrados en `main.py`
+(`start_agent_bridge`). En el host donde corre el bot (Railway/Render):
+
+1. `git pull` y `pip install -r bot/requirements.txt` (sin cambios nuevos).
+2. Reiniciar el bot → en el log aparecerá
+   `🤖 Agente VANTS activo: /agente estado · informe · …`.
+3. Opcional: `AGENT_URL` + `AGENT_TOKEN` para respuesta instantánea.

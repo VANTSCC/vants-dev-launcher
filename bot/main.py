@@ -10,6 +10,7 @@ from discord import app_commands
 from commands.perfil import perfil_handler
 from commands.verificar import verificar_handler
 from commands.vincular import vincular_riot_handler
+from commands.agente import registrar as registrar_agente
 from commands.moderacion import (
     warn_handler, kick_handler, ban_handler, mute_handler,
     unmute_handler, clear_handler, lock_handler, unlock_handler,
@@ -27,6 +28,7 @@ from utils.health import start_health_server
 from utils.db import execute, fetch_all, fetch_one
 from alerts import start_alerts
 from supervisor import start_supervisor
+from agent_bridge import start_agent_bridge
 
 
 def required_env(name: str) -> str:
@@ -461,6 +463,12 @@ async def recordatorio_cmd(interaction: discord.Interaction, mensaje: str, minut
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# AGENTE VANTS (control total de la plataforma)
+# ─────────────────────────────────────────────────────────────────────────────
+registrar_agente(tree, GUILD)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # EVENTOS
 # ─────────────────────────────────────────────────────────────────────────────
 @client.event
@@ -469,9 +477,11 @@ async def on_ready() -> None:
     await tree.sync(guild=GUILD)
     start_alerts(client)
     start_supervisor(client)
+    start_agent_bridge(client)
     print(f"✅ vantcall conectado como {client.user}")
     print(f"📋 Comandos registrados en guild {GUILD_ID}")
     print(f"🛡️ Supervisor de la web activo → DM {os.getenv('SUPERVISOR_DM_ID') or '1532612429295521930'}")
+    print("🤖 Agente VANTS activo: /agente estado · informe · incidentes · resolver · comando")
 
 
 client.run(TOKEN)

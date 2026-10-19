@@ -12,7 +12,8 @@
 | Servicio | Puerto | Framework | Estado | Responsabilidad |
 |----------|--------|-----------|--------|-----------------|
 | `api-gateway/` | 8080 | **Express** | ✅ base | Puerta única `/api/v1/*`, rate limit, status de servicios |
-| `matchmaking-service/` | 8081 | **Fastify** | ✅ base (cola en memoria, Fase 4 la conecta a Neon) | Colas de partida, tickets, criterios |
+| `matchmaking-service/` | 8081 | **Fastify** | ✅ Fase 4 completa | Colas de partida, tickets, emparejamiento, RR, historial |
+| `agent-service/` | 8082 | **Fastify** | ✅ Agente VANTS v1 | Cerebro de control total: vigila web/launcher/BD/CI, decide, actúa en GitHub y guarda memoria en Neon (docs/AGENTE.md) |
 
 ## Cómo correr
 

@@ -92,6 +92,28 @@ porque ya validó su Bearer.
 
 Rate limit: 120 req/min/IP (ventana fija en memoria). CORS: solo `ALLOW_ORIGIN`.
 
+## 4-b · Agent-service (Agente VANTS · Node/Fastify · :8082)
+
+Cerebro de control total (docs/AGENTE.md). Auth Bearer opcional con
+`AGENT_TOKEN` (si está definido, todas las rutas `/api/v1/*` lo exigen;
+`/healthz` nunca). Memoria en Neon (`agent_runs`/`agent_events`/
+`agent_comandos`, migración 25) o RAM sin credenciales.
+
+| Método | Ruta | Respuesta |
+|--------|------|-----------|
+| GET | `/healthz` | `{ ok, service:"agent-service", version, uptime, memoria:"pg"\|"memoria", cerebro:"reglas"\|"reglas+llm" }` |
+| GET | `/api/v1/estado` | `{ ok, ultimo, incidentes[], cerebro }` |
+| POST | `/api/v1/ciclo` | `{ ok, run_id, estado: UP\|DEGRADED\|DOWN, resumen, hallazgos[], acciones[] }` |
+| POST | `/api/v1/comando` | body `{ texto, creado_por? }` → `{ ok, intencion, via, respuesta }` (NLU español; LLM si `AGENT_LLM_*`) |
+| GET | `/api/v1/incidentes` | `{ ok, incidentes[] }` |
+| POST | `/api/v1/incidentes/:id/resolver` | body `{ resolucion? }` → `{ ok, resuelto }` · 404 si no existe/ya cerrado |
+
+Acciones automáticas (lista blanca): `redispatch_cloudflare`,
+`redispatch_neon_migrate` (1 vez por SHA) y `rerun_fallidos` (1 vez por run),
+con guarda persistida en `agent_events` (dedupe_key). Sin `GITHUB_TOKEN` las
+acciones quedan propuestas. El bot de Discord expone lo mismo vía `/agente`
+y los DMs salen de la tabla `agent_events` (`agent_bridge.py`).
+
 ## 5 · FACEIT Data API (open.faceit.com)
 
 - Host oficial: `https://open.faceit.com/data/v4` (Bearer API key server-side).
