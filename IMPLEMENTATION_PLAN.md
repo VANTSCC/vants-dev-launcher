@@ -48,22 +48,32 @@
 - Estado y filtros en URL (`?estado=&juego=&region=&pag=`), enlaces accesibles, estados
   carga/vacío/error, sin inventar datos.
 
-### FASE 7 · Backend, base de datos y API
-- Migración 28 (`db/migrations/28-plataforma-torneos.sql`): games, tournaments, teams, players
-  (reutiliza si ya existe), matches, articles + índices + seed DEMO etiquetado.
+### FASE 7 · Backend, base de datos y API — ✅ COMPLETADA (T52 + T53 cierra los :slug)
+- Migración 28 (`db/migrations/28-plataforma-torneos.sql`): games, torneos, teams, matches,
+  articles + índices + seed DEMO etiquetado.
+- **T53**: migración 29 (`29-pt-players.sql`) — pt_players con plantillas demo de 20 jugadores.
 - Endpoints Worker: `GET /api/games`, `GET /api/tournaments` (filtros+paginación),
-  `GET /api/tournaments/:slug`, `GET /api/matches`, `GET /api/teams`, `GET /api/players`,
-  `GET /api/articles`, `GET /api/search`. Validación de parámetros, anti-N+1 (JOINs),
-  índices, errores `{ok:false}` sin filtrar internals.
+  `GET /api/tournaments/:slug`, `GET /api/matches`, `GET /api/teams` + **`/api/teams/:slug`
+  (T53: ficha+plantilla+partidas)**, `GET /api/players` + **`/api/players/:slug` (T53,
+  lee pt_players sin PII)**, `GET /api/articles`, `GET /api/search`. Validación de
+  parámetros, anti-N+1 (Promise.all en fichas), índices, errores `{ok:false}` sin internals.
 
-### FASE 8 · Datos de esports e integraciones
-- Interfaz `EsportsDataProvider` (contrato JS) + adaptador `demo` (fixtures etiquetadas) +
-  adaptador `faceit` (usa FACEIT_API_KEY existente) para torneos/championships reales.
+### FASE 8 · Datos de esports e integraciones — ✅ COMPLETADA (T53: código real, no solo doc)
+- **`scripts/proveedor-datos.mjs` (T53)**: interfaz `EsportsDataProvider` documentada en el
+  propio módulo + adaptador `demo` (fixtures etiquetadas) + adaptador `faceit`
+  (Data API v4 oficial con FACEIT_API_KEY — SIN scraping). Mapeos puros testeados
+  (estados, juegos, epoch→ISO, facciones→equipos).
+- **`scripts/sincronizar-faceit.mjs` (T53)**: UPSERT idempotente pt_* con is_demo=false;
+  salidas honestas (sin key→0, sin DATABASE_URL→2, errores→3).
+- **`.github/workflows/faceit-sync.yml` (T53)**: cron diario 05:17 UTC + manual.
 - Documentar qué es real y qué demo. Sin scraping de terceros.
 
-### FASE 9 · Páginas complementarias
+### FASE 9 · Páginas complementarias — ✅ COMPLETADA (T52 + T53 cierra las 4 que faltaban)
 - `equipos.html` (nuevo), `noticias.html` + ficha de artículo, `busqueda.html`,
   ficha de torneo reforzada (torneo.html ya existe), calendario (partidos.html ya existe).
+- **T53**: `equipo-ficha.html` (?slug= con plantilla+partidas), `jugador.html` (?slug=),
+  `calendario.html` (upcoming + live primero), `resultados.html` (finished) — con pestañas
+  cruzadas, nav "Calendario" y enlaces equipos→ficha→jugador→equipo.
 - Todos los estados: carga/vacío/error/contenido.
 
 ### FASE 10 · SEO e internacionalización
@@ -81,10 +91,13 @@
 - Validación server-side en endpoints nuevos, rate limit de lectura, cabeceras (revisar las
   existentes del Worker), sin secretos en repo, CORS mínimo, revisión de dependencias.
 
-### FASE 13 · Pruebas automatizadas
+### FASE 13 · Pruebas automatizadas — ✅ COMPLETADA (T52 + T53 añade Playwright real)
 - `scripts/test_plataforma.js`: unit (clasificación de estado, filtros, orden, paginación,
-  formateo de fechas, validación de query) + integración (SQL contra Neon si hay
-  DATABASE_URL; skip suave si no). CI ya ejecuta suites node.
+  fechas, validación de query, fichas, filaMatch XSS, proveedores demo/FACEIT) +
+  integración (SQL contra Neon si hay red; skip suave si no). 90 asserts verdes.
+- **T53: `tests/e2e/plataforma.spec.js` + `playwright.config.js`** — Playwright real
+  (desktop 1280 + móvil 390) contra producción: rutas, fichas, calendario, búsqueda,
+  i18n, overflow móvil y estados honestos. Job `e2e` en tests.yml.
 - E2E con navegador contra producción tras desplegar (rutas críticas).
 
 ### FASE 14 · Despliegue

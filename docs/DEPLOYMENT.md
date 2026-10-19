@@ -49,6 +49,15 @@ Ningún secreto vive en el repo (`.env.example` solo con placeholders).
 - Migración 28: tablas `pt_games/pt_torneos/pt_teams/pt_matches/pt_articulos` + seed DEMO
   etiquetado. Reversible con los `DROP TABLE IF EXISTS` documentados en su cabecera.
 
+## FACEIT · sync de datos reales (T53)
+
+Workflow `faceit-sync.yml`: cron diario 05:17 UTC + ejecución manual (con inputs
+`juegos` y `dry`). Ejecuta `scripts/sincronizar-faceit.mjs` con `FACEIT_API_KEY` y
+`DATABASE_URL` de secrets: torneos/equipos/partidas REALES de FACEIT entran en pt_*
+con `source='faceit'` e `is_demo=false` (UPSERT idempotente por source+external_id).
+Honestidad de salidas: sin key → exit 0 con aviso; sin DATABASE_URL → exit 2;
+errores de la API → exit 3 (rojo visible). Requiere migraciones 28 y 29 aplicadas.
+
 ## Dominio propio (pendiente del dueño)
 
 `vantsgg.com` está preparado en `wrangler.toml` (comentado). Al activar la zona en

@@ -4,10 +4,11 @@
    Módulo INDEPENDIENTE (no toca arena.js/Auth0/strafe-home).
    · Estados reutilizables: skeleton / empty / error(reintentar).
    · Consume la API pública del Worker:
-     /api/games /api/tournaments[/slug] /api/matches /api/teams
-     /api/players /api/articles[/slug] /api/search
+     /api/games /api/tournaments[/slug] /api/matches /api/teams[/slug]
+     /api/players /api/players/:slug /api/articles[/slug] /api/search
    · Páginas que activa (por body[data-plataforma]):
-     equipos · noticias · noticia · busqueda
+     equipos · equipo · jugador · noticias · noticia · busqueda ·
+     calendario · resultados   (F9 — fases que faltaban, T53)
    · Chip DEMO visible en todo dato is_demo=true (nunca pasa por real).
    Usa window.VANTS_API (api-client.js) si está; si no, fetch directo.
    ============================================================ */
@@ -39,7 +40,11 @@
   function proxyUrl(ruta, search) {
     var q = new URLSearchParams(search || '');
     var tabla = '';
-    if (ruta === '/api/games') tabla = 'pt_games';
+    var mT = ruta.match(/^\/api\/teams\/([a-z0-9-]+)$/);
+    var mP = ruta.match(/^\/api\/players\/([a-z0-9-]+)$/);
+    if (mT) tabla = 'pt_teams';
+    else if (mP) tabla = 'pt_players';
+    else if (ruta === '/api/games') tabla = 'pt_games';
     else if (ruta === '/api/tournaments' || /^\/api\/tournaments\//.test(ruta)) tabla = 'pt_torneos';
     else if (ruta === '/api/matches') tabla = 'pt_matches';
     else if (ruta === '/api/teams') tabla = 'pt_teams';
@@ -48,6 +53,8 @@
     if (!tabla) return null;
     var u = new URL(PROXY);
     u.searchParams.set('table', tabla);
+    if (mT) u.searchParams.set('slug.eq', mT[1]);
+    if (mP) u.searchParams.set('slug.eq', mP[1]);
     var slugs = { estado: 'estado.eq', juego: 'game_slug.eq', region: 'region.ilike', pag: 'offset', porPagina: 'limit' };
     q.forEach(function (v, k) {
       if (k === 'estado') { u.searchParams.set('estado.eq', v === 'archive' ? 'finished' : v); }
@@ -57,6 +64,7 @@
       else if (k === 'pag') { /* offset calculado al final */ u.searchParams.set('__pag', v); }
       else u.searchParams.set(k, v);
     });
+    if (mT || mP) { u.searchParams.set('limit', '1'); return u.toString(); }
     var pag = parseInt(u.searchParams.get('__pag') || '1', 10);
     u.searchParams.delete('__pag');
     if (!u.searchParams.get('limit')) u.searchParams.set('limit', '12');
@@ -138,11 +146,11 @@
       if (!items) { error(host, paginaEquipos); return; }
       if (!items.length) { empty(host, (I() && I().t('sin_datos')) || ''); return; }
       host.innerHTML = '<div class="pf-cards">' + items.map(function (t) {
-        return '<article class="pf-card">' +
-          '<div class="pf-card-head"><span class="pf-avatar" aria-hidden="true">' + esc((t.tag || t.nombre || '?').slice(0, 3).toUpperCase()) + '</span>' +
+        return '<a class="pf-card" href="/equipo-ficha.html?slug=' + encodeURIComponent(t.slug) + '">' +
+          '<div class="pf-card-head"><span class="pf-avatar" aria-hidden="true">' + esc((t.tag || t.nombre || '?').replace(/^DEMO\s·\s/, '').slice(0, 3).toUpperCase()) + '</span>' +
           '<h3>' + esc(t.nombre) + chipDemo(t.is_demo) + '</h3></div>' +
           '<p class="pf-meta">' + esc(String(t.game || '—').toUpperCase()) + ' · ' + esc(t.region || '—') + '</p>' +
-          '<p class="pf-meta dim">' + esc(t.slug) + '</p></article>';
+          '<p class="pf-meta dim">' + esc(t.slug) + '</p></a>';
       }).join('') + '</div>';
     }).catch(function () { error(host, paginaEquipos); });
   }
@@ -223,22 +231,164 @@
           filas.map(function (x) { return '<li><a href="' + hrefFn(x) + '">' + esc(x.nombre || x.titulo || '') + chipDemo(x.is_demo) + '</a></li>'; }).join('') + '</ul>');
       }
       lista((I() && I().t('secciones.torneos')) || 'Torneos', d.torneos, function (x) { return '/torneo?slug=' + encodeURIComponent(x.slug); });
-      lista((I() && I().t('secciones.equipos')) || 'Equipos', d.equipos, function (x) { return '/equipos'; });
+      lista((I() && I().t('secciones.equipos')) || 'Equipos', d.equipos, function (x) { return '/equipo-ficha.html?slug=' + encodeURIComponent(x.slug); });
       lista((I() && I().t('secciones.articulos')) || 'Artículos', d.articulos, function (x) { return '/noticia?slug=' + encodeURIComponent(x.slug); });
       host.innerHTML = tit + secciones.join('');
     }).catch(function () { error(host, function () { paginaBusqueda(); }); });
   }
 
+  /* ---------------- fila de partido (client, misma marca que plataforma-core.filaMatch) ---------------- */
+  function filaMatchCli(m, locale) {
+    var juego = m.game && m.game.slug ? m.game.slug : 'valorant';
+    var estado = m.estado || 'upcoming';
+    var badge = '';
+    if (estado === 'live') badge = '<span class="sf-badge red">' + esc((I() && I().t('en_vivo')) || 'EN VIVO') + '</span>';
+    else if (estado === 'finished') badge = '<span class="sf-badge dim">' + esc((I() && I().t('finalizado')) || 'FINALIZADO') + '</span>';
+    if (m.is_demo) badge += chipDemo(true);
+    var score = (m.score && m.score.a != null && m.score.b != null)
+      ? '<span class="sf-mscore"><b>' + Number(m.score.a) + '</b><i>:</i><b>' + Number(m.score.b) + '</b></span>'
+      : '<span class="sf-mscore sin"><i>' + (estado === 'finished' ? '—' : 'vs') + '</i></span>';
+    var fecha = m.empieza_at
+      ? esc(fechaCorta(m.empieza_at)) + ' · ' + esc(new Date(m.empieza_at).toLocaleTimeString(lang() === 'en' ? 'en-GB' : 'es-ES', { hour: '2-digit', minute: '2-digit' }))
+      : esc((I() && I().t('fecha_anuncio')) || 'POR ANUNCIAR');
+    return '<a class="sf-row sf-mrow" href="/calendario.html" data-est="' + esc(estado) + '">' +
+      '<span class="sf-rlogo" aria-hidden="true"></span>' +
+      '<span class="sf-rmain"><span class="sf-rname"><b>' + esc((m.equipos && m.equipos.a) || '—') + '</b>' + score + '<b>' + esc((m.equipos && m.equipos.b) || '—') + '</b>' + badge + '</span>' +
+      '<span class="sf-stage">' + esc(String(juego).toUpperCase()) + (m.best_of ? ' · Bo' + Number(m.best_of) : '') + '</span></span>' +
+      '<span class="sf-rcol c-fechas">' + fecha + '</span>' +
+      '<span class="sf-rgo"></span></a>';
+  }
+  function mapMatch(f) {
+    return {
+      game: { slug: f.game_slug }, equipos: { a: f.equipo_a, b: f.equipo_b },
+      score: f.score_a != null && f.score_b != null ? { a: Number(f.score_a), b: Number(f.score_b) } : null,
+      estado: f.estado, best_of: f.best_of, empieza_at: f.empieza_at, is_demo: !!f.is_demo,
+    };
+  }
+  function px(tabla, params) {
+    var u = new URL(PROXY);
+    u.searchParams.set('table', tabla);
+    Object.keys(params || {}).forEach(function (k) { u.searchParams.set(k, params[k]); });
+    return fetch(u.toString(), { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+  /* ---------------- PÁGINA: FICHA DE EQUIPO (F9) ---------------- */
+  function paginaEquipo() {
+    var host = $('#pfEquipo');
+    if (!host) return;
+    var slug = new URLSearchParams(location.search).get('slug') || '';
+    if (!slug || !/^[a-z0-9-]{2,64}$/.test(slug)) { empty(host, ''); return; }
+    skeleton(host, 3);
+    Promise.all([
+      get('/api/teams/' + slug),
+      px('pt_players', { 'team_slug.eq': slug, 'order': 'nombre.asc', 'limit': 30 }),
+    ]).then(function (res) { return res[0].ok && res[0].data && res[0].data.ok ? res : null; })
+      .then(function (res) {
+        if (!res) { error(host, paginaEquipo); return; }
+        var dd = res[0].data.data;
+        var ficha = Array.isArray(dd) ? dd[0] : dd;
+        if (!ficha || !ficha.nombre) { empty(host, ''); return; }
+        var roster = res[1] || [];
+        // Las partidas por nombre del equipo (equipo_a guarda el NOMBRE, no el slug)
+        var nombre = ficha.nombre;
+        Promise.all([
+          px('pt_matches', { 'equipo_a.eq': nombre, 'order': 'empieza_at.desc.nullslast', 'limit': 20 }),
+          px('pt_matches', { 'equipo_b.eq': nombre, 'order': 'empieza_at.desc.nullslast', 'limit': 20 }),
+        ]).then(function (ms) {
+          var vistas = {}, partidas = [];
+          (ms[0] || []).concat(ms[1] || []).forEach(function (f) {
+            var k = String(f.external_id || f.id);
+            if (vistas[k]) return; vistas[k] = 1; partidas.push(mapMatch(f));
+          });
+          partidas.sort(function (a, b) { return Date.parse(b.empieza_at || 0) - Date.parse(a.empieza_at || 0); });
+          pintaEquipo(host, ficha, roster, partidas);
+        }).catch(function () { pintaEquipo(host, ficha, roster, []); });
+      }).catch(function () { error(host, paginaEquipo); });
+  }
+  function pintaEquipo(host, ficha, roster, partidas) {
+    var rosterHtml = (roster && roster.length)
+      ? '<div class="pf-roster">' + roster.map(function (p) {
+          return '<a class="pf-player" href="/jugador.html?slug=' + encodeURIComponent(p.slug) + '">' +
+            '<span class="pf-avatar" aria-hidden="true">' + esc(String(p.nombre || '?').replace(/^DEMO\s·\s/, '').slice(0, 2).toUpperCase()) + '</span>' +
+            '<span class="pf-player-n"><b>' + esc(p.nombre) + '</b>' + chipDemo(p.is_demo) + '<i>' + esc(p.rol || '—') + (p.pais ? ' · ' + esc(p.pais) : '') + '</i></span></a>';
+        }).join('') + '</div>'
+      : '<div class="pf-empty"><b>' + esc((I() && I().t('roster_vacio')) || 'SIN PLANTILLA PUBLICADA') + '</b></div>';
+    var partHtml = (partidas && partidas.length)
+      ? '<div class="sf-table" role="list">' + partidas.slice(0, 10).map(function (m) { return filaMatchCli(m, lang()); }).join('') + '</div>'
+      : '<div class="pf-empty"><b>' + esc((I() && I().t('sin_partidas')) || 'SIN PARTIDAS REGISTRADAS') + '</b></div>';
+    host.innerHTML = '<article class="pf-ficha">' +
+      '<div class="pf-ficha-head"><span class="pf-avatar big" aria-hidden="true">' + esc((ficha.tag || ficha.nombre || '?').replace(/^DEMO\s·\s/, '').slice(0, 3).toUpperCase()) + '</span>' +
+      '<div><h2>' + esc(ficha.nombre) + chipDemo(ficha.is_demo) + '</h2>' +
+      '<p class="pf-meta">' + esc(String(ficha.game && ficha.game.slug || '—').toUpperCase()) + ' · ' + esc(ficha.region || '—') + (ficha.tag ? ' · [' + esc(ficha.tag) + ']' : '') + '</p></div></div>' +
+      '<h3 class="pf-ficha-h">' + esc((I() && I().t('plantilla')) || 'PLANTILLA') + '</h3>' + rosterHtml +
+      '<h3 class="pf-ficha-h">' + esc((I() && I().t('partidas_equipo')) || 'PARTIDAS') + '</h3>' + partHtml +
+      '<p><a class="pf-volver" href="/equipos.html">‹ ' + esc((I() && I().t('nav_equipos')) || 'Equipos') + '</a></p></article>';
+    document.title = ficha.nombre + ' | VANTS';
+  }
+
+  /* ---------------- PÁGINA: FICHA DE JUGADOR (F9) ---------------- */
+  function paginaJugador() {
+    var host = $('#pfJugador');
+    if (!host) return;
+    var slug = new URLSearchParams(location.search).get('slug') || '';
+    if (!slug || !/^[a-z0-9-]{2,64}$/.test(slug)) { empty(host, ''); return; }
+    skeleton(host, 2);
+    get('/api/players/' + slug).then(function (r) {
+      var dd = r.ok && r.data && r.data.ok ? r.data.data : null;
+      var jug = Array.isArray(dd) ? dd[0] : dd;
+      if (!jug || !jug.nombre) { empty(host, ''); return; }
+      host.innerHTML = '<article class="pf-ficha">' +
+        '<div class="pf-ficha-head"><span class="pf-avatar big" aria-hidden="true">' + esc(String(jug.nombre).replace(/^DEMO\s·\s/, '').slice(0, 2).toUpperCase()) + '</span>' +
+        '<div><h2>' + esc(jug.nombre) + chipDemo(jug.is_demo) + '</h2>' +
+        '<p class="pf-meta">' + (jug.game ? esc(String(jug.game.slug).toUpperCase()) + ' · ' : '') + esc(jug.rol || '—') + (jug.pais ? ' · ' + esc(jug.pais) : '') + '</p>' +
+        (jug.bio ? '<p class="pf-bio">' + esc(jug.bio) + '</p>' : '') + '</div></div>' +
+        (jug.equipo && jug.equipo.slug ? '<h3 class="pf-ficha-h">' + esc((I() && I().t('equipo_del_jugador')) || 'EQUIPO') + '</h3>' +
+          '<p><a class="pf-link-card" href="/equipo-ficha.html?slug=' + encodeURIComponent(jug.equipo.slug) + '"><b>' + esc(jug.equipo.nombre) + '</b>' + chipDemo(jug.equipo.is_demo) + '<i>' + esc(String(jug.equipo.game && jug.equipo.game.slug || '').toUpperCase()) + '</i></a></p>' : '') +
+        '<p><a class="pf-volver" href="/jugadores.html">‹ ' + esc((I() && I().t('nav_jugadores')) || 'Jugadores') + '</a></p></article>';
+      document.title = jug.nombre + ' | VANTS';
+    }).catch(function () { error(host, paginaJugador); });
+  }
+
+  /* ---------------- PÁGINAS: CALENDARIO Y RESULTADOS (F9) ---------------- */
+  function paginaPartidas(estado, orden) {
+    var host = estado === 'upcoming' ? $('#pfCalendario') : $('#pfResultados');
+    if (!host) return;
+    skeleton(host, 5);
+    px('pt_matches', { 'estado.eq': estado, 'order': 'empieza_at.' + orden + '.nullslast', 'limit': '24' }).then(function (filas) {
+      var items = (filas || []).map(mapMatch);
+      if (!items.length) { empty(host, (I() && I().t(estado === 'upcoming' ? 'vacio_partidas' : 'sin_datos')) || ''); return; }
+      if (estado === 'upcoming') {
+        items.sort(function (a, b) { return Date.parse(a.empieza_at || 9e15) - Date.parse(b.empieza_at || 9e15); });
+        var vivas = items.filter(function (m) { return m.estado === 'live'; });
+        var prox = items.filter(function (m) { return m.estado !== 'live'; });
+        items = vivas.concat(prox);
+      }
+      host.innerHTML = '<div class="sf-table" role="list">' + items.map(function (m) { return filaMatchCli(m, lang()); }).join('') + '</div>';
+    }).catch(function () { error(host, function () { paginaPartidas(estado, orden); }); });
+  }
+  function paginaCalendario() { paginaPartidas('upcoming', 'asc'); }
+  function paginaResultados() { paginaPartidas('finished', 'desc'); }
+
   /* ---------------- boot por body[data-plataforma] ---------------- */
   function boot() {
     var modo = document.body.getAttribute('data-plataforma');
     if (modo === 'equipos') paginaEquipos();
+    else if (modo === 'equipo') paginaEquipo();
+    else if (modo === 'jugador') paginaJugador();
+    else if (modo === 'calendario') paginaCalendario();
+    else if (modo === 'resultados') paginaResultados();
     else if (modo === 'noticias') paginaNoticias();
     else if (modo === 'noticia') paginaNoticia();
     else if (modo === 'busqueda') paginaBusqueda();
     // Re-render al cambiar idioma (los textos de estados se regeneran)
     document.addEventListener('vants:lang', function () {
       if (modo === 'equipos') paginaEquipos();
+      else if (modo === 'equipo') paginaEquipo();
+      else if (modo === 'jugador') paginaJugador();
+      else if (modo === 'calendario') paginaCalendario();
+      else if (modo === 'resultados') paginaResultados();
       else if (modo === 'noticias') paginaNoticias();
       else if (modo === 'noticia') paginaNoticia();
       else if (modo === 'busqueda') paginaBusqueda();

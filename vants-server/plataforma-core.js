@@ -172,6 +172,82 @@ export function filaTorneo(t, locale) {
     '<span class="sf-rgo"></span></a>';
 }
 
+/* ---------------- FICHAS · EQUIPO Y JUGADOR (F7/F9, fases que faltaban) ---------------- */
+
+/** Slug válido para rutas /api/teams/:slug · /api/players/:slug y fichas ?slug=. */
+export function validarSlug(s) {
+  const v = String(s == null ? '' : s);
+  return /^[a-z0-9-]{2,64}$/.test(v) ? v : null;
+}
+
+/** Proyección pública de un equipo (fila pt_teams → contrato API). */
+export function equipoPublico(t) {
+  if (!t) return null;
+  return {
+    slug: t.slug,
+    nombre: t.nombre,
+    tag: t.tag || null,
+    game: { slug: t.game_slug, nombre: GAME_NAMES[t.game_slug] || String(t.game_slug || '').toUpperCase() },
+    region: t.region || null,
+    logo_url: t.logo_url || null,
+    source: t.source || null,
+    is_demo: !!t.is_demo,
+  };
+}
+
+/** Proyección pública de un jugador de plataforma (pt_players → contrato API).
+ *  SOLO perfil competitivo público: nunca email/auth/contacto (PII prohibida). */
+export function jugadorPublicoPt(p) {
+  if (!p) return null;
+  return {
+    slug: p.slug,
+    nombre: p.nombre,
+    game: p.game_slug ? { slug: p.game_slug, nombre: GAME_NAMES[p.game_slug] || String(p.game_slug).toUpperCase() } : null,
+    team_slug: p.team_slug || null,
+    rol: p.rol || null,
+    pais: p.pais || null,
+    bio: p.bio || null,
+    source: p.source || null,
+    is_demo: !!p.is_demo,
+  };
+}
+
+/** Ficha de equipo ensamblada (equipo + plantilla + partidas) — pura, testeable.
+ *  matches = partidas ya fusionadas (local/visitante) y ordenadas. */
+export function fichaEquipo(team, roster, matches) {
+  const ficha = equipoPublico(team);
+  if (!ficha) return null;
+  ficha.plantilla = (Array.isArray(roster) ? roster : []).map(jugadorPublicoPt);
+  ficha.partidas = Array.isArray(matches) ? matches : [];
+  return ficha;
+}
+
+/** Fila de partido estilo strafe (calendario/resultados), XSS-safe.
+ *  Datos = fila de /api/matches (contrato matchPublico). */
+export function filaMatch(m, locale) {
+  const juego = m.game && m.game.slug ? m.game.slug : 'valorant';
+  const estado = m.estado || 'upcoming';
+  let badge = '';
+  if (estado === 'live') badge = '<span class="sf-badge red">EN VIVO</span>';
+  else if (estado === 'finished') badge = '<span class="sf-badge dim">FINALIZADO</span>';
+  if (m.is_demo) badge += '<span class="sf-badge demo" title="Datos de demostración">DEMO</span>';
+  const score = m.score && m.score.a != null && m.score.b != null
+    ? '<span class="sf-mscore"><b>' + Number(m.score.a) + '</b><i>:</i><b>' + Number(m.score.b) + '</b></span>'
+    : '<span class="sf-mscore sin"><i>' + (estado === 'finished' ? '—' : 'vs') + '</i></span>';
+  const fecha = m.empieza_at
+    ? fechaRango(m.empieza_at, null, locale) + ' · ' + new Date(m.empieza_at).toLocaleTimeString(locale === 'en' ? 'en-GB' : 'es-ES', { hour: '2-digit', minute: '2-digit' })
+    : 'POR ANUNCIAR';
+  const href = m.tournament_slug && /^[a-z0-9-]{2,64}$/.test(String(m.tournament_slug))
+    ? '/torneo?slug=' + encodeURIComponent(m.tournament_slug) + '#ficha'
+    : '/calendario.html';
+  return '<a class="sf-row sf-mrow" href="' + href + '" data-est="' + esc(estado) + '">' +
+    '<span class="sf-rlogo" aria-hidden="true"></span>' +
+    '<span class="sf-rmain"><span class="sf-rname"><b>' + esc((m.equipos && m.equipos.a) || '—') + '</b>' + score + '<b>' + esc((m.equipos && m.equipos.b) || '—') + '</b>' + badge + '</span>' +
+    '<span class="sf-stage">' + esc(GAME_NAMES[juego] || (m.game && m.game.nombre) || 'VALORANT') + (m.best_of ? ' · Bo' + Number(m.best_of) : '') + '</span></span>' +
+    '<span class="sf-rcol c-fechas">' + esc(fecha) + '</span>' +
+    '<span class="sf-rgo"></span></a>';
+}
+
 /* Export ESM (el worker lo importa; la suite de pruebas lo carga con import()) */
 export default {
   ESTADOS_TORNEO, ESTADOS_MATCH,
@@ -179,4 +255,5 @@ export default {
   validarQueryTorneos, validarQueryMatches, validarQueryBusqueda,
   clasificarEstado, ordenarTorneos, ordenarMatches, paginar,
   fechaRango, filaTorneo, GAME_NAMES,
+  validarSlug, equipoPublico, jugadorPublicoPt, fichaEquipo, filaMatch,
 };

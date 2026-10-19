@@ -36,6 +36,31 @@ cd vants-server && npx wrangler dev --port 8787
 2. Navegador real: tabs de estado (URL cambia sin recargar; back/forward restaura), ficha de torneo, búsqueda, cambio de idioma ES/EN, móvil 390px sin overflow horizontal.
 3. Consola sin errores rojos; los avisos "Neon no disponible" con red bloqueada son del entorno local.
 
+## E2E con Playwright (T53 · F13)
+
+Suite: `tests/e2e/plataforma.spec.js` · config: `playwright.config.js`.
+Corre contra PRODUCCIÓN por defecto (`VANTS_E2E_URL` para apuntar a otro entorno),
+con dos proyectos: desktop 1280×800 y móvil 390×844.
+
+```bash
+npm install                 # @playwright/test ya está en devDependencies
+npx playwright test         # 13 tests: rutas, fichas, calendario, búsqueda, i18n, overflow
+npx playwright test --project=chromium-desktop   # solo desktop
+VANTS_E2E_URL=http://localhost:8787 npx playwright test   # contra wrangler dev
+```
+
+Contrato de la suite: las páginas SIEMPRE deben terminar en datos (`sf-mrow`/`pf-card`/
+`pf-ficha`) o en estado honesto (`pf-empty`/`pf-error`) — nunca en blanco. Los datos demo
+deben mostrar su chip DEMO. En CI hay un job `e2e` (retries 2, espera hasta 6 min al deploy).
+
+## Sincronización FACEIT (T53 · F8)
+
+```bash
+npm run sync:faceit:dry    # previsualiza sin escribir (no necesita DATABASE_URL)
+npm run sync:faceit        # UPSERT real en Neon (requiere FACEIT_API_KEY + DATABASE_URL)
+npm run audit:enlaces      # crawler interno (723 enlaces / 0 rotos al cierre de T53)
+```
+
 ## Qué cubre cada criterio
 
 Ver `product/ACCEPTANCE_CRITERIA.md` (AC1–AC41) con la evidencia asociada.

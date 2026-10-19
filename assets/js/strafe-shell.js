@@ -20,6 +20,7 @@
   var NAV = [
     ['index.html', 'Inicio'],
     ['partidos.html', 'Partidas'],
+    ['calendario.html', 'Calendario'],
     ['/es/tournaments/valorant/upcoming/', 'Torneos'],
     ['equipos.html', 'Equipos'],
     ['jugadores.html', 'Jugadores'],

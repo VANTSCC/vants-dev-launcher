@@ -1,0 +1,71 @@
+# ============================================================
+# FACEIT · sincronización del catálogo pt_* (F8)
+# ------------------------------------------------------------
+# Tira del Data API v4 de FACEIT (secrets.FACEIT_API_KEY) y
+# UPSERT torneos/equipos/partidas REALES (source='faceit',
+# is_demo=false) en Neon. Idempotente: puede re-ejecutarse.
+#
+# Honestidad:
+#  · Sin FACEIT_API_KEY → el script avisa y sale 0 (nada falso).
+#  · Sin DATABASE_URL   → sale 2 (rojo: no puede escribir).
+#  · API FACEIT en error → sale 3 (rojo, no se disfraza de verde).
+# Requisito: que neon-migrate haya aplicado 28 y 29 (tablas pt_*).
+# ============================================================
+name: "FACEIT · sync de torneos reales a pt_*"
+
+on:
+  schedule:
+    - cron: '17 5 * * *'   # diario 05:17 UTC (fuera de las horas pico del repo)
+  workflow_dispatch:
+    inputs:
+      juegos:
+        description: "Juegos FACEIT a sincronizar (cs2, valorant…)"
+        required: false
+        default: 'cs2'
+      dry:
+        description: "Solo previsualizar (--dry, no escribe)"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: faceit-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar pg (dependencia del sync)
+        run: npm install --no-audit --no-fund
+
+      - name: Sincronizar catálogo pt_* desde FACEIT
+        env:
+          FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          ARGS="--juegos=${{ github.event.inputs.juegos || 'cs2' }}"
+          if [ "${{ github.event.inputs.dry }}" = "true" ]; then ARGS="$ARGS --dry"; fi
+          node scripts/sincronizar-faceit.mjs $ARGS
+
+      - name: Verificación de lectura (API pública del Worker)
+        if: ${{ github.event.inputs.dry != 'true' }}
+        run: |
+          sleep 75   # la caché de lectura del Worker vive 60 s
+          for ruta in /api/games "/api/tournaments?estado=upcoming&porPagina=5" /api/teams; do
+            code=$(curl -s -o /tmp/r.json -w '%{http_code}' -A "Mozilla/5.0 (compatible; VANTS-CI/1.0)" \
+              "https://vants.vants.workers.dev${ruta}" || true)
+            echo "${ruta} → HTTP ${code}"
+            # El Worker→proxy puede estar limitado por el WAF de Neon (limitación
+            # documentada en TROUBLESHOOTING); aquí SOLO se registra, no falla.
+          done

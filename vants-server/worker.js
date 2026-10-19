@@ -141,7 +141,7 @@ const PLAT_TTL_MS = 60_000;
 /* ==================== PLATAFORMA DE TORNEOS (estilo strafe) ====================
    Rutas de página  : /es|en/tournaments/:juego/:estado/  (index.html + HTMLRewriter)
    API pública (GET): /api/games · /api/tournaments[/slug] · /api/matches
-                      /api/teams · /api/players · /api/articles[/slug] · /api/search
+                      /api/teams[/slug] · /api/players[/slug] · /api/articles[/slug] · /api/search
    Datos: Neon Data API (mismo patrón que el resto). Lógica pura en plataforma-core.js
    (compartida con scripts/test_plataforma.js). Seed demo etiquetado is_demo=true.
    ============================================================ */
@@ -825,7 +825,7 @@ export default {
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo' || url.pathname === '/api/games' || url.pathname === '/api/tournaments' || url.pathname === '/api/matches' || url.pathname === '/api/players' || url.pathname === '/api/articles' || url.pathname === '/api/search' || /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname);
+      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo' || url.pathname === '/api/games' || url.pathname === '/api/tournaments' || url.pathname === '/api/matches' || url.pathname === '/api/players' || url.pathname === '/api/articles' || url.pathname === '/api/search' || /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/teams\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/players\/[a-z0-9-]+$/.test(url.pathname);
       const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/inscribir' || url.pathname === '/api/torneos/gestionar';
       if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
@@ -1631,7 +1631,8 @@ export default {
     const API_LECTURA = url.pathname === '/api/games' || url.pathname === '/api/tournaments' ||
       url.pathname === '/api/matches' || url.pathname === '/api/teams' || url.pathname === '/api/players' ||
       url.pathname === '/api/articles' || url.pathname === '/api/search' ||
-      /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname);
+      /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname) ||
+      /^\/api\/teams\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/players\/[a-z0-9-]+$/.test(url.pathname);
     if (API_LECTURA) {
       if (method !== 'GET') {
         return json({ ok: false, error: { message: 'Solo GET' } }, 405, { Allow: 'GET' });
@@ -1715,12 +1716,54 @@ export default {
             if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
             return { ok: true, data: r.body.map((t) => ({ slug: t.slug, nombre: t.nombre, tag: t.tag || null, game: t.game_slug || null, region: t.region || null, logo_url: t.logo_url || null, is_demo: !!t.is_demo })) };
           });
+        } else if (/^\/api\/teams\/[a-z0-9-]+$/.test(url.pathname)) {
+          // F7/F9 · ficha de equipo: equipo + plantilla (pt_players) + partidas del equipo
+          const slug = CORE.validarSlug(url.pathname.split('/').pop());
+          if (!slug) { payload = { ok: false, error: { message: 'Equipo no encontrado' } }; }
+          else payload = await platLectura('equipo:' + slug, async () => {
+            const r = await proxyConsulta('pt_teams', { 'slug.eq': slug, 'limit': 1 });
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
+            if (!r.body.length) return { ok: false, error: { message: 'Equipo no encontrado' } };
+            const team = r.body[0];
+            const [rost, mA, mB] = await Promise.all([
+              proxyConsulta('pt_players', { 'team_slug.eq': slug, 'order': 'nombre.asc', 'limit': 30 }),
+              proxyConsulta('pt_matches', { 'equipo_a.eq': team.nombre, 'order': 'empieza_at.desc.nullslast', 'limit': 20 }),
+              proxyConsulta('pt_matches', { 'equipo_b.eq': team.nombre, 'order': 'empieza_at.desc.nullslast', 'limit': 20 }),
+            ]);
+            const vistas = new Set();
+            const partidas = [];
+            for (const lista of [mA.body || [], mB.body || []]) {
+              for (const m of lista) {
+                const k = String(m.external_id || m.id);
+                if (vistas.has(k)) continue;
+                vistas.add(k);
+                partidas.push(matchPublico(m));
+              }
+            }
+            const ficha = CORE.fichaEquipo(team, rost.ok ? rost.body : [], CORE.ordenarMatches(partidas, 'finished'));
+            return ficha ? { ok: true, data: ficha } : { ok: false, error: { message: 'Equipo no encontrado' } };
+          });
         } else if (url.pathname === '/api/players') {
           payload = await platLectura('players:' + cacheKey, async () => {
             const pag = CORE.intDe(q.get('pag'), 1, 1, 500);
             const r = await proxyConsulta('players', { 'order': 'rating.desc.nullslast', 'limit': 50, 'offset': (pag - 1) * 50 }, true);
             if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
             return { ok: true, data: { pag, items: r.body.map(playerPublico), total: r.total != null ? r.total : r.body.length } };
+          });
+        } else if (/^\/api\/players\/[a-z0-9-]+$/.test(url.pathname)) {
+          // F7/F9 · ficha de jugador de plataforma (pt_players; la lista /api/players sigue leyendo perfiles VANTS)
+          const slug = CORE.validarSlug(url.pathname.split('/').pop());
+          if (!slug) { payload = { ok: false, error: { message: 'Jugador no encontrado' } }; }
+          else payload = await platLectura('jugador:' + slug, async () => {
+            const r = await proxyConsulta('pt_players', { 'slug.eq': slug, 'limit': 1 });
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
+            if (!r.body.length) return { ok: false, error: { message: 'Jugador no encontrado' } };
+            const jug = CORE.jugadorPublicoPt(r.body[0]);
+            if (jug && jug.team_slug) {
+              const eq = await proxyConsulta('pt_teams', { 'slug.eq': jug.team_slug, 'limit': 1 });
+              jug.equipo = eq.ok && eq.body.length ? CORE.equipoPublico(eq.body[0]) : null;
+            }
+            return { ok: true, data: jug };
           });
         } else if (url.pathname === '/api/articles') {
           if (/^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname)) {

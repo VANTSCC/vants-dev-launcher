@@ -62,6 +62,45 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
 - **Consecuencias**: cada fase que termine en push incluye smoke en producción.
 - Fecha: 2026-10-19 (formaliza método T50/T51).
 
+## D8 · Fichas de equipo/jugador por query `?slug=` sobre páginas propias (patrón de la casa)
+- **Decisión**: las fichas nuevas (T53) viven en páginas estáticas + `?slug=` leído por
+  `plataforma.js` (`/equipo-ficha.html?slug=…`, `/jugador.html?slug=…`), igual que
+  `/torneo?slug=` y `/noticia?slug=`. Las tarjetas de `equipos.html` y la búsqueda enlazan
+  a las fichas; el nav añade "Calendario" (`calendario.html`) con pestañas cruzadas a
+  `resultados.html`.
+- **Motivo**: el Worker ya usa este patrón para fichas (plan C verificado en producción),
+  y las rutas limpias `/es/teams/:slug` exigirían más HTMLRewriter sin beneficio real
+  (los datos se leen client-side del proxy; el SEO de fichas dinámicas queda genérico
+  en ambos casos).
+- **Consecuencias**: cero rutas nuevas de Worker para fichas; `equipo.html` (VANTS DE 5)
+  queda intacto y separado de las fichas de plataforma.
+- Fecha: 2026-10-20.
+
+## D9 · Datos REALES de FACEIT vía Data API v4 oficial + sync programado (sin scraping)
+- **Decisión**: `scripts/proveedor-datos.mjs` define la interfaz `EsportsDataProvider`
+  con dos adaptadores: `demo` (fixtures etiquetadas is_demo=true, para desarrollo/QA) y
+  `faceit` (Data API v4 `open.faceit.com` con FACEIT_API_KEY, is_demo=false). El job
+  `.github/workflows/faceit-sync.yml` (diario 05:17 UTC + manual) ejecuta
+  `scripts/sincronizar-faceit.mjs` que hace UPSERT idempotente en pt_*
+  (ON CONFLICT source+external_id). Jugadores FACEIT: `[]` honesto (v4 no expone
+  rosters de championships sin scopes de organizador — NO se inventan plantillas).
+- **Motivo**: F8 exigía fuente real; la API oficial es legal, estable y la key ya vive
+  en secrets. Cualquier error HTTP LANZA y el sync sale 3 (rojo) — nunca éxito falso.
+- **Consecuencias**: los torneos FACEIT aparecen junto a los DEMO (claramente separados
+  por chips); el catálogo pt_* se mantiene fresco sin intervención manual.
+- Fecha: 2026-10-20.
+
+## D10 · pt_players como catálogo público SEPARADO de la tabla `players` real
+- **Decisión**: migra 29 crea `pt_players` (slug, rol, país, team_slug soft-ref) SOLO con
+  perfil competitivo público. La tabla `players` (cuentas/auth del dueño) sigue siendo la
+  fuente de `/api/players` (lista) y NO se expone con PII.
+- **Motivo**: la ficha de jugador estilo strafe necesita catálogo público con slug; las
+  cuentas reales tienen PII y ciclo de vida distinto. Dos tablas, dos contratos, cero
+  riesgo de fuga.
+- **Consecuencias**: `/api/players/:slug` lee pt_players; `/api/players` (lista) lee
+  players con whitelist. Documentado en API_SPEC.
+- Fecha: 2026-10-20.
+
 ## Decisiones heredadas (resumen de sesiones previas)
 - Electron (NUNCA Tauri) para el HUB/launcher, con electron-updater (Fase 5 del plan VANTS).
 - Borrado (no ocultado) de perfiles duplicados; única identidad del dueño conservada.

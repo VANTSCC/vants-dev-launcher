@@ -118,3 +118,60 @@
   .pf-art { flex-direction: column; }
   .pf-art-go { display: none; }
 }
+
+/* ---------- F9 · fichas de equipo/jugador y partidas (T53) ---------- */
+.pf-ficha { background: #181818; border: 1px solid #3c3c3c; border-radius: 10px; padding: 18px 16px; }
+.pf-ficha-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.pf-ficha-head h2 { margin: 0; font: 800 24px var(--body, 'Barlow Semi Condensed', sans-serif); color: #f2f2f2; display: flex; align-items: center; gap: 8px; }
+.pf-ficha-h { margin: 18px 0 8px; font: 800 11px var(--mono, monospace); letter-spacing: .14em; color: #d2dc59; }
+.pf-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 8px; flex: 0 0 auto;
+  background: #262626; border: 1px solid #3c3c3c; color: #d2dc59;
+  font: 800 12px var(--mono, monospace); letter-spacing: .06em;
+}
+.pf-avatar.big { width: 56px; height: 56px; font-size: 16px; border-radius: 12px; }
+.pf-roster { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.pf-player {
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  background: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 10px;
+  color: #e8ecef; text-decoration: none;
+}
+.pf-player:hover, .pf-player:focus-visible { border-color: #d2dc59; }
+.pf-player-n b { display: block; font: 700 14px var(--body, 'Barlow Semi Condensed', sans-serif); color: #f2f2f2; }
+.pf-player-n i { font: 600 11px var(--mono, monospace); color: #666; font-style: normal; letter-spacing: .08em; }
+.pf-bio { color: #b0b6bd; font: 500 14px/1.5 var(--body, 'Barlow Semi Condensed', sans-serif); margin: 8px 0 0; }
+.pf-link-card {
+  display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 10px;
+  color: #e8ecef; text-decoration: none; font: 700 14px var(--body, 'Barlow Semi Condensed', sans-serif);
+}
+.pf-link-card:hover, .pf-link-card:focus-visible { border-color: #d2dc59; }
+.pf-link-card i { font: 600 11px var(--mono, monospace); color: #666; font-style: normal; letter-spacing: .1em; }
+.pf-volver { color: #93939d; text-decoration: none; font: 700 13px var(--body, 'Barlow Semi Condensed', sans-serif); }
+.pf-volver:hover, .pf-volver:focus-visible { color: #d2dc59; }
+
+/* fila de partido (calendario/resultados) */
+.sf-mrow { grid-template-columns: 44px minmax(0, 1fr) 170px 16px; }
+.sf-mrow .sf-rname { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sf-mscore { display: inline-flex; align-items: center; gap: 4px; background: #141414; border: 1px solid #3c3c3c; border-radius: 6px; padding: 2px 8px; }
+.sf-mscore b { font: 800 13px var(--mono, monospace); color: #f2f2f2; }
+.sf-mscore i { font: 700 11px var(--mono, monospace); color: #666; font-style: normal; }
+.sf-mscore.sin b { display: none; }
+.sf-mscore.sin { min-width: 34px; justify-content: center; }
+
+/* pestañas cruzadas calendario ⇄ resultados */
+.pf-subtabs { display: flex; gap: 8px; margin: 0 0 12px; padding: 0 0 4px; }
+.pf-subtabs a {
+  padding: 8px 16px; border-radius: 9999px; text-decoration: none;
+  background: #1e1e1e; border: 1px solid #3c3c3c; color: #e8ecef;
+  font: 700 12px var(--body, 'Barlow Semi Condensed', sans-serif); letter-spacing: .08em;
+}
+.pf-subtabs a:hover, .pf-subtabs a:focus-visible { border-color: #d2dc59; color: #d2dc59; }
+.pf-subtabs a.on { background: #d2dc59; border-color: #d2dc59; color: #101010; }
+
+@media (max-width: 640px) {
+  .sf-mrow { grid-template-columns: 34px minmax(0, 1fr) 16px; }
+  .sf-mrow .sf-rcol { display: none; }
+  .pf-roster { grid-template-columns: 1fr; }
+}

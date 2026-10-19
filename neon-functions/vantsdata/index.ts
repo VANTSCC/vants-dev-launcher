@@ -54,13 +54,14 @@ const TABLES = new Set([
   'tournament_matches',
   'events',
   'profiles',
-  // Plataforma de torneos (migración 28): catálogo público estilo strafe.
+  // Plataforma de torneos (migraciones 28/29): catálogo público estilo strafe.
   // Solo lectura anónima; escrituras por RLS del OWNER con JWT Auth0.
   'pt_games',
   'pt_torneos',
   'pt_teams',
   'pt_matches',
   'pt_articulos',
+  'pt_players',
 ]);
 
 // Embeds PostgREST permitidos: "alias:tabla(columnas)".

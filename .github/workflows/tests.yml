@@ -98,7 +98,7 @@ jobs:
         run: node ../../scripts/test_llm_agente.js
 
   plataforma:
-    name: Plataforma de torneos (47 asserts unit + integración)
+    name: Plataforma de torneos (90 asserts unit + integración)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,5 +107,37 @@ jobs:
         with:
           node-version: 20
 
-      - name: Lógica pura compartida worker↔tests (validación, orden, paginación, fechas, XSS)
+      - name: Lógica pura compartida worker↔tests (validación, orden, paginación, fechas, XSS, fichas, proveedores)
         run: node scripts/test_plataforma.js
+
+  e2e:
+    name: E2E Playwright · plataforma en producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Dependencias (@playwright/test)
+        run: npm install --no-audit --no-fund
+
+      - name: Navegador Chromium (caché incluida en el runner)
+        run: npx playwright install chromium --with-deps
+
+      - name: Esperar al despliegue del Worker (hasta 6 min, sin bloquear)
+        run: |
+          for i in $(seq 1 36); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 (compatible; VANTS-CI/1.0)" https://vants.vants.workers.dev/calendario.html || true)
+            echo "intento $i: /calendario.html → HTTP $code"
+            [ "$code" = "200" ] && echo "Despliegue con las páginas T53 visible" && exit 0
+            sleep 10
+          done
+          echo "AVISO: /calendario.html aún no responde 200 (deploy en cola). Se prueba el estado actual de producción."
+
+      - name: Suite E2E (desktop + móvil 390)
+        env:
+          CI: "true"
+        run: npx playwright test

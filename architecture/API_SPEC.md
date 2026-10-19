@@ -43,9 +43,24 @@ Solo juegos `activo=true`, ordenados por `orden`.
 ## GET /api/teams?juego=valorant&pag=1
 - Items: `{ slug, nombre, tag, game, region, logo_url, is_demo }`.
 
+## GET /api/teams/:slug (T53 · F7/F9)
+- Ficha completa: equipo + `plantilla[]` (pt_players por team_slug) + `partidas[]`
+  (pt_matches donde el equipo es local o visitante, dedupe por external_id, ordenadas
+  por fecha desc).
+- Contrato: `{ slug, nombre, tag, game:{slug,nombre}, region, logo_url, source, is_demo,
+  plantilla:[{slug,nombre,game,team_slug,rol,pais,source,is_demo}], partidas:[contrato match] }`.
+- 404 `{ok:false}` si el slug no existe; 400 si el slug no es válido (`validarSlug`).
+
 ## GET /api/players?pag=1
 - Sobre `players` existente (solo columnas públicas sin PII):
   `{ id, nombre/display, game?, rating, tipo, role }` — SIN email ni auth0_sub.
+
+## GET /api/players/:slug (T53 · F7/F9)
+- Ficha de jugador de PLATAFORMA (tabla `pt_players`, migra 29): `{ slug, nombre, game,
+  team_slug, rol, pais, bio, source, is_demo, equipo:{...}|null }`.
+- NUNCA expone email/auth/contacto (proyección `jugadorPublicoPt`, testeada).
+- La lista `/api/players` (sin :slug) sigue leyendo perfiles VANTS — contratos distintos
+  a propósito: pt_players = catálogo público de la plataforma; players = cuentas reales.
 
 ## GET /api/articles?pag=1&juego=…
 - `estado='published'` únicamente; orden `publicado_at DESC`.
