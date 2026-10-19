@@ -12,5 +12,7 @@ contextBridge.exposeInMainWorld('vantsHub', {
   abrir:       (url) => ipcRenderer.invoke('hub:abrir', url),
   info:        () => ipcRenderer.invoke('hub:info'),
   ventana:     (acc) => ipcRenderer.invoke('hub:ventana', acc),
-  onEstado:    (cb) => ipcRenderer.on('hub:estado', (e, d) => cb(d))
+  onEstado:    (cb) => ipcRenderer.on('hub:estado', (e, d) => cb(d)),
+  onActualizacion: (cb) => ipcRenderer.on('hub:update', (e, d) => cb(d)),
+  actualizarInstalar: () => ipcRenderer.invoke('hub:actualizar-instalar')
 });

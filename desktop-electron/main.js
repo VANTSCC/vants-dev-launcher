@@ -44,6 +44,48 @@ let procesosTimer = null;
 let juegoActual = null;      // nombre del juego en ejecución
 let estadoPresencia = 'online'; // online | jugando | invisible
 
+// ============================================================
+// AUTO-ACTUALIZACIÓN (electron-updater + GitHub Releases)
+// ------------------------------------------------------------
+// Fase 5 · El HUB se mantiene solo: al arrancar (y cada 6 h)
+// consulta el último Release del repo oficial; si hay versión
+// nueva la DESCARGA en silencio en segundo plano y la instala
+// al cerrar la app (autoInstallOnAppQuit) — el usuario ya no
+// descarga el instalador a mano. El renderer solo recibe
+// eventos (hub:update) para mostrar el aviso; puede pedir
+// "Reiniciar y actualizar" con hub:actualizar-instalar.
+// ============================================================
+let autoUpdater = null;
+function iniciarAutoActualizacion() {
+  if (!app.isPackaged) { log('auto-update: omitido en dev'); return; }
+  try { autoUpdater = require('electron-updater').autoUpdater; }
+  catch (e) { log('auto-update no disponible:', e.message); return; }
+
+  autoUpdater.autoDownload = true;           // descarga en segundo plano
+  autoUpdater.autoInstallOnAppQuit = true;   // instala al cerrar: cero fricción
+  autoUpdater.allowPrerelease = false;       // solo releases estables
+  try { autoUpdater.logger = { info: log, warn: log, error: (...a) => log('upd:', ...a) }; } catch (e) {}
+
+  const aviso = (tipo, datos) => {
+    log('auto-update:', tipo, datos || '');
+    if (win && !win.isDestroyed()) win.webContents.send('hub:update', Object.assign({ tipo }, datos || {}));
+  };
+  autoUpdater.on('checking-for-update', () => aviso('chequeando'));
+  autoUpdater.on('update-available', (i) => aviso('disponible', { version: i && i.version }));
+  autoUpdater.on('update-not-available', () => aviso('sin-novedad'));
+  autoUpdater.on('download-progress', (p) => aviso('progreso', {
+    pct: Math.round(p.percent || 0),
+    mb: ((p.transferred || 0) / 1048576).toFixed(1),
+    total: ((p.total || 0) / 1048576).toFixed(1)
+  }));
+  autoUpdater.on('update-downloaded', (i) => aviso('lista', { version: i && i.version }));
+  autoUpdater.on('error', (e) => aviso('error', { message: (e && e.message) || 'fallo del actualizador' }));
+
+  const chequear = () => { try { autoUpdater.checkForUpdates().catch((e) => log('check:', e.message)); } catch (e) { log('check:', e.message); } };
+  setTimeout(chequear, 8000);                     // primer chequeo al arrancar
+  setInterval(chequear, 6 * 60 * 60 * 1000);      // y cada 6 horas
+}
+
 const SESION_FILE = () => path.join(app.getPath('userData'), 'vants-session.bin');
 
 // ============================================================
@@ -476,6 +518,13 @@ function ipcRegistrar() {
   });
   ipcMain.handle('hub:abrir', (e, url) => shell.openExternal(url));
   ipcMain.handle('hub:info', () => ({ version: app.getVersion(), plataforma: process.platform, juego: juegoActual }));
+  ipcMain.handle('hub:actualizar-instalar', () => {
+    try {
+      if (!autoUpdater) return { ok: false, error: 'sin actualizador' };
+      autoUpdater.quitAndInstall(true, true); // instala en silencio y reabre
+      return { ok: true };
+    } catch (err) { return { ok: false, error: err.message }; }
+  });
   ipcMain.handle('hub:ventana', (e, acc) => {
     try {
       if (!win || win.isDestroyed()) return { ok: false };
@@ -523,6 +572,7 @@ if (!gotLock) { app.quit(); } else {
     ipcRegistrar();
     crearVentana();
     crearTray();
+    iniciarAutoActualizacion();
     sesion = cargarSesion();
     if (sesion) { reiniciarLatido(); }
     reiniciarProcesos();

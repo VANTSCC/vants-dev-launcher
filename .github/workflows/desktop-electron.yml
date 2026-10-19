@@ -2,7 +2,9 @@ name: "VANTS HUB · instalador Windows (Electron)"
 
 # Compila el instalador NSIS de VANTS HUB (Electron) en un runner
 # Windows real y lo publica en GitHub Releases al crear un tag v*.
-# El dueño (y cualquier jugador) lo descarga desde la web: /descargar
+# En tags publica con electron-builder (--publish always): sube el .exe
+# + latest.yml + blockmap — pieza que consume electron-updater para las
+# ACTUALIZACIONES AUTOMÁTICAS del HUB (el usuario no reinstala a mano).
 
 on:
   push:
@@ -30,7 +32,13 @@ jobs:
         working-directory: desktop-electron
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win nsis --x64 --publish never
+        shell: pwsh
+        run: |
+          if ("$env:GITHUB_REF" -like 'refs/tags/v*') {
+            npx electron-builder --win nsis --x64 --publish always
+          } else {
+            npx electron-builder --win nsis --x64 --publish never
+          }
 
       - name: Subir artefacto del build
         uses: actions/upload-artifact@v4
