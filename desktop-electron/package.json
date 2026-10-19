@@ -1,0 +1,52 @@
+{
+  "name": "vants-hub",
+  "productName": "VANTS Hub",
+  "version": "2.2.0",
+  "description": "VANTS HUB · Launcher oficial de VANTS para Windows: tu cuenta, partidos, bracket, líderes, en vivo y tu biblioteca de juegos en un solo cajón.",
+  "author": "VANTS <contact@vants.app>",
+  "homepage": "https://vants.vants.workers.dev",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "gg.vants.hub",
+    "productName": "VANTS Hub",
+    "copyright": "Copyright © 2026 VANTS",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "VANTS-Hub-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "VANTS Hub",
+      "uninstallDisplayName": "VANTS Hub ${version}"
+    }
+  }
+}
