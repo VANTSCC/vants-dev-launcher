@@ -10,7 +10,8 @@
 // Interfaz (todas async, nunca lanzan — devuelven { ok } o fila/null):
 //   tipo, elegible(sub), encolar(datos), ticket(t), salir(t),
 //   posicion(t), emparejar(game,mode,region), match(id),
-//   participa(id,sub), reportar(id,sub,a,b), encolados(), cerrar()
+//   participa(id,sub), reportar(id,sub,a,b), verificar(id),
+//   historial(sub,limite), encolados(), cerrar()
 // ============================================
 'use strict';
 
@@ -22,6 +23,8 @@ const TICKET_ESTADOS = ['queued', 'matched', 'cancelled', 'expired'];
 function crearStoreMemoria(opts = {}) {
   const elegibles = opts.elegibles instanceof Map ? opts.elegibles : new Map(Object.entries(opts.elegibles || {}));
   const ahora = opts.ahora || (() => new Date());
+  // ratings simula players.rating (escala 0.50–1.60); default placement 0.95.
+  const ratings = opts.ratings instanceof Map ? opts.ratings : new Map(Object.entries(opts.ratings || {}));
   const tickets = new Map(); // ticket -> fila
   const matches = new Map(); // id -> { match, players: [] }
   const activosPorJugador = new Map(); // `sub|game` -> ticket (índice parcial)
@@ -135,6 +138,60 @@ function crearStoreMemoria(opts = {}) {
       m.match.report_at = ahora().toISOString();
       return { ok: true };
     },
+    // Espejo en memoria de mm_aplicar_resultado() (migración 22):
+    // win +0.015 / draw +0.002 / loss -0.012, clamp [0.50,1.60],
+    // placement 0.95; RR entero = round(rating*100). Idempotente.
+    async verificar(id) {
+      const m = matches.get(id);
+      if (!m) return { ok: false, error: 'no_encontrado' };
+      if (m.match.status === 'verificado') return { ok: true, ya: true };
+      if (m.match.status !== 'reportado') return { ok: false, error: 'estado_invalido' };
+      const a = m.match.score_a;
+      const b = m.match.score_b;
+      let aplicados = 0;
+      let omitidos = 0;
+      for (const p of m.players) {
+        if (!elegibles.has(p.sub)) { omitidos += 1; continue; }
+        const res = p.team === 1
+          ? (a > b ? 'win' : a < b ? 'loss' : 'draw')
+          : (b > a ? 'win' : b < a ? 'loss' : 'draw');
+        const antes = ratings.has(p.sub) ? ratings.get(p.sub) : 0.95;
+        const desp = Math.max(0.50, Math.min(1.60, antes + (res === 'win' ? 0.015 : res === 'draw' ? 0.002 : -0.012)));
+        ratings.set(p.sub, desp);
+        p.rr_before = Math.round(antes * 100);
+        p.rr_after = Math.round(desp * 100);
+        aplicados += 1;
+      }
+      m.match.status = 'verificado';
+      m.match.verify_source = 'auto';
+      m.match.verify_payload = { aplicados, omitidos };
+      return { ok: true, aplicados, omitidos };
+    },
+    async historial(sub, limite = 50) {
+      const out = [];
+      for (const [id, m] of matches) {
+        const p = m.players.find((x) => x.sub === sub);
+        if (!p) continue;
+        const delta = p.rr_after != null && p.rr_before != null ? p.rr_after - p.rr_before : null;
+        out.push({
+          match_id: id,
+          game: m.match.game,
+          mode: m.match.mode,
+          region: m.match.region,
+          status: m.match.status,
+          score_a: m.match.score_a,
+          score_b: m.match.score_b,
+          team: p.team,
+          rr_before: p.rr_before != null ? p.rr_before : null,
+          rr_after: p.rr_after != null ? p.rr_after : null,
+          rr_delta: delta,
+          resultado: delta == null ? null : delta > 0 ? 'win' : delta < 0 ? 'loss' : 'draw',
+          played_at: m.match.created_at,
+        });
+      }
+      out.sort((x, y) => (x.played_at < y.played_at ? 1 : -1));
+      return out.slice(0, Math.max(1, Math.min(limite, 100)));
+    },
     async encolados() {
       let n = 0;
       for (const f of tickets.values()) if (esViva(f)) n += 1;
@@ -158,23 +215,23 @@ function crearStorePg(pool) {
     async encolar(d) {
       const client = await pool.connect();
       try {
-        // El índice anti-duplicados es PARCIAL (WHERE status='queued'):
-        // ON CONFLICT con predicado de índice lo toma tal cual.
-        const ins = await client.query(
-          `INSERT INTO mm_tickets (ticket, sub, game, mode, region, expires_at)
-           VALUES ($1, $2, $3, $4, $5, $6::timestamptz)
-           ON CONFLICT (sub, game) WHERE status = 'queued' DO NOTHING
-           RETURNING ticket`,
-          [d.ticket, d.sub, d.game, d.mode, d.region, new Date(Date.now() + d.ttl_ms).toISOString()],
+        // Fuente única: mm_encolar (migración 23) — reutiliza el ticket vivo,
+        // valida elegibilidad y evita duplicados por índice parcial.
+        // Sin request.jwt.claim.sub (conexión directa) el guard de identidad no aplica.
+        const r = await client.query(
+          'SELECT mm_encolar($1, $2, $3, $4, $5) AS res',
+          [d.sub, d.game, d.mode, d.region, Math.round(d.ttl_ms / 1000)],
         );
-        if (ins.rowCount > 0) return { ok: true, reutilizado: false, ticket: d.ticket };
-        const dup = await client.query(
-          `SELECT ticket FROM mm_tickets
-           WHERE sub = $1 AND game = $2 AND status = 'queued' LIMIT 1`,
-          [d.sub, d.game],
-        );
-        if (dup.rowCount > 0) return { ok: true, reutilizado: true, ticket: dup.rows[0].ticket };
-        return { ok: false, error: 'no_se_pudo_encolar' };
+        const res = r.rows[0] && r.rows[0].res;
+        if (!res || res.ok !== true) {
+          return { ok: false, error: (res && res.error) || 'no_se_pudo_encolar' };
+        }
+        return {
+          ok: true,
+          reutilizado: !!res.reutilizado,
+          ticket: res.ticket,
+          expires_at: res.expires_at || null,
+        };
       } finally {
         client.release();
       }
@@ -234,6 +291,18 @@ function crearStorePg(pool) {
       if (r.rowCount > 0) return { ok: true };
       const ex = await pool.query('SELECT 1 FROM mm_matches WHERE id = $1', [id]);
       return ex.rowCount > 0 ? { ok: false, error: 'ya_reportado' } : { ok: false, error: 'no_encontrado' };
+    },
+    // SELECT mm_aplicar_resultado (migración 22) — atómico e idempotente.
+    async verificar(id) {
+      const r = await pool.query('SELECT mm_aplicar_resultado($1) AS res', [id]);
+      return r.rows[0] ? r.rows[0].res : { ok: false, error: 'no_encontrado' };
+    },
+    async historial(sub, limite = 50) {
+      const r = await pool.query(
+        'SELECT * FROM mm_historial WHERE sub = $1 LIMIT $2',
+        [sub, Math.max(1, Math.min(limite, 100))],
+      );
+      return r.rows;
     },
     async encolados() {
       const r = await pool.query(

@@ -58,6 +58,7 @@
         <nav id="nav">
           <button class="nav-it activa" data-cajon="inicio"><svg class="ic"><use href="#i-home"/></svg><span>INICIO</span></button>
           <button class="nav-it" data-cajon="cuenta"><svg class="ic"><use href="#i-user"/></svg><span>MI CUENTA</span></button>
+          <button class="nav-it" data-cajon="buscar"><svg class="ic"><use href="#i-zap"/></svg><span>BUSCAR PARTIDA</span><b class="nav-badge oculto" id="nav-buscar-n">0</b></button>
           <button class="nav-it" data-cajon="partidos"><svg class="ic"><use href="#i-target"/></svg><span>PARTIDOS</span></button>
           <button class="nav-it" data-cajon="bracket"><svg class="ic"><use href="#i-trophy"/></svg><span>BRACKET</span></button>
           <button class="nav-it" data-cajon="lideres"><svg class="ic"><use href="#i-chart"/></svg><span>LÍDERES</span></button>
@@ -291,6 +292,63 @@
           </div>
         </section>
 
+        <!-- ── BUSCAR PARTIDA (Fase 4/5 · matchmaking real) ── -->
+        <section class="cajon" id="cajon-buscar">
+          <div class="panel">
+            <div class="panel-head">
+              <h3><svg class="ic"><use href="#i-zap"/></svg> BUSCAR PARTIDA</h3>
+              <span class="dim mono" id="mm-estado">—</span>
+            </div>
+            <div class="mm-form">
+              <label>JUEGO
+                <select id="mm-juego">
+                  <option value="valorant">VALORANT</option>
+                  <option value="cs2">Counter-Strike 2</option>
+                </select>
+              </label>
+              <label>MODO
+                <select id="mm-modo">
+                  <option value="duo">DUO · 1v1</option>
+                  <option value="team">TEAM · 5v5</option>
+                </select>
+              </label>
+              <label>REGIÓN
+                <select id="mm-region">
+                  <option value="EU">EU</option>
+                  <option value="NA">NA</option>
+                  <option value="SA">SA</option>
+                </select>
+              </label>
+              <div class="mm-botones">
+                <button class="btn primario" id="mm-entrar">ENTRAR EN COLA</button>
+                <button class="btn fantasma oculto" id="mm-salir">SALIR DE LA COLA</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel oculto" id="mm-panel-match">
+            <div class="panel-head"><h3>⚔️ PARTIDA ENCONTRADA</h3><span class="dim mono" id="mm-match-id"></span></div>
+            <div id="mm-match" class="mm-match"></div>
+            <div class="mm-form">
+              <button class="btn fantasma" id="mm-lanzar">ABRIR EL JUEGO</button>
+            </div>
+            <div class="mm-reportar oculto" id="mm-reportar">
+              <b>Reportar resultado</b>
+              <div class="mm-form">
+                <label>Equipo 1 <input id="mm-sa" type="number" min="0" value="0" /></label>
+                <label>Equipo 2 <input id="mm-sb" type="number" min="0" value="0" /></label>
+                <div class="mm-botones"><button class="btn primario" id="mm-enviar">REPORTAR</button></div>
+              </div>
+              <div class="dim" id="mm-reportar-estado"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>📜 TU HISTORIAL RR</h3><button class="ver-todo mono" id="mm-historial-refrescar">REFRESCAR</button></div>
+            <div id="mm-historial" class="tabla"><div class="dim">sin partidas todavía</div></div>
+          </div>
+        </section>
+
       </main>
 
       <!-- ═══════════ RAIL DERECHO · ACCESOS RÁPIDOS ═══════════ -->
@@ -328,5 +386,6 @@
   </div>
 
   <script src="app.js"></script>
+  <script src="mm.js"></script>
 </body>
 </html>

@@ -24,7 +24,7 @@ const { crearAuthVerifier } = require('./auth');
 const { crearStoreMemoria, crearStorePg } = require('./store');
 
 const APP = 'matchmaking-service';
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 const PORT = process.env.PORT || 8081;
 const ALLOW_ORIGIN = process.env.ALLOW_ORIGIN || 'https://vants.vants.workers.dev';
 const TICKET_TTL_MS = 10 * 60 * 1000; // ticket caduca en 10 min
@@ -204,7 +204,35 @@ function construir(opts = {}) {
       const code = res.error === 'ya_reportado' ? 409 : 404;
       return reply.code(code).send({ ok: false, error: { message: res.error === 'ya_reportado' ? 'resultado ya reportado' : 'partida no encontrada' } });
     }
-    return { ok: true, data: { match_id: req.params.id, status: 'reportado', score_a: a, score_b: b } };
+    // Aplicar RR al instante (migración 22, idempotente). Si falla, el match
+    // queda 'reportado' y se recupera re-llamando al reporte con 409 → verificar.
+    let ver = null;
+    try {
+      ver = await store.verificar(req.params.id);
+    } catch (e) {
+      req.log.warn({ err: e.code || e.message }, 'verificación diferida (match queda reportado)');
+    }
+    return {
+      ok: true,
+      data: {
+        match_id: req.params.id,
+        status: ver && ver.ok ? 'verificado' : 'reportado',
+        score_a: a,
+        score_b: b,
+        rr: ver && ver.ok
+          ? { aplicados: ver.aplicados != null ? ver.aplicados : null, omitidos: ver.omitidos != null ? ver.omitidos : null, ya: !!ver.ya }
+          : null,
+      },
+    };
+  }));
+
+  // Historial RR propio: matches en los que participé, con rr_before/after
+  // (vista mm_historial, migración 22). ?limite=1..100 (default 50).
+  app.get('/api/v1/matchmaking/history', guard(async (req, reply) => {
+    if (!(await requireAuth(req, reply))) return;
+    const limite = parseInt((req.query && req.query.limite) || '50', 10) || 50;
+    const rows = await store.historial(req.sub, limite);
+    return { ok: true, data: rows };
   }));
 
   // ¿Quién soy? (diagnóstico de sesión para el hub/launcher)

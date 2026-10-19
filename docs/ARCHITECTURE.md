@@ -140,8 +140,8 @@ temporada y fecha (auditable y corregible).
 | 1 — Cinemática | Portada, intro, efectos, transiciones, móvil; archivos actuales intactos | ✅ `vants-cinematic.*` |
 | 2 — Frontend modular | api-client, sesión, componentes compartidos, manejo de errores | ✅ `api-client.js` · `session.js` · `components.js` |
 | 3 — Backend y datos | Auth/permisos, esquemas Neon, rankings, torneos | ✅ base sólida |
-| 4 — Competición real | Matchmaking, resultados verificables, historial RR, dedupe | 🔜 (FACEIT ya aplica dedupe por `faceit_match_id`) |
-| 5 — Launcher | VANTS HUB Windows: presencia, invitaciones, apertura de juegos | ✅ 2.3.0 |
+| 4 — Competición real | Matchmaking, resultados verificables, historial RR, dedupe | ✅ migraciones 21–23 (cola + emparejamiento atómico + reporte → RR automático + historial; service v0.5.0 con 51 tests; HUB con BUSCAR PARTIDA) |
+| 5 — Launcher | VANTS HUB Windows: presencia, matchmaking en el HUB, apertura de juegos | ✅ 2.3.0 + cajón BUSCAR PARTIDA (mm.js); invitaciones 🔜 |
 | 6 — Operación profesional | Monitorización, auditoría, pruebas automáticas, despliegues controlados | 🔜 |
 
 Tras cada fase: verificar que Auth0, torneos, ranking y los scripts conectados

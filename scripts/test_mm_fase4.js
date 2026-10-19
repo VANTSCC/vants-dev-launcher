@@ -79,7 +79,7 @@ const encolar = (sub, game, mode, region = 'EU') =>
     const r = await req('GET', '/healthz', { sinToken: true });
     ok(r.statusCode === 200 && r.json().ok === true, 'healthz 200 ok');
     ok(r.json().store === 'memoria', 'healthz reporta store memoria');
-    ok(r.json().version === '0.4.0', 'healthz versión 0.4.0');
+    ok(r.json().version === '0.5.0', 'healthz versión 0.5.0');
   }
 
   // ---------- auth ----------
@@ -166,11 +166,38 @@ const encolar = (sub, game, mode, region = 'EU') =>
     ok(dentro.statusCode === 200 && dentro.json().data.players.length === 2, 'GET match participante → 200 con 2 jugadores');
     ok(dentro.json().data.players.map((p) => p.team).sort().join(',') === '1,2', 'lados 1 y 2');
     const rep = await req('POST', `/api/v1/matchmaking/matches/${mid}/result`, { sub: 'auth0|AAA', cuerpo: { score_a: 13, score_b: 7 } });
-    ok(rep.statusCode === 200 && rep.json().data.status === 'reportado', 'reporte participante → 200');
+    ok(rep.statusCode === 200 && rep.json().data.status === 'verificado', 'reporte participante → 200 verificado (RR auto)');
+    ok(rep.json().data.rr && rep.json().data.rr.aplicados === 2, `RR aplicado a 2 jugadores (${JSON.stringify(rep.json().data.rr)})`);
+    global.__midOW = mid;
     const rep2 = await req('POST', `/api/v1/matchmaking/matches/${mid}/result`, { sub: 'auth0|BBB', cuerpo: { score_a: 1, score_b: 1 } });
     ok(rep2.statusCode === 409, 'segundo reporte → 409');
     const repFuera = await req('POST', `/api/v1/matchmaking/matches/${mid}/result`, { sub: 'auth0|CCC', cuerpo: { score_a: 2, score_b: 2 } });
     ok(repFuera.statusCode === 403, 'reporte de fuera → 403');
+  }
+
+  // ---------- RR: valores, idempotencia e historial ----------
+  {
+    const mid = global.__midOW;
+    const m = await req('GET', `/api/v1/matchmaking/matches/${mid}`, { sub: 'auth0|AAA' });
+    const ps = m.json().data.players;
+    const aaa = ps.find((p) => p.sub === 'auth0|AAA');
+    const bbb = ps.find((p) => p.sub === 'auth0|BBB');
+    ok(aaa.rr_before === 95 && aaa.rr_after === 97, `AAA (team1, win): RR 95 → 97 (${aaa.rr_before}→${aaa.rr_after})`);
+    ok(bbb.rr_before === 95 && bbb.rr_after === 94, `BBB (team2, loss): RR 95 → 94 (${bbb.rr_before}→${bbb.rr_after})`);
+    // Idempotencia: verificar de nuevo no duplica RR
+    const ya = await store.verificar(mid);
+    ok(ya.ok === true && ya.ya === true, 'verificar de nuevo → {ok, ya:true}');
+    const m2 = await req('GET', `/api/v1/matchmaking/matches/${mid}`, { sub: 'auth0|AAA' });
+    const aaa2 = m2.json().data.players.find((p) => p.sub === 'auth0|AAA');
+    ok(aaa2.rr_after === 97, 'RR sin doble aplicación (sigue 97)');
+    // Historial: la entrada del overwatch con delta +2 y resultado win
+    const h = await req('GET', '/api/v1/matchmaking/history', { sub: 'auth0|AAA' });
+    ok(h.statusCode === 200 && Array.isArray(h.json().data), 'GET history → 200 lista');
+    const ow = h.json().data.find((e) => e.match_id === mid);
+    ok(ow && ow.rr_delta === 2 && ow.resultado === 'win' && ow.status === 'verificado', `history overwatch: +2 win verificado (${JSON.stringify(ow && { d: ow.rr_delta, r: ow.resultado })})`);
+    // Historial es privado: sin token → 401
+    const hs = await req('GET', '/api/v1/matchmaking/history', { sinToken: true });
+    ok(hs.statusCode === 401, 'GET history sin token → 401');
   }
 
   // ---------- validación de score (par fresco en 'rocket') ----------
