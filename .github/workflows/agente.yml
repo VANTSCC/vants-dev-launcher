@@ -108,7 +108,10 @@ jobs:
           const fs = require('fs');
           let r = null;
           try { r = JSON.parse(fs.readFileSync('/tmp/agente_salida.txt', 'utf8')); } catch {}
-          if (!r || !r.estado) { console.log('## Agente VANTS\n\n(sin salida JSON — revisa el paso anterior)'); process.exit(0); }
+          if (!r || !r.estado) {
+            console.log('## Agente VANTS\n\n(sin salida JSON — revisa el paso anterior)');
+            process.exit(0);
+          }
           const icono = { UP: '🟢', DEGRADED: '🟡', DOWN: '🔴' }[r.estado] || '⚪';
           const lineas = [`## ${icono} Agente VANTS — ${r.estado}`, '', `**Resumen:** ${r.resumen || '—'}`, ''];
           if (Array.isArray(r.hallazgos) && r.hallazgos.length) {
@@ -125,17 +128,17 @@ jobs:
             for (const a of r.acciones) lineas.push(`- ${a.ejecutada ? '⚡' : '⏸'} \`${a.id}\` — ${a.resultado || ''}`);
             lineas.push('');
           }
-          console.log(lineas.join('\n'));
+          const md = lineas.join('\n');
+          console.log(md);
+          // embed opcional para Discord (solo si el secret existe)
+          const color = { UP: 0x3ddc84, DEGRADED: 0xffb547, DOWN: 0xff4655 }[r.estado] || 0x5865f2;
+          fs.writeFileSync('/tmp/embed.json', JSON.stringify({
+            username: 'Agente VANTS',
+            embeds: [{ title: 'Agente VANTS · ciclo de vigilancia', description: md.slice(0, 3800), color }],
+            allowed_mentions: { parse: [] },
+          }));
           NODE
           cat /tmp/resumen.md >> "$GITHUB_STEP_SUMMARY" || true
-          # Aviso opcional a Discord (si el dueño crea el secret VANTS_DISCORD_WEBHOOK)
           if [ -n "$VANTS_DISCORD_WEBHOOK" ]; then
-            node - <<'NODE' > /tmp/embed.json || true
-            const fs = require('fs');
-            let md = fs.readFileSync('/tmp/resumen.md', 'utf8').slice(0, 3800);
-            const estado = /Agente VANTS — (\w+)/.exec(md);
-            const color = { UP: 0x3ddc84, DEGRADED: 0xffb547, DOWN: 0xff4655 }[(estado && estado[1]) || ''] || 0x5865f2;
-            process.stdout.write(JSON.stringify({ username: 'Agente VANTS', embeds: [{ title: 'Agente VANTS · ciclo de vigilancia', description: md, color }], allowed_mentions: { parse: [] } }));
-            NODE
             curl -sS -o /dev/null -X POST -H 'content-type: application/json' -d @/tmp/embed.json "$VANTS_DISCORD_WEBHOOK" || true
           fi
