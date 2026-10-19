@@ -897,14 +897,12 @@ function openPlayerProfile(pid){
       +'<div class="rc-top">'+platIc(c.k)+'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div><p class="rc-title">Canal vinculado · '+escHtml(c.h)+'</p></div></div>'
       +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+PLAT[c.k].n+'</b></span><span class="rc-game">VER CANAL</span></div></div>':'')
     +(esMio?'<p class="d-sec">TU CUENTA</p><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:6px">'
-      +'<button class="btn btn-ghost btn-sm" id="pfMiCuenta" style="width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em"><i data-lucide="layout-dashboard"></i>MI CUENTA · DASHBOARD COMPLETO</button>'
       +'<button class="btn btn-ghost btn-sm" id="pfEditar" style="width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em"><i data-lucide="pencil"></i>EDITAR PERFIL · BANNER · DATOS · EQUIPO</button>'
       +'<button class="btn btn-ghost btn-sm" id="pfAjustes" style="width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em"><i data-lucide="settings"></i>AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button></div>'
     :'')
     +'</div>');
   icons();
   if(esMio){
-    const eMc=document.querySelector('#pfMiCuenta');if(eMc)eMc.onclick=()=>{closeDrawer();if(window.abrirMiCuenta)window.abrirMiCuenta();};
     const eEd=document.querySelector('#pfEditar');if(eEd)eEd.onclick=()=>{if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();else toast('Iniciá sesión para editar tu perfil','info');};
     const eAj=document.querySelector('#pfAjustes');if(eAj)eAj.onclick=()=>{if(window.openAjustesCuenta)window.openAjustesCuenta();};
   }
@@ -1807,7 +1805,7 @@ async function inscribirReal(t,team,tag){
   if(!tok){toast('Iniciá sesión para inscribir tu equipo en la base','info');const lb=$('#arenaLoginBtn');if(lb)lb.click();return;}
   toast('Registrando tu equipo en la base…','info');
   try{
-    const r=await fetchWorker('/api/torneos/inscribir',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},
+    const r=await fetchWorker('/api/torneos/inscribir',{method:'POST',headers:{'Content-Type':'application/json',[AUTH_FIELD]:AUTH_SCHEME+tok},
       body:JSON.stringify({torneo:t.id,juego:state.game||'valorant',equipo:team,tag:tag,capitan:($('#fCap')?$('#fCap').value.trim():''),region:($('#fReg')?$('#fReg').value.trim():'')})});
     const j=await r.json().catch(()=>({}));
     if(r.ok&&j.ok){finishEnroll(t,team,tag);torneosCargar(true);return;}
@@ -1963,7 +1961,19 @@ window.abrirMiCuenta=async function(){
 /* ---------- ARRANQUE DEL MÓDULO ---------- */
 (function arranqueMiCuenta(){
   const b=$('#miCuentaBtn');
-  if(b)b.addEventListener('click',()=>{try{window.abrirMiCuenta();}catch(e){}});
+  if(b)b.addEventListener('click',function(){
+    /* UN SOLO PERFIL: MI CUENTA abre el PERFIL DE JUGADOR (ficha editable
+       con todo: banner, datos, equipo, cuentas, series, FACEIT, ajustes).
+       El dashboard viejo queda solo como respaldo si la ficha no cargó. */
+    try{
+      var mio=(window.VANTS_ME&&window.VANTS_ME.player)||null;
+      if(!mio&&window.VANTS_AUTH&&window.VANTS_AUTH.playerId){
+        mio=(window.VANTS_PLAYERS||[]).find(function(x){return String(x.id)===String(window.VANTS_AUTH.playerId);})||null;
+      }
+      if(mio&&window.openPlayerProfile){window.openPlayerProfile(mio);return;}
+    }catch(e){}
+    try{window.abrirMiCuenta();}catch(e){}
+  });
   const iv=setInterval(()=>{if(b)b.hidden=!(window.VANTS_AUTH&&window.VANTS_AUTH.sub);},1200);
   setTimeout(()=>clearInterval(iv),45000);
   const iv2=setInterval(()=>{

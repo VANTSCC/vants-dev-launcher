@@ -45,3 +45,6 @@ Thumbs.db
 # Monitor local (estado y webhook privado)
 monitor/config.json
 monitor/state.json
+
+# Archivos personales
+Evolution-of-AI-Agents.pptx

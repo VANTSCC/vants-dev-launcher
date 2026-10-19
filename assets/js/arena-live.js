@@ -531,6 +531,19 @@
       '<input id="rp-eq-tag" placeholder="Tag del equipo (2-5 letras)" maxlength="5" value="' + escHtml(equipoDe(p) ? equipoDe(p).tag : '') + '" style="' + inp + 'margin-bottom:12px">' +
       '<button class="btn btn-sm" id="rp-eq-guardar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">GUARDAR MI EQUIPO</button>' +
       '<div id="rp-eq-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
+      '<p class="d-sec">MEMBRESÍA</p>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line2,#303039);background:rgba(255,13,46,.05);padding:12px">' +
+        '<div><b style="font:800 11px var(--mono);color:var(--ink,#EDEDE7);letter-spacing:.06em">' + (esOwner ? 'VANTS PRO · OWNER' : ((me && me.plan) ? me.plan : 'VANTS FREE')) + '</b><br><span style="font:500 9.5px var(--mono);color:var(--mut,#93939D)">' + (esOwner ? 'Dueño de la arena: todo el contenido premium desbloqueado' : 'Tu plan actual acompaña a tu perfil') + '</span></div>' +
+        '<button class="btn btn-ghost btn-sm" id="rp-planes" style="flex:none">VER MEMBRESÍAS</button>' +
+      '</div>' +
+      '<p class="d-sec">ESTADO EN VIVO</p>' +
+      '<div id="rp-pres" style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<button class="btn btn-sm" data-pres2="online" style="' + bs + '">EN LÍNEA</button>' +
+        '<button class="btn btn-sm" data-pres2="jugando" style="' + bs + '">JUGANDO</button>' +
+        '<button class="btn btn-sm" data-pres2="ausente" style="' + bs + '">INVISIBLE</button>' +
+      '</div>' +
+      '<p class="d-sec">MIS INSCRIPCIONES</p>' +
+      '<div id="rp-equipos" style="font:500 10.5px/1.7 var(--mono);color:var(--dim,#5C5C66);margin-bottom:4px">Cargando…</div>' +
       '<p class="d-sec">CUENTA</p>' +
       '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">Rol en VANTS: <b style="color:var(--ink)">' + (p.role ? p.role.toUpperCase() : 'JUGADOR') + '</b><br>Verificado: <b style="color:' + (p.verified ? 'var(--grn)' : 'var(--dim)') + '">' + (p.verified ? 'SÍ' : 'NO') + '</b><br>Correo: ' + ((user && user.email) || '—') + '</div>' +
       '<button class="btn btn-ghost btn-sm" id="rp-ajustes" style="margin-top:14px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button>' +
@@ -868,8 +881,44 @@
       bnMsg('Guardando banner…');
       guardarBanner();
     };
-  }
 
+    /* ---- MEMBRESÍA · PRESENCIA · INSCRIPCIONES (fusionados de MI CUENTA) ---- */
+    var rpPlanes = document.getElementById('rp-planes');
+    if (rpPlanes) rpPlanes.onclick = function () { closeDrawer(); var pb = document.getElementById('plansBtn'); if (pb) pb.click(); };
+    var presAct = (function () { try { return localStorage.getItem('vants_presencia') || 'online'; } catch (eP1) { return 'online'; } })();
+    function pintarPresFicha() {
+      document.querySelectorAll('#rp-pres [data-pres2]').forEach(function (x) {
+        var on = x.getAttribute('data-pres2') === presAct;
+        x.style.borderColor = on ? '#FF0D2E' : 'var(--line2,#303039)';
+        x.style.color = on ? '#FF0D2E' : 'var(--mut,#93939D)';
+      });
+    }
+    document.querySelectorAll('#rp-pres [data-pres2]').forEach(function (x) {
+      x.onclick = function () {
+        presAct = x.getAttribute('data-pres2');
+        try { localStorage.setItem('vants_presencia', presAct); } catch (eP2) {}
+        if (window.vantsPresenciaSet) { try { window.vantsPresenciaSet(presAct); } catch (eP3) {} }
+        pintarPresFicha();
+        if (typeof toast === 'function') { try { toast('Estado en vivo: ' + (presAct === 'ausente' ? 'INVISIBLE' : (presAct === 'jugando' ? 'JUGANDO' : 'EN LÍNEA'))); } catch (eP4) {} }
+      };
+    });
+    pintarPresFicha();
+    (async function () {
+      var hostEq = document.getElementById('rp-equipos');
+      if (!hostEq) return;
+      try {
+        var tEq = await jwt();
+        var subEq = (window.VANTS_AUTH && window.VANTS_AUTH.sub) || null;
+        if (!tEq || !subEq) { hostEq.textContent = 'Aún no inscribiste ningún equipo.'; return; }
+        var rEq = await fetch(API + '/tournament_teams?auth0_sub=eq.' + encodeURIComponent(subEq) + '&order=created_at.desc&limit=8', { headers: authHeaders(tEq) });
+        var filasEq = await rEq.json().catch(function () { return null; });
+        if (!Array.isArray(filasEq) || !filasEq.length) { hostEq.textContent = 'Aún no inscribiste ningún equipo. Cuando inscribas uno, aparece acá y en el bracket.'; return; }
+        hostEq.innerHTML = filasEq.map(function (eE) {
+          return '<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line,#222);padding:5px 0"><span><b style="color:var(--ink,#EDEDE7)">' + escHtml(String(eE.name || 'EQUIPO').toUpperCase()) + '</b> [' + escHtml(String(eE.tag || '').toUpperCase()) + ']</span><span style="color:var(--grn,#3EE6A0)">' + escHtml(String(eE.status || '').toUpperCase()) + '</span></div>';
+        }).join('');
+      } catch (eEq) { hostEq.textContent = ''; }
+    })();
+  }
   /* vista previa del perfil real sin sesión (solo dibuja el drawer con
      datos que se le pasan; toda escritura real exige JWT + RLS) */
   window.__previewPerfilReal = function (fake) {
