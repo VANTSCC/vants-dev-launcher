@@ -21,7 +21,7 @@ const URL_GLM_GLOBAL = 'https://api.z.ai/api/paas/v4';
 function crearLlm(env = process.env, fetchImpl = fetch) {
   const url = String(env.AGENT_LLM_URL || '').trim() || URL_GLM_GLOBAL;
   const key = String(env.AGENT_LLM_KEY || '').trim();
-  const model = env.AGENT_LLM_MODEL || 'glm-5.3-flash';
+  const model = env.AGENT_LLM_MODEL || 'glm-4.5-flash';
   if (!key) return null;
 
   // prompt del modo clásico (intención JSON) — usado por interpretar()

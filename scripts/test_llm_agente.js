@@ -206,7 +206,7 @@ async function principal() {
       { status: 200, headers: { 'content-type': 'application/json' } }
     ));
     const p1 = await okLlm.probar();
-    ok(p1.ok === true && p1.modelo === 'glm-5.3-flash' && String(p1.url).includes('api.z.ai'), 'probar() ok con URL global por defecto');
+    ok(p1.ok === true && p1.modelo === 'glm-4.5-flash' && String(p1.url).includes('api.z.ai'), 'probar() ok con URL global por defecto');
     const badLlm = crearLlm({ AGENT_LLM_KEY: 'k' }, async () => new Response(
       JSON.stringify({ error: { message: 'invalid api key' } }),
       { status: 401, headers: { 'content-type': 'application/json' } }

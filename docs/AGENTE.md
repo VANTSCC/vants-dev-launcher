@@ -132,7 +132,7 @@ key, el núcleo cae al modo reglas (degradación elegante, nunca se queda mudo).
 |----------|---------|
 | `AGENT_LLM_KEY` | la key del proveedor (Z.ai → API Keys). **Basta con ella**: sin URL se usa la global `https://api.z.ai/api/paas/v4` |
 | `AGENT_LLM_URL` | (opcional) `https://open.bigmodel.cn/api/paas/v4` si la key es de CN · `https://api.openai.com/v1` · `http://localhost:11434/v1` (Ollama) |
-| `AGENT_LLM_MODEL` | `glm-5.3-flash` por defecto (rápido/económico) · `glm-5.3` máxima calidad |
+| `AGENT_LLM_MODEL` | `glm-4.5-flash` por defecto (rápido/económico) · `glm-5.3 (si tu cuenta tiene cuota)` máxima calidad |
 
 Funciona igual en local (`node cli.js comando "..."`), en el servicio HTTP
 (`POST /api/v1/comando` → `via: "llm-herramientas"`) y en Discord
