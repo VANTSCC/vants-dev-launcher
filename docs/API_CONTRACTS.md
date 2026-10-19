@@ -57,10 +57,12 @@ Errores de BD → 503 JSON limpio; `/healthz` nunca 500 (reporta `db:error`).
 | POST | `/api/v1/matchmaking/matches/:id/result` | Bearer JWT (participante) | body `{ score_a, score_b }` (enteros ≥0, no ambos 0) → 200 `{ ok, data:{ match_id, status:"reportado", score_a, score_b } }` · 400 score inválido · 409 ya reportado · 403/404 |
 | GET | `/api/v1/me` | Bearer JWT | 200 `{ ok, data:{ sub } }` |
 
-Fase 4 (próximo paso): verificación del resultado (contraste FACEIT/capitán
-segundo) y aplicación de RR con `rr_before`/`rr_after` en `mm_match_players`.
+Cierre de Fase 4 (T39): el reporte aplica RR al instante
+(`mm_aplicar_resultado`, regla FACEIT) y marca `verificado`
+(`verify_source=auto`); `rr_before/rr_after` quedan en
+`mm_match_players` y el historial en la vista `mm_historial`.
 
-### 3.1 · Capa SQL compartida (migraciones 21–23) — fuente única
+### 3.1 · Capa SQL compartida (migraciones 21–24) — fuente única
 
 El service Node y el HUB de escritorio comparten la MISMA lógica atómica en
 SQL (PostgREST `POST /rpc/<fn>` para el HUB; conexión directa para el service):
@@ -73,6 +75,9 @@ SQL (PostgREST `POST /rpc/<fn>` para el HUB; conexión directa para el service):
 | `mm_reportar(p_match_id, p_sub, score_a, score_b)` | valida participante + reporta + aplica RR (mm_aplicar_resultado) en una transacción |
 | `mm_aplicar_resultado(p_match_id)` | win +0.015 / draw +0.002 / loss −0.012, clamp [0.50,1.60], placement 0.95; rr_before/after; season stats vía faceit_stats_delta; idempotente |
 | `mm_historial_de(p_sub, limite)` | historial RR propio (vista `mm_historial`) |
+| `mm_invitar(p_to_email, p_game, p_mode, p_region)` | invitación HUB por email (24): valida destino con perfil, anti-duplicado por pareja+juego, vigencia 10 min |
+| `mm_invites_pendientes(p_limite)` | mis invitaciones recibidas + enviadas (24); expira vencidas al vuelo |
+| `mm_responder_invite(p_id, p_aceptar)` | destino acepta → queda ENCOLADO con los parámetros vía `mm_encolar` (24); destino rechaza; remitente cancela |
 
 Guard de identidad: si la llamada trae JWT (PostgREST), `p_sub` debe coincidir
 con `request.jwt.claim.sub`; el service (conexión directa) pasa por diseño

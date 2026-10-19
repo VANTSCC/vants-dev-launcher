@@ -3,9 +3,11 @@
 // ------------------------------------------------------------
 // Módulo independiente (patrón Fase 2 del plan): no toca app.js,
 // solo se enchufa a los elementos de #cajon-buscar y a vantsHub.
-// Toda la lógica vive en SQL (migraciones 21–23): mm_encolar,
-// mm_ticket_estado, mm_salir, mm_reportar, mm_historial_de —
-// llamadas por PostgREST con el Bearer de la sesión del HUB.
+// Toda la lógica vive en SQL (migraciones 21–24): mm_encolar,
+// mm_ticket_estado, mm_salir, mm_reportar, mm_historial_de y las
+// invitaciones (mm_invitar, mm_invites_pendientes,
+// mm_responder_invite) — llamadas por PostgREST con el Bearer de
+// la sesión del HUB.
 // Reglas: 1 ticket activo por jugador y juego · duo 1v1 · team 5v5 ·
 // TTL 10 min · primer reporte gana · RR win +1.5 / draw +0.2 / loss -1.2
 // (escala entera *100 de la web).
@@ -31,11 +33,19 @@
   const reportarBox = $('#mm-reportar');
   const reportarEstado = $('#mm-reportar-estado');
   const historialEl = $('#mm-historial');
+  const invEmail = $('#mm-inv-email');
+  const invEnviar = $('#mm-inv-enviar');
+  const invRecibidasEl = $('#mm-inv-recibidas');
+  const invEnviadasEl = $('#mm-inv-enviadas');
+  const invEstadoEl = $('#mm-inv-estado');
 
   let SESION = null;
   let ticket = null;
   let matchId = null;
   let sondeo = null;
+  let invSondeo = null;          // sondeo de invitaciones (15 s)
+  let invOcupado = false;        // evita solapamiento del poll
+  const invProcesadas = new Set(); // aceptaciones ya reaccionadas
   const JUEGO_LABEL = { valorant: 'VALORANT', cs2: 'Counter-Strike 2' };
 
   // ---------- estilos propios (prefijo mm-, opt-in como components.js) ----------
@@ -211,6 +221,143 @@
     }).join('');
   }
 
+  // ============================================================
+  // INVITACIONES (migración 24): convoca a un amigo a la cola.
+  // Enviar: mm_invitar(email destino) con juego/modo/región del
+  // formulario. Recibir: el HUB sondea mm_invites_pendientes cada
+  // 15 s. Al aceptar, el destino queda encolado (mm_encolar) con
+  // los parámetros de la invitación; el remitente lo ve en
+  // "enviadas" y entra en cola también — el emparejador los cruza.
+  // ============================================================
+  function invEstado(txt) { if (invEstadoEl) invEstadoEl.textContent = txt; }
+
+  async function invitar() {
+    if (!SESION || !SESION.sub) { invEstado('inicia sesión primero'); return; }
+    const email = (invEmail && invEmail.value || '').trim();
+    if (!email || email.indexOf('@') < 1) { invEstado('escribe el email del jugador'); return; }
+    if (invEnviar) invEnviar.disabled = true;
+    invEstado('enviando…');
+    try {
+      const r = await rpc('mm_invitar', {
+        p_to_email: email,
+        p_game: juegoEl.value,
+        p_mode: modoEl.value,
+        p_region: regionEl.value,
+      });
+      if (!r.ok) {
+        const msg = r.error === 'destino_no_encontrado' ? 'no hay jugador VANTS con ese email'
+          : r.error === 'destino_es_tu_email' ? 'ese email es el tuyo'
+          : r.error === 'no_elegible' ? 'tu perfil no es elegible'
+          : r.error === 'sin_sesion' ? 'inicia sesión primero'
+          : (r.error || 'no se pudo invitar');
+        invEstado(msg);
+        return;
+      }
+      invEstado(r.reutilizada ? 'ya hay una invitación tuya pendiente para ese jugador' : 'invitación enviada · vigencia 10 min');
+      if (invEmail) invEmail.value = '';
+      invPoll();
+    } finally {
+      if (invEnviar) invEnviar.disabled = false;
+    }
+  }
+
+  async function invResponder(id, aceptar) {
+    const r = await rpc('mm_responder_invite', { p_id: id, p_aceptar: !!aceptar });
+    if (!r.ok) {
+      invEstado(r.error === 'ya_no_vigente' ? 'la invitación ya no está vigente' : (r.error || 'no se pudo responder'));
+      invPoll();
+      return;
+    }
+    if (r.status === 'aceptada') {
+      const cola = r.cola || {};
+      if (cola.ok && cola.ticket) {
+        ticket = cola.ticket;
+        if (juegoEl && cola.game) { try { juegoEl.value = cola.game; } catch (e) {} }
+        if (modoEl && cola.mode) { try { modoEl.value = cola.mode; } catch (e) {} }
+        if (regionEl && cola.region) { try { regionEl.value = cola.region; } catch (e) {} }
+        setEstado('en cola por invitación · ' + (JUEGO_LABEL[cola.game] || cola.game) + ' · ' + (cola.mode || '').toUpperCase());
+        if (btnEntrar) btnEntrar.classList.add('oculto');
+        if (btnSalir) btnSalir.classList.remove('oculto');
+        detenerSondeo();
+        sondeo = setInterval(poll, 3000);
+        poll();
+      } else {
+        invEstado('aceptada, pero la cola dijo: ' + (cola.error || 'error desconocido'));
+      }
+    } else {
+      invEstado('invitación ' + r.status);
+    }
+    invPoll();
+  }
+
+  function invPintar(d) {
+    if (!invRecibidasEl) return;
+    const rec = (d && d.recibidas) || [];
+    const env = (d && d.enviadas) || [];
+
+    invRecibidasEl.innerHTML = rec.length === 0
+      ? '<div class="dim">sin invitaciones pendientes</div>'
+      : rec.map((i) =>
+        '<div class="mm-p"><span><b>' + escapeHtml(String(i.from_nombre || 'jugador')) + '</b>' +
+        '<span class="dim mono"> · ' + escapeHtml((JUEGO_LABEL[i.game] || i.game || '?').toUpperCase()) +
+        ' · ' + (i.mode || '?').toUpperCase() + ' · ' + escapeHtml(i.region || 'EU') + '</span></span>' +
+        '<span>' +
+        '<button class="btn primario" data-act="si" data-id="' + i.id + '" style="padding:6px 10px;font-size:11px">ACEPTAR</button> ' +
+        '<button class="btn fantasma" data-act="no" data-id="' + i.id + '" style="padding:6px 10px;font-size:11px">RECHAZAR</button>' +
+        '</span></div>').join('');
+
+    if (invEnviadasEl) {
+      invEnviadasEl.textContent = env.length === 0 ? ''
+        : 'tus invitaciones: ' + env.map((i) =>
+          (JUEGO_LABEL[i.game] || i.game) + ' ' + (i.mode || '') + ' → ' +
+          (i.status === 'pendiente' ? 'pendiente' : i.status === 'aceptada' ? 'ACEPTADA ✓' : i.status)).join(' · ');
+    }
+
+    // badge del nav BUSCAR PARTIDA (elemento existente)
+    const badge = $('#nav-buscar-n');
+    if (badge) {
+      badge.textContent = String(rec.length);
+      badge.classList.toggle('oculto', rec.length === 0);
+    }
+
+    // el remitente reacciona a las aceptaciones: entra en cola igual
+    for (const i of env) {
+      if (i.status === 'aceptada' && !invProcesadas.has(i.id)) {
+        invProcesadas.add(i.id);
+        if (!ticket && !matchId && SESION && SESION.sub) {
+          if (juegoEl && i.game) { try { juegoEl.value = i.game; } catch (e) {} }
+          if (modoEl && i.mode) { try { modoEl.value = i.mode; } catch (e) {} }
+          if (regionEl && i.region) { try { regionEl.value = i.region; } catch (e) {} }
+          invEstado('tu invitación fue aceptada — entrando en cola…');
+          entrar();
+        }
+      }
+    }
+  }
+
+  async function invPoll() {
+    if (!SESION || !SESION.sub || invOcupado) return;
+    invOcupado = true;
+    try {
+      const d = await rpc('mm_invites_pendientes', { p_limite: 10 });
+      if (d && d.ok) invPintar(d);
+      else if (d && d.error === 'sin_sesion') invEstado('inicia sesión para ver invitaciones');
+    } catch (e) {
+      // silencioso: red/BD caída — el siguiente ciclo reintenta
+    } finally {
+      invOcupado = false;
+    }
+  }
+
+  function invIniciarSondeo() {
+    if (invSondeo) return;
+    invPoll();
+    invSondeo = setInterval(invPoll, 15000);
+  }
+  function invDetenerSondeo() {
+    if (invSondeo) { clearInterval(invSondeo); invSondeo = null; }
+  }
+
   // ---------- arranque ----------
   async function iniciar() {
     estilos();
@@ -223,11 +370,19 @@
     if (bLanzar) bLanzar.addEventListener('click', lanzar);
     const bRef = $('#mm-historial-refrescar');
     if (bRef) bRef.addEventListener('click', historial);
-    if (SESION && SESION.sub) setEstado('listo');
+    if (invEnviar) invEnviar.addEventListener('click', invitar);
+    if (invRecibidasEl) invRecibidasEl.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-act]');
+      if (!b) return;
+      b.disabled = true;
+      invResponder(b.getAttribute('data-id'), b.getAttribute('data-act') === 'si');
+    });
+    if (SESION && SESION.sub) { setEstado('listo'); invIniciarSondeo(); }
     else setEstado('inicia sesión para buscar partida');
     H.onEstado(async (d) => {
       SESION = d.sesion;
-      if (SESION && SESION.sub) { setEstado('listo'); historial(); }
+      if (SESION && SESION.sub) { setEstado('listo'); historial(); invIniciarSondeo(); }
+      else { invDetenerSondeo(); invPintar({ recibidas: [], enviadas: [] }); }
     });
   }
 
