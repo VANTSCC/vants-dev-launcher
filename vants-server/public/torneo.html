@@ -185,14 +185,42 @@
     if(String(t.game||'').toLowerCase().indexOf('cs')<0&&g!=='valorant'){/* el juego del torneo manda en la ficha */}
     if(/cs|counter|csgo/.test(String(t.game||'').toLowerCase()))document.body.setAttribute('data-game','cs2');
   }
+  var PROXY='https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+  function filaPt(t){
+    /* fila de pt_torneos (plataforma) → forma que consume pinta() */
+    var e=String(t.estado||'upcoming');
+    return {name:t.nombre,status:e==='ongoing'?'abierto':e==='finished'?'finalizado':'proximo',
+      tier:t.major?'major':'open',game:t.game_slug,
+      prize_pool:t.prize_value!=null?Number(t.prize_value):null,fee:t.fee,
+      max_participants:t.max_teams,description:t.descripcion,
+      starts_at:t.starts_at,ends_at:t.ends_at,slug:t.slug,is_demo:!!t.is_demo};
+  }
   function intento(n){
     try{
       var DB=window.VantDB;
-      var id=new URLSearchParams(location.search).get('id');
+      var sp=new URLSearchParams(location.search);
+      var id=sp.get('id')||sp.get('slug');
       if(!id)return;
+      /* Plataforma pt_*: si el slug viene de la nueva tabla, resolvemos directo */
+      if(sp.get('slug')){
+        fetch(PROXY+'?table=pt_torneos&slug.eq='+encodeURIComponent(id)+'&limit=1',{headers:{Accept:'application/json'}})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(rows){
+            if(Array.isArray(rows)&&rows.length){pinta(filaPt(rows[0]));return;}
+            /* no está en pt_* → continúa con VentDB/fallback */
+            intentoVentDB(n, DB, id);
+          })
+          .catch(function(){intentoVentDB(n, DB, id);});
+        return;
+      }
+      intentoVentDB(n, DB, id);
+    }catch(e){}
+  }
+  function intentoVentDB(n, DB, id){
+    try{
       /* fallback S4 cuando Neon aún no tiene el torneo */
       var FB={'s4-asc':{name:'ASCENSIÓN SERIES S4',status:'abierto',tier:'open',game:'valorant',day:'24',mon:'OCT',max_participants:32},'s4-ranked':{name:'VANTS RANKED NOCTURNA',status:'abierto',tier:'ranked',game:'valorant',max_participants:64},'s4-copa':{name:'COPA COMUNIDAD S4',status:'proximamente',tier:'open',game:'valorant',prize_pool:500,day:'08',mon:'NOV',max_participants:16},'s4-stratos':{name:'STRATOS MAJOR S4',status:'proximamente',tier:'major',game:'cs2',prize_pool:1000,day:'15',mon:'NOV',max_participants:24}};
-      if(!DB||typeof DB.tournaments!=='function'){if(n>0)setTimeout(function(){intento(n-1);},900);else if(FB[id])pinta(FB[id]);return;}
+      if(!DB||typeof DB.tournaments!=='function'){if(n>0)setTimeout(function(){intentoVentDB(n-1, DB, id);},900);else if(FB[id])pinta(FB[id]);return;}
       Promise.resolve(DB.tournaments()).then(function(rows){
         var t=(rows||[]).find(function(x){return String(x.id)===String(id)||String(x.slug)===String(id);});
         if(t)pinta(t);else if(FB[id])pinta(FB[id]);

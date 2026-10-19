@@ -218,20 +218,40 @@
     { id: 's4-stratos', slug: 'demo-stratos-major-s4', name: 'DEMO · STRATOS MAJOR S4', status: 'proximamente', tier: 'major', game: 'cs2', prize_pool: 1000, day: '15', mon: 'NOV', region: 'LATAM', max_participants: 24, is_demo: true }
   ];
 
-  /* ---------------- CARGA DE DATOS REALES ---------------- */
+  /* ---------------- CARGA DE DATOS REALES (plataforma pt_* vía proxy) ---------------- */
+  var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+
+  function filaPt(t) {
+    /* fila de pt_torneos → la forma que ya consume fila()/pintar() */
+    var estado = String(t.estado || 'upcoming');
+    return {
+      slug: t.slug,
+      name: t.nombre,
+      status: estado === 'ongoing' ? 'abierto' : estado === 'finished' ? 'finalizado' : 'proximo',
+      tier: t.major ? 'major' : 'open',
+      game: t.game_slug,
+      prize_pool: t.prize_value != null ? Number(t.prize_value) : null,
+      starts_at: t.starts_at,
+      region: t.region,
+      max_participants: t.max_teams,
+      is_demo: !!t.is_demo,
+      source: t.source,
+    };
+  }
+
   safe(function () {
     pintar(FALLBACK); /* pinta algo de inmediato */
-    var t0 = setTimeout(function cargar() {
-      try {
-        var DB = window.VantDB;
-        if (!DB || typeof DB.tournaments !== 'function') { t0 = setTimeout(cargar, 900); return; }
-        Promise.resolve(DB.tournaments()).then(function (rows) {
-          clearTimeout(t0);
-          if (Array.isArray(rows) && rows.length) { SF.cache = rows; pintar(rows); }
-          else { SF.cache = FALLBACK; pintar(FALLBACK); }
-        }).catch(function () { SF.cache = FALLBACK; pintar(FALLBACK); });
-      } catch (e) { SF.cache = FALLBACK; pintar(FALLBACK); }
-    }, 400);
+    fetch(PROXY + '?table=pt_torneos&limit=50', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rows) {
+        if (Array.isArray(rows) && rows.length) {
+          SF.cache = rows.map(filaPt);
+          pintar(SF.cache);
+        } else {
+          SF.cache = FALLBACK; pintar(FALLBACK);
+        }
+      })
+      .catch(function () { SF.cache = FALLBACK; pintar(FALLBACK); });
   });
 
   /* ---------------- TARJETA DISCORD (sin invite aún) ---------------- */

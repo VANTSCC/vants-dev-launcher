@@ -30,13 +30,81 @@
   }
 
   /* ---------------- fetch tolerante ---------------- */
+  /* El WAF del endpoint de Neon Functions bloquea el egreso de Cloudflare
+     Workers (403 por ASN), así que el NAVEGADOR lee del proxy vantsdata
+     DIRECTO (patrón de la casa, igual que window.VantDB). La API /api/…
+     del Worker queda como fallback para clientes que sí alcancen el proxy. */
+  var PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+
+  function proxyUrl(ruta, search) {
+    var q = new URLSearchParams(search || '');
+    var tabla = '';
+    if (ruta === '/api/games') tabla = 'pt_games';
+    else if (ruta === '/api/tournaments' || /^\/api\/tournaments\//.test(ruta)) tabla = 'pt_torneos';
+    else if (ruta === '/api/matches') tabla = 'pt_matches';
+    else if (ruta === '/api/teams') tabla = 'pt_teams';
+    else if (ruta === '/api/articles' || /^\/api\/articles\//.test(ruta)) tabla = 'pt_articulos';
+    else if (ruta === '/api/search') return null; // search: varias tablas → vía Worker o vacío
+    if (!tabla) return null;
+    var u = new URL(PROXY);
+    u.searchParams.set('table', tabla);
+    var slugs = { estado: 'estado.eq', juego: 'game_slug.eq', region: 'region.ilike', pag: 'offset', porPagina: 'limit' };
+    q.forEach(function (v, k) {
+      if (k === 'estado') { u.searchParams.set('estado.eq', v === 'archive' ? 'finished' : v); }
+      else if (k === 'juego') { u.searchParams.set('game_slug.eq', v); }
+      else if (k === 'region') { u.searchParams.set('region.ilike', v); }
+      else if (k === 'porPagina') { u.searchParams.set('limit', v); }
+      else if (k === 'pag') { /* offset calculado al final */ u.searchParams.set('__pag', v); }
+      else u.searchParams.set(k, v);
+    });
+    var pag = parseInt(u.searchParams.get('__pag') || '1', 10);
+    u.searchParams.delete('__pag');
+    if (!u.searchParams.get('limit')) u.searchParams.set('limit', '12');
+    u.searchParams.set('offset', String((Math.max(1, pag) - 1) * parseInt(u.searchParams.get('limit'), 10)));
+    u.searchParams.set('order', ruta.indexOf('tournaments') > -1 ? 'starts_at.asc.nullslast' : 'empieza_at.asc.nullslast');
+    return u.toString();
+  }
+
+  function normalizar(fila) {
+    /* pt_* (snake largo) → contrato interno de plataforma */
+    if (fila && fila.nombre && fila.slug && 'estado' in fila) {
+      return {
+        slug: fila.slug, nombre: fila.nombre, estado: fila.estado, is_demo: !!fila.is_demo,
+        game: { slug: fila.game_slug, nombre: (fila.game_slug || '').toUpperCase() },
+        region: fila.region, major: !!fila.major, formato: fila.formato || null,
+        prize: fila.prize_value != null ? { value: Number(fila.prize_value), currency: fila.prize_currency || 'USD' } : null,
+        starts_at: fila.starts_at, ends_at: fila.ends_at, equipos: fila.max_teams,
+      };
+    }
+    return fila;
+  }
+
   function get(url) {
-    try {
-      if (window.VANTS_API && typeof window.VANTS_API.get === 'function') return window.VANTS_API.get(url);
-    } catch (e) {}
-    return fetch(url, { headers: { Accept: 'application/json' } })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); })
-      .catch(function (e) { return { ok: false, status: 0, data: null, error: e }; });
+    var ruta = url.split('?')[0];
+    var search = url.indexOf('?') > -1 ? url.slice(url.indexOf('?') + 1) : '';
+    var pUrl = proxyUrl(ruta, search);
+    var viaProxy = pUrl ? fetch(pUrl, { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j, via: 'proxy' }; }); })
+      .catch(function (e) { return { ok: false, status: 0, data: null, error: e }; }) : null;
+    var viaApi = (function () {
+      try {
+        if (window.VANTS_API && typeof window.VANTS_API.get === 'function') return window.VANTS_API.get(url);
+      } catch (e) {}
+      return fetch(url, { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, data: j }; }); })
+        .catch(function (e) { return { ok: false, status: 0, data: null, error: e }; });
+    })();
+    return Promise.resolve(viaProxy).then(function (pr) {
+      if (pr && pr.ok && pr.data) {
+        var arr = Array.isArray(pr.data) ? pr.data : (pr.data.items || []);
+        if (ruta === '/api/search') return viaApi;
+        if (Array.isArray(arr)) {
+          arr = arr.map(normalizar);
+          return { ok: true, status: 200, via: 'proxy', data: { ok: true, data: ruta === '/api/games' ? arr : { items: arr, total: arr.length, pag: 1 } } };
+        }
+      }
+      return viaApi;
+    });
   }
 
   /* ---------------- estados UI reutilizables ---------------- */
@@ -65,7 +133,8 @@
     if (!host) return;
     skeleton(host, 4);
     get('/api/teams' + (location.search || '')).then(function (r) {
-      var items = r.ok && r.data && r.data.ok && Array.isArray(r.data.data) ? r.data.data : null;
+      var dd = r.ok && r.data && r.data.ok ? r.data.data : null;
+      var items = Array.isArray(dd) ? dd : (dd && dd.items) || null;
       if (!items) { error(host, paginaEquipos); return; }
       if (!items.length) { empty(host, (I() && I().t('sin_datos')) || ''); return; }
       host.innerHTML = '<div class="pf-cards">' + items.map(function (t) {
@@ -84,9 +153,9 @@
     if (!host) return;
     skeleton(host, 3);
     get('/api/articles' + (location.search || '')).then(function (r) {
-      var d = r.ok && r.data && r.data.ok && r.data.data ? r.data.data : null;
-      if (!d) { error(host, paginaNoticias); return; }
-      var items = d.items || [];
+      var dd = r.ok && r.data && r.data.ok ? r.data.data : null;
+      if (!dd) { error(host, paginaNoticias); return; }
+      var items = Array.isArray(dd) ? dd : (dd && dd.items) || [];
       if (!items.length) { empty(host, (I() && I().t('sin_datos')) || ''); return; }
       host.innerHTML = '<div class="pf-arts">' + items.map(function (a) {
         return '<article class="pf-art">' +
@@ -105,8 +174,11 @@
     var slug = new URLSearchParams(location.search).get('slug') || '';
     if (!slug) { empty(host, ''); return; }
     skeleton(host, 2);
-    get('/api/articles/' + encodeURIComponent(slug)).then(function (r) {
-      var a = r.ok && r.data && r.data.ok && r.data.data ? r.data.data : null;
+    get('/api/articles').then(function (r) {
+      var d = r.ok && r.data && r.data.ok ? r.data.data : null;
+      var items = Array.isArray(d) ? d : (d && d.items) || [];
+      var a = null;
+      for (var i = 0; i < items.length; i++) { if (items[i].slug === slug) { a = items[i]; break; } }
       if (!a) { empty(host, ''); return; }
       var cuerpo = String(a.cuerpo || '').split(/\n+/).filter(Boolean).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('');
       host.innerHTML = '<article class="pf-art-full">' +
@@ -129,22 +201,30 @@
     if (input && q && input.value !== q) input.value = q;
     if (q.length < 2) { empty(host, (I() && I().t('vacio_busqueda')) || ''); return; }
     skeleton(host, 3);
-    get('/api/search?q=' + encodeURIComponent(q)).then(function (r) {
-      var d = r.ok && r.data && r.data.ok && r.data.data ? r.data.data : null;
-      if (!d) { error(host, function () { paginaBusqueda(); }); return; }
-      var hay = (d.torneos || []).length + (d.equipos || []).length + (d.jugadores || []).length + (d.articulos || []).length;
+    var patron = '%' + q + '%';
+    function px(tabla, sel) {
+      var u = new URL(PROXY);
+      u.searchParams.set('table', tabla);
+      u.searchParams.set(sel, 'ilike.' + patron);
+      u.searchParams.set('limit', '8');
+      return fetch(u, { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .catch(function () { return []; });
+    }
+    Promise.all([px('pt_torneos', 'nombre'), px('pt_teams', 'nombre'), px('pt_articulos', 'titulo')]).then(function (res) {
+      var d = { torneos: res[0] || [], equipos: res[1] || [], articulos: res[2] || [], jugadores: [] };
+      var hay = d.torneos.length + d.equipos.length + d.articulos.length;
       var tit = '<h2 class="pf-search-title">' + esc(((I() && I().t('resultados_para')) || 'Resultados para "{q}"').split('{q}').join(q)) + '</h2>';
-      if (!hay) { host.innerHTML = tit + ''; empty(host, ((I() && I().t('vacio_busqueda_res')) || 'Sin resultados para "{q}".').split('{q}').join(q)); return; }
+      if (!hay) { host.innerHTML = tit; empty(host, ((I() && I().t('vacio_busqueda_res')) || 'Sin resultados para "{q}".').split('{q}').join(q)); return; }
       var secciones = [];
       function lista(titulo, filas, hrefFn) {
         if (!filas.length) return;
         secciones.push('<h3 class="pf-search-h">' + esc(titulo) + '</h3><ul class="pf-search-list">' +
           filas.map(function (x) { return '<li><a href="' + hrefFn(x) + '">' + esc(x.nombre || x.titulo || '') + chipDemo(x.is_demo) + '</a></li>'; }).join('') + '</ul>');
       }
-      lista((I() && I().t('secciones.torneos')) || 'Torneos', d.torneos || [], function (x) { return '/torneo?slug=' + encodeURIComponent(x.slug); });
-      lista((I() && I().t('secciones.equipos')) || 'Equipos', d.equipos || [], function (x) { return '/equipos'; });
-      lista((I() && I().t('secciones.jugadores')) || 'Jugadores', d.jugadores || [], function (x) { return '/jugadores'; });
-      lista((I() && I().t('secciones.articulos')) || 'Artículos', d.articulos || [], function (x) { return '/noticia?slug=' + encodeURIComponent(x.slug); });
+      lista((I() && I().t('secciones.torneos')) || 'Torneos', d.torneos, function (x) { return '/torneo?slug=' + encodeURIComponent(x.slug); });
+      lista((I() && I().t('secciones.equipos')) || 'Equipos', d.equipos, function (x) { return '/equipos'; });
+      lista((I() && I().t('secciones.articulos')) || 'Artículos', d.articulos, function (x) { return '/noticia?slug=' + encodeURIComponent(x.slug); });
       host.innerHTML = tit + secciones.join('');
     }).catch(function () { error(host, function () { paginaBusqueda(); }); });
   }
