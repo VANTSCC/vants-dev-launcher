@@ -1,18 +1,20 @@
 {
   "name": "@vants/matchmaking-service",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "VANTS Matchmaking Service (Fastify). Cola de partida y tickets (Fase 4 conecta Neon).",
+  "description": "VANTS Matchmaking Service (Fastify). Fase 4: cola persistida en Neon (mm_*), elegibilidad, emparejamiento atómico y reporte de resultados.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node ../../scripts/test_mm_fase4.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "express": "^4.21.2",
-    "fastify": "^5.2.1"
+    "fastify": "^5.2.1",
+    "pg": "^8.23.1"
   }
 }

@@ -75,7 +75,7 @@ El backend (Worker) es la autoridad de todas las operaciones competitivas.
 | Auth | Identidad (Auth0 JWT), sesiones y permisos | ✅ |
 | Players | Perfiles, estadísticas, cuentas vinculadas | ✅ |
 | Ranked | Cálculo y registro de RR, rangos, temporadas | ✅ |
-| Matchmaking | Colas, criterios, asignación | 🔜 Fase 4 |
+| Matchmaking | Colas, criterios, asignación | ✅ Fase 4 (Neon, migración 21) |
 | Matches | Partidas, resultados y validación (series + FACEIT) | ✅ parcial |
 | Tournaments | Inscripciones, equipos, brackets, premios | ✅ (migración 17) |
 | Integrations | Eventos de juegos (FACEIT webhook+poller), Discord | ✅ |
@@ -88,15 +88,20 @@ Además del Worker existen **servicios Node complementarios** en `services/`
 | Servicio | Puerto | Framework | Estado |
 |----------|--------|-----------|--------|
 | api-gateway (`services/api-gateway/`) | 8080 | Express | ✅ base (healthz, /api/v1/status, rate limit, CORS) |
-| matchmaking-service (`services/matchmaking-service/`) | 8081 | Fastify | ✅ base en memoria (cola + tickets; Fase 4 lo conecta a Neon) |
+| matchmaking-service (`services/matchmaking-service/`) | 8081 | Fastify | ✅ Fase 4: cola persistida en Neon (mm_*), elegibilidad, emparejamiento atómico, reporte de resultado; memoria como fallback |
 
 ### Flujo de una partida competitiva
 
 1. Jugador inicia sesión y busca partida
-2. Matchmaking API valida elegibilidad, cola y reglas
+2. Matchmaking API valida elegibilidad (sub en `players`), encola en `mm_tickets`
+   (un ticket activo por jugador y juego; TTL 10 min) y empareja de forma
+   atómica (`mm_intentar_emparejar`: duo 1v1, team 5v5, SKIP LOCKED)
 3. Adaptador del juego integra **solo** funciones compatibles con el juego
-4. Resultado verificado: fuente confiable, validación, prevención de duplicados
-5. PostgreSQL + eventos: guardar, recalcular RR, actualizar ranking
+4. Resultado reportado por participantes (`mm_matches` `reportado`, primer
+   reporte gana) y verificado contra fuente confiable — prevención de
+   duplicados por claves únicas en cada capa
+5. PostgreSQL + eventos: guardar, recalcular RR (`rr_before`/`rr_after`),
+   actualizar ranking
 
 No se promete acceso automático a partidas/invitaciones/resultados si la API
 del juego no lo permite.

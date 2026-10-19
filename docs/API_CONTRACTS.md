@@ -37,16 +37,28 @@ Identidad: JWT de Auth0 RS256 verificado por JWKS en el servidor
 (`services/matchmaking-service/auth.js`). Sin token → 401. Token de otro
 jugador en un ticket → 403.
 
+**Persistencia (migración 21)**: cola y partidas en Neon (`mm_tickets`,
+`mm_matches`, `mm_match_players`). Sin `DATABASE_URL` postgres:// el servicio
+arranca en modo memoria (degradado). Unicidad: **un ticket activo por
+(sub, game)** — índice único parcial; reencolar devuelve el ticket vivo
+(200 `reutilizado:true`) conservando su modo/región originales. Elegibilidad:
+el sub debe existir en `players` (403 si no). Emparejamiento atómico
+(`mm_intentar_emparejar`, SKIP LOCKED): tamaños duo=2 (1v1), team=10 (5v5);
+el match nace `propuesto` al completarse el grupo. TTL del ticket: 10 min.
+Errores de BD → 503 JSON limpio; `/healthz` nunca 500 (reporta `db:error`).
+
 | Método | Ruta | Auth | Cuerpo / Respuesta |
 |--------|------|------|--------------------|
-| GET | `/healthz` | ninguna | `{ ok, service, version, uptime, queued }` |
-| POST | `/api/v1/matchmaking/queue` | Bearer JWT | body `{ game:"valorant", mode:"duo"\|"team", region:"EU" }` → 201 `{ ok, data:{ ticket, position, ttl_ms } }` · 400 sin `game` |
-| GET | `/api/v1/matchmaking/queue/:ticket` | Bearer JWT (dueño) | 200 `{ ok, data:{ ticket, game, mode, region, sub, enqueued_at, position } }` · 404 · 403 |
+| GET | `/healthz` | ninguna | `{ ok, service, version, store:"pg"\|"memoria", db:"ok"\|"error", queued }` |
+| POST | `/api/v1/matchmaking/queue` | Bearer JWT | body `{ game:"valorant", mode:"duo"\|"team", region:"EU" }` → 201 `{ ok, data:{ ticket, reutilizado, game, mode, region, position, ttl_ms, expires_at, match_id } }` · 200 si reutiliza · 400 sin `game`/`mode` inválido · 403 no elegible |
+| GET | `/api/v1/matchmaking/queue/:ticket` | Bearer JWT (dueño) | 200 `{ ok, data:{ ticket, game, mode, region, sub, status, enqueued_at, expires_at, match_id, position } }` · 404 · 403 |
 | DELETE | `/api/v1/matchmaking/queue/:ticket` | Bearer JWT (dueño) | 200 `{ ok, data:{ removed } }` · 404 · 403 |
+| GET | `/api/v1/matchmaking/matches/:id` | Bearer JWT (participante) | 200 `{ ok, data:{ match:{ id, game, mode, region, status, score_a, score_b, report_sub }, players:[{ sub, team }] } }` · 404 · 403 |
+| POST | `/api/v1/matchmaking/matches/:id/result` | Bearer JWT (participante) | body `{ score_a, score_b }` (enteros ≥0, no ambos 0) → 200 `{ ok, data:{ match_id, status:"reportado", score_a, score_b } }` · 400 score inválido · 409 ya reportado · 403/404 |
 | GET | `/api/v1/me` | Bearer JWT | 200 `{ ok, data:{ sub } }` |
 
-Fase 4 (pendiente): persistencia de la cola en Neon (tablas del árbol objetivo),
-elegibilidad (rango, sanciones, región) y emparejamiento real.
+Fase 4 (próximo paso): verificación del resultado (contraste FACEIT/capitán
+segundo) y aplicación de RR con `rr_before`/`rr_after` en `mm_match_players`.
 
 ## 4 · API Gateway (Fase 2/4 · Node/Express · :8080)
 
