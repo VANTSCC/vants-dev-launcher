@@ -37,6 +37,7 @@ jobs:
       FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
       LINKER_URL: https://br-sweet-shape-b42xhogj-linker.compute.c-6.us-east-2.aws.neon.tech
       VANTSBOT_URL: https://br-sweet-shape-b42xhogj-vantsbot.compute.c-6.us-east-2.aws.neon.tech
+      MM_URL: https://br-sweet-shape-b42xhogj-mm.compute.c-6.us-east-2.aws.neon.tech
       DISCORD_PUBLIC_KEY: ${{ secrets.DISCORD_PUBLIC_KEY }}
       DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
       # App id: el dueño lo guardó como DISCORD_ID_APP (fallback si no hay
@@ -94,6 +95,17 @@ jobs:
             ${VANTS_BOT_SECRET:+--env VANTS_BOT_SECRET=$VANTS_BOT_SECRET} \
             ${SUPERVISOR_DM_ID:+--env SUPERVISOR_DM_ID=$SUPERVISOR_DM_ID}
 
+      - name: "Desplegar mm (matchmaking serverless · cola, partidas, RR, historiales, invites)"
+        run: |
+          neon functions deploy mm \
+            --project-id square-surf-41242074 \
+            --branch br-sweet-shape-b42xhogj \
+            --src neon-functions/mm \
+            --api-key "$NK" \
+            --wait \
+            --env AUTH0_DOMAIN=vants.eu.auth0.com \
+            --env AUTH0_AUDIENCE=https://api.vants.app
+
       - name: Verificación (diagnóstico público del linker)
         run: |
           sleep 5
@@ -131,3 +143,13 @@ jobs:
           if [ -z "$DISCORD_BOT_TOKEN" ] || [ -z "$DISCORD_PUBLIC_KEY" ]; then
             echo "::warning::Faltan DISCORD_BOT_TOKEN y/o DISCORD_PUBLIC_KEY — añade los secrets para activar el mando /agente."
           fi
+
+      - name: "Verificación mm (salud del matchmaking serverless)"
+        run: |
+          sleep 5
+          echo "--- GET /salud (mm · cola/partidas/RR/invites) ---"
+          curl -s --max-time 30 "$MM_URL/salud" | head -c 500; echo
+          echo "--- POST /encolar sin token (esperado 401) ---"
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST -H 'content-type: application/json' -d '{"game":"valorant"}' "$MM_URL/encolar")
+          echo "HTTP $CODE"
+          if [ "$CODE" != "401" ]; then echo "::warning::mm /encolar sin token respondió $CODE (esperado 401)"; fi

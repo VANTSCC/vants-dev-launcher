@@ -44,3 +44,49 @@ jobs:
         env:
           LOG_LEVEL: silent
         run: npm test
+
+  neon_functions:
+    name: Neon Functions (vantsbot 36 + mm 16 asserts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 24: type-stripping nativo para importar los index.ts de las funciones
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Dependencias (pg para el bundling/imports)
+        run: npm install --no-audit --no-fund
+
+      - name: "vantsbot (Discord: interactions, puente, /setup, eventos)"
+        run: node scripts/test_vantsbot.js
+
+      - name: "mm (matchmaking serverless: JWT RS256, cola, RR, invites)"
+        run: node scripts/test_mm_neon.js
+
+  agente:
+    name: Agente VANTS (61 + 60 + 28 asserts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Dependencias del agente
+        working-directory: services/agent-service
+        run: npm ci --no-audit --no-fund
+
+      - name: Núcleo, reglas y memoria
+        working-directory: services/agent-service
+        run: node ../../scripts/test_agente.js
+
+      - name: Sandbox (memoria autoalojada + exec aislado)
+        working-directory: services/agent-service
+        run: node ../../scripts/test_sandbox_agente.js
+
+      - name: Cerebro agéntico GLM (function calling, servidores falsos)
+        working-directory: services/agent-service
+        run: node ../../scripts/test_llm_agente.js
