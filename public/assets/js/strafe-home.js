@@ -1,23 +1,34 @@
 /* ============================================================
-   STRAFE HOME · v1 — Comportamiento del index estilo strafe.com
+   STRAFE HOME · v2 — Filas con el layout EXACTO de strafe.com
    ------------------------------------------------------------
-   Módulo 100% INDEPENDIENTE (mismo patrón que strafe.css):
-   · NO toca arena.js / arena-live.js / Auth0 / RR.
-   · Tabs de estado EN CURSO / PRÓXIMOS / ARCHIVO que filtran
-     la tabla de torneos (como strafe.com).
-   · Filas alimentadas con datos REALES de Neon
-     (window.VantDB.tournaments()) + fallback S4 si la base
-     no responde. Cada fila lleva a torneos.html (inscripción).
+   Fila strafe: [icono juego] [logo] [NOMBRE + juego + badge] |
+   [región] [premio] [fechas] [equipos] — meta 12px/700 #666.
+   · Tabs EN CURSO / PRÓXIMOS (default) / ARCHIVO.
+   · Datos REALES de Neon (window.VantDB.tournaments()) con
+     fallback S4. Cada fila abre la ficha torneo.html?id=…
+   · Hero/breadcrumb/panel sincronizados con el juego activo
+     (se re-imponen tras el renderAll de arena.js).
+   Módulo independiente: no toca arena.js/Auth0/RR.
    ============================================================ */
 (function () {
   'use strict';
   if (window.__SF_HOME__) return;
-  var SF = { version: '1.0.0', estado: 'curso' };
+  var SF = { version: '2.0.0', estado: 'prox' }; /* strafe aterriza en PRÓXIMOS */
   window.__SF_HOME__ = SF;
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
   function safe(fn) { try { fn(); } catch (e) { /* silencio total */ } }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  var GAME_NAMES = { valorant: 'VALORANT', cs2: 'COUNTER-STRIKE 2' };
+  var ICON_VAL = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.2 3h5.6l7.3 14-2.3 4L2.2 3Z"/><path d="M21.8 3h-5.6l-3.4 6.5 2.4 4.5L21.8 3Z"/></svg>';
+  var ICON_CS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="2.1"/><path d="M12 3.8v3.4M12 16.8v3.4M3.8 12h3.4M16.8 12h3.4"/></svg>';
+
+  function juegoDe(t) {
+    var g = String(t.game || '').toLowerCase();
+    if (/cs|counter|csgo/.test(g)) return 'cs2';
+    return 'valorant';
+  }
 
   /* ---------------- CLASIFICACIÓN POR ESTADO ---------------- */
   function estadoDe(t) {
@@ -27,35 +38,51 @@
     return 'prox';
   }
 
-  /* ---------------- FILAS ---------------- */
-  var TROPHY = '<i data-lucide="trophy"></i>';
+  /* ---------------- FECHAS ESTILO STRAFE "17 – 20 NOV" ---------------- */
+  var MES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+  function dShort(d) { return d.getDate() + ' ' + MES[d.getMonth()]; }
+  function fechasDe(t) {
+    try {
+      var a = t.starts_at ? new Date(t.starts_at) : null;
+      var b = t.ends_at ? new Date(t.ends_at) : null;
+      if (a && !isNaN(a.getTime()) && b && !isNaN(b.getTime()) && b.getTime() !== a.getTime()) return dShort(a) + ' – ' + dShort(b);
+      if (a && !isNaN(a.getTime())) return dShort(a);
+      if (t.day && t.mon) return t.day + ' ' + t.mon;
+    } catch (e) {}
+    return 'POR ANUNCIAR';
+  }
 
+  /* ---------------- FILA EXACTA STRAFE ---------------- */
   function fila(t) {
     var ed = estadoDe(t);
-    var badge = ed === 'curso' ? '<span class="sf-badge">ABIERTO</span>'
-      : ed === 'arch' ? '<span class="sf-badge dim">FINALIZADO</span>'
-      : '<span class="sf-badge red">PRÓXIMO</span>';
-    var fecha = 'POR ANUNCIAR';
-    if (t.starts_at) {
-      var d = new Date(t.starts_at);
-      if (!isNaN(d.getTime())) fecha = String(d.getDate()).padStart(2, '0') + ' ' + d.toLocaleString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
-    } else if (t.day && t.mon) {
-      fecha = t.day + ' ' + t.mon;
-    }
+    var g = juegoDe(t);
+    /* badge tipo MAJOR junto al nombre (lima = abierto/major) */
+    var tier = String(t.tier || 'open').toLowerCase();
+    var badge = '';
+    if (tier === 'major' || /major|premier/.test(tier)) badge = '<span class="sf-badge">MAJOR</span>';
+    else if (ed === 'curso') badge = '<span class="sf-badge">ABIERTO</span>';
+    else if (ed === 'arch') badge = '<span class="sf-badge dim">FINALIZADO</span>';
+    else badge = '<span class="sf-badge red">PRÓXIMO</span>';
+
     var premio = (t.prize_pool != null && Number(t.prize_pool) > 0)
-      ? '$' + Number(t.prize_pool).toLocaleString('es-ES')
-      : 'POR ANUNCIAR';
-    var cupos = (t.max_participants != null && Number(t.max_participants) > 0)
-      ? (Number(t.current_participants) || 0) + ' / ' + Number(t.max_participants)
-      : 'ABIERTOS';
-    var tier = esc(String(t.tier || 'open').toUpperCase());
-    return '<a class="sf-row" href="torneos.html" data-est="' + ed + '">' +
-      '<span class="sf-ric">' + TROPHY + '</span>' +
-      '<span class="sf-rmain"><span class="sf-rname">' + esc(t.name || 'Torneo VANTS') + '</span>' +
-      '<span class="sf-rmeta"><span class="tg">' + tier + '</span><span>VANTS · ' + esc(t.game ? String(t.game).toUpperCase() : 'VALORANT') + '</span>' + badge + '</span></span>' +
-      '<span class="sf-rcol c-prize"><small>PREMIO</small><b' + (t.prize_pool != null && Number(t.prize_pool) > 0 ? ' class="lm"' : '') + '>' + esc(premio) + '</b></span>' +
-      '<span class="sf-rcol c-fechas"><small>FECHAS</small><b>' + esc(fecha) + '</b></span>' +
-      '<span class="sf-rcol c-slots"><small>EQUIPOS</small><b>' + esc(cupos) + '</b></span>' +
+      ? '$' + Number(t.prize_pool).toLocaleString('en-US')
+      : '—';
+    var equipos = (t.max_participants != null && Number(t.max_participants) > 0)
+      ? '+' + Number(t.max_participants)
+      : (Number(t.current_participants) > 0 ? '+' + Number(t.current_participants) : '—');
+    var region = esc(String(t.region || 'LATAM').toUpperCase().slice(0, 6));
+    var href = 'torneo.html?id=' + encodeURIComponent(t.id != null ? t.id : (t.slug || '')) + '#ficha';
+
+    return '<a class="sf-row" href="' + href + '" data-est="' + ed + '">' +
+      '<span class="sf-rlogo">' + (g === 'cs2' ? ICON_CS : ICON_VAL) + '</span>' +
+      '<span class="sf-rmain">' +
+        '<span class="sf-rname"><b>' + esc(t.name || 'Torneo VANTS') + '</b>' + badge + '</span>' +
+        '<span class="sf-stage">' + (GAME_NAMES[g] || 'VALORANT') + ' · ' + esc(String(t.tier || 'open').toUpperCase()) + '</span>' +
+      '</span>' +
+      '<span class="sf-rcol c-region">' + region + '</span>' +
+      '<span class="sf-rcol c-prize">' + premio + '</span>' +
+      '<span class="sf-rcol c-fechas">' + esc(fechasDe(t)) + '</span>' +
+      '<span class="sf-rcol c-slots sf-rparts"><span class="n">' + equipos + '</span></span>' +
       '<span class="sf-rgo"><i data-lucide="chevron-right"></i></span></a>';
   }
 
@@ -64,18 +91,46 @@
     if (!host) return;
     var visibles = rows.filter(function (t) { return estadoDe(t) === SF.estado; });
     if (SF.estado === 'arch' && !visibles.length) {
-      host.innerHTML = '<div class="sf-empty">ARCHIVO VACÍO POR AHORA — CADA TEMPORADA PASA A VIVIR AQUÍ.</div>';
+      host.innerHTML = '<div class="sf-empty"><b>ARCHIVO VACÍO POR AHORA</b>Cada temporada que termina pasa a vivir aquí, con sus campeones y brackets.</div>';
     } else if (!visibles.length) {
-      host.innerHTML = '<div class="sf-empty">SIN TORNEOS EN ESTE ESTADO · EL CALENDARIO SE ANUNCIA POR DISCORD Y LA WEB.</div>';
+      host.innerHTML = '<div class="sf-empty"><b>SIN TORNEOS EN ESTE ESTADO</b>El calendario se anuncia por Discord y en la sección Torneos.</div>';
     } else {
       host.innerHTML = visibles.slice(0, 8).map(fila).join('');
     }
-    var lbl = $('#sfTState');
-    if (lbl) lbl.textContent = SF.estado === 'curso' ? 'EN CURSO' : SF.estado === 'prox' ? 'PRÓXIMOS' : 'ARCHIVO';
     var cnt = $('#sfTCount');
-    if (cnt) cnt.textContent = rows.length + ' TORNEOS · TEMPORADA 4';
+    if (cnt) {
+      cnt.textContent = rows.length
+        ? (SF.cache === FALLBACK ? 'CALENDARIO S4 · FECHAS POR ANUNCIAR' : 'DATOS EN VIVO · NEON · ' + rows.length + ' TORNEOS')
+        : 'CALENDARIO S4 · FECHAS POR ANUNCIAR';
+      cnt.classList.toggle('on', SF.cache !== FALLBACK && rows.length > 0);
+    }
     safe(function () { if (window.lucide && window.lucide.createIcons) window.lucide.createIcons(); });
   }
+
+  /* ---------------- HERO / BREADCRUMB / PANEL POR JUEGO (después de arena.js) ---------------- */
+  function juego() { return document.body.getAttribute('data-game') || 'valorant'; }
+  function nombre() { return GAME_NAMES[juego()] || 'VALORANT'; }
+  function heroStrafe() {
+    safe(function () {
+      var h = $('#heroTitle'), s = $('#heroSub');
+      if (h) h.innerHTML = 'Próximos torneos de ' + nombre();
+      if (s) s.textContent = 'Calendario de próximos torneos de esports de ' + nombre() + '. Inscripción abierta por equipo, premios en efectivo y VANTS RATING en juego cada partida.';
+      var c = $('#sfCrumbGame'); if (c) c.textContent = nombre();
+      var cs = $('#sfCrumbSect'); if (cs) cs.textContent = 'TORNEOS DE ' + nombre();
+      var pg = $('#sfPanelGame'); if (pg) pg.textContent = nombre();
+    });
+  }
+  safe(function () {
+    heroStrafe();
+    window.addEventListener('load', heroStrafe);
+    /* los .gbtn de arena.js corren primero (se registraron antes); re-imponemos después */
+    document.querySelectorAll('.gbtn').forEach(function (b) {
+      b.addEventListener('click', function () { setTimeout(heroStrafe, 0); });
+    });
+    if (window.MutationObserver) {
+      new MutationObserver(heroStrafe).observe(document.body, { attributes: true, attributeFilter: ['data-game'] });
+    }
+  });
 
   /* ---------------- TABS ---------------- */
   safe(function () {
@@ -84,17 +139,17 @@
       b.addEventListener('click', function () {
         SF.estado = b.getAttribute('data-est');
         tabs.forEach(function (x) { x.classList.toggle('on', x === b); });
-        if (SF.cache) pintar(SF.cache);
-        else pintar(FALLBACK);
+        pintar(SF.cache || FALLBACK);
       });
     });
   });
 
   /* ---------------- FALLBACK S4 (si Neon no responde) ---------------- */
   var FALLBACK = [
-    { name: 'ASCENSIÓN SERIES S4', status: 'abierto', tier: 'open', game: 'valorant', prize_pool: null, day: '24', mon: 'OCT' },
-    { name: 'VANTS RANKED NOCTURNA', status: 'abierto', tier: 'ranked', game: 'valorant', prize_pool: null },
-    { name: 'COPA COMUNIDAD S4', status: 'proximamente', tier: 'open', game: 'valorant', prize_pool: null, day: '08', mon: 'NOV' }
+    { id: 's4-asc', name: 'ASCENSIÓN SERIES S4', status: 'abierto', tier: 'open', game: 'valorant', prize_pool: null, starts_at: null, day: '24', mon: 'OCT', region: 'LATAM', max_participants: 32 },
+    { id: 's4-ranked', name: 'VANTS RANKED NOCTURNA', status: 'abierto', tier: 'ranked', game: 'valorant', prize_pool: null, region: 'LATAM', max_participants: 64 },
+    { id: 's4-copa', name: 'COPA COMUNIDAD S4', status: 'proximamente', tier: 'open', game: 'valorant', prize_pool: 500, day: '08', mon: 'NOV', region: 'LATAM', max_participants: 16 },
+    { id: 's4-stratos', name: 'STRATOS MAJOR S4', status: 'proximamente', tier: 'major', game: 'cs2', prize_pool: 1000, day: '15', mon: 'NOV', region: 'LATAM', max_participants: 24 }
   ];
 
   /* ---------------- CARGA DE DATOS REALES ---------------- */
@@ -119,19 +174,7 @@
     if (!d) return;
     d.addEventListener('click', function (e) {
       e.preventDefault();
-      toast('El invite del Discord oficial se entrega con tu cuenta: ingresa y lo verás en tu panel.', 'info');
+      if (typeof window.toast === 'function') toast('El invite del Discord oficial se entrega con tu cuenta: ingresa y lo verás en tu panel.', 'info');
     });
-  });
-
-  /* ---------------- BREADCRUMB SINCRONIZADO CON EL JUEGO ---------------- */
-  safe(function () {
-    var el = $('#sfCrumbGame');
-    if (!el || !window.MutationObserver) return;
-    var sync = function () {
-      var g = (document.body.getAttribute('data-game') || 'valorant').toUpperCase();
-      el.textContent = g === 'CS2' ? 'COUNTER-STRIKE 2' : g;
-    };
-    new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['data-game'] });
-    sync();
   });
 })();

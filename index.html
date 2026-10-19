@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VANTS GAMES — Torneos de Valorant y CS2 · Juega, compite y gana</title>
-<meta name="description" content="Calendario de torneos VANTS: inscripción abierta, premios en efectivo y VANTS RATING propio. Valorant y Counter-Strike 2 — camino al hub de todos los juegos de PC. Entra con Google, Discord, GitHub, Kick o correo.">
+<title>VANTS GAMES — Próximos torneos de Valorant y CS2 · Calendario</title>
+<meta name="description" content="Calendario de próximos torneos VANTS: inscripción abierta, premios en efectivo y VANTS RATING propio. Valorant y Counter-Strike 2 — camino al hub de todos los juegos de PC. Entra con Google, Discord, GitHub, Kick o correo.">
 <link rel="canonical" href="https://feispla.github.io/Vants/">
-<meta property="og:title" content="VANTS GAMES — Torneos, ranking y premios reales">
+<meta property="og:title" content="VANTS GAMES — Próximos torneos, ranking y premios reales">
 <meta property="og:url" content="https://feispla.github.io/Vants/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="stylesheet" href="./assets/css/arena.css?v=10">
 <link rel="stylesheet" href="./assets/css/vants-shop.css?v=1">
 <link rel="stylesheet" href="./assets/css/vants-cinematic.css?v=1">
-<link rel="stylesheet" href="./assets/css/strafe.css?v=1">
+<link rel="stylesheet" href="./assets/css/strafe.css?v=2">
 </head>
-<body class="strafe" data-game="valorant">
+<body class="sf" data-game="valorant">
 
 <!-- ===== SYMBOL DEL LOGO VANTS (usable en todo el sitio) ===== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -39,7 +39,7 @@
 <!-- TICKER (arena.js lo llena; en el home strafe vive oculto por diseño) -->
 <div class="ticker" hidden><div class="ticker-track" id="tickerTrack"></div></div>
 
-<!-- ===== BARRA SUPERIOR: LOGO + JUEGOS + ACCIONES ===== -->
+<!-- ===== BARRA SUPERIOR: LOGO + JUEGOS + ACCIONES (strafe) ===== -->
 <header class="sf-top">
   <div class="wrap sf-top-in">
     <a class="sf-brand" href="index.html">
@@ -51,7 +51,7 @@
         VALORANT
       </button>
       <button class="sf-title gbtn" data-game="cs2">
-        <i data-lucide="crosshair"></i>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.2"/><circle cx="12" cy="12" r="2.1"/><path d="M12 3.8v3.4M12 16.8v3.4M3.8 12h3.4M16.8 12h3.4"/></svg>
         COUNTER-STRIKE 2
       </button>
       <span class="sf-title soon">+ MÁS JUEGOS PC</span>
@@ -81,9 +81,9 @@
   </div>
 </nav>
 
-<!-- BREADCRUMB -->
+<!-- BREADCRUMB (strafe) -->
 <div class="wrap sf-crumb">
-  <a href="index.html">INICIO</a><i>/</i><b id="sfCrumbGame">VALORANT</b><i>/</i><span>COMPETITIVO</span>
+  <a href="index.html">INICIO</a><i>|</i><b id="sfCrumbGame">VALORANT</b><i>|</i><span id="sfCrumbSect">TORNEOS DE VALORANT</span><i>|</i><b>PRÓXIMOS</b>
 </div>
 
 <!-- ===== HERO ESTILO STRAFE + TABS DE ESTADO ===== -->
@@ -93,14 +93,16 @@
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.2 3h5.6l7.3 14-2.3 4L2.2 3Z"/><path d="M21.8 3h-5.6l-3.4 6.5 2.4 4.5L21.8 3Z"/></svg>
     </span>
     <div>
-      <h1 class="sf-h1" id="heroTitle">ASCENSIÓN<br><span class="out">SERIES</span> <span class="acc">S4</span></h1>
-      <p class="sf-sub" id="heroSub">El circuito competitivo abierto de LATAM. Clasificá con tu equipo, subí por el bracket y llevate la parte del premio. Matchmaking por skill, anti-cheat obligatorio y servidores 128 tick.</p>
+      <h1 class="sf-h1" id="heroTitle">Próximos torneos de VALORANT</h1>
+      <p class="sf-sub" id="heroSub">Calendario de próximos torneos de esports de VALORANT. Inscripción abierta por equipo, premios en efectivo y VANTS RATING en juego cada partida.</p>
     </div>
   </div>
   <div class="wrap sf-tabs-row">
-    <button class="sf-tab on" data-est="curso">EN CURSO</button>
-    <button class="sf-tab" data-est="prox">PRÓXIMOS</button>
-    <button class="sf-tab" data-est="arch">ARCHIVO</button>
+    <div class="sf-tabswrap">
+      <button class="sf-tab" data-est="curso">EN CURSO</button>
+      <button class="sf-tab on" data-est="prox">PRÓXIMOS</button>
+      <button class="sf-tab" data-est="arch">ARCHIVO</button>
+    </div>
     <span class="sf-live-note" id="liveDataBadge">CALENDARIO S4 · CARGANDO…</span>
     <!-- Compatibilidad arena.js: IDs exigidos por el rotador de juego -->
     <span id="gbNext" hidden></span>
@@ -112,7 +114,7 @@
   <div class="wrap sf-grid">
     <div class="sf-panel">
       <div class="sf-panel-head">
-        <span>TORNEOS VANTS · <span id="sfTState">EN CURSO</span></span>
+        <span>PRÓXIMOS TORNEOS DE <span id="sfPanelGame">VALORANT</span></span>
         <small id="sfTCount">CARGANDO…</small>
       </div>
       <div class="sf-table" id="sfRows"></div>
@@ -149,70 +151,80 @@
 <!-- ===== JUEGOS (HUB UNIVERSAL) ===== -->
 <section class="sf-sec" id="sfJuegos">
   <div class="wrap">
-    <div class="sf-panel-head" style="border:1px solid var(--line);border-radius:10px 10px 0 0;background:var(--panel2)"><span>ELIGE TU ARENA</span><small>EL HUB DE TODOS LOS JUEGOS PC</small></div>
-    <div class="sf-games" style="border-radius:0 0 10px 10px;border-top:none;overflow:hidden">
-      <button class="sf-game gbtn g-val" data-game="valorant">
-        <span class="bg"></span>
-        <span class="sf-gin"><span class="sf-gtag hot">ACTIVO · RATING 2.0</span><h3>VALORANT</h3><p>El shooter táctico 5v5 de Riot. Series BO3, bracket doble y RR en juego cada partida.</p><span class="go">ENTRAR A LA ARENA <i data-lucide="chevron-right"></i></span></span>
-      </button>
-      <button class="sf-game gbtn g-cs" data-game="cs2">
-        <span class="bg"></span>
-        <span class="sf-gin"><span class="sf-gtag">ACTIVO · RATING 2.1</span><h3>COUNTER-STRIKE 2</h3><p>El clásico competitivo de Valve. MR12, servidores dedicados y anti-cheat obligatorio.</p><span class="go">ENTRAR A LA ARENA <i data-lucide="chevron-right"></i></span></span>
-      </button>
-      <a class="sf-game g-more" href="guia.html">
-        <span class="bg"></span>
-        <span class="sf-gin"><span class="sf-gtag">PRÓXIMAMENTE</span><h3>+ MÁS JUEGOS PC</h3><p>El hub universal: nuevos títulos y comunidades llegarán a la arena VANTS.</p><span class="go">VER LA GUÍA <i data-lucide="chevron-right"></i></span></span>
-      </a>
+    <div class="sf-panel">
+      <div class="sf-panel-head"><span>ELIGE TU ARENA</span><small>EL HUB DE TODOS LOS JUEGOS PC</small></div>
+      <div style="padding:16px">
+        <div class="sf-games">
+          <button class="sf-game gbtn g-val" data-game="valorant">
+            <span class="bg"></span>
+            <span class="sf-gin"><span class="sf-gtag hot">ACTIVO · RATING 2.0</span><h3>VALORANT</h3><p>El shooter táctico 5v5 de Riot. Series BO3, bracket doble y RR en juego cada partida.</p><span class="go">ENTRAR A LA ARENA <i data-lucide="chevron-right"></i></span></span>
+          </button>
+          <button class="sf-game gbtn g-cs" data-game="cs2">
+            <span class="bg"></span>
+            <span class="sf-gin"><span class="sf-gtag">ACTIVO · RATING 2.1</span><h3>COUNTER-STRIKE 2</h3><p>El clásico competitivo de Valve. MR12, servidores dedicados y anti-cheat obligatorio.</p><span class="go">ENTRAR A LA ARENA <i data-lucide="chevron-right"></i></span></span>
+          </button>
+          <a class="sf-game g-more" href="guia.html">
+            <span class="bg"></span>
+            <span class="sf-gin"><span class="sf-gtag">PRÓXIMAMENTE</span><h3>+ MÁS JUEGOS PC</h3><p>El hub universal: nuevos títulos y comunidades llegarán a la arena VANTS.</p><span class="go">VER LA GUÍA <i data-lucide="chevron-right"></i></span></span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ===== GUÍAS Y RECURSOS ===== -->
+<!-- ===== GUÍAS Y CONSEJOS (cards con media como strafe) ===== -->
 <section class="sf-sec" id="sfGuias">
   <div class="wrap">
-    <div class="sf-panel-head" style="border:1px solid var(--line);border-radius:10px 10px 0 0;background:var(--panel2)"><span>GUÍAS Y RECURSOS</span><small>TODO PARA SUBIR</small></div>
-    <div class="sf-cards" style="border-radius:0 0 10px 10px;border-top:none;overflow:hidden;box-shadow:0 -14px 0 -12px var(--panel)">
-      <a class="sf-card c1" href="guia.html">
-        <span class="sf-cmedia"><i data-lucide="compass"></i></span>
-        <span class="sf-cbody"><h4>Cómo funciona VANTS</h4><p>Del registro al podio: RR, insignias, brackets, membresías y todo el sistema de la arena explicado paso a paso.</p><span class="sf-cfoot"><span>GUÍA OFICIAL</span><span class="sf-lk">LEER →</span></span></span>
-      </a>
-      <a class="sf-card c2" href="rangos.html">
-        <span class="sf-cmedia"><i data-lucide="shield-check"></i></span>
-        <span class="sf-cbody"><h4>VANTS RANKED y rangos</h4><p>Cola ranked con series cortas: cada resultado verificado mueve tu VANTS RATING con historial auditable.</p><span class="sf-cfoot"><span>SISTEMA DE RANGOS</span><span class="sf-lk">VER →</span></span></span>
-      </a>
-      <a class="sf-card c3" href="clips.html">
-        <span class="sf-cmedia"><i data-lucide="clapperboard"></i></span>
-        <span class="sf-cbody"><h4>Clips · Momentos destacados</h4><p>Las mejores jugadas del circuito: aces, clutches y jugadas de la semana verificadas por la comunidad.</p><span class="sf-cfoot"><span>COMUNIDAD</span><span class="sf-lk">VER LOS CLIPS →</span></span></span>
-      </a>
+    <div class="sf-panel">
+      <div class="sf-panel-head"><span>GUÍAS Y CONSEJOS</span><small>TODO PARA SUBIR</small></div>
+      <div class="sf-cards">
+        <a class="sf-card c1" href="guia.html">
+          <span class="sf-cmedia"><i data-lucide="compass"></i></span>
+          <span class="sf-cbody"><h4>Cómo funciona VANTS</h4><p>Del registro al podio: RR, insignias, brackets, membresías y todo el sistema de la arena explicado paso a paso.</p><span class="sf-cfoot"><span>GUÍA OFICIAL</span><span class="sf-lk">LEER →</span></span></span>
+        </a>
+        <a class="sf-card c2" href="rangos.html">
+          <span class="sf-cmedia"><i data-lucide="shield-check"></i></span>
+          <span class="sf-cbody"><h4>VANTS RANKED y rangos</h4><p>Cola ranked con series cortas: cada resultado verificado mueve tu VANTS RATING con historial auditable.</p><span class="sf-cfoot"><span>SISTEMA DE RANGOS</span><span class="sf-lk">VER →</span></span></span>
+        </a>
+        <a class="sf-card c3" href="clips.html">
+          <span class="sf-cmedia"><i data-lucide="clapperboard"></i></span>
+          <span class="sf-cbody"><h4>Clips · Momentos destacados</h4><p>Las mejores jugadas del circuito: aces, clutches y jugadas de la semana verificadas por la comunidad.</p><span class="sf-cfoot"><span>COMUNIDAD</span><span class="sf-lk">VER LOS CLIPS →</span></span></span>
+        </a>
+      </div>
+      <a class="sf-seeall" href="clips.html">VER TODOS LOS ARTÍCULOS <i data-lucide="chevron-right"></i></a>
     </div>
   </div>
 </section>
 
-<!-- ===== FAQ ===== -->
+<!-- ===== FAQ (panel + texto, como strafe) ===== -->
 <section class="sf-sec" id="sfFaq">
   <div class="wrap">
-    <div class="sf-panel-head" style="border:1px solid var(--line);border-radius:10px 10px 0 0;background:var(--panel2)"><span>PREGUNTAS FRECUENTES</span><small>VANTS GAMES</small></div>
-    <div class="sf-faq">
-      <details open><summary>¿Qué es VANTS GAMES exactamente?<span class="plus">+</span></summary><div class="fbody">Es la arena competitiva de VALORANT y Counter-Strike 2 — camino a ser el hub de todos los juegos de PC. Torneos con premio, VANTS RATING propio, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</div></details>
-      <details><summary>¿Es gratis registrarse en VANTS?<span class="plus">+</span></summary><div class="fbody">Sí. Crear tu cuenta y entrar a la comunidad es gratis. Hay torneos abiertos sin costo y membresías opcionales (VANTS PRO, VANTS CREATOR) con beneficios extra.</div></details>
-      <details><summary>¿Cómo subo mi VANTS RATING (RR)?<span class="plus">+</span></summary><div class="fbody">Jugando series de VANTS RANKED y torneos. Cada resultado verificado mueve tu rating automáticamente y queda registrado en tu historial con motivo, partida, temporada y fecha — nada manual, todo auditable.</div></details>
-      <details><summary>¿Cómo se garantiza el juego limpio?<span class="plus">+</span></summary><div class="fbody">Anti-cheat obligatorio, una cuenta por jugador, verificación de resultados por el sistema y los capitanes, y moderación activa. Las trampas se sancionan con exclusión.</div></details>
-      <details><summary>¿Cuándo hay torneos y cómo me inscribo?<span class="plus">+</span></summary><div class="fbody">El calendario completo vive en la sección Torneos, con fechas, formato y cupos de cada evento. Te inscribes desde la web con tu cuenta (Google, Discord, GitHub, Kick o correo) o desde Discord.</div></details>
-      <details><summary>¿Hay premios en dinero?<span class="plus">+</span></summary><div class="fbody">Sí. Los torneos con premio anuncian su pozo en el cartel. Los pagos se procesan de forma segura por Stripe (tarjeta, Klarna, Link y más) y el reglamento de cada torneo define el reparto.</div></details>
-    </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:14px">
-      <a class="sf-seeall" href="preguntas-frecuentes.html" style="border:none;padding:10px 4px">VER TODAS LAS PREGUNTAS <i data-lucide="chevron-right"></i></a>
+    <div class="sf-panel">
+      <div class="sf-panel-head"><span>FAQ</span><small>VANTS GAMES</small></div>
+      <div class="sf-faq" style="border:none;border-radius:0">
+        <details><summary>¿Cómo funcionan los torneos de VANTS?<span class="plus">+</span></summary><div class="fbody">Se inscriben equipos completos desde la web o Discord. Cada torneo publica fechas, formato (BO3, doble eliminación), cupos y fee si aplica. Los brackets se juegan en fechas fijas y cada serie se verifica antes de avanzar.</div></details>
+        <details><summary>¿Cuánto dinero en premios hay en los torneos?<span class="plus">+</span></summary><div class="fbody">Cada torneo con premio anuncia su pozo en el cartel y en la página del evento. Los pagos se procesan de forma segura por Stripe (tarjeta, Klarna, Link y más) y el reglamento define el reparto entre posiciones.</div></details>
+        <details><summary>¿Cómo subo mi VANTS RATING (RR)?<span class="plus">+</span></summary><div class="fbody">Jugando series de VANTS RANKED y torneos. Cada resultado verificado mueve tu rating automáticamente y queda registrado en tu historial con motivo, partida, temporada y fecha — nada manual, todo auditable.</div></details>
+        <details><summary>¿Es gratis registrarse en VANTS?<span class="plus">+</span></summary><div class="fbody">Sí. Crear tu cuenta y entrar a la comunidad es gratis. Hay torneos abiertos sin costo y membresías opcionales (VANTS PRO, VANTS CREATOR) con beneficios extra.</div></details>
+      </div>
+      <div class="sf-seo">
+        <p>Bienvenido a la página de <b>próximos torneos de VANTS GAMES</b>, tu calendario definitivo para mantenerte conectado al competitivo de VALORANT y Counter-Strike 2. Nuestra plataforma te trae información detallada sobre los calendarios de próximos torneos, equipos participantes, dinero en premios, cupos disponibles y todos los demás detalles esenciales del torneo, como formato, fechas y ubicación.</p>
+        <p>Al proporcionar cobertura completa de los últimos torneos de la arena, nos aseguramos de que estés informado y comprometido con la acción trepidante y estratégica que ha hecho de VANTS una referencia en el panorama de los videojuegos competitivos de LATAM. Ya seas un fan dedicado o nuevo en el mundo del competitivo, nuestra interfaz fácil de usar ofrece acceso sin esfuerzo a las actualizaciones más recientes sobre torneos, asegurándote de no perderte nunca un momento de emoción.</p>
+        <p>Confía en la página de <b>próximos torneos de VANTS GAMES</b> como tu fuente de referencia para la información más reciente sobre eventos de esports, inscripción de equipos y verificación de resultados. Donde nace la ventaja.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FOOTER POR COLUMNAS ===== -->
+<!-- ===== FOOTER POR COLUMNAS (strafe: marca + tiendas) ===== -->
 <footer class="sf-foot">
   <div class="wrap sf-foot-in">
     <div class="sf-fbrand">
       <a class="sf-brand" href="index.html"><svg class="mark" style="width:30px;height:30px"><use href="#vmark"/></svg><b style="font-size:19px">VANTS</b><small>GAMES</small></a>
       <p>La arena competitiva de VALORANT y Counter-Strike 2: torneos con premio, rangos propios, insignias verificadas y una comunidad que juega para subir.</p>
       <span class="tag">VANTS GAMES — Donde nace la ventaja.</span>
+      <a class="sf-store" href="descargar.html"><i data-lucide="monitor-down"></i><span><small>DISPONIBLE PARA</small><b>WINDOWS · HUB VANTS</b></span></a>
       <div class="socials">
         <!-- PON AQUI TU INVITE DE DISCORD: href="https://discord.gg/XXXX" -->
         <a href="#" id="sfDiscord" aria-label="Discord de VANTS"><i data-lucide="message-circle"></i></a>
@@ -222,12 +234,12 @@
       </div>
     </div>
     <div class="sf-fcol"><h5>COMPETIR</h5><a href="torneos.html">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="gpr.html">Global Power Rankings</a><a href="ranking.html">Ranking global</a><a href="rangos.html">VANTS RANKED</a><a href="partidos.html">Partidas</a></div>
-    <div class="sf-fcol"><h5>JUEGOS</h5><a href="index.html">VALORANT</a><a href="index.html">Counter-Strike 2</a><a href="guia.html">+ Más juegos PC</a><a href="jugadores.html">Sala de jugadores</a><a href="equipo.html">Equipo VANTS DE 5</a></div>
-    <div class="sf-fcol"><h5>LEGAL</h5><a href="politica-de-privacidad.html">Política de privacidad</a><a href="terminos-de-servicio.html">Términos de servicio</a><a href="politica-de-reembolsos.html">Reembolsos</a><a href="preguntas-frecuentes.html">Preguntas frecuentes</a><a href="membresias.html">Membresías</a><a href="tienda.html">Tienda oficial</a></div>
+    <div class="sf-fcol"><h5>TÍTULOS</h5><a href="index.html" data-game-link="valorant">VALORANT</a><a href="index.html" data-game-link="cs2">Counter-Strike 2</a><a href="guia.html">+ Más juegos PC</a><a href="jugadores.html">Sala de jugadores</a><a href="equipo.html">Equipo VANTS DE 5</a></div>
+    <div class="sf-fcol"><h5>SOPORTE</h5><a href="preguntas-frecuentes.html">Preguntas frecuentes</a><a href="descargar.html">Descargar el HUB</a><a href="membresias.html">Membresías</a><a href="tienda.html">Tienda oficial</a><a href="guia.html">Guía de la arena</a></div>
   </div>
   <div class="sf-fbot">
     <span>© 2026 VANTS GAMES. Todos los derechos reservados. No afiliado a Riot Games ni a Valve.</span>
-    <span>Pagos seguros procesados por Stripe · Tarjeta, Klarna, Link y más.</span>
+    <span><a href="politica-de-privacidad.html">Privacidad</a> · <a href="terminos-de-servicio.html">Términos</a> · <a href="politica-de-reembolsos.html">Reembolsos</a> · Pagos por Stripe</span>
   </div>
 </footer>
 
@@ -273,6 +285,7 @@
 <script src="./assets/js/session.js?v=1" defer></script>
 <script src="./assets/js/components.js?v=2" defer></script>
 <script src="./assets/js/menu-preview.js?v=3" defer></script>
-<script src="./assets/js/strafe-home.js?v=1" defer></script>
+<script src="./assets/js/strafe-shell.js?v=1" defer></script>
+<script src="./assets/js/strafe-home.js?v=2" defer></script>
 </body>
 </html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torneo · VANTS GAMES</title>
+<meta name="description" content="Ficha del torneo VANTS: fecha, formato, bolsa de premios, cupos e inscripción por equipo.">
+<link rel="canonical" href="https://vants.vants.workers.dev/torneo.html">
+<meta property="og:title" content="Torneo · VANTS GAMES">
+<meta property="og:url" content="https://vants.vants.workers.dev/torneo.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<link rel="stylesheet" href="./assets/css/arena.css?v=10">
+<link rel="stylesheet" href="./assets/css/strafe.css?v=2">
+</head>
+<body class="sf" data-game="valorant" data-crumb="TORNEOS|FICHA DEL TORNEO">
+
+<!-- ===== SYMBOL DEL LOGO VANTS ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="vm-plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1f26"/><stop offset="1" stop-color="#08090c"/></linearGradient>
+    <linearGradient id="vm-edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b78"/><stop offset=".5" stop-color="#2a2f38"/><stop offset="1" stop-color="#ff0d2e"/></linearGradient>
+    <linearGradient id="vm-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#d9dde3"/><stop offset="1" stop-color="#8d949e"/></linearGradient>
+    <linearGradient id="vm-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a68"/><stop offset=".5" stop-color="#ff0d2e"/><stop offset="1" stop-color="#9e0019"/></linearGradient>
+  </defs>
+  <symbol id="vmark" viewBox="0 0 64 64">
+    <path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#vm-plate)" stroke="url(#vm-edge)" stroke-width="1.5"/>
+    <path d="M9 14 H23 L34.5 44.5 L32 52 Z" fill="url(#vm-steel)"/>
+    <path d="M55 14 H41 L32.4 37 L42.2 37 Z" fill="url(#vm-red)"/>
+    <path d="M38.6 41 L41 41 L32 52 L33.6 47.6 Z" fill="#ff0d2e" opacity=".9"/>
+    <path d="M9 14 H23 L23.8 16.2 H9.9 Z" fill="#fff" opacity=".75"/>
+  </symbol>
+</svg>
+
+<!-- El shell strafe (top bar + nav + breadcrumb) lo construye strafe-shell.js -->
+
+<!-- ===== HERO DEL EVENTO ===== -->
+<section class="sf-event-hero">
+  <div class="wrap sf-event-in">
+    <span class="sf-evlogo" id="evLogo"><i data-lucide="trophy"></i></span>
+    <div>
+      <h1 class="sf-evtitle" id="evTitle">Ficha de torneo</h1>
+      <div class="sf-evbadges" id="evBadges"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GRILLA: INFO / BRACKETS / LATERAL ===== -->
+<div class="wrap sf-evgrid" id="ficha">
+  <!-- IZQUIERDA: INFORMACIÓN DEL TORNEO -->
+  <div>
+    <div class="sf-panel">
+      <div class="sf-panel-head"><span>INFORMACIÓN DEL TORNEO</span></div>
+      <div class="sf-idescript" id="evDesc">Elegí un torneo del calendario para ver su ficha completa: fechas, formato, bolsa de premios y cupos.</div>
+      <div class="sf-idef"><small>Esport</small><b id="evGame">VALORANT</b></div>
+      <div class="sf-idef"><small>Fecha</small><b id="evFecha">POR ANUNCIAR</b></div>
+      <div class="sf-idef"><small>Formato</small><b id="evFormato">BO3 · DOBLE ELIMINACIÓN</b></div>
+      <div class="sf-idef"><small>Ubicación</small><b id="evLugar">LATAM · ONLINE</b></div>
+      <div class="sf-idef"><small>Bolsa de premios</small><b class="lm" id="evPremio">POR ANUNCIAR</b></div>
+      <div class="sf-idef"><small>Fee de inscripción</small><b id="evFee">GRATIS</b></div>
+      <div class="sf-idef"><small>Cupos</small><b id="evCupos">ABIERTOS</b></div>
+      <div style="padding:16px 20px 18px">
+        <a class="btn btn-cut" style="width:100%;justify-content:center" href="torneos.html#inscripcion"><i data-lucide="user-plus"></i>INSCRIBIR MI EQUIPO</a>
+        <p style="margin-top:10px;font:500 11.5px/1.6 var(--sans);color:var(--dim)">La inscripción se completa en la sección Torneos con tu cuenta VANTS (Google, Discord, GitHub, Kick o correo).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRO: BRACKETS + REGLAS -->
+  <div>
+    <div class="sf-panel" style="margin-bottom:20px">
+      <div class="sf-panel-head"><span>BRACKETS Y PARTIDAS</span><small id="evBrkNote">SE PUBLICAN AL ARRANCAR</small></div>
+      <div class="sf-empty" style="padding:34px 20px">
+        <b>LOS CRUCES SE ARMAN AL CERRAR LA INSCRIPCIÓN</b>
+        Cuando el torneo arranca, el bracket doble queda en vivo aquí y en la sección Brackets, serie por serie.
+        <div style="margin-top:14px"><a class="sf-pill" href="llaves.html"><i data-lucide="git-branch" style="width:14px;height:14px"></i>VER BRACKETS EN VIVO</a></div>
+      </div>
+    </div>
+    <div class="sf-panel">
+      <div class="sf-panel-head"><span>REGLAS RÁPIDAS</span></div>
+      <div class="sf-idescript" style="border-bottom:none">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px">
+          <li>· Un equipo por torneo; los jugadores juegan con la cuenta verificada con la que se inscribieron.</li>
+          <li>· Anti-cheat obligatorio en cada serie y revisión de demos ante cualquier reclamo.</li>
+          <li>· Resultados verificados por el sistema y los capitanes; el RR se mueve solo con partidas válidas.</li>
+          <li>· El reglamento completo de cada evento se anuncia en Discord y en el cartel del torneo.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- DERECHA: LATERAL -->
+  <div class="sf-aside-col">
+    <div class="sf-aside">
+      <div class="sf-panel-head"><span>ACCESOS</span></div>
+      <div class="sf-aside-in" style="padding:0">
+        <a class="sf-mini-row" href="torneos.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="calendar-days" style="width:16px;height:16px;color:var(--dim)"></i>CALENDARIO COMPLETO</a>
+        <a class="sf-mini-row" href="llaves.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="git-branch" style="width:16px;height:16px;color:var(--dim)"></i>BRACKETS EN VIVO</a>
+        <a class="sf-mini-row" href="ranking.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="bar-chart-3" style="width:16px;height:16px;color:var(--dim)"></i>RANKING GLOBAL</a>
+        <a class="sf-mini-row" href="rangos.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="medal" style="width:16px;height:16px;color:var(--dim)"></i>VANTS RANKED · RR</a>
+      </div>
+    </div>
+    <div class="sf-aside">
+      <div class="sf-panel-head"><span>CÓMO FUNCIONA</span></div>
+      <div class="sf-aside-in">Inscribís tu equipo, jugás las series asignadas y cada resultado verificado mueve el <a href="rangos.html">VANTS RATING</a> con historial auditable. Las dudas vividas y resueltas están en la <a href="guia.html">guía de la arena</a>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div class="f-brand">
+        <span class="nav-logo"><svg class="mark" style="width:34px;height:34px"><use href="#vmark"/></svg><span class="wordmark"><b style="font-size:24px">VANT<em>S</em></b><small>GAMES</small></span></span>
+        <p>La arena competitiva de VALORANT y Counter-Strike 2: torneos con premio, rangos propios, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</p>
+      </div>
+      <div class="f-col"><h5>COMPETIR</h5><a href="torneos.html">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="gpr.html">Global Power Rankings</a><a href="ranking.html">Ranking global</a><a href="rangos.html">VANTS RANKED</a><a href="clips.html">Clips · Momentos destacados</a><a href="guia.html">Guía de la arena</a></div>
+      <div class="f-col"><h5>IDENTIDAD</h5><a href="jugadores.html">Sala de jugadores</a><a href="equipo.html">Equipo VANTS DE 5</a><a href="identidad.html">Tienda de identidad</a><a href="historia.html">Historia de la marca</a><a href="membresias.html">Programa de socios</a></div>
+      <div class="f-col"><h5>SOPORTE</h5><a href="preguntas-frecuentes.html">Preguntas frecuentes</a><a href="descargar.html">Descargar el HUB</a><a href="membresias.html">VANTS PRO</a><a href="tienda.html">Tienda oficial</a></div>
+    </div>
+    <div class="f-bottom">
+      <span>© 2026 VANTS GAMES — Donde nace la ventaja. No afiliado a Riot Games ni a Valve.</span>
+      <span>Pagos seguros procesados por Stripe · Tarjeta, Klarna, Link y más.</span>
+      <span><a href="politica-de-privacidad.html">Privacidad</a> · <a href="terminos-de-servicio.html">Términos</a> · <a href="politica-de-reembolsos.html">Reembolsos</a> · <a href="preguntas-frecuentes.html">FAQ</a></span>
+    </div>
+  </div>
+</footer>
+
+<!-- OVERLAYS -->
+<div class="ov" id="drawerOv"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
+<div class="toasts" id="toasts"></div>
+
+<script src="./assets/js/arena.js?v=30"></script>
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
+<script src="./assets/js/auth0-config.js?v=16" defer></script>
+<script src="./assets/js/vants-supervisor.js?v=1" defer></script>
+<script src="./assets/js/strafe-shell.js?v=1" defer></script>
+<script>
+/* ===== FICHA DEL TORNEO: lee ?id= y pinta con datos reales (Neon) ===== */
+(function () {
+  'use strict';
+  var MES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function dShort(d){return d.getDate()+' '+MES[d.getMonth()];}
+  function fechas(t){
+    try{
+      var a=t.starts_at?new Date(t.starts_at):null,b=t.ends_at?new Date(t.ends_at):null;
+      if(a&&!isNaN(a.getTime())&&b&&!isNaN(b.getTime())&&b.getTime()!==a.getTime())return dShort(a)+' – '+dShort(b);
+      if(a&&!isNaN(a.getTime()))return dShort(a);
+      if(t.day&&t.mon)return t.day+' '+t.mon;
+    }catch(e){}
+    return 'POR ANUNCIAR';
+  }
+  function estadoDe(t){
+    var s=String(t.status||'').toLowerCase();
+    if(/final|cerrad|complet|archiv|terminad|done/.test(s))return ['FINALIZADO','dim'];
+    if(/abierto|open|ongoing|curso|activo|live|inscripc/.test(s))return ['INSCRIPCIÓN ABIERTA','grn'];
+    return ['PRÓXIMAMENTE','red'];
+  }
+  function premioDe(t){return (t.prize_pool!=null&&Number(t.prize_pool)>0)?'$'+Number(t.prize_pool).toLocaleString('en-US'):'POR ANUNCIAR';}
+  function juegoDe(t){var g=String(t.game||'').toLowerCase();return /cs|counter|csgo/.test(g)?'COUNTER-STRIKE 2':'VALORANT';}
+
+  function pinta(t){
+    var title=document.getElementById('evTitle');
+    var badges=document.getElementById('evBadges');
+    var st=estadoDe(t);
+    document.title=(t.name||'Torneo')+' · VANTS GAMES';
+    title.textContent=t.name||'Ficha de torneo';
+    badges.innerHTML='<span class="sf-badge '+st[1]+'">'+st[0]+'</span>'+
+      (String(t.tier||'').toLowerCase()==='major'?'<span class="sf-badge">MAJOR</span>':'')+
+      '<span class="sf-badge dim">'+esc(juegoDe(t))+'</span>';
+    var set=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+    set('evGame',juegoDe(t));
+    set('evFecha',fechas(t));
+    set('evPremio',premioDe(t));
+    set('evFee',(t.fee!=null&&Number(t.fee)>0)?'$'+Number(t.fee):'GRATIS');
+    set('evCupos',(t.max_participants!=null&&Number(t.max_participants)>0)?((Number(t.current_participants)||0)+' / '+Number(t.max_participants)+' EQUIPOS'):'ABIERTOS');
+    if(t.description)set('evDesc',t.description);
+    var g=document.body.getAttribute('data-game');
+    if(String(t.game||'').toLowerCase().indexOf('cs')<0&&g!=='valorant'){/* el juego del torneo manda en la ficha */}
+    if(/cs|counter|csgo/.test(String(t.game||'').toLowerCase()))document.body.setAttribute('data-game','cs2');
+  }
+  function intento(n){
+    try{
+      var DB=window.VantDB;
+      var id=new URLSearchParams(location.search).get('id');
+      if(!id)return;
+      /* fallback S4 cuando Neon aún no tiene el torneo */
+      var FB={'s4-asc':{name:'ASCENSIÓN SERIES S4',status:'abierto',tier:'open',game:'valorant',day:'24',mon:'OCT',max_participants:32},'s4-ranked':{name:'VANTS RANKED NOCTURNA',status:'abierto',tier:'ranked',game:'valorant',max_participants:64},'s4-copa':{name:'COPA COMUNIDAD S4',status:'proximamente',tier:'open',game:'valorant',prize_pool:500,day:'08',mon:'NOV',max_participants:16},'s4-stratos':{name:'STRATOS MAJOR S4',status:'proximamente',tier:'major',game:'cs2',prize_pool:1000,day:'15',mon:'NOV',max_participants:24}};
+      if(!DB||typeof DB.tournaments!=='function'){if(n>0)setTimeout(function(){intento(n-1);},900);else if(FB[id])pinta(FB[id]);return;}
+      Promise.resolve(DB.tournaments()).then(function(rows){
+        var t=(rows||[]).find(function(x){return String(x.id)===String(id)||String(x.slug)===String(id);});
+        if(t)pinta(t);else if(FB[id])pinta(FB[id]);
+      }).catch(function(){if(FB[id])pinta(FB[id]);});
+    }catch(e){}
+  }
+  window.addEventListener('load',function(){setTimeout(function(){intento(6);},300);});
+  try{if(window.lucide&&lucide.createIcons)lucide.createIcons();}catch(e){}
+})();
+</script>
+</body>
+</html>
