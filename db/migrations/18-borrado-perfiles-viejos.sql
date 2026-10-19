@@ -46,7 +46,9 @@ BEGIN
 END $$;
 
 -- ---------- 1) Identificar filas a borrar (NUNCA el dueño real) ----------
-CREATE TEMP TABLE _ids_borrar ON COMMIT DROP AS
+-- (tabla TEMP del psql actual: sin ON COMMIT DROP, en autocommit
+--  desaparecería al instante; muere sola al terminar la sesión)
+CREATE TEMP TABLE _ids_borrar AS
 SELECT p.id
 FROM players p
 WHERE (p.auth0_sub IN (SELECT sub FROM _subs_viejos))
