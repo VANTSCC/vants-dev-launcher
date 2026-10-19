@@ -38,12 +38,13 @@ Vants/
 │   │          (futuro: components.css · responsive.css)
 │   ├── js/    arena.js · arena-live.js · auth0-config.js · vants-supervisor.js
 │   │          vants-shop.js · vants-cinematic.js ← Fase 1
-│   │          (futuro: api-client.js · session.js · components.js)
+│   │          api-client.js · session.js · components.js ← Fase 2
 │   ├── img/   brand/ · backgrounds/ · ranks/ · games/
 │   └── fonts/
 ├── docs/      ARCHITECTURE.md ← este archivo · API_CONTRACTS.md · DEPLOYMENT.md
 ├── db/migrations/              # SQL versionado (workflow neon-migrate lo aplica)
 ├── vants-server/               # Backend: worker.js + public/ (espejo del sitio)
+├── services/                   # Servicios Node (Express + Fastify): api-gateway · matchmaking-service
 ├── desktop-electron/           # VANTS HUB (launcher Windows)
 ├── bot/  monitor/  vlr-results/  android/
 └── scripts/                    # Utilidades (faceit-xp.mjs, etc.)
@@ -59,7 +60,7 @@ Vants/
 | UI Components | arena.js (modales, drawer, toasts) | ✅ |
 | Ranked UI | rangos, RR, tablas (arena.js + arena-live.js) | ✅ |
 | Live UI | partidas, eventos, en vivo (`arena-live.js`, `/api/en-vivo`) | ✅ |
-| Aplicación | Cliente API · Sesión · Validación · Estado · Errores | parcial (futuro: `api-client.js`, `session.js`) |
+| Aplicación | `api-client.js` (red: timeout, reintentos, Bearer) · `session.js` (lectura de sesión Auth0 + eventos) · `components.js` (toast/confirm/badge opt-in) | ✅ Fase 2 |
 
 Regla: los módulos nuevos se comunican por interfaces definidas y **no
 modifican el funcionamiento interno de los módulos antiguos**. Ejemplo:
@@ -80,6 +81,14 @@ El backend (Worker) es la autoridad de todas las operaciones competitivas.
 | Integrations | Eventos de juegos (FACEIT webhook+poller), Discord | ✅ |
 | Payments | Membresías, pagos, confirmaciones (Stripe) | ✅ parcial |
 | Admin | Gestión, sanciones, auditoría | 🔜 |
+
+Además del Worker existen **servicios Node complementarios** en `services/`
+(decisión del dueño: todos llevan `express` y `fastify` instalados):
+
+| Servicio | Puerto | Framework | Estado |
+|----------|--------|-----------|--------|
+| api-gateway (`services/api-gateway/`) | 8080 | Express | ✅ base (healthz, /api/v1/status, rate limit, CORS) |
+| matchmaking-service (`services/matchmaking-service/`) | 8081 | Fastify | ✅ base en memoria (cola + tickets; Fase 4 lo conecta a Neon) |
 
 ### Flujo de una partida competitiva
 
@@ -124,7 +133,7 @@ temporada y fecha (auditable y corregible).
 | Fase | Alcance | Estado |
 |------|---------|--------|
 | 1 — Cinemática | Portada, intro, efectos, transiciones, móvil; archivos actuales intactos | ✅ `vants-cinematic.*` |
-| 2 — Frontend modular | api-client, sesión, componentes compartidos, manejo de errores | 🔜 |
+| 2 — Frontend modular | api-client, sesión, componentes compartidos, manejo de errores | ✅ `api-client.js` · `session.js` · `components.js` |
 | 3 — Backend y datos | Auth/permisos, esquemas Neon, rankings, torneos | ✅ base sólida |
 | 4 — Competición real | Matchmaking, resultados verificables, historial RR, dedupe | 🔜 (FACEIT ya aplica dedupe por `faceit_match_id`) |
 | 5 — Launcher | VANTS HUB Windows: presencia, invitaciones, apertura de juegos | ✅ 2.3.0 |
