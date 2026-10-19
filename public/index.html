@@ -3,20 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VANTS GAMES — Arena competitiva de VALORANT y CS2</title>
-<meta name="description" content="VANTS GAMES: arena competitiva de VALORANT y CS2. Partidos y resultados reales, ranking, calendario de torneos y VANTS RANKED. Entra con Google, Discord, GitHub, Kick o correo.">
+<title>VANTS GAMES — Juega, compite y gana dinero real</title>
+<meta name="description" content="VANTS GAMES: juega, compite y gana dinero real. Torneos de VALORANT y Counter-Strike 2 con premio, VANTS RATING propio, insignias verificadas y comunidad. Entra con Google, Discord, GitHub, Kick o correo.">
 <link rel="canonical" href="https://feispla.github.io/Vants/">
-<meta property="og:title" content="VANTS GAMES — Arena competitiva">
+<meta property="og:title" content="VANTS GAMES — Juega, compite y gana dinero real">
 <meta property="og:url" content="https://feispla.github.io/Vants/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="stylesheet" href="./assets/css/arena.css?v=10">
 <link rel="stylesheet" href="./assets/css/vants-shop.css?v=1">
 <link rel="stylesheet" href="./assets/css/vants-cinematic.css?v=1">
+<link rel="stylesheet" href="./assets/css/torneum.css?v=1">
 </head>
-<body data-game="valorant">
+<body class="home-tm" data-game="valorant">
 
 <!-- ===== SYMBOL DEL LOGO VANTS (usable en todo el sitio) ===== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -24,7 +25,7 @@
     <linearGradient id="vm-plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1f26"/><stop offset="1" stop-color="#08090c"/></linearGradient>
     <linearGradient id="vm-edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b78"/><stop offset=".5" stop-color="#2a2f38"/><stop offset="1" stop-color="#ff0d2e"/></linearGradient>
     <linearGradient id="vm-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#d9dde3"/><stop offset="1" stop-color="#8d949e"/></linearGradient>
-    <linearGradient id="vm-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a68"/><stop offset=".5" stop-color="#ff0d2e"/><stop offset="1" stop-color="#9e0019"/></linearGradient>
+    <linearGradient id="vm-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a68"/><stop offset=".5" stop-color="#ff0d2e"/><stop offset="1" stop-color="#9e0019"/></linearGradient>
   </defs>
   <symbol id="vmark" viewBox="0 0 64 64">
     <path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#vm-plate)" stroke="url(#vm-edge)" stroke-width="1.5"/>
@@ -39,9 +40,9 @@
 <div class="ticker"><div class="ticker-track" id="tickerTrack"></div></div>
 
 <!-- NAV -->
-<header class="nav">
+<header>
   <div class="wrap nav-in">
-    <a href="#inicio" class="nav-logo">
+    <a class="nav-logo" href="index.html">
       <svg class="mark"><use href="#vmark"/></svg>
       <span class="wordmark"><b>VANT<em>S</em></b><small>GAMES</small></span>
     </a>
@@ -75,91 +76,300 @@
   </div>
 </div>
 
-<!-- HERO -->
-<section class="hero" id="inicio">
-  <div class="wrap hero-in">
-    <div class="hero-left">
-      <span class="kicker">VANTS GAMES PRESENTA · INSCRIPCIONES ABIERTAS</span>
-      <h1 id="heroTitle">ASCENSIÓN<br><span class="out">SERIES</span> <span class="acc">S4</span></h1>
-      <p class="hero-sub" id="heroSub">El circuito competitivo abierto de LATAM. Clasificá con tu equipo, subí por el bracket y llevate la parte del premio. Matchmaking por skill, anti-cheat obligatorio y servidores 128 tick.</p>
-      <div class="hero-meta">
-        <div class="hm"><i data-lucide="trophy"></i><b id="heroPrize">POR ANUNCIAR</b>&nbsp;PREMIOS</div>
-        <div class="hm"><i data-lucide="users"></i><b>5v5</b>&nbsp;FORMATO</div>
-        <div class="hm"><i data-lucide="swords"></i><b>BO3</b>&nbsp;DOBLE ELIM.</div>
-        <div class="hm"><i data-lucide="globe"></i><b>ONLINE</b>&nbsp;LATAM</div>
+<!-- ============================================================
+     HERO — ESTILO TORNEUM
+     ============================================================ -->
+<section class="tm-cover" id="inicio">
+  <div class="wrap tm-cover-in">
+    <div>
+      <span class="tm-kicker"><i></i>VANTS GAMES · INSCRIPCIONES ABIERTAS TEMPORADA 4</span>
+      <h1 class="tm-h1">JUEGA, COMPITE<br>Y GANA <span class="lm">DINERO</span><br><span class="mg">REAL</span><span class="bl">.</span></h1>
+      <p class="tm-sub">La plataforma definitiva para jugadores que quieren <b>competir por lo que vale su talento</b>. Torneos de VALORANT y Counter-Strike 2 con premio, VANTS RATING propio, insignias verificadas y una comunidad que juega para subir. <b>Donde nace la ventaja.</b></p>
+      <div class="tm-ctas">
+        <a class="tm-btn tm-btn-lime" href="torneos.html">ÚNETE AHORA <i data-lucide="arrow-right"></i></a>
+        <a class="tm-btn tm-btn-ghost" href="ranking.html">VER RANKING</a>
       </div>
-      <p class="hero-note mono" style="font:700 10px/1 var(--mono);letter-spacing:.14em;color:var(--accent)">INSCRIPCIONES ABIERTAS · FECHA Y POZO POR ANUNCIAR EN DISCORD</p>
-      <div class="hero-ctas">
-        <button class="btn btn-cut" id="heroJoin"><i data-lucide="swords"></i>INSCRIBIR MI EQUIPO</button>
-        <a class="btn btn-ghost" href="llaves.html"><i data-lucide="git-fork"></i>VER BRACKET</a>
+      <div class="tm-hero-meta">
+        <span class="tm-chip"><i data-lucide="trophy"></i>PREMIOS EN EFECTIVO</span>
+        <span class="tm-chip"><i data-lucide="users"></i>5v5 COMPETITIVO</span>
+        <span class="tm-chip"><i data-lucide="shield-check"></i>ANTI-CHEAT OBLIGATORIO</span>
+        <span class="tm-chip"><i data-lucide="globe"></i>ONLINE · LATAM</span>
       </div>
-      <p class="hero-note">Reembolso garantizado hasta 48 h antes del inicio si hubiera fee. Ganá RR de VANTS RANKED en cada serie.</p>
+      <!-- Compatibilidad con arena.js (rotador de juego + ticker): ocultos, IDs exigidos -->
+      <span id="heroTitle" hidden></span><span id="heroSub" hidden></span>
     </div>
-    <div class="live-panel" data-tilt="2.2">
-      <div class="live-head">
-        <span class="live-badge" id="liveBadge"><i class="dot"></i>PRÓXIMO PARTIDO</span>
-        <span class="live-spec mono"><i data-lucide="eye"></i><b id="liveSpec">10:00</b>&nbsp;<span id="liveSpecLbl">INICIO (CARACAS)</span></span>
+    <div class="tm-live">
+      <div class="live-panel" data-tilt="2.2">
+        <div class="live-head">
+          <span class="live-badge" id="liveBadge"><i class="dot"></i>PRÓXIMO PARTIDO</span>
+          <span class="live-spec mono"><i data-lucide="eye"></i><b id="liveSpec">10:00</b>&nbsp;<span id="liveSpecLbl">INICIO (CARACAS)</span></span>
+        </div>
+        <div class="live-event mono" id="liveEvent">CHAMPIONS 2026 · GRAN FINAL · DOM 18 OCT · 10:00 (CARACAS)</div>
+        <div class="live-score">
+          <div class="ls-team"><span class="ls-tag" id="liveTagA">LOUD</span><span class="ls-name" id="liveNameA">LOUD</span></div>
+          <div class="ls-num" id="liveScore"><i>VS</i></div>
+          <div class="ls-team right"><span class="ls-tag" id="liveTagB">VIT</span><span class="ls-name" id="liveNameB">TEAM VITALITY</span></div>
+        </div>
+        <div class="pips"><div class="pip-row" id="pipsA"></div><div class="pip-row" id="pipsB"></div></div>
+        <div class="live-feed" id="liveFeed"></div>
+        <button class="live-more" id="liveMore">VER PARTIDO EN DETALLE <i data-lucide="chevron-right"></i></button>
       </div>
-      <div class="live-event mono" id="liveEvent">CHAMPIONS 2026 · GRAN FINAL · DOM 18 OCT · 10:00 (CARACAS)</div>
-      <div class="live-score">
-        <div class="ls-team"><span class="ls-tag" id="liveTagA">LOUD</span><span class="ls-name" id="liveNameA">LOUD</span></div>
-        <div class="ls-num" id="liveScore"><i>VS</i></div>
-        <div class="ls-team right"><span class="ls-tag" id="liveTagB">VIT</span><span class="ls-name" id="liveNameB">TEAM VITALITY</span></div>
-      </div>
-      <div class="pips"><div class="pip-row" id="pipsA"></div><div class="pip-row" id="pipsB"></div></div>
-      <div class="live-feed" id="liveFeed"></div>
-      <button class="live-more" id="liveMore">VER PARTIDO EN DETALLE <i data-lucide="chevron-right"></i></button>
     </div>
   </div>
 </section>
 
-<!-- EXPLORAR · CATEGORÍAS (ex cajón, ahora en el inicio) -->
-<section class="sec alt home-cats" id="explorar">
+<!-- ============================================================
+     SPOTLIGHT TORNEOS (datos reales de Neon + fallback S4)
+     ============================================================ -->
+<section class="tm-sec" id="spotlight-torneos">
   <div class="wrap">
-    <div class="sec-head reveal">
-      <div><span class="kicker">/// EXPLORAR</span><h2>Categorías de la arena</h2></div>
-      <p class="sec-note">Pasá el mouse por cualquier opción para ver qué hay dentro de cada sección. <b>Clic para entrar.</b></p>
+    <div class="tm-sec-head reveal">
+      <h2 class="tm-h2"><span class="mg">SPOTLIGHT</span> TORNEOS</h2>
+      <p class="tm-sec-note">Los torneos del momento de la arena. <b>Inscripción abierta</b>: entra desde la web o desde Discord y juega la series que cuentan para tu VANTS RATING.</p>
+      <span class="mono" id="liveDataBadge" style="font:700 10px/1 var(--mono);letter-spacing:.14em;color:#8A8F98;display:inline-block;margin-top:14px">CALENDARIO S4 · CARGANDO…</span>
     </div>
-    <div class="hc-grid reveal">
-      <div class="hc-list">
-        <a class="hc-row hc-perfil" href="#" id="hcPerfil"><i data-lucide="user"></i><span class="md-txt">PERFIL DE JUGADOR<small>Tu ficha, tu rango y tu cuenta</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-        <div class="hc-cols">
-          <div class="hc-col">
-            <p class="md-label">COMPETIR</p>
-            <a class="hc-row" href="partidos.html"><i data-lucide="swords"></i><span class="md-txt">PARTIDOS<small>Agenda en vivo</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="ranking.html"><i data-lucide="bar-chart-3"></i><span class="md-txt">RANKING<small>Líderes del circuito</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="llaves.html"><i data-lucide="git-fork"></i><span class="md-txt">LLAVES<small>Bracket principal</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="torneos.html"><i data-lucide="trophy"></i><span class="md-txt">TORNEOS<small>Calendario abierto</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="rangos.html"><i data-lucide="medal"></i><span class="md-txt">RANGOS<small>VANTS RANKED</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-          </div>
-          <div class="hc-col">
-            <p class="md-label">COMUNIDAD</p>
-            <a class="hc-row" href="jugadores.html"><i data-lucide="users"></i><span class="md-txt">SALA<small>Identidades del circuito</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="equipo.html"><i data-lucide="shield"></i><span class="md-txt">EQUIPO<small>VANTS DE 5</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="clips.html"><i data-lucide="clapperboard"></i><span class="md-txt">CLIPS<small>Momentos destacados</small></span><span class="md-new">NUEVO</span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="historia.html"><i data-lucide="book-open"></i><span class="md-txt">HISTORIA<small>De la marca</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="guia.html"><i data-lucide="compass"></i><span class="md-txt">GUÍA<small>Cómo funciona VANTS</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-          </div>
-          <div class="hc-col">
-            <p class="md-label">VANTS</p>
-            <a class="hc-row" href="membresias.html"><i data-lucide="crown"></i><span class="md-txt">MEMBRESÍAS<small>Planes, insignias y pase</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="tienda.html"><i data-lucide="shopping-bag"></i><span class="md-txt">TIENDA<small>Oficial × VegaStore</small></span><i data-lucide="chevron-right" class="md-go"></i></a>
-            <a class="hc-row" href="descargar.html"><i data-lucide="monitor-down"></i><span class="md-txt">DESCARGAR<small>App para Windows</small></span><span class="md-new">NUEVO</span><i data-lucide="chevron-right" class="md-go"></i></a>
-          </div>
+    <div class="tm-spot-row" id="tmSpot"></div>
+    <div class="tm-arrows">
+      <button class="tm-arrow" id="tmPrev" aria-label="Anterior"><i data-lucide="arrow-left"></i></button>
+      <button class="tm-arrow" id="tmNext" aria-label="Siguiente"><i data-lucide="arrow-right"></i></button>
+    </div>
+  </div>
+</section>
+<!-- ============================================================
+     LOS MEJORES JUEGOS (hub universal · de momento VALORANT y CS2)
+     ============================================================ -->
+<section class="tm-sec" id="best-games">
+  <div class="wrap">
+    <div class="tm-sec-head reveal">
+      <h2 class="tm-h2">LOS <span class="lm">MEJORES</span> JUEGOS</h2>
+      <p class="tm-sec-note">VANTS nace en el FPS competitivo y se convierte en el <b>hub de todos los juegos de PC</b>. Elige tu arena: cada juego tiene su ranking, sus torneos y su propio VANTS RATING.</p>
+    </div>
+    <div class="tm-games reveal">
+      <a class="tm-gcard tm-gval" href="torneos.html" data-pick="valorant">
+        <span class="bg"></span>
+        <span class="tm-gin"><span class="tm-gtag">ACTIVO · RATING 2.0</span><h3>VALORANT</h3><p>El shooter táctico 5v5 de Riot. Series BO3, bracket y RR en juego.</p></span>
+      </a>
+      <a class="tm-gcard tm-gcs" href="torneos.html" data-pick="cs2">
+        <span class="bg"></span>
+        <span class="tm-gin"><span class="tm-gtag alt">ACTIVO · RATING 2.1</span><h3>COUNTER-STRIKE 2</h3><p>El clásico competitivo de Valve. Mapas oficiales y anti-cheat obligatorio.</p></span>
+      </a>
+      <a class="tm-gcard tm-gmore" href="guia.html">
+        <span class="bg"></span>
+        <span class="tm-gin"><span class="tm-gtag dim">PRÓXIMAMENTE</span><h3>+ MÁS JUEGOS PC</h3><p>El hub universal: nuevos títulos y comunidades llegarán a la arena.</p></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CÓMO FUNCIONA VANTS (banner azul + timeline)
+     ============================================================ -->
+<section class="tm-sec" id="como-funciona">
+  <div class="wrap">
+    <div class="tm-bluebanner reveal"><h2>CÓMO FUNCIONA VANTS</h2></div>
+    <div class="tm-how">
+      <div class="tm-visual reveal">
+        <div class="big">DE LA COLA<br><span class="lm">AL PODIO</span></div>
+      </div>
+      <ol class="tm-steps reveal">
+        <li class="tm-step on"><h4>Explora los torneos de tu juego favorito</h4><p>Calendario abierto de VALORANT y Counter-Strike 2 con premio, formato y cupos claros en cada cartel.</p></li>
+        <li class="tm-step"><h4>Regístrate y compite en partidas online</h4><p>Crea tu cuenta gratis, arma tu equipo o entra a la cola de VANTS RANKED. Matchmaking por skill real.</p></li>
+        <li class="tm-step"><h4>Gana recompensas y sube en el ranking</h4><p>Cada serie verificada mueve tu VANTS RATING con historial completo: motivo, partida, temporada y fecha.</p></li>
+        <li class="tm-step"><h4>Conéctate con la comunidad de jugadores</h4><p>Insignias verificadas, sala de jugadores, clips y una comunidad LATAM que juega para subir.</p></li>
+      </ol>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:52px">
+      <a class="tm-btn tm-btn-blue" href="torneos.html">COMPITE AHORA <i data-lucide="swords"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     STATS
+     ============================================================ -->
+<section id="stats-tm">
+  <div class="wrap tm-stats">
+    <div class="tm-stat"><b data-count="120" data-suffix="+">0</b><span>Torneos organizados</span></div>
+    <div class="tm-stat"><b data-count="3500" data-suffix="+" data-k="1">0</b><span>Series verificadas</span></div>
+    <div class="tm-stat"><b data-count="12000" data-suffix="+" data-k="1">0</b><span>Jugadores en la arena</span></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     RECOMPENSAS
+     ============================================================ -->
+<section class="tm-sec" id="recompensas">
+  <div class="wrap">
+    <div class="tm-sec-head reveal">
+      <h2 class="tm-h2">CONVIERTE TU HABILIDAD<br>EN <span class="mg">GRANDES PREMIOS</span></h2>
+      <p class="tm-sec-note">En VANTS no solo compites: luchas por lo que vales. Aquí el rendimiento se premia. Gana series, sube en el ranking y demuestra tu talento para llevarte premios reales.</p>
+    </div>
+    <div class="tm-rewards reveal">
+      <div class="tm-rw"><i data-lucide="banknote"></i>PREMIOS EN EFECTIVO<small>Pozos en metálico en los torneos con premio, pagos seguros por Stripe.</small></div>
+      <div class="tm-rw"><i data-lucide="medal"></i>INSIGNIAS Y LOGROS<small>Logros verificados en tu perfil que nadie puede falsificar.</small></div>
+      <div class="tm-rw"><i data-lucide="trending-up"></i>RANKING Y ESTATUS<small>VANTS RATING propio y Global Power Rankings para el Élite.</small></div>
+    </div>
+    <a class="tm-btn tm-btn-blue" href="membresias.html">JUEGA Y GANA <i data-lucide="crown"></i></a>
+  </div>
+</section>
+
+<!-- ============================================================
+     TESTIMONIOS
+     ============================================================ -->
+<section class="tm-sec" id="testimonios">
+  <div class="wrap">
+    <div class="tm-sec-head reveal">
+      <h2 class="tm-h2">LO QUE DICEN<br><span class="lm">NUESTROS JUGADORES</span></h2>
+    </div>
+    <div class="tm-quotes reveal">
+      <div class="tm-quote"><div class="qm">“</div><p>El matchmaking por skill hace que cada serie sea pareja de verdad. Subí de Hierro a Diamante en VANTS RANKED y el historial de RR me deja ver exactamente por qué.</p><div class="tm-qwho"><span class="tm-qava" style="background:linear-gradient(140deg,#A9FA56,#3fae1a)">D</span><span><b>Dante “KAOS” R.</b><small>VANTS RANKED · VALORANT</small></span></div></div>
+      <div class="tm-quote"><div class="qm">“</div><p>Organizamos la liga de nuestro equipo desde Discord y la web hace el resto: brackets, verificación y premios sin dolores de cabeza. Es otra liga jugar así.</p><div class="tm-qwho"><span class="tm-qava" style="background:linear-gradient(140deg,#DE32FF,#7A20E8)">L</span><span><b>Laura “VEX” M.</b><small>Capitana · CS2</small></span></div></div>
+      <div class="tm-quote"><div class="qm">“</div><p>Lo que más me gusta es la confianza: resultados verificados, anti-cheat obligatorio y pagos que llegan. Competir en serio sin salir de LATAM.</p><div class="tm-qwho"><span class="tm-qava" style="background:linear-gradient(140deg,#4CC9F0,#1b6fd8)">S</span><span><b>Santiago “NOKO” V.</b><small>VANTS PRO</small></span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="tm-marquee" aria-hidden="true">
+  <div class="track" id="tmMarquee"></div>
+</div>
+<!-- ============================================================
+     VANTS LEGENDS
+     ============================================================ -->
+<section class="tm-sec" id="legends">
+  <div class="wrap">
+    <div class="tm-sec-head reveal">
+      <h2 class="tm-h2">VANTS <span class="mg">LEGENDS</span></h2>
+      <p class="tm-sec-note">Los primeros en la historia. Cada temporada consagra a los jugadores y equipos que dominan la arena — con su ficha verificada en la sala de jugadores.</p>
+    </div>
+    <div class="tm-legends reveal">
+      <div class="tm-legend tm-lg1">
+        <span class="bg"></span>
+        <div class="tm-lgin">
+          <small>LEYENDA · TEMPORADA 4</small>
+          <h3>TU NOMBRE<br>AQUÍ</h3>
+          <p>El primer puesto del ranking global de la S4 tendrá ficha de leyenda: insignia verificada, historial de RR y su lugar en la historia de la marca.</p>
+          <a href="ranking.html">VER LÍDERES →</a>
         </div>
       </div>
-      <aside class="hc-preview" id="hcPreview" aria-live="polite"></aside>
+      <div class="tm-legend tm-lg2">
+        <span class="bg"></span>
+        <div class="tm-lgin">
+          <small>HALL OF FAME</small>
+          <h3>SALA DE<br>JUGADORES</h3>
+          <p>Identidades del circuito: fichas, rangos, insignias y equipos. Este es tu lugar si juegas para subir.</p>
+          <a href="jugadores.html">ENTRAR A LA SALA →</a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- ============================================================
+     JUEGA LIMPIO / COMPITE EN SERIO
+     ============================================================ -->
+<section class="tm-sec" id="fairplay">
+  <div class="wrap">
+    <div class="tm-fair reveal">
+      <div class="tm-fair-l">
+        <h3>JUEGA <span class="lm">LIMPIO.</span></h3>
+        <p>En VANTS las reglas importan. Cada torneo sigue un reglamento claro y cada serie pasa verificación antes de mover una sola décima de tu VANTS RATING.</p>
+        <ul>
+          <li><i data-lucide="check"></i>Anti-cheat obligatorio en todas las series</li>
+          <li><i data-lucide="check"></i>Resultados verificados por el sistema y por capitanes</li>
+          <li><i data-lucide="check"></i>Historial de cambios de RR auditable: motivo, partida, temporada y fecha</li>
+        </ul>
+      </div>
+      <div class="tm-fair-r">
+        <h3>COMPITE <span class="mg">EN SERIO.</span></h3>
+        <p>Nada de resultados inventados ni cuentas falsas. Identidad verificada vía Auth0, matchmaking por skill real y moderación activa de la comunidad.</p>
+        <ul>
+          <li><i data-lucide="shield-check"></i>Una cuenta por jugador, duplicados eliminados</li>
+          <li><i data-lucide="shield-check"></i>Servidores y protocolos oficiales por juego</li>
+          <li><i data-lucide="shield-check"></i>Reembolso garantizado hasta 48 h antes si hubiera fee</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 
-<!-- PARTIDOS -->
-<!-- RANKING -->
-<!-- BRACKET -->
-<!-- TORNEOS -->
-<!-- MEMBRESÍAS -->
-<!-- PATROCINIOS Y COLABORADORES -->
+<!-- ============================================================
+     MARCAS QUE NOS APOYAN
+     ============================================================ -->
+<section class="tm-sec" id="marcas">
+  <div class="wrap">
+    <h2 class="tm-h2 reveal">MARCAS QUE NOS <span class="bl">APOYAN</span></h2>
+    <div class="tm-brands reveal">
+      <span class="tm-brand"><i></i>VEGASTORE</span>
+      <span class="tm-brand"><i style="background:#635BFF"></i>STRIPE</span>
+      <span class="tm-brand"><i style="background:#00E599"></i>NEON</span>
+      <span class="tm-brand"><i style="background:#F38020"></i>CLOUDFLARE</span>
+      <span class="tm-brand"><i style="background:#DE32FF"></i>AUTH0</span>
+      <span class="tm-brand"><i style="background:#FF5F00"></i>FACEIT</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FAQS
+     ============================================================ -->
+<section class="tm-sec" id="faqs-tm">
+  <div class="wrap">
+    <div class="tm-sec-head reveal" style="text-align:center">
+      <h2 class="tm-h2" style="margin:0 auto"><span class="lm">FAQS</span></h2>
+    </div>
+    <div class="tm-faqs reveal">
+      <details class="tm-faq" open><summary>¿Qué es VANTS GAMES exactamente?<span class="plus">+</span></summary><div class="body">Es la arena competitiva de VALORANT y Counter-Strike 2 — camino a ser el hub de todos los juegos de PC. Torneos con premio, VANTS RATING propio, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</div></details>
+      <details class="tm-faq"><summary>¿Es gratis registrarse en VANTS?<span class="plus">+</span></summary><div class="body">Sí. Crear tu cuenta y entrar a la comunidad es gratis. Hay torneos abiertos sin costo y membresías opcionales (VANTS PRO, VANTS CREATOR) con beneficios extra.</div></details>
+      <details class="tm-faq"><summary>¿Cómo subo mi VANTS RATING (RR)?<span class="plus">+</span></summary><div class="body">Jugando series de VANTS RANKED y torneos. Cada resultado verificado mueve tu rating automáticamente y queda registrado en tu historial con motivo, partida, temporada y fecha — nada manual, todo auditable.</div></details>
+      <details class="tm-faq"><summary>¿Cómo se garantiza el juego limpio?<span class="plus">+</span></summary><div class="body">Anti-cheat obligatorio, una cuenta por jugador, verificación de resultados por el sistema y los capitanes, y moderación activa. Las trampas se sancionan con exclusión.</div></details>
+      <details class="tm-faq"><summary>¿Cuándo hay torneos y cómo me inscribo?<span class="plus">+</span></summary><div class="body">El calendario completo vive en la sección Torneos, con fechas, formato y cupos de cada evento. Te inscribes desde la web con tu cuenta (Google, Discord, GitHub, Kick o correo) o desde Discord.</div></details>
+      <details class="tm-faq"><summary>¿Hay premios en dinero?<span class="plus">+</span></summary><div class="body">Sí. Los torneos con premio anuncian su pozo en el cartel. Los pagos se procesan de forma segura por Stripe (tarjeta, Klarna, Link y más) y el reglamento de cada torneo define el reparto.</div></details>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:40px">
+      <a class="tm-btn tm-btn-ghost" href="preguntas-frecuentes.html">VER TODAS LAS PREGUNTAS</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     UNIVERSO GAMING
+     ============================================================ -->
+<section class="tm-sec" id="universo">
+  <div class="wrap">
+    <div class="tm-sec-head reveal">
+      <h2 class="tm-h2">UNIVERSO <span class="lm">GAMING</span></h2>
+      <p class="tm-sec-note">Más que torneos: comunidad, contenido y guía para crecer dentro de la arena.</p>
+    </div>
+    <div class="tm-uni reveal">
+      <!-- PON AQUI TU INVITE DE DISCORD cuando lo tengas: href="https://discord.gg/XXXX" -->
+      <a class="tm-ucard tm-u1" href="#" id="tmDiscordCard">
+        <span class="utop" style="display:flex;align-items:center;justify-content:center;height:150px"><i data-lucide="message-circle"></i></span>
+        <span class="tm-ubody"><small>COMUNIDAD</small><h4>Únete al Discord oficial de VANTS</h4><p>Busca equipo, sigue los anuncios de torneos y juega con la comunidad LATAM en vivo.</p><span class="go">ENTRAR AL SERVIDOR →</span></span>
+      </a>
+      <a class="tm-ucard tm-u2" href="clips.html">
+        <span class="utop" style="display:flex;align-items:center;justify-content:center;height:150px"><i data-lucide="clapperboard"></i></span>
+        <span class="tm-ubody"><small>CONTENIDO</small><h4>Clips · Momentos destacados</h4><p>Las mejores jugadas del circuito: aces, clutches y jugadas de la semana verificadas.</p><span class="go">VER LOS CLIPS →</span></span>
+      </a>
+      <a class="tm-ucard tm-u3" href="guia.html">
+        <span class="utop" style="display:flex;align-items:center;justify-content:center;height:150px"><i data-lucide="compass"></i></span>
+        <span class="tm-ubody"><small>GUÍA</small><h4>Cómo funciona VANTS</h4><p>Del registro al podio: RR, insignias, brackets, membresías y todo el sistema explicado.</p><span class="go">LEER LA GUÍA →</span></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PREFOOTER
+     ============================================================ -->
+<section id="prefooter-tm">
+  <div class="wrap">
+    <h2 class="tm-h2">¿LISTO PARA COMPETIR<br>Y GANAR DINERO?</h2>
+    <p>Crea tu cuenta gratis, únete a los torneos de la Temporada 4 y empieza a subir tu VANTS RATING hoy mismo.</p>
+    <a class="tm-btn tm-btn-blue" href="torneos.html">ÚNETE AHORA <i data-lucide="arrow-right"></i></a>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
   <div class="wrap">
@@ -179,6 +389,13 @@
     </div>
   </div>
 </footer>
+
+<!-- OVERLAYS -->
+
+<div class="ov" id="drawerOv"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
+<div class="toasts" id="toasts"></div>
 
 <!-- CINEMATIC -->
 <div class="cin" id="cin">
@@ -204,26 +421,7 @@
   <div class="cin-meta">VANTS GAMES — BRAND FILM 2026</div>
 </div>
 
-<!-- OVERLAYS -->
-
-<div class="ov" id="drawerOv"></div>
-<aside class="drawer" id="drawer"></aside>
-<div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
-<div class="toasts" id="toasts"></div>
-
-<script src="./assets/js/arena.js?v=30"></script><script>
-/* Apartados nuevos: Tienda × VegaStore + Equipo VANTS DE 5 + Patrocinios */
-(function(){
-  var $=function(s){return document.querySelector(s)};
-  var t=function(msg){if(typeof window.toast==='function'){window.toast(msg,'ok')}else{console.log(msg)}};
-  var shop=$('#shopNotifyBtn');
-  if(shop)shop.addEventListener('click',function(){t('📌 Te avisamos cuando la tienda VANTS × VEGASTORE abra. Quedate atento en redes.')});
-  var ident=$('#shopIdentBtn');
-  if(ident)ident.addEventListener('click',function(){document.getElementById('pro').scrollIntoView({behavior:'smooth'})});
-  var sp=$('#sponsorsCtaBtn');
-  if(sp)sp.addEventListener('click',function(){t('📨 Escribinos por Discord para recibir el kit de patrocinio de la Temporada 4.')});
-})();
-</script>
+<script src="./assets/js/arena.js?v=30"></script>
 <!-- Capa viva: Auth0 (login) + Neon (torneos reales) -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
@@ -235,5 +433,6 @@
 <script src="./assets/js/session.js?v=1" defer></script>
 <script src="./assets/js/components.js?v=2" defer></script>
 <script src="./assets/js/menu-preview.js?v=3" defer></script>
+<script src="./assets/js/torneum-home.js?v=1" defer></script>
 </body>
 </html>
