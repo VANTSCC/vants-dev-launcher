@@ -1645,7 +1645,7 @@ export default {
         if (url.pathname === '/api/games') {
           payload = await platLectura('games', async () => {
             const r = await proxyConsulta('pt_games', { 'activo.is': 'true', 'order': 'orden.asc' });
-            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
             return { ok: true, data: r.body.map((g) => ({ slug: g.slug, nombre: g.nombre, corto: g.corto || null, logo_url: g.logo_url || null, color: g.color || null, activo: !!g.activo })) };
           });
         } else if (url.pathname === '/api/tournaments') {
@@ -1663,7 +1663,7 @@ export default {
               if (vq.juego) params['game_slug.eq'] = vq.juego;
               if (vq.region) params['region.ilike'] = vq.region;
               const r = await proxyConsulta('pt_torneos', params, true);
-              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
               const mapa = await juegosMapa();
               const p = CORE.paginar(r.body, vq.pag, vq.porPagina);
               return { ok: true, data: { pag: p.pag, porPagina: p.porPagina, total: r.total != null ? r.total : p.total, items: p.items.map((t) => torneoPublico(Object.assign({}, t, { game: mapa[t.game_slug] || null }))) } };
@@ -1694,7 +1694,7 @@ export default {
               };
               if (vq.juego) params['game_slug.eq'] = vq.juego;
               const r = await proxyConsulta('pt_matches', params, true);
-              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
               const p = CORE.paginar(r.body, vq.pag, vq.porPagina);
               return { ok: true, data: { pag: p.pag, porPagina: p.porPagina, total: r.total != null ? r.total : p.total, items: p.items.map(matchPublico) } };
             });
@@ -1705,14 +1705,14 @@ export default {
             const params = { 'order': 'nombre.asc', 'limit': 50 };
             if (juego && /^[a-z0-9-]{2,24}$/.test(juego)) params['game_slug.eq'] = juego;
             const r = await proxyConsulta('pt_teams', params);
-            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
             return { ok: true, data: r.body.map((t) => ({ slug: t.slug, nombre: t.nombre, tag: t.tag || null, game: t.game_slug || null, region: t.region || null, logo_url: t.logo_url || null, is_demo: !!t.is_demo })) };
           });
         } else if (url.pathname === '/api/players') {
           payload = await platLectura('players:' + cacheKey, async () => {
             const pag = CORE.intDe(q.get('pag'), 1, 1, 500);
             const r = await proxyConsulta('players', { 'order': 'rating.desc.nullslast', 'limit': 50, 'offset': (pag - 1) * 50 }, true);
-            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
             return { ok: true, data: { pag, items: r.body.map(playerPublico), total: r.total != null ? r.total : r.body.length } };
           });
         } else if (url.pathname === '/api/articles') {
@@ -1731,7 +1731,7 @@ export default {
               const params = { 'estado.eq': 'published', 'order': 'publicado_at.desc.nullslast', 'limit': 20, 'offset': (pag - 1) * 20 };
               if (juego && /^[a-z0-9-]{2,24}$/.test(juego)) params['game_slug.eq'] = juego;
               const r = await proxyConsulta('pt_articulos', params, true);
-              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles (proxy ' + (r.status || 'red') + ')' } };
               return { ok: true, data: { pag, items: r.body.map(articuloPublico), total: r.total != null ? r.total : r.body.length } };
             });
           }
