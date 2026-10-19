@@ -703,6 +703,8 @@
   async function renderPerfilReal() {
     if (typeof linksCargar === 'function') { try { await linksCargar(); } catch (eL) {} }
     revisarOwnerDiscord();
+    if (window.VANTS_ME && ME && ME.player) window.VANTS_ME.player = ME.player;
+    if (typeof renderAccount === 'function') { try { renderAccount(); } catch (eRA2) {} }
     openDrawer(perfilRealHTML());
     if (window.lucide) lucide.createIcons();
     cargarSeriesReal();
@@ -1036,6 +1038,11 @@
   await cargarPerfilReal();
 
   if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (ME && ME.pid) || null;
+  /* el chip de la nav muestra el PERFIL REAL (nombre y foto de Neon) */
+  if (ME && ME.player) {
+    window.VANTS_ME = { pid: ME.pid, player: ME.player, owner: esOwner };
+    if (typeof renderAccount === 'function') { try { renderAccount(); } catch (eRA) {} }
+  }
 
   if (user) {
     if (loginBtn) loginBtn.hidden = true;
@@ -1044,11 +1051,15 @@
     var menuBtnSesion = document.getElementById('menuBtn');
     if (menuBtnSesion) menuBtnSesion.hidden = false;
     var nm = String(user.name || user.nickname || user.email || 'JUGADOR').split('@')[0].toUpperCase();
+    var nombreReal = (ME && ME.player) ? String(ME.player.display_name || ME.player.username || nm) : nm;
     var ava = document.getElementById('accAva');
     var accName = document.getElementById('accName');
     var dot = document.getElementById('accLive');
-    if (ava) ava.textContent = nm.slice(0, 2);
-    if (accName) accName.textContent = esOwner ? 'OWNER' : nm.slice(0, 12);
+    if (ava) {
+      if (ME && ME.player && ME.player.avatar_url) ava.innerHTML = '<img alt="" src="' + ME.player.avatar_url + '">';
+      else ava.textContent = nombreReal.slice(0, 2);
+    }
+    if (accName) accName.textContent = esOwner ? nombreReal.toUpperCase() : nombreReal.slice(0, 12).toUpperCase();
     if (dot) dot.style.display = 'none';
     if (typeof toast === 'function') { try { toast(esOwner ? '👑 Modo DUEÑO activo — todo el contenido premium gratis' : 'Sesión iniciada como ' + nm); } catch (e3) {} }
 

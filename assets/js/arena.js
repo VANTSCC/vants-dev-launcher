@@ -1256,14 +1256,18 @@ window.disconnect=async k=>{
   meSave();toast('Cuenta desconectada: '+PLAT[k].n,'info');if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();
 };
 
-/* nav con foto */
+/* nav con foto — usa el PERFIL REAL (Neon) cuando la sesión está cargada;
+   el objeto local `me` queda solo de respaldo */
 function renderAccount(){
   const a=$('#accAva');if(!a)return;
+  const real=(window.VANTS_ME&&window.VANTS_ME.player)||null;
+  const nombre=real?String(real.display_name||real.username||me.name||''):String(me.name||'');
+  const foto=real?(real.avatar_url||null):me.avatar;
   const k=rankFor(0.96+me.rr/1000);
   a.style.setProperty('--rc',RANKS[k].c1);
-  a.innerHTML=me.avatar?'<img alt="" src="'+me.avatar+'">':me.name.slice(0,2).toUpperCase();
-  $('#accName').textContent=me.name.toUpperCase();
-  $('#accLive').style.display=me.live?'block':'none';
+  a.innerHTML=foto?'<img alt="" src="'+foto+'">':(nombre||'V').slice(0,2).toUpperCase();
+  const nm=$('#accName');if(nm)nm.textContent=nombre.toUpperCase();
+  const lv=$('#accLive');if(lv)lv.style.display=me.live?'block':'none';
   a.style.filter=me.live?'drop-shadow(0 0 8px rgba(255,13,46,.8))':'';
 }
 
