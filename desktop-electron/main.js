@@ -137,6 +137,7 @@ async function loginConPKCE() {
       width: 520, height: 720, show: false, resizable: true,
       title: 'Iniciar sesión · VANTS',
       autoHideMenuBar: true, backgroundColor: '#0A0A0C',
+      icon: path.join(__dirname, 'build', 'icon.png'),
       webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
     });
     authWin.loadURL(url);
@@ -177,6 +178,7 @@ async function loginViaWeb() {
     const w = new BrowserWindow({
       width: 1180, height: 820, show: true, title: 'Inicia sesión en VANTS · luego esta ventana se cerrará sola',
       autoHideMenuBar: true, backgroundColor: '#0A0A0C',
+      icon: path.join(__dirname, 'build', 'icon.png'),
       webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
     });
     w.loadURL(WEB_BASE + '/');
@@ -432,6 +434,7 @@ function crearVentana() {
     show: false, backgroundColor: '#0A0A0C',
     title: 'VANTS HUB',
     icon: path.join(__dirname, 'build', 'icon.png'),
+    frame: false,            // barra de título propia (estilo FACEIT)
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -473,6 +476,15 @@ function ipcRegistrar() {
   });
   ipcMain.handle('hub:abrir', (e, url) => shell.openExternal(url));
   ipcMain.handle('hub:info', () => ({ version: app.getVersion(), plataforma: process.platform, juego: juegoActual }));
+  ipcMain.handle('hub:ventana', (e, acc) => {
+    try {
+      if (!win || win.isDestroyed()) return { ok: false };
+      if (acc === 'min') win.minimize();
+      else if (acc === 'max') { win.isMaximized() ? win.unmaximize() : win.maximize(); }
+      else if (acc === 'close') win.close();
+      return { ok: true };
+    } catch (err) { return { ok: false, error: err.message }; }
+  });
 }
 
 // ============================================================
@@ -486,7 +498,7 @@ function actualizarTray() {
 }
 function crearTray() {
   try {
-    const img = nativeImage.createFromPath(path.join(__dirname, 'build', 'icon.png')).resize({ width: 16, height: 16 });
+    const img = nativeImage.createFromPath(path.join(__dirname, 'renderer', 'tray.png'));
     tray = new Tray(img);
     const menu = Menu.buildFromTemplate([
       { label: 'Abrir VANTS HUB', click: () => { if (win) win.show(); else crearVentana(); } },

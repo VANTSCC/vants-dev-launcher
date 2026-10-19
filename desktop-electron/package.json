@@ -1,8 +1,8 @@
 {
   "name": "vants-hub",
   "productName": "VANTS Hub",
-  "version": "2.2.0",
-  "description": "VANTS HUB · Launcher oficial de VANTS para Windows: tu cuenta, partidos, bracket, líderes, en vivo y tu biblioteca de juegos en un solo cajón.",
+  "version": "2.3.0",
+  "description": "VANTS HUB · Launcher oficial de VANTS para Windows: tu cuenta, membresía, conexiones, partidos, bracket, líderes, en vivo y tu biblioteca de juegos con portadas — cada categoría en su cajón.",
   "author": "VANTS <contact@vants.app>",
   "homepage": "https://vants.vants.workers.dev",
   "license": "MIT",

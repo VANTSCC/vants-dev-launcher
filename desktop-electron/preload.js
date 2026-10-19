@@ -11,5 +11,6 @@ contextBridge.exposeInMainWorld('vantsHub', {
   jugar:       (juego) => ipcRenderer.invoke('hub:jugar', juego),
   abrir:       (url) => ipcRenderer.invoke('hub:abrir', url),
   info:        () => ipcRenderer.invoke('hub:info'),
+  ventana:     (acc) => ipcRenderer.invoke('hub:ventana', acc),
   onEstado:    (cb) => ipcRenderer.on('hub:estado', (e, d) => cb(d))
 });

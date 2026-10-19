@@ -8,165 +8,325 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+
+  <!-- ═══════════ SPRITE DE ICONOS (lucide, trazo 2) ═══════════ -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+      <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+      <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+      <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+      <symbol id="i-pad" viewBox="0 0 24 24"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></symbol>
+      <symbol id="i-crown" viewBox="0 0 24 24"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+      <symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+      <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+      <symbol id="i-min" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+      <symbol id="i-max" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    </defs>
+  </svg>
+
   <div id="app">
-    <!-- ═══════════ BARRA LATERAL · CAJONES ═══════════ -->
-    <aside class="side">
-      <div class="marca">
-        <div class="logo">V</div>
-        <div>
-          <div class="marca-n">VANTS <b>HUB</b></div>
-          <div class="marca-s">launcher oficial</div>
-        </div>
+    <!-- ═══════════ BARRA DE TÍTULO (estilo app de escritorio) ═══════════ -->
+    <header id="tbar">
+      <div class="tb-marca">
+        <img src="logo.png" alt="" class="tb-logo" />
+        <span class="tb-nombre">VANTS <b>HUB</b></span>
       </div>
-
-      <nav id="nav">
-        <button class="nav-it activa" data-cajon="inicio">🏠 <span>INICIO</span></button>
-        <button class="nav-it" data-cajon="cuenta">👤 <span>MI CUENTA</span></button>
-        <button class="nav-it" data-cajon="partidos">⚔️ <span>PARTIDOS</span></button>
-        <button class="nav-it" data-cajon="bracket">🏆 <span>BRACKET</span></button>
-        <button class="nav-it" data-cajon="lideres">📊 <span>LÍDERES</span></button>
-        <button class="nav-it" data-cajon="vivo">🟢 <span>EN VIVO</span></button>
-        <button class="nav-it" data-cajon="biblioteca">🎮 <span>BIBLIOTECA</span></button>
-      </nav>
-
-      <div class="pie">
-        <div id="estado-capsula" class="capsula">…</div>
-        <div class="ver">VANTS Hub <span id="ver-num">2.2.0</span></div>
+      <div class="tb-centro mono">LAUNCHER OFICIAL · ARENA VANTS</div>
+      <div class="tb-ctrl">
+        <button id="win-min" title="Minimizar"><svg class="ic"><use href="#i-min"/></svg></button>
+        <button id="win-max" title="Maximizar"><svg class="ic"><use href="#i-max"/></svg></button>
+        <button id="win-close" class="cerrar" title="Cerrar"><svg class="ic"><use href="#i-x"/></svg></button>
       </div>
-    </aside>
+    </header>
 
-    <!-- ═══════════ CONTENIDO ═══════════ -->
-    <main class="contenido">
-
-      <!-- ── CAJÓN · INICIO ── -->
-      <section class="cajon activo" id="cajon-inicio">
-        <div class="hero">
-          <div>
-            <div class="hero-hola" id="hero-hola">Bienvenido a VANTS HUB</div>
-            <div class="hero-sub" id="hero-sub">Tu cuenta, tus partidos, el bracket y tus juegos — todo en un solo lugar.</div>
-            <div class="hero-acciones">
-              <button class="btn primario" id="btn-login">INICIAR SESIÓN</button>
-              <button class="btn fantasma oculto" id="btn-logout">CERRAR SESIÓN</button>
-              <button class="btn fantasma" id="btn-web">ABRIR LA ARENA WEB</button>
-            </div>
-          </div>
-          <div class="hero-estado" id="hero-estado">
-            <div class="punto" id="hero-punto"></div>
-            <div>
-              <div id="hero-estado-txt">conectando…</div>
-              <div class="dim" id="hero-estado-juego"></div>
-            </div>
-          </div>
+    <div id="cuerpo">
+      <!-- ═══════════ BARRA LATERAL · CATEGORÍAS ═══════════ -->
+      <aside id="side">
+        <div class="side-search">
+          <svg class="ic"><use href="#i-search"/></svg>
+          <input id="q" type="text" placeholder="Buscar juegos o jugadores" spellcheck="false" />
         </div>
 
-        <div class="grid2">
-          <div class="caja">
-            <h3>🟢 EN LA ARENA AHORA</h3>
-            <div id="inicio-vivo" class="lista"><div class="dim">cargando…</div></div>
-          </div>
-          <div class="caja">
-            <h3>🎮 JUGAR RÁPIDO</h3>
-            <div id="inicio-rapido" class="chips-juegos"><div class="dim">detectando juegos…</div></div>
-          </div>
-        </div>
-      </section>
+        <nav id="nav">
+          <button class="nav-it activa" data-cajon="inicio"><svg class="ic"><use href="#i-home"/></svg><span>INICIO</span></button>
+          <button class="nav-it" data-cajon="cuenta"><svg class="ic"><use href="#i-user"/></svg><span>MI CUENTA</span></button>
+          <button class="nav-it" data-cajon="partidos"><svg class="ic"><use href="#i-target"/></svg><span>PARTIDOS</span></button>
+          <button class="nav-it" data-cajon="bracket"><svg class="ic"><use href="#i-trophy"/></svg><span>BRACKET</span></button>
+          <button class="nav-it" data-cajon="lideres"><svg class="ic"><use href="#i-chart"/></svg><span>LÍDERES</span></button>
+          <button class="nav-it" data-cajon="vivo"><svg class="ic"><use href="#i-activity"/></svg><span>EN VIVO</span><b class="nav-badge oculto" id="nav-vivo-n">0</b></button>
+          <button class="nav-it" data-cajon="biblioteca"><svg class="ic"><use href="#i-pad"/></svg><span>BIBLIOTECA</span></button>
+        </nav>
 
-      <!-- ── CAJÓN · MI CUENTA ── -->
-      <section class="cajon" id="cajon-cuenta">
-        <h2>MI CUENTA</h2>
-        <div id="cuenta-sin" class="aviso">Inicia sesión para ver tu cuenta.</div>
-        <div id="cuenta-panel" class="oculto">
-          <div class="caja perfil-caja">
-            <img id="pct-avatar" class="avatar" alt="" />
-            <div class="perfil-datos">
-              <div class="perfil-nombre" id="pct-nombre">—</div>
-              <div class="dim" id="pct-email">—</div>
-              <div class="perfil-chips">
-                <span class="chip oro" id="pct-rol">—</span>
-                <span class="chip" id="pct-xp">— XP</span>
-                <span class="chip" id="pct-rating">rating —</span>
+        <div class="sep"></div>
+        <nav>
+          <button class="nav-it nav-oro" data-cajon="membresia"><svg class="ic"><use href="#i-crown"/></svg><span>MEMBRESÍA</span></button>
+          <button class="nav-it" data-cajon="conexiones"><svg class="ic"><use href="#i-link"/></svg><span>CONEXIONES</span></button>
+        </nav>
+
+        <div class="side-pie">
+          <button class="btn-linea" id="btn-tienda"><svg class="ic"><use href="#i-bag"/></svg><span>TIENDA</span></button>
+          <div id="estado-capsula" class="capsula">…</div>
+          <div class="ver mono">VANTS HUB · <span id="ver-num">2.3.0</span></div>
+        </div>
+      </aside>
+
+      <!-- ═══════════ CONTENIDO · CADA CATEGORÍA SU CAJÓN ═══════════ -->
+      <main id="main">
+
+        <!-- ── INICIO ── -->
+        <section class="cajon activo" id="cajon-inicio">
+          <div class="hero">
+            <div class="hero-txt">
+              <span class="kicker mono">ARENA VANTS · HUB DE JUEGOS PC</span>
+              <h1 id="hero-hola">Bienvenido a VANTS HUB</h1>
+              <p id="hero-sub">Tu cuenta, tus partidos, el bracket y tu biblioteca — todo en un solo lugar.</p>
+              <div class="hero-acciones">
+                <button class="btn primario" id="btn-login"><svg class="ic"><use href="#i-zap"/></svg> INICIAR SESIÓN</button>
+                <button class="btn fantasma oculto" id="btn-logout">CERRAR SESIÓN</button>
+                <button class="btn fantasma" id="btn-web">ABRIR LA ARENA WEB</button>
               </div>
             </div>
-            <button class="btn fantasma" id="btn-ver-en-web">VER EN LA WEB</button>
+            <img class="hero-logo" src="logo.png" alt="" />
           </div>
 
-          <div class="grid2">
-            <div class="caja">
-              <h3>💳 PLAN DE MEMBRESÍA</h3>
-              <div id="membresia" class="dim">cargando…</div>
+          <div class="grid-main">
+            <div class="panel">
+              <div class="panel-head">
+                <h3><span class="dot vivo"></span> EN LA ARENA AHORA</h3>
+                <button class="ver-todo mono" data-ir="vivo">VER TODO</button>
+              </div>
+              <div id="inicio-vivo" class="lista"><div class="dim">cargando…</div></div>
             </div>
-            <div class="caja">
-              <h3>🔗 CONEXIONES</h3>
-              <div id="conexiones" class="lista-conn"><div class="dim">cargando…</div></div>
+            <div class="panel">
+              <div class="panel-head">
+                <h3><svg class="ic"><use href="#i-play"/></svg> JUGAR RÁPIDO</h3>
+                <button class="ver-todo mono" data-ir="biblioteca">VER BIBLIOTECA</button>
+              </div>
+              <div id="inicio-rapido" class="chips-juegos"><div class="dim">detectando juegos…</div></div>
             </div>
           </div>
 
-          <div class="caja">
-            <h3>👁 ESTADO EN VIVO (lo que ven los demás)</h3>
-            <div class="opciones-pres">
-              <button class="opt-pres activa" data-pres="online">🟢 EN LÍNEA</button>
-              <button class="opt-pres" data-pres="jugando">🎮 JUGANDO (auto)</button>
-              <button class="opt-pres" data-pres="invisible">⚪ INVISIBLE</button>
+          <div class="grid-main tres">
+            <div class="panel mini-panel" data-ir="partidos">
+              <div class="mp-ic rojo"><svg class="ic"><use href="#i-target"/></svg></div>
+              <div><b>PARTIDOS</b><span>Faceit y series ranked</span></div>
             </div>
-            <div class="dim">Tu estado aparece en la web y en el launcher de tus amigos. En INVISIBLE dejas de latir.</div>
+            <div class="panel mini-panel" data-ir="bracket">
+              <div class="mp-ic oro"><svg class="ic"><use href="#i-trophy"/></svg></div>
+              <div><b>BRACKET</b><span>El torneo en movimiento</span></div>
+            </div>
+            <div class="panel mini-panel" data-ir="membresia">
+              <div class="mp-ic oro"><svg class="ic"><use href="#i-crown"/></svg></div>
+              <div><b>MEMBRESÍA</b><span>Tu plan y tu pase</span></div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- ── CAJÓN · PARTIDOS ── -->
-      <section class="cajon" id="cajon-partidos">
-        <h2>PARTIDOS</h2>
-        <div class="caja">
-          <h3>⚔️ PARTIDAS FACEIT</h3>
-          <div id="partidos-faceit" class="tabla"><div class="dim">inicia sesión para ver tus partidas</div></div>
-        </div>
-        <div class="caja">
-          <h3>🎯 SERIES RANKED VANTS</h3>
-          <div id="partidos-series" class="tabla"><div class="dim">inicia sesión para ver tus series</div></div>
-        </div>
-      </section>
+        <!-- ── MI CUENTA ── -->
+        <section class="cajon" id="cajon-cuenta">
+          <div class="cajon-head">
+            <h2>MI CUENTA</h2>
+            <span class="kicker mono">TU PERFIL EN LA ARENA</span>
+          </div>
+          <div id="cuenta-sin" class="aviso">Inicia sesión para ver tu cuenta.</div>
+          <div id="cuenta-panel" class="oculto">
+            <div class="panel perfil-panel">
+              <div class="ava" id="pct-ava-wrap"><img id="pct-avatar" alt="" /><span class="live-dot oculto" id="pct-live"></span></div>
+              <div class="perfil-datos">
+                <div class="perfil-nombre" id="pct-nombre">—</div>
+                <div class="dim" id="pct-email">—</div>
+                <div class="perfil-chips">
+                  <span class="chip oro" id="pct-rol">—</span>
+                  <span class="chip" id="pct-xp">— XP</span>
+                  <span class="chip" id="pct-rating">rating —</span>
+                </div>
+              </div>
+              <div class="perfil-lado">
+                <button class="btn fantasma mini" id="btn-conexiones-ir">GESTIONAR CONEXIONES</button>
+                <button class="btn fantasma mini" id="btn-ver-en-web">VER EN LA WEB</button>
+              </div>
+            </div>
 
-      <!-- ── CAJÓN · BRACKET ── -->
-      <section class="cajon" id="cajon-bracket">
-        <h2>BRACKET PRINCIPAL</h2>
-        <div class="dim" id="bracket-act">se actualiza solo · ganadores avanzan automáticamente</div>
-        <div class="caja">
-          <h3>🎟 EQUIPOS INSCRITOS</h3>
-          <div id="bracket-equipos" class="chips"><div class="dim">cargando…</div></div>
-        </div>
-        <div class="caja">
-          <h3>🗺 LLAVES</h3>
-          <div id="bracket-llaves" class="llaves"><div class="dim">sin datos aún</div></div>
-        </div>
-      </section>
+            <div class="panel">
+              <div class="panel-head"><h3>👁 ESTADO EN VIVO · LO QUE VEN LOS DEMÁS</h3></div>
+              <div class="opciones-pres">
+                <button class="opt-pres activa" data-pres="online"><span class="dot verde"></span> EN LÍNEA</button>
+                <button class="opt-pres" data-pres="jugando"><span class="dot naranja"></span> JUGANDO (auto)</button>
+                <button class="opt-pres" data-pres="invisible"><span class="dot gris"></span> INVISIBLE</button>
+              </div>
+              <div class="dim">Tu estado aparece en la web, en los LÍDERES y en el hub de tus amigos. En INVISIBLE dejas de latir.</div>
+            </div>
+          </div>
+        </section>
 
-      <!-- ── CAJÓN · LÍDERES ── -->
-      <section class="cajon" id="cajon-lideres">
-        <h2>LÍDERES · RANKING DE JUGADORES</h2>
-        <div class="dim">auto · se refresca solo</div>
-        <div class="caja">
-          <div id="lideres-tabla" class="tabla"><div class="dim">cargando…</div></div>
-        </div>
-      </section>
+        <!-- ── PARTIDOS ── -->
+        <section class="cajon" id="cajon-partidos">
+          <div class="cajon-head">
+            <h2>PARTIDOS</h2>
+            <span class="kicker mono">RESULTADOS DE TUS COMPETICIONES</span>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>⚔ PARTIDAS FACEIT</h3><span class="chip mono">CS2</span></div>
+            <div id="partidos-faceit" class="tabla"><div class="dim">inicia sesión para ver tus partidas</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>🎯 SERIES RANKED VANTS</h3><span class="chip mono">RANKED</span></div>
+            <div id="partidos-series" class="tabla"><div class="dim">inicia sesión para ver tus series</div></div>
+          </div>
+        </section>
 
-      <!-- ── CAJÓN · EN VIVO ── -->
-      <section class="cajon" id="cajon-vivo">
-        <h2>EN VIVO · ¿QUIÉN ESTÁ JUGANDO?</h2>
-        <div class="caja">
-          <div id="vivo-tabla" class="tabla"><div class="dim">cargando…</div></div>
-        </div>
-      </section>
+        <!-- ── BRACKET ── -->
+        <section class="cajon" id="cajon-bracket">
+          <div class="cajon-head">
+            <h2>BRACKET PRINCIPAL</h2>
+            <span class="chip vivo-chip mono">AUTO · SE ACTUALIZA SOLO</span>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>🎟 EQUIPOS INSCRITOS</h3><button class="ver-todo mono" data-ir="inicio">INICIO</button></div>
+            <div id="bracket-equipos" class="chips"><div class="dim">cargando…</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>🗺 LLAVES</h3></div>
+            <div id="bracket-llaves" class="llaves"><div class="dim">sin datos aún</div></div>
+          </div>
+        </section>
 
-      <!-- ── CAJÓN · BIBLIOTECA ── -->
-      <section class="cajon" id="cajon-biblioteca">
-        <h2>BIBLIOTECA DE JUEGOS</h2>
-        <div class="dim" id="biblio-sub">Steam · Riot · Epic — detección local, nada sale de tu PC</div>
-        <button class="btn fantasma" id="btn-rescan">REESCANEAR</button>
-        <div id="biblio-grid" class="biblio"><div class="dim">detectando juegos instalados…</div></div>
-      </section>
+        <!-- ── LÍDERES ── -->
+        <section class="cajon" id="cajon-lideres">
+          <div class="cajon-head">
+            <h2>LÍDERES</h2>
+            <span class="chip vivo-chip mono">RANKING AUTO · EN VIVO</span>
+          </div>
+          <div class="panel">
+            <div id="lideres-tabla" class="tabla"><div class="dim">cargando…</div></div>
+          </div>
+        </section>
 
-    </main>
+        <!-- ── EN VIVO ── -->
+        <section class="cajon" id="cajon-vivo">
+          <div class="cajon-head">
+            <h2>EN VIVO</h2>
+            <span class="kicker mono">¿QUIÉN ESTÁ JUGANDO AHORA MISMO?</span>
+          </div>
+          <div class="panel">
+            <div id="vivo-tabla" class="tabla"><div class="dim">cargando…</div></div>
+          </div>
+        </section>
+
+        <!-- ── BIBLIOTECA ── -->
+        <section class="cajon" id="cajon-biblioteca">
+          <div class="cajon-head">
+            <h2>BIBLIOTECA</h2>
+            <button class="btn fantasma mini" id="btn-rescan">REESCANEAR</button>
+          </div>
+          <div class="dim" id="biblio-sub">Steam · Riot · Epic — detección local, nada sale de tu PC</div>
+          <div id="biblio-grid" class="biblio"><div class="dim">detectando juegos instalados…</div></div>
+        </section>
+
+        <!-- ── MEMBRESÍA ── -->
+        <section class="cajon" id="cajon-membresia">
+          <div class="cajon-head">
+            <h2>MEMBRESÍA</h2>
+            <span class="kicker mono">TU PLAN · TU PASE · GESTIONADO AQUÍ</span>
+          </div>
+
+          <div id="memb-plan-actual" class="panel plan-actual">
+            <div class="pa-izq">
+              <span class="kicker mono">TU PLAN ACTUAL</span>
+              <div class="pa-nombre" id="memb-plan-nombre">PLAN GRATIS</div>
+              <div class="dim" id="memb-plan-detalle">Inicia sesión para ver tu membresía.</div>
+            </div>
+            <div class="pa-der" id="memb-pase">
+              <!-- pase de batalla aquí -->
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>👑 ELEGÍ TU NIVEL</h3>
+              <div class="pp-toggle" id="plan-toggle">
+                <button data-periodo="mo" class="on mono">MENSUAL</button>
+                <button data-periodo="yr" class="mono">ANUAL <b class="pp-save">-33%</b></button>
+              </div>
+            </div>
+            <div class="planes" id="planes-grid"><!-- planes render JS --></div>
+            <div class="dim" style="margin-top:10px">El pago se completa en la tienda oficial de la arena (se abre en tu navegador); tu insignia y tu plan se activan aquí al instante.</div>
+          </div>
+        </section>
+
+        <!-- ── CONEXIONES ── -->
+        <section class="cajon" id="cajon-conexiones">
+          <div class="cajon-head">
+            <h2>CONEXIONES</h2>
+            <span class="kicker mono">GESTIONA TODO DESDE EL HUB · SIN IR A LA WEB</span>
+          </div>
+          <div id="conn-sin" class="aviso oculto">Inicia sesión para gestionar tus conexiones.</div>
+          <div class="panel">
+            <div id="conexiones" class="lista-conn"><div class="dim">cargando…</div></div>
+          </div>
+          <div class="dim">CONECTAR guarda tu handle en tu cuenta VANTS (verificable). DESCONECTAR lo elimina. Google es tu forma de ingresar: se conecta solo al iniciar sesión.</div>
+        </section>
+
+        <!-- ── BUSCADOR ── -->
+        <section class="cajon" id="cajon-buscador">
+          <div class="cajon-head">
+            <h2>BUSCAR</h2>
+            <span class="kicker mono" id="busca-q-txt"></span>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>🎮 EN TU BIBLIOTECA</h3></div>
+            <div id="busca-juegos" class="chips-juegos"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>👥 JUGADORES EN LA ARENA</h3></div>
+            <div id="busca-jugadores" class="tabla"></div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ═══════════ RAIL DERECHO · ACCESOS RÁPIDOS ═══════════ -->
+      <aside id="rail">
+        <button class="rail-b" id="rail-avatar" title="Mi cuenta">
+          <img id="rail-avatar-img" src="logo.png" alt="" />
+          <span class="rail-dot" id="rail-dot"></span>
+        </button>
+        <button class="rail-b" data-ir="vivo" title="En vivo">
+          <svg class="ic"><use href="#i-activity"/></svg><b class="rail-badge oculto" id="rail-vivo-n">0</b>
+        </button>
+        <button class="rail-b" data-ir="bracket" title="Bracket"><svg class="ic"><use href="#i-trophy"/></svg></button>
+        <button class="rail-b" data-ir="biblioteca" title="Biblioteca"><svg class="ic"><use href="#i-pad"/></svg></button>
+        <div class="rail-sep"></div>
+        <button class="rail-b" id="rail-pres" title="Estado: EN LÍNEA">
+          <span class="dot verde" id="rail-pres-dot"></span>
+        </button>
+        <button class="rail-b" id="rail-web" title="Abrir la arena web"><svg class="ic"><use href="#i-ext"/></svg></button>
+      </aside>
+    </div>
   </div>
+
+  <!-- ═══════════ MODAL (input de handle · confirmaciones) ═══════════ -->
+  <div id="modal" class="oculto">
+    <div class="modal-fondo"></div>
+    <div class="modal-caja">
+      <h3 id="modal-titulo">—</h3>
+      <p class="dim" id="modal-texto"></p>
+      <input id="modal-input" type="text" spellcheck="false" class="oculto" />
+      <div class="modal-acciones">
+        <button class="btn fantasma" id="modal-cancelar">CANCELAR</button>
+        <button class="btn primario" id="modal-ok">CONFIRMAR</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
