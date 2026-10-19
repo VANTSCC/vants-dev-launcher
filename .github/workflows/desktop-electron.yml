@@ -1,0 +1,47 @@
+name: "VANTS HUB · instalador Windows (Electron)"
+
+# Compila el instalador NSIS de VANTS HUB (Electron) en un runner
+# Windows real y lo publica en GitHub Releases al crear un tag v*.
+# El dueño (y cualquier jugador) lo descarga desde la web: /descargar
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  instalar-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias
+        working-directory: desktop-electron
+        run: npm install
+
+      - name: Compilar instalador (NSIS x64)
+        working-directory: desktop-electron
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win nsis --x64
+
+      - name: Subir artefacto del build
+        uses: actions/upload-artifact@v4
+        with:
+          name: vants-hub-windows
+          path: desktop-electron/dist/*.exe
+          if-no-files-found: error
+
+      - name: Publicar en GitHub Releases (solo tags v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: desktop-electron/dist/*.exe
+          generate_release_notes: true
