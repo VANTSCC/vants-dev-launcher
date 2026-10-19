@@ -281,6 +281,17 @@ function seccion(n) { console.log('\n== ' + n + ' =='); }
             as(plP.every((p) => !p.team_slug || /^demo-equipo-/.test(p.team_slug)), 'pt_players team_slug apunta a equipos demo');
           }
         } else { SKIP++; console.log('  ~ SKIP: pt_players HTTP ' + r7.status + ' (migra 29 pendiente en Neon o sin red)'); }
+        const to8 = setTimeout(() => ctl.abort(), 12000);
+        const r8 = await fetch(PROXY + '?table=pt_matches&limit=2', { headers: { Accept: 'application/json' } });
+        clearTimeout(to8);
+        if (r8.ok) {
+          const filasM = await r8.json();
+          if (Array.isArray(filasM) && filasM.length) {
+            const emp = filasM[0].empieza_at;
+            as(emp == null || typeof emp === 'string', 'pt_matches.empieza_at es string ISO o null (no {}: regreso del bug stripSensible de fechas, T53)');
+            as(filasM.every((m) => !(m.empieza_at && typeof m.empieza_at === 'object')), 'ninguna fecha pt_matches destruida a objeto vacío');
+          }
+        } else { SKIP++; console.log('  ~ SKIP: pt_matches HTTP ' + r8.status); }
       }
     }
   } catch (e) {

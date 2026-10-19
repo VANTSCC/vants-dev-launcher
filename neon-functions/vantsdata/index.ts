@@ -205,6 +205,10 @@ function parseOr(expr: string, b: SqlBuilder): string {
 }
 
 function stripSensible<T>(data: T): T {
+  // T53 · los timestamptz llegan de pg como Date; serializarlos aquí a ISO
+  // (si se recursara como objeto, Object.entries(Date)=[] los dejaba en {} —
+  // bug real: todas las fechas pt_* llegaban vacías al navegador).
+  if (data instanceof Date) return data.toISOString() as unknown as T;
   if (Array.isArray(data)) return data.map((r) => stripSensible(r)) as unknown as T;
   if (data && typeof data === 'object') {
     const out: Record<string, unknown> = {};
