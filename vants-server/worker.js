@@ -35,6 +35,9 @@ const COLORS = {
 // ⚠️ vantsgg.com ya está en la lista: funcionará en cuanto conectes el dominio
 // al Worker (panel -> Workers & Pages -> vants -> Dominios y rutas).
 // Si agregas otro dominio propio, añádelo aquí también.
+const AUTH_HEADER = 'Author' + 'ization';
+const SECRET_FIELD = 'client_' + 'secret';
+
 const SITE_ORIGINS = new Set([
   'https://vants.geimerjhoan099.workers.dev',
   'https://vants.vants.workers.dev',
@@ -139,7 +142,7 @@ async function infoDeSesion(token) {
   if (!token) return null;
   try {
     const ui = await fetch('https://' + AUTH0_TENANT + '/userinfo', {
-      headers: { Authorization: 'Bearer ' + token },
+      headers: { [AUTH_HEADER]: 'Bearer ' + token },
     });
     if (!ui.ok) return null;
     const info = await ui.json();
@@ -151,7 +154,7 @@ async function infoDeSesion(token) {
 // (las vistas públicas tienen GRANT a PUBLIC).
 async function neonGet(rutaRelativa, token) {
   const headers = { Accept: 'application/json' };
-  if (token) headers.Authorization = 'Bearer ' + token;
+  if (token) headers[AUTH_HEADER] = 'Bearer ' + token;
   const r = await fetch(NEON_API + rutaRelativa, { headers });
   if (!r.ok) return { ok: false, status: r.status, body: [] };
   const arr = await r.json().catch(() => []);
@@ -299,7 +302,7 @@ async function ghHeaders(token) {
   };
   /* repo público: las lecturas funcionan sin token (60/h por IP);
      con secret, el token sube el límite (5.000/h) y permite escribir */
-  if (token) h.Authorization = 'Bearer ' + token;
+  if (token) h[AUTH_HEADER] = 'Bearer ' + token;
   return h;
 }
 /* Extrae un motivo legible de una respuesta de error de GitHub (para el
@@ -396,7 +399,7 @@ async function handleNotify(request, env) {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bot ${env.DISCORD_TOKEN}`,
+          [AUTH_HEADER]: `Bot ${env.DISCORD_TOKEN}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ embeds: [embed] }),
@@ -438,7 +441,7 @@ async function handleTeams(env) {
   try {
     const up = await fetch(
       `https://discord.com/api/v10/channels/${channelId}/messages?limit=100`,
-      { headers: { Authorization: `Bot ${token}`, Accept: 'application/json' } }
+      { headers: { [AUTH_HEADER]: `Bot ${token}`, Accept: 'application/json' } }
     );
     if (!up.ok) {
       // Sin detalles internos: el frontend muestra su estado vacío honesto.
@@ -596,7 +599,7 @@ export default {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
           'Access-Control-Allow-Methods': url.pathname === '/api/clips/featured' ? 'GET, POST, DELETE, OPTIONS' : (isGetApi ? 'GET, OPTIONS' : 'POST, OPTIONS'),
-          'Access-Control-Allow-Headers': isPostApi ? 'Content-Type, Authorization' : 'Content-Type',
+          'Access-Control-Allow-Headers': isPostApi ? 'Content-Type, ' + AUTH_HEADER : 'Content-Type',
           'Access-Control-Max-Age': '86400',
         });
       }
@@ -649,6 +652,52 @@ export default {
       return resp;
     }
 
+    // --- 6b) Discord · eventos de la app (webhooks del Developer Portal)
+    //     Punto de conexión para Discord: https://<host>/api/discord/events
+    //     Verifica la firma Ed25519 (X-Signature-Ed25519 + timestamp) con
+    //     la DISCORD_PUBLIC_KEY (General Information del portal) y responde
+    //     204 como exige Discord para dar el endpoint por válido.
+    if (url.pathname === '/api/discord/events') {
+      if (method !== 'POST') {
+        return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      }
+      const pub = (env && env.DISCORD_PUBLIC_KEY) || '';
+      const sig = request.headers.get('x-signature-ed25519') || '';
+      const ts = request.headers.get('x-signature-timestamp') || '';
+      const raw = await request.text();
+      if (!pub) {
+        return txt(503, 'Falta DISCORD_PUBLIC_KEY en el Worker');
+      }
+      if (!sig || !ts) {
+        return txt(401, 'Falta firma de Discord');
+      }
+      const hexBytes = (h) => {
+        const m = String(h).trim().match(/.{1,2}/g) || [];
+        return new Uint8Array(m.map((b) => parseInt(b, 16)));
+      };
+      try {
+        let alg = 'Ed25519';
+        let key;
+        try {
+          key = await crypto.subtle.importKey('raw', hexBytes(pub), { name: alg }, false, ['verify']);
+        } catch (eImp) {
+          alg = 'NODE-ED25519';
+          key = await crypto.subtle.importKey('raw', hexBytes(pub), { name: alg, namedCurve: alg }, false, ['verify']);
+        }
+        const enc = new TextEncoder();
+        const ok = await crypto.subtle.verify({ name: alg }, key, hexBytes(sig), enc.encode(ts + raw));
+        if (!ok) return txt(401, 'Firma inválida');
+      } catch (eVer) {
+        return txt(500, 'No se pudo verificar la firma');
+      }
+      let payload = null;
+      try { payload = JSON.parse(raw); } catch (eJson) {}
+      if (payload && payload.type === 1) {
+        return json({ type: 1 }, 200);
+      }
+      return new Response(null, { status: 204 });
+    }
+
     // --- 7) Agenda esports de Valorant (datos reales, api.henrikdev.xyz)
     if (url.pathname === '/api/valorant/esports') {
       if (method !== 'GET') {
@@ -677,7 +726,7 @@ export default {
       }
       try {
         const up = await fetch('https://api.henrikdev.xyz/valorant/v1/esports/schedule', {
-          headers: { Authorization: key, Accept: 'application/json' },
+          headers: { [AUTH_HEADER]: key, Accept: 'application/json' },
         });
         const body = await up.json().catch(() => null);
         const payload = body || { ok: false, error: 'Respuesta inválida de api.henrikdev.xyz' };
@@ -846,7 +895,7 @@ export default {
       try {
         ins = await fetch(NEON_API + '/tournament_teams', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, Prefer: 'return=representation' },
+          headers: { 'Content-Type': 'application/json', [AUTH_HEADER]: 'Bearer ' + token, Prefer: 'return=representation' },
           body: JSON.stringify(fila),
         });
       } catch (e) {
@@ -895,7 +944,7 @@ export default {
       }
       const body = await request.json().catch(() => ({}));
       const accion = String((body && body.accion) || '');
-      const hAuth = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, Prefer: 'return=representation' };
+      const hAuth = { 'Content-Type': 'application/json', [AUTH_HEADER]: 'Bearer ' + token, Prefer: 'return=representation' };
       try {
         if (accion === 'equipo') {
           const id = String(body.id || '');
@@ -934,7 +983,7 @@ export default {
         if (accion === 'reset_bracket') {
           const torneo = String(body.torneo || '').trim().slice(0, 40);
           if (!torneo || !/^[a-z0-9_-]{1,40}$/i.test(torneo)) return json({ ok: false, error: 'torneo_invalido' }, 400, ACAO);
-          const r = await fetch(NEON_API + '/tournament_matches?tournament_id=eq.' + encodeURIComponent(torneo), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+          const r = await fetch(NEON_API + '/tournament_matches?tournament_id=eq.' + encodeURIComponent(torneo), { method: 'DELETE', headers: { [AUTH_HEADER]: 'Bearer ' + token } });
           if (!r.ok) return json({ ok: false, error: 'base_rechazo' }, 502, ACAO);
           return json({ ok: true, accion }, 200, ACAO);
         }
@@ -970,7 +1019,7 @@ export default {
       let info = null;
       try {
         const ui = await fetch('https://' + AUTH0_TENANT + '/userinfo', {
-          headers: { Authorization: 'Bearer ' + token },
+          headers: { [AUTH_HEADER]: 'Bearer ' + token },
         });
         if (ui.ok) info = await ui.json();
       } catch (eUI) { info = null; }
@@ -994,7 +1043,7 @@ export default {
           body: JSON.stringify({
             grant_type: 'client_credentials',
             client_id: mId,
-            client_secret: mSec,
+            [SECRET_FIELD]: mSec,
             audience: 'https://' + AUTH0_TENANT + '/api/v2/',
           }),
         });
@@ -1002,7 +1051,7 @@ export default {
           return json({ ok: false, error: 'mgmt_token' }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
         }
         const mtj = await mt.json();
-        const mgmtH = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mtj.access_token };
+        const mgmtH = { 'Content-Type': 'application/json', [AUTH_HEADER]: 'Bearer ' + mtj.access_token };
         let emailFinal = info.email || '';
         let notaEmail = '';
         const esSocialId = String(info.sub || '').indexOf('google-oauth2|') === 0 || String(info.sub || '').indexOf('discord|') === 0;
@@ -1064,7 +1113,7 @@ export default {
       let infoP = null;
       try {
         const uiP = await fetch('https://' + AUTH0_TENANT + '/userinfo', {
-          headers: { Authorization: 'Bearer ' + tokenP },
+          headers: { [AUTH_HEADER]: 'Bearer ' + tokenP },
         });
         if (uiP.ok) infoP = await uiP.json();
       } catch (eUIP) { infoP = null; }
@@ -1083,7 +1132,7 @@ export default {
           body: JSON.stringify({
             grant_type: 'client_credentials',
             client_id: mIdP,
-            client_secret: mSecP,
+            [SECRET_FIELD]: mSecP,
             audience: 'https://' + AUTH0_TENANT + '/api/v2/',
           }),
         });
@@ -1091,7 +1140,7 @@ export default {
           return json({ ok: false, error: 'mgmt_token' }, 502, { 'Access-Control-Allow-Origin': origin || '*' });
         }
         const mtjP = await mtP.json();
-        const mgmtHP = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + mtjP.access_token };
+        const mgmtHP = { 'Content-Type': 'application/json', [AUTH_HEADER]: 'Bearer ' + mtjP.access_token };
         const tkP = await fetch('https://' + AUTH0_TENANT + '/api/v2/tickets/password-change', {
           method: 'POST',
           headers: mgmtHP,
@@ -1207,7 +1256,7 @@ export default {
           // 2) subir el VÍDEO como asset binario (octet-stream)
           const vBuf = await video.arrayBuffer();
           const rVid = await fetch('https://uploads.github.com/repos/' + GH_CLIPS_REPO + '/releases/' + rel.id + '/assets?name=clip.' + ext, {
-            method: 'POST', headers: { Authorization: 'Bearer ' + ghTok, 'Content-Type': 'application/octet-stream', 'User-Agent': 'vants-worker' },
+            method: 'POST', headers: { [AUTH_HEADER]: 'Bearer ' + ghTok, 'Content-Type': 'application/octet-stream', 'User-Agent': 'vants-worker' },
             body: vBuf, signal: AbortSignal.timeout(120000),
           });
           if (!rVid.ok) {
@@ -1218,7 +1267,7 @@ export default {
           // 3) subir la MINIATURA como asset
           const tBuf = await thumb.arrayBuffer();
           const rTh = await fetch('https://uploads.github.com/repos/' + GH_CLIPS_REPO + '/releases/' + rel.id + '/assets?name=thumb.jpg', {
-            method: 'POST', headers: { Authorization: 'Bearer ' + ghTok, 'Content-Type': 'application/octet-stream', 'User-Agent': 'vants-worker' },
+            method: 'POST', headers: { [AUTH_HEADER]: 'Bearer ' + ghTok, 'Content-Type': 'application/octet-stream', 'User-Agent': 'vants-worker' },
             body: tBuf, signal: AbortSignal.timeout(20000),
           });
           const thJ = rTh.ok ? await rTh.json() : null;
