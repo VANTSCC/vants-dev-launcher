@@ -124,8 +124,16 @@ jobs:
       - name: Dependencias (@playwright/test)
         run: npm install --no-audit --no-fund
 
-      - name: Navegador Chromium (caché incluida en el runner)
-        run: npx playwright install chromium --with-deps
+      - name: Navegador Chromium (caché + 1 reintento ante fallo de descarga)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-1.57.0
+
+      - name: Instalar Chromium
+        run: |
+          npx playwright install chromium --with-deps || \
+          { echo "descarga fallida — reintento único"; sleep 10; npx playwright install chromium --with-deps; }
 
       - name: Esperar al despliegue del Worker (hasta 6 min, sin bloquear)
         run: |
