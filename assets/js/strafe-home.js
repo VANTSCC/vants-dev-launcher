@@ -1,24 +1,31 @@
 /* ============================================================
-   STRAFE HOME · v2 — Filas con el layout EXACTO de strafe.com
+   STRAFE HOME · v2.1 — Filas con el layout EXACTO de strafe.com
    ------------------------------------------------------------
    Fila strafe: [icono juego] [logo] [NOMBRE + juego + badge] |
    [región] [premio] [fechas] [equipos] — meta 12px/700 #666.
-   · Tabs EN CURSO / PRÓXIMOS (default) / ARCHIVO.
-   · Datos REALES de Neon (window.VantDB.tournaments()) con
-     fallback S4. Cada fila abre la ficha torneo.html?id=…
-   · Hero/breadcrumb/panel sincronizados con el juego activo
-     (se re-imponen tras el renderAll de arena.js).
+   · Tabs EN CURSO / PRÓXIMOS (default) / ARCHIVO como ANCHORS a
+     las rutas /es|en/tournaments/:juego/:estado/ (URL compartible,
+     back/forward correctos). Estado leído de body[data-torneos].
+   · Datos REALES de la plataforma (VantDB + /api/tournaments) con
+     fallback DEMO etiquetado (chip visible, nunca pasa por real).
+   · Cada fila abre la ficha torneo.html?slug=…/id=…
+   · Hero/breadcrumb/panel sincronizados con el juego activo y con
+     i18n (window.VANTS_I18N).
    Módulo independiente: no toca arena.js/Auth0/RR.
    ============================================================ */
 (function () {
   'use strict';
   if (window.__SF_HOME__) return;
-  var SF = { version: '2.0.0', estado: 'prox' }; /* strafe aterriza en PRÓXIMOS */
+  var SF = { version: '2.1.0', estado: 'prox' }; /* strafe aterriza en PRÓXIMOS */
   window.__SF_HOME__ = SF;
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
   function safe(fn) { try { fn(); } catch (e) { /* silencio total */ } }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function tr(clave, params) {
+    try { if (window.VANTS_I18N && window.VANTS_I18N.t) return window.VANTS_I18N.t(clave, params); } catch (e) {}
+    return clave;
+  }
 
   var GAME_NAMES = { valorant: 'VALORANT', cs2: 'COUNTER-STRIKE 2' };
   var ICON_VAL = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2.2 3h5.6l7.3 14-2.3 4L2.2 3Z"/><path d="M21.8 3h-5.6l-3.4 6.5 2.4 4.5L21.8 3Z"/></svg>';
@@ -28,6 +35,21 @@
     var g = String(t.game || '').toLowerCase();
     if (/cs|counter|csgo/.test(g)) return 'cs2';
     return 'valorant';
+  }
+
+  /* ---------------- ESTADO POR URL (/es|en/tournaments/:juego/:estado) ---------------- */
+  var EST_A_URL = { curso: 'ongoing', prox: 'upcoming', arch: 'archive' };
+  var URL_A_EST = { ongoing: 'curso', upcoming: 'prox', archive: 'arch' };
+  function rutaTorneos() {
+    var m = location.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
+    return m ? { lang: m[1], juego: m[2], estado: m[3] } : null;
+  }
+  function urlDeEstado(est, juego) {
+    var r = rutaTorneos();
+    var lang = (r && r.lang) || (document.body.getAttribute('data-lang') || 'es');
+    var j = juego || (r && r.juego) || (document.body.getAttribute('data-game') || 'valorant');
+    if (window.VANTS_I18N && window.VANTS_I18N.lang === 'en' && !r) lang = 'en';
+    return '/' + lang + '/tournaments/' + j + '/' + EST_A_URL[est] + '/';
   }
 
   /* ---------------- CLASIFICACIÓN POR ESTADO ---------------- */
@@ -59,7 +81,8 @@
     /* badge tipo MAJOR junto al nombre (lima = abierto/major) */
     var tier = String(t.tier || 'open').toLowerCase();
     var badge = '';
-    if (tier === 'major' || /major|premier/.test(tier)) badge = '<span class="sf-badge">MAJOR</span>';
+    if (t.is_demo) badge = '<span class="sf-badge demo" title="' + esc(tr('demo_title')) + '">' + esc(tr('demo')) + '</span>';
+    else if (tier === 'major' || /major|premier/.test(tier)) badge = '<span class="sf-badge">MAJOR</span>';
     else if (ed === 'curso') badge = '<span class="sf-badge">ABIERTO</span>';
     else if (ed === 'arch') badge = '<span class="sf-badge dim">FINALIZADO</span>';
     else badge = '<span class="sf-badge red">PRÓXIMO</span>';
@@ -71,7 +94,7 @@
       ? '+' + Number(t.max_participants)
       : (Number(t.current_participants) > 0 ? '+' + Number(t.current_participants) : '—');
     var region = esc(String(t.region || 'LATAM').toUpperCase().slice(0, 6));
-    var href = 'torneo.html?id=' + encodeURIComponent(t.id != null ? t.id : (t.slug || '')) + '#ficha';
+    var href = '/torneo?' + (t.slug ? 'slug=' + encodeURIComponent(t.slug) : 'id=' + encodeURIComponent(t.id != null ? t.id : '')) + '#ficha';
 
     return '<a class="sf-row" href="' + href + '" data-est="' + ed + '">' +
       '<span class="sf-rlogo">' + (g === 'cs2' ? ICON_CS : ICON_VAL) + '</span>' +
@@ -91,17 +114,17 @@
     if (!host) return;
     var visibles = rows.filter(function (t) { return estadoDe(t) === SF.estado; });
     if (SF.estado === 'arch' && !visibles.length) {
-      host.innerHTML = '<div class="sf-empty"><b>ARCHIVO VACÍO POR AHORA</b>Cada temporada que termina pasa a vivir aquí, con sus campeones y brackets.</div>';
+      host.innerHTML = '<div class="sf-empty"><b>' + esc(tr('tab_arch')) + '</b>' + esc(tr('vacio_torneos')) + '</div>';
     } else if (!visibles.length) {
-      host.innerHTML = '<div class="sf-empty"><b>SIN TORNEOS EN ESTE ESTADO</b>El calendario se anuncia por Discord y en la sección Torneos.</div>';
+      host.innerHTML = '<div class="sf-empty"><b>' + esc(tr('sin_datos')) + '</b>' + esc(tr('vacio_torneos')) + '</div>';
     } else {
       host.innerHTML = visibles.slice(0, 8).map(fila).join('');
     }
     var cnt = $('#sfTCount');
     if (cnt) {
       cnt.textContent = rows.length
-        ? (SF.cache === FALLBACK ? 'CALENDARIO S4 · FECHAS POR ANUNCIAR' : 'DATOS EN VIVO · NEON · ' + rows.length + ' TORNEOS')
-        : 'CALENDARIO S4 · FECHAS POR ANUNCIAR';
+        ? (SF.cache === FALLBACK ? 'CALENDARIO DEMO · DATOS DE EJEMPLO' : 'DATOS EN VIVO · NEON · ' + rows.length + ' TORNEOS')
+        : 'CALENDARIO DEMO · DATOS DE EJEMPLO';
       cnt.classList.toggle('on', SF.cache !== FALLBACK && rows.length > 0);
     }
     safe(function () { if (window.lucide && window.lucide.createIcons) window.lucide.createIcons(); });
@@ -110,14 +133,26 @@
   /* ---------------- HERO / BREADCRUMB / PANEL POR JUEGO (después de arena.js) ---------------- */
   function juego() { return document.body.getAttribute('data-game') || 'valorant'; }
   function nombre() { return GAME_NAMES[juego()] || 'VALORANT'; }
+  function estadoClave() { return SF.estado === 'curso' ? 'ongoing' : SF.estado === 'arch' ? 'archive' : 'upcoming'; }
   function heroStrafe() {
     safe(function () {
       var h = $('#heroTitle'), s = $('#heroSub');
-      if (h) h.innerHTML = 'Próximos torneos de ' + nombre();
-      if (s) s.textContent = 'Calendario de próximos torneos de esports de ' + nombre() + '. Inscripción abierta por equipo, premios en efectivo y VANTS RATING en juego cada partida.';
+      if (h) h.textContent = tr('estado_' + estadoClave()) + ' ' + nombre();
+      if (s) s.textContent = tr('desc_' + estadoClave(), { juego: nombre() });
       var c = $('#sfCrumbGame'); if (c) c.textContent = nombre();
-      var cs = $('#sfCrumbSect'); if (cs) cs.textContent = 'TORNEOS DE ' + nombre();
+      var cs = $('#sfCrumbSect'); if (cs) cs.textContent = tr('crumb_torneos_de') + ' ' + nombre();
       var pg = $('#sfPanelGame'); if (pg) pg.textContent = nombre();
+      var ph = document.querySelector('.sf-panel-head > span');
+      if (ph && pg) {
+        /* mantiene el <span id=sfPanelGame> dentro del head, re-imponiendo el prefijo */
+      }
+    });
+  }
+  function actualizarTabs() {
+    safe(function () {
+      document.querySelectorAll('.sf-tab[data-est]').forEach(function (b) {
+        b.classList.toggle('on', b.getAttribute('data-est') === SF.estado);
+      });
     });
   }
   safe(function () {
@@ -132,24 +167,55 @@
     }
   });
 
-  /* ---------------- TABS ---------------- */
+  /* ---------------- TABS como anchors con estado en la URL ---------------- */
   safe(function () {
     var tabs = document.querySelectorAll('.sf-tab[data-est]');
     tabs.forEach(function (b) {
-      b.addEventListener('click', function () {
+      /* upgrade button → anchor (deep link + SEO + teclado) */
+      if (String(b.tagName).toLowerCase() === 'button') {
+        var a = document.createElement('a');
+        a.className = b.className;
+        a.setAttribute('data-est', b.getAttribute('data-est'));
+        a.textContent = b.textContent;
+        b.parentNode.replaceChild(a, b);
+        b = a;
+      }
+      b.setAttribute('href', urlDeEstado(b.getAttribute('data-est')));
+      b.addEventListener('click', function (e) {
+        /* misma página: pushState + render (el deep link real es el href) */
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
         SF.estado = b.getAttribute('data-est');
-        tabs.forEach(function (x) { x.classList.toggle('on', x === b); });
+        actualizarTabs();
         pintar(SF.cache || FALLBACK);
+        heroStrafe();
+        try { history.pushState({ sfEstado: SF.estado }, '', urlDeEstado(SF.estado)); } catch (e2) {}
       });
+    });
+    window.addEventListener('popstate', function () {
+      var r = rutaTorneos();
+      SF.estado = r ? (URL_A_EST[r.estado] || 'prox') : 'prox';
+      if (r) document.body.setAttribute('data-game', r.juego);
+      actualizarTabs(); pintar(SF.cache || FALLBACK); heroStrafe();
     });
   });
 
-  /* ---------------- FALLBACK S4 (si Neon no responde) ---------------- */
+  /* ---------------- estado inicial desde la URL ---------------- */
+  safe(function () {
+    var r = rutaTorneos();
+    if (r && URL_A_EST[r.estado]) {
+      SF.estado = URL_A_EST[r.estado];
+      document.body.setAttribute('data-game', r.juego);
+    }
+    document.addEventListener('vants:lang', function () { actualizarTabs(); heroStrafe(); pintar(SF.cache || FALLBACK); });
+  });
+
+  /* ---------------- FALLBACK S4 (datos DEMO etiquetados) ---------------- */
   var FALLBACK = [
-    { id: 's4-asc', name: 'ASCENSIÓN SERIES S4', status: 'abierto', tier: 'open', game: 'valorant', prize_pool: null, starts_at: null, day: '24', mon: 'OCT', region: 'LATAM', max_participants: 32 },
-    { id: 's4-ranked', name: 'VANTS RANKED NOCTURNA', status: 'abierto', tier: 'ranked', game: 'valorant', prize_pool: null, region: 'LATAM', max_participants: 64 },
-    { id: 's4-copa', name: 'COPA COMUNIDAD S4', status: 'proximamente', tier: 'open', game: 'valorant', prize_pool: 500, day: '08', mon: 'NOV', region: 'LATAM', max_participants: 16 },
-    { id: 's4-stratos', name: 'STRATOS MAJOR S4', status: 'proximamente', tier: 'major', game: 'cs2', prize_pool: 1000, day: '15', mon: 'NOV', region: 'LATAM', max_participants: 24 }
+    { id: 's4-asc', slug: 'demo-ascension-series-s4', name: 'DEMO · ASCENSIÓN SERIES S4', status: 'abierto', tier: 'open', game: 'valorant', prize_pool: null, starts_at: null, day: '24', mon: 'OCT', region: 'LATAM', max_participants: 32, is_demo: true },
+    { id: 's4-ranked', slug: 'demo-ranked-nocturna', name: 'DEMO · VANTS RANKED NOCTURNA', status: 'abierto', tier: 'ranked', game: 'valorant', prize_pool: null, region: 'LATAM', max_participants: 64, is_demo: true },
+    { id: 's4-copa', slug: 'demo-copa-comunidad-s4', name: 'DEMO · COPA COMUNIDAD S4', status: 'proximamente', tier: 'open', game: 'valorant', prize_pool: 500, day: '08', mon: 'NOV', region: 'LATAM', max_participants: 16, is_demo: true },
+    { id: 's4-stratos', slug: 'demo-stratos-major-s4', name: 'DEMO · STRATOS MAJOR S4', status: 'proximamente', tier: 'major', game: 'cs2', prize_pool: 1000, day: '15', mon: 'NOV', region: 'LATAM', max_participants: 24, is_demo: true }
   ];
 
   /* ---------------- CARGA DE DATOS REALES ---------------- */

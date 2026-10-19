@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noticias de esports · VANTS</title>
+<meta name="description" content="Noticias y anuncios de VANTS: torneos, temporadas, resultados y comunidad. Leído directo de la plataforma.">
+<link rel="canonical" href="https://vants.vants.workers.dev/noticias.html">
+<link rel="alternate" hreflang="es" href="https://vants.vants.workers.dev/noticias.html">
+<link rel="alternate" hreflang="en" href="https://vants.vants.workers.dev/en/noticias.html">
+<link rel="alternate" hreflang="x-default" href="https://vants.vants.workers.dev/noticias.html">
+<meta property="og:title" content="Noticias de esports · VANTS">
+<meta property="og:description" content="Noticias y anuncios de VANTS: torneos, temporadas, resultados y comunidad. Leído directo de la plataforma.">
+<meta property="og:url" content="https://vants.vants.workers.dev/noticias.html">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<link rel="stylesheet" href="./assets/css/arena.css?v=10">
+<link rel="stylesheet" href="./assets/css/strafe.css?v=2">
+<link rel="stylesheet" href="./assets/css/plataforma.css?v=1">
+</head>
+<body data-game="valorant" class="sf" data-crumb="INICIO|NOTICIAS" data-plataforma="noticias">
+
+<!-- ===== SYMBOL DEL LOGO VANTS (usable en todo el sitio) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="vm-plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1f26"/><stop offset="1" stop-color="#08090c"/></linearGradient>
+    <linearGradient id="vm-edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b78"/><stop offset=".5" stop-color="#2a2f38"/><stop offset="1" stop-color="#ff0d2e"/></linearGradient>
+    <linearGradient id="vm-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#d9dde3"/><stop offset="1" stop-color="#8d949e"/></linearGradient>
+    <linearGradient id="vm-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5a68"/><stop offset=".5" stop-color="#ff0d2e"/><stop offset="1" stop-color="#9e0019"/></linearGradient>
+  </defs>
+  <symbol id="vmark" viewBox="0 0 64 64">
+    <path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#vm-plate)" stroke="url(#vm-edge)" stroke-width="1.5"/>
+    <path d="M9 14 H23 L34.5 44.5 L32 52 Z" fill="url(#vm-steel)"/>
+    <path d="M55 14 H41 L32.4 37 L42.2 37 Z" fill="url(#vm-red)"/>
+    <path d="M38.6 41 L41 41 L32 52 L33.6 47.6 Z" fill="#ff0d2e" opacity=".9"/>
+    <path d="M9 14 H23 L23.8 16.2 H9.9 Z" fill="#fff" opacity=".75"/>
+  </symbol>
+</svg>
+
+<section class="sec" id="plataforma">
+  <div class="wrap">
+    <div class="sec-head reveal"><div><span class="kicker">VANTS</span><h2>Noticias VANTS</h2></div>
+    <p class="sec-note">Noticias y anuncios de VANTS: torneos, temporadas, resultados y comunidad. Leído directo de la plataforma.</p></div>
+    <div class="sf-panel">
+      <div class="sf-panel-head"><span>NOTICIAS Y ANUNCIOS</span><small>PLATAFORMA VANTS</small></div>
+      <div id="pfNoticias" class="pf-host"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div class="f-brand">
+        <span class="nav-logo"><svg class="mark" style="width:34px;height:34px"><use href="#vmark"/></svg><span class="wordmark"><b style="font-size:24px">VANT<em>S</em></b><small>GAMES</small></span></span>
+        <p>La arena competitiva de VALORANT y Counter-Strike 2: torneos con premio, rangos propios, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</p>
+      </div>
+      <div class="f-col"><h5>COMPETIR</h5><a href="/es/tournaments/valorant/upcoming/">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="gpr.html">Global Power Rankings</a><a href="ranking.html">Ranking global</a><a href="rangos.html">VANTS RANKED</a><a href="clips.html">Clips · Momentos destacados</a><a href="guia.html">Guía de la arena</a></div>
+      <div class="f-col"><h5>IDENTIDAD</h5><a href="jugadores.html">Sala de jugadores</a><a href="equipos.html">Equipos</a><a href="equipo.html">Equipo VANTS DE 5</a><a href="noticias.html">Noticias</a><a href="identidad.html">Tienda de identidad</a><a href="historia.html">Historia de la marca</a></div>
+      <div class="f-col"><h5>MEMBRERÍA</h5><a href="membresias.html">VANTS PRO</a><a href="membresias.html">VANTS CREATOR</a><a href="/es/tournaments/valorant/upcoming/">Torneos abiertos</a><a href="tienda.html">Tienda oficial × VegaStore</a><a href="membresias.html">Patrocinios y colaboradores</a></div>
+    </div>
+    <div class="f-bottom">
+      <span>© 2026 VANTS GAMES — Donde nace la ventaja. No afiliado a Riot Games ni a Valve.</span>
+      <span>Pagos seguros procesados por Stripe · Tarjeta, Klarna, Link y más.</span>
+      <span><a href="politica-de-privacidad.html" style="color:#93939D;text-decoration:underline;text-underline-offset:3px">Privacidad</a> · <a href="terminos-de-servicio.html" style="color:#93939D;text-decoration:underline;text-underline-offset:3px">Términos</a> · <a href="politica-de-reembolsos.html" style="color:#93939D;text-decoration:underline;text-underline-offset:3px">Reembolsos</a> · <a href="preguntas-frecuentes.html" style="color:#93939D;text-decoration:underline;text-underline-offset:3px">Preguntas frecuentes</a></span>
+    </div>
+  </div>
+</footer>
+
+<div class="ov" id="drawerOv"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
+<div class="toasts" id="toasts"></div>
+
+<script src="./assets/js/arena.js?v=30"></script><!-- Capa viva: Auth0 (login) + Neon (torneos reales) -->
+<script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
+<script src="./assets/js/auth0-config.js?v=16" defer></script>
+<script src="./assets/js/vants-supervisor.js?v=1" defer></script>
+<script src="./assets/js/arena-live.js?v=32" defer></script>
+<script src="./assets/js/menu-preview.js?v=3" defer></script>
+<script src="./assets/js/i18n.js?v=1" defer></script>
+<script src="./assets/js/plataforma.js?v=1" defer></script>
+<script src="./assets/js/strafe-shell.js?v=2" defer></script>
+</body>
+</html>

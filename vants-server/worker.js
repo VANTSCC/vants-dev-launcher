@@ -22,6 +22,8 @@
  *    pocos días; si Riot falla, la web usa su snapshot embebido.
  */
 
+import CORE from './plataforma-core.js';
+
 const COLORS = {
   rojo: 0xff0d2e,
   violeta: 0xb44cff,
@@ -128,8 +130,221 @@ const rlTeams = new Map();
 const rlGpr = new Map();
 const rlAccount = new Map();
 const rlTorneo = new Map();
+const rlLectura = new Map(); // API pública de la plataforma de torneos (lectura)
+const LIMIT_LECTURA = 60;    // peticiones por minuto por IP a los endpoints públicos nuevos
 // Caché de /api/en-vivo (a nivel de módulo: sobrevive entre peticiones)
 let enVivoCache = { at: 0, body: null };
+// Caché corta de la API pública de torneos (60 s) — reduce carga a Neon
+const platCache = new Map(); // ruta → { at, body }
+const PLAT_TTL_MS = 60_000;
+
+/* ==================== PLATAFORMA DE TORNEOS (estilo strafe) ====================
+   Rutas de página  : /es|en/tournaments/:juego/:estado/  (index.html + HTMLRewriter)
+   API pública (GET): /api/games · /api/tournaments[/slug] · /api/matches
+                      /api/teams · /api/players · /api/articles[/slug] · /api/search
+   Datos: Neon Data API (mismo patrón que el resto). Lógica pura en plataforma-core.js
+   (compartida con scripts/test_plataforma.js). Seed demo etiquetado is_demo=true.
+   ============================================================ */
+
+const JUEGOS_RUTA = {
+  valorant: 'VALORANT',
+  cs2: 'COUNTER-STRIKE 2',
+  dota2: 'DOTA 2',
+  lol: 'LEAGUE OF LEGENDS',
+  r6s: 'RAINBOW SIX SIEGE',
+  cod: 'CALL OF DUTY',
+};
+
+const TEXTOS_TORNEOS = {
+  es: {
+    upcoming: { h: 'Próximos torneos de', panel: 'PRÓXIMOS TORNEOS DE', desc: (g) => 'Calendario de próximos torneos de esports de ' + g + '. Inscripción abierta por equipo, premios en efectivo y VANTS RATING en juego cada partida.', tab: 'PRÓXIMOS', crumb: 'PRÓXIMOS' },
+    ongoing:  { h: 'Torneos en curso de', panel: 'TORNEOS EN CURSO DE', desc: (g) => 'Torneos de ' + g + ' en curso ahora mismo: brackets, resultados en vivo y clasificación.', tab: 'EN CURSO', crumb: 'EN CURSO' },
+    archive:  { h: 'Archivo de torneos de', panel: 'ARCHIVO DE TORNEOS DE', desc: (g) => 'Historial de torneos finalizados de ' + g + ': campeones, brackets y resultados.', tab: 'ARCHIVO', crumb: 'ARCHIVO' },
+  },
+  en: {
+    upcoming: { h: 'Upcoming tournaments for', panel: 'UPCOMING TOURNAMENTS FOR', desc: (g) => 'Calendar of upcoming ' + g + ' esports tournaments. Open team registration, cash prizes and VANTS RATING on every match.', tab: 'UPCOMING', crumb: 'UPCOMING' },
+    ongoing:  { h: 'Ongoing tournaments for', panel: 'ONGOING TOURNAMENTS FOR', desc: (g) => g + ' tournaments running right now: brackets, live results and standings.', tab: 'ONGOING', crumb: 'ONGOING' },
+    archive:  { h: 'Tournament archive for', panel: 'TOURNAMENT ARCHIVE FOR', desc: (g) => 'History of finished ' + g + ' tournaments: champions, brackets and results.', tab: 'ARCHIVE', crumb: 'ARCHIVE' },
+  },
+};
+
+const BASE_URL = 'https://vants.vants.workers.dev';
+
+function urlTorneos(lang, juego, estado) {
+  return BASE_URL + '/' + lang + '/tournaments/' + juego + '/' + estado + '/';
+}
+
+// Proxy público de lectura (vantsdata · Neon Function): whitelist de tablas,
+// strip de columnas sensibles, rate limit y Content-Range con _count=exact.
+// El Worker NUNCA guarda credenciales de la base (patrón de la casa).
+const PLAT_PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+
+async function proxyConsulta(tabla, params, conCount) {
+  const u = new URL(PLAT_PROXY);
+  u.searchParams.set('table', tabla);
+  for (const [k, v] of Object.entries(params || {})) u.searchParams.set(k, String(v));
+  if (conCount) u.searchParams.set('_count', 'exact');
+  const r = await fetch(u, { headers: { Accept: 'application/json' } });
+  if (!r.ok) return { ok: false, status: r.status, body: [], total: null };
+  const arr = await r.json().catch(() => []);
+  const cr = r.headers.get('Content-Range'); // "0-11/34"
+  let total = null;
+  if (cr && cr.includes('/')) {
+    const n = parseInt(cr.split('/')[1], 10);
+    if (Number.isFinite(n)) total = n;
+  }
+  return { ok: true, status: r.status, body: Array.isArray(arr) ? arr : [], total };
+}
+
+// Une filas de pt_torneos con pt_games (1 consulta extra TOTAL, no por fila)
+async function juegosMapa() {
+  const g = await proxyConsulta('pt_games', { 'activo.is': 'true', 'order': 'orden.asc' });
+  const mapa = {};
+  for (const row of g.body || []) mapa[row.slug] = { slug: row.slug, nombre: row.nombre };
+  return mapa;
+}
+
+// Caché de lectura 60 s (misma estrategia que en-vivo)
+async function platLectura(clave, fn) {
+  const c = platCache.get(clave);
+  if (c && Date.now() - c.at < PLAT_TTL_MS) return c.body;
+  const body = await fn();
+  if (body && body.ok) platCache.set(clave, { at: Date.now(), body });
+  if (platCache.size > 300) platCache.clear();
+  return body;
+}
+
+// Proyección pública de un torneo (fila de BD → contrato de API_SPEC)
+function torneoPublico(t) {
+  return {
+    slug: t.slug,
+    nombre: t.nombre,
+    descripcion: t.descripcion || null,
+    game: t.game && typeof t.game === 'object' ? { slug: t.game.slug, nombre: t.game.nombre } : { slug: t.game_slug, nombre: CORE.GAME_NAMES[t.game_slug] || String(t.game_slug || '').toUpperCase() },
+    estado: t.estado,
+    major: !!t.major,
+    region: t.region || null,
+    location_type: t.location_type || null,
+    prize: t.prize_value != null ? { value: Number(t.prize_value), currency: t.prize_currency || 'USD' } : null,
+    fee: t.fee != null ? Number(t.fee) : 0,
+    max_teams: t.max_teams != null ? Number(t.max_teams) : null,
+    starts_at: t.starts_at || null,
+    ends_at: t.ends_at || null,
+    logo_url: t.logo_url || null,
+    formato: t.formato || null,
+    source: t.source,
+    is_demo: !!t.is_demo,
+  };
+}
+
+// Proyección pública de un partido
+function matchPublico(m) {
+  return {
+    game: { slug: m.game_slug, nombre: CORE.GAME_NAMES[m.game_slug] || String(m.game_slug || '').toUpperCase() },
+    tournament_slug: m.tournament_id || null,
+    equipos: { a: m.equipo_a, b: m.equipo_b },
+    score: m.score_a != null && m.score_b != null ? { a: Number(m.score_a), b: Number(m.score_b) } : null,
+    estado: m.estado,
+    best_of: m.best_of != null ? Number(m.best_of) : null,
+    empieza_at: m.empieza_at || null,
+    is_demo: !!m.is_demo,
+  };
+}
+
+// Whitelist de columnas públicas de players (NUNCA email/auth0_sub/contacto)
+function playerPublico(p) {
+  const out = { id: p.id || null, role: p.role || null, is_demo: !!p.is_demo };
+  for (const k of ['nombre', 'display_name', 'game', 'rating', 'tipo', 'region']) {
+    if (p[k] != null) out[k] = p[k];
+  }
+  return out;
+}
+
+function articuloPublico(a) {
+  return {
+    slug: a.slug, titulo: a.titulo, resumen: a.resumen || null,
+    autor: a.autor || null,
+    game: a.game_slug || null,
+    publicado_at: a.publicado_at || a.created_at || null,
+    is_demo: !!a.is_demo,
+  };
+}
+
+// Sirve index.html reescrito para /es|en/tournaments/:juego/:estado/
+async function paginaTorneos(env, request, url, lang, juego, estado) {
+  const t = (TEXTOS_TORNEOS[lang] || TEXTOS_TORNEOS.es)[estado];
+  const g = JUEGOS_RUTA[juego] || 'VALORANT';
+  const target = new URL('/', url.origin); // /index.html → Assets redirige 307 a / : pedir la raíz
+  const page = await env.ASSETS.fetch(new Request(target, request));
+  if (!page.ok) return page;
+  const can = urlTorneos(lang, juego, estado);
+  const otros = ['es', 'en'].filter((l) => l !== lang);
+  const res = new HTMLRewriter()
+    .on('html', { element(el) { el.setAttribute('lang', lang); } })
+    .on('body', {
+      element(el) {
+        el.setAttribute('data-torneos', juego + ':' + estado);
+        el.setAttribute('data-lang', lang);
+      },
+    })
+    .on('title', { element(el) { el.setInnerContent(t.h + ' ' + g + ' | ' + (lang === 'en' ? 'Calendar' : 'Calendario') + ' | VANTS'); } })
+    .on('meta[name="description"]', { element(el) { el.setAttribute('content', t.desc(g)); } })
+    .on('link[rel="canonical"]', { element(el) { el.setAttribute('href', can); } })
+    .on('meta[property="og:title"]', { element(el) { el.setAttribute('content', t.h + ' ' + g + ' | ' + (lang === 'en' ? 'Calendar' : 'Calendario') + ' | VANTS'); } })
+    .on('meta[property="og:url"]', { element(el) { el.setAttribute('content', can); } })
+    .on('head', {
+      element(el) {
+        el.append('<link rel="alternate" hreflang="' + lang + '" href="' + can + '">', { html: true });
+        el.append('<link rel="alternate" hreflang="x-default" href="' + urlTorneos('es', juego, estado) + '">', { html: true });
+        for (const l of otros) el.append('<link rel="alternate" hreflang="' + l + '" href="' + urlTorneos(l, juego, estado) + '">', { html: true });
+      },
+    })
+    .on('#heroTitle', { element(el) { el.setInnerContent(t.h + ' ' + g); } })
+    .on('#heroSub', { element(el) { el.setInnerContent(t.desc(g)); } })
+    .on('#sfCrumbGame', { element(el) { el.setInnerContent(g); } })
+    .on('#sfCrumbSect', { element(el) { el.setInnerContent('TORNEOS DE ' + g); } })
+    .on('#sfPanelGame', { element(el) { el.setInnerContent(g); } })
+    /* Rutas anidadas: TODO href/src relativo se hace absoluto (si no, los
+       assets y enlaces buscarían /es/tournaments/<juego>/<estado>/assets/…) */
+    .on('a[href]', {
+      element(el) {
+        const h = el.getAttribute('href') || '';
+        if (h && !/^(https?:|#|mailto:|data:|\/)/.test(h)) el.setAttribute('href', '/' + h);
+      },
+    })
+    .on('link[href^="./"]', {
+      element(el) {
+        const h = el.getAttribute('href') || '';
+        if (h.startsWith('./')) el.setAttribute('href', h.slice(1));
+      },
+    })
+    .on('script[src^="./"]', {
+      element(el) {
+        const h = el.getAttribute('src') || '';
+        if (h.startsWith('./')) el.setAttribute('src', h.slice(1));
+      },
+    })
+    .on('img[src^="./"]', {
+      element(el) {
+        const h = el.getAttribute('src') || '';
+        if (h.startsWith('./')) el.setAttribute('src', h.slice(1));
+      },
+    })
+    .on('.sf-tab[data-est]', {
+      element(el) {
+        const est = el.getAttribute('data-est');
+        const canon = est === 'curso' ? 'ongoing' : est === 'arch' ? 'archive' : 'upcoming';
+        el.tagName = 'a';
+        el.setAttribute('href', '/' + lang + '/tournaments/' + juego + '/' + canon + '/');
+        let cls = el.getAttribute('class') || 'sf-tab';
+        if (canon === estado) cls += ' on'; else cls = cls.replace(/\bon\b/g, '').trim();
+        el.setAttribute('class', cls);
+      },
+    })
+    .transform(new Response(page.body, page));
+  res.headers.set('Cache-Control', 'public, max-age=60');
+  return harden(res);
+}
 
 // Tenant Auth0 del sitio (misma configuración que assets/js/auth0-config.js)
 const AUTH0_TENANT = 'vants.eu.auth0.com';
@@ -593,7 +808,7 @@ export default {
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo';
+      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo' || url.pathname === '/api/games' || url.pathname === '/api/tournaments' || url.pathname === '/api/matches' || url.pathname === '/api/players' || url.pathname === '/api/articles' || url.pathname === '/api/search' || /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname);
       const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/inscribir' || url.pathname === '/api/torneos/gestionar';
       if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
@@ -1370,6 +1585,198 @@ export default {
       res.headers.set('Access-Control-Allow-Origin', origin || '*');
       res.headers.set('Cache-Control', 'public, max-age=3600');
       return res;
+    }
+
+    // --- 7b) PLATAFORMA DE TORNEOS · rutas de página /es|en/tournaments/:juego/:estado/
+    const mT = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
+    if (mT && (method === 'GET' || method === 'HEAD')) {
+      // Juego no catalogado → 307 al juego principal del mismo estado
+      if (!JUEGOS_RUTA[mT[2]]) {
+        return harden(new Response(null, { status: 307, headers: { Location: '/' + mT[1] + '/tournaments/valorant/' + mT[3] + '/' } }));
+      }
+      if (env.ASSETS) {
+        const p = await paginaTorneos(env, request, url, mT[1], mT[2], mT[3]);
+        return method === 'HEAD' ? new Response(null, { status: p.status, headers: p.headers }) : p;
+      }
+    }
+    // Rutas parciales → 307 a la canónica (juego por defecto valorant, estado upcoming)
+    const mT3 = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/?$/);
+    if (mT3 && method === 'GET') {
+      const destino = '/' + mT3[1] + '/tournaments/' + (JUEGOS_RUTA[mT3[2]] ? mT3[2] : 'valorant') + '/upcoming/';
+      return harden(new Response(null, { status: 307, headers: { Location: destino } }));
+    }
+    if (/^\/(es|en)\/tournaments\/?$/.test(url.pathname) && method === 'GET') {
+      const lang = url.pathname.startsWith('/en') ? 'en' : 'es';
+      return harden(new Response(null, { status: 307, headers: { Location: '/' + lang + '/tournaments/valorant/upcoming/' } }));
+    }
+
+    // --- 7c) PLATAFORMA DE TORNEOS · API pública de lectura (JSON {ok,data})
+    const API_LECTURA = url.pathname === '/api/games' || url.pathname === '/api/tournaments' ||
+      url.pathname === '/api/matches' || url.pathname === '/api/teams' || url.pathname === '/api/players' ||
+      url.pathname === '/api/articles' || url.pathname === '/api/search' ||
+      /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname);
+    if (API_LECTURA) {
+      if (method !== 'GET') {
+        return json({ ok: false, error: { message: 'Solo GET' } }, 405, { Allow: 'GET' });
+      }
+      const origin = request.headers.get('origin') || '';
+      if (origin && !SITE_ORIGINS.has(origin)) {
+        return json({ ok: false, error: { message: 'Origen no permitido' } }, 403);
+      }
+      const rl = rateLimit(rlLectura, ip, LIMIT_LECTURA);
+      if (!rl.ok) {
+        return json({ ok: false, error: { message: 'Demasiadas peticiones' } }, 429, { 'Retry-After': String(rl.retry) });
+      }
+      const q = url.searchParams;
+      const cacheKey = url.pathname + '?' + url.search;
+      let payload = null;
+
+      try {
+        if (url.pathname === '/api/games') {
+          payload = await platLectura('games', async () => {
+            const r = await proxyConsulta('pt_games', { 'activo.is': 'true', 'order': 'orden.asc' });
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+            return { ok: true, data: r.body.map((g) => ({ slug: g.slug, nombre: g.nombre, corto: g.corto || null, logo_url: g.logo_url || null, color: g.color || null, activo: !!g.activo })) };
+          });
+        } else if (url.pathname === '/api/tournaments') {
+          const vq = CORE.validarQueryTorneos({ estado: q.get('estado'), juego: q.get('juego'), region: q.get('region'), pag: q.get('pag'), porPagina: q.get('porPagina') });
+          if (!vq.ok) {
+            payload = { ok: false, error: { message: vq.error } };
+          } else {
+            payload = await platLectura('torneos:' + cacheKey, async () => {
+              const params = {
+                'estado.eq': vq.estado === 'archive' ? 'finished' : vq.estado,
+                'order': vq.estado === 'archive' ? 'starts_at.desc.nullslast' : 'starts_at.asc.nullslast',
+                'limit': vq.porPagina,
+                'offset': (vq.pag - 1) * vq.porPagina,
+              };
+              if (vq.juego) params['game_slug.eq'] = vq.juego;
+              if (vq.region) params['region.ilike'] = vq.region;
+              const r = await proxyConsulta('pt_torneos', params, true);
+              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+              const mapa = await juegosMapa();
+              const p = CORE.paginar(r.body, vq.pag, vq.porPagina);
+              return { ok: true, data: { pag: p.pag, porPagina: p.porPagina, total: r.total != null ? r.total : p.total, items: p.items.map((t) => torneoPublico(Object.assign({}, t, { game: mapa[t.game_slug] || null }))) } };
+            });
+          }
+        } else if (/^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname)) {
+          const slug = url.pathname.split('/').pop();
+          payload = await platLectura('torneo:' + slug, async () => {
+            const r = await proxyConsulta('pt_torneos', { 'slug.eq': slug, 'limit': 1 });
+            if (!r.ok || !r.body.length) return { ok: false, error: { message: 'Torneo no encontrado' } };
+            const mapa = await juegosMapa();
+            const ficha = torneoPublico(Object.assign({}, r.body[0], { game: mapa[r.body[0].game_slug] || null }));
+            const part = await proxyConsulta('tournament_teams', { 'tournament_id.eq': slug, 'status.eq': 'confirmado', 'order': 'created_at', 'select': 'name,tag,captain,region,game' });
+            ficha.participantes = part.ok ? part.body : [];
+            return { ok: true, data: ficha };
+          });
+        } else if (url.pathname === '/api/matches') {
+          const vq = CORE.validarQueryMatches({ estado: q.get('estado'), juego: q.get('juego'), pag: q.get('pag'), porPagina: q.get('porPagina') });
+          if (!vq.ok) {
+            payload = { ok: false, error: { message: vq.error } };
+          } else {
+            payload = await platLectura('matches:' + cacheKey, async () => {
+              const params = {
+                'estado.eq': vq.estado,
+                'order': vq.estado === 'upcoming' ? 'empieza_at.asc.nullslast' : 'empieza_at.desc.nullslast',
+                'limit': vq.porPagina,
+                'offset': (vq.pag - 1) * vq.porPagina,
+              };
+              if (vq.juego) params['game_slug.eq'] = vq.juego;
+              const r = await proxyConsulta('pt_matches', params, true);
+              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+              const p = CORE.paginar(r.body, vq.pag, vq.porPagina);
+              return { ok: true, data: { pag: p.pag, porPagina: p.porPagina, total: r.total != null ? r.total : p.total, items: p.items.map(matchPublico) } };
+            });
+          }
+        } else if (url.pathname === '/api/teams') {
+          payload = await platLectura('teams:' + cacheKey, async () => {
+            const juego = String(q.get('juego') || '').toLowerCase();
+            const params = { 'order': 'nombre.asc', 'limit': 50 };
+            if (juego && /^[a-z0-9-]{2,24}$/.test(juego)) params['game_slug.eq'] = juego;
+            const r = await proxyConsulta('pt_teams', params);
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+            return { ok: true, data: r.body.map((t) => ({ slug: t.slug, nombre: t.nombre, tag: t.tag || null, game: t.game_slug || null, region: t.region || null, logo_url: t.logo_url || null, is_demo: !!t.is_demo })) };
+          });
+        } else if (url.pathname === '/api/players') {
+          payload = await platLectura('players:' + cacheKey, async () => {
+            const pag = CORE.intDe(q.get('pag'), 1, 1, 500);
+            const r = await proxyConsulta('players', { 'order': 'rating.desc.nullslast', 'limit': 50, 'offset': (pag - 1) * 50 }, true);
+            if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+            return { ok: true, data: { pag, items: r.body.map(playerPublico), total: r.total != null ? r.total : r.body.length } };
+          });
+        } else if (url.pathname === '/api/articles') {
+          if (/^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname)) {
+            const slug = url.pathname.split('/').pop();
+            payload = await platLectura('articulo:' + slug, async () => {
+              const r = await proxyConsulta('pt_articulos', { 'estado.eq': 'published', 'slug.eq': slug, 'limit': 1 });
+              if (!r.ok || !r.body.length) return { ok: false, error: { message: 'Artículo no encontrado' } };
+              const a = r.body[0];
+              return { ok: true, data: Object.assign(articuloPublico(a), { cuerpo: a.cuerpo || '' }) };
+            });
+          } else {
+            payload = await platLectura('articulos:' + cacheKey, async () => {
+              const pag = CORE.intDe(q.get('pag'), 1, 1, 500);
+              const juego = String(q.get('juego') || '').toLowerCase();
+              const params = { 'estado.eq': 'published', 'order': 'publicado_at.desc.nullslast', 'limit': 20, 'offset': (pag - 1) * 20 };
+              if (juego && /^[a-z0-9-]{2,24}$/.test(juego)) params['game_slug.eq'] = juego;
+              const r = await proxyConsulta('pt_articulos', params, true);
+              if (!r.ok) return { ok: false, error: { message: 'Datos no disponibles' } };
+              return { ok: true, data: { pag, items: r.body.map(articuloPublico), total: r.total != null ? r.total : r.body.length } };
+            });
+          }
+        } else if (url.pathname === '/api/search') {
+          const vb = CORE.validarQueryBusqueda({ q: q.get('q') });
+          if (!vb.ok) {
+            payload = { ok: false, error: { message: vb.error } };
+          } else {
+            payload = await platLectura('search:' + vb.q.toLowerCase(), async () => {
+              const patron = '%' + vb.q + '%';
+              const [tor, eq, ar, ju] = await Promise.all([
+                proxyConsulta('pt_torneos', { 'nombre.ilike': patron, 'select': 'slug,nombre,estado,is_demo', 'limit': 8 }),
+                proxyConsulta('pt_teams', { 'nombre.ilike': patron, 'select': 'slug,nombre,tag,game_slug,is_demo', 'limit': 8 }),
+                proxyConsulta('pt_articulos', { 'titulo.ilike': patron, 'estado.eq': 'published', 'select': 'slug,titulo,is_demo', 'limit': 8 }),
+                proxyConsulta('players', { 'select': '*', 'limit': 50 }),
+              ]);
+              const texto = vb.q.toLowerCase();
+              const jugadores = ju.ok
+                ? ju.body.map(playerPublico).filter((p) => {
+                    const nom = String(p.nombre || p.display_name || '').toLowerCase();
+                    return nom && nom.includes(texto);
+                  }).slice(0, 8)
+                : [];
+              return {
+                ok: true,
+                data: {
+                  q: vb.q,
+                  torneos: tor.ok ? tor.body : [],
+                  equipos: eq.ok ? eq.body : [],
+                  articulos: ar.ok ? ar.body : [],
+                  jugadores,
+                },
+              };
+            });
+          }
+        }
+      } catch (eApi) {
+        payload = { ok: false, error: { message: 'Error interno' } };
+      }
+
+      if (payload) {
+        let status = 200;
+        if (!payload.ok) {
+          const m = payload.error && payload.error.message;
+          if (m === 'Torneo no encontrado' || m === 'Artículo no encontrado') status = 404;
+          else if (m === 'Datos no disponibles') status = 502;
+          else if (m === 'Error interno') status = 500;
+          else status = 400;
+        }
+        const res = json(payload, status, {
+          'Access-Control-Allow-Origin': origin || '*',
+          'Cache-Control': payload.ok ? 'public, max-age=60' : 'no-store',
+        });
+        return res;
+      }
     }
 
     // --- 8) Resto: archivos estáticos con cabeceras de seguridad

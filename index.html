@@ -5,9 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VANTS GAMES — Próximos torneos de Valorant y CS2 · Calendario</title>
 <meta name="description" content="Calendario de próximos torneos VANTS: inscripción abierta, premios en efectivo y VANTS RATING propio. Valorant y Counter-Strike 2 — camino al hub de todos los juegos de PC. Entra con Google, Discord, GitHub, Kick o correo.">
-<link rel="canonical" href="https://feispla.github.io/Vants/">
+<link rel="canonical" href="https://vants.vants.workers.dev/">
+<link rel="alternate" hreflang="es" href="https://vants.vants.workers.dev/">
+<link rel="alternate" hreflang="en" href="https://vants.vants.workers.dev/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://vants.vants.workers.dev/">
 <meta property="og:title" content="VANTS GAMES — Próximos torneos, ranking y premios reales">
-<meta property="og:url" content="https://feispla.github.io/Vants/">
+<meta property="og:url" content="https://vants.vants.workers.dev/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M12 2H52L62 12V52L52 62H12L2 52V12Z' fill='%23191c22' stroke='%23ff0d2e' stroke-width='3'/%3E%3Cpath d='M9 14H23L34.5 44.5L32 52Z' fill='%23e8ecef'/%3E%3Cpath d='M55 14H41L32.4 37L42.2 37Z' fill='%23ff0d2e'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -58,8 +61,9 @@
     </div>
     <div class="sf-top-right">
       <span class="pro-badge" id="proBadge"><i data-lucide="zap"></i>PRO</span>
+      <a class="sf-ico" href="busqueda.html" title="Búsqueda" aria-label="Búsqueda en VANTS"><i data-lucide="search"></i></a>
       <a class="sf-ico" href="descargar.html" title="Descargar el HUB VANTS" aria-label="Descargar el HUB VANTS"><i data-lucide="download"></i></a>
-      <span class="sf-lang"><span class="sf-flag"></span>ES</span>
+      <span class="sf-lang" role="button" tabindex="0" aria-label="Cambiar idioma / Change language"><span class="sf-flag"></span>ES</span>
       <button class="sf-login" id="arenaLoginBtn" hidden>LOGIN</button>
       <button class="sf-login solid" id="miCuentaBtn" hidden><i data-lucide="layout-dashboard"></i>MI CUENTA</button>
     </div>
@@ -69,14 +73,15 @@
 <!-- ===== NAV DE TABS ===== -->
 <nav class="sf-nav">
   <div class="wrap sf-nav-in">
-    <a href="index.html" class="on">Inicio</a>
-    <a href="partidos.html">Partidas</a>
-    <a href="torneos.html">Torneos</a>
-    <a href="equipo.html">Equipos</a>
-    <a href="jugadores.html">Jugadores</a>
+    <a href="index.html" class="on" data-i18n="nav_inicio">Inicio</a>
+    <a href="partidos.html" data-i18n="nav_partidas">Partidas</a>
+    <a href="/es/tournaments/valorant/upcoming/" data-i18n="nav_torneos">Torneos</a>
+    <a href="equipo.html" data-i18n="nav_equipos">Equipos</a>
+    <a href="jugadores.html" data-i18n="nav_jugadores">Jugadores</a>
     <a href="ranking.html">Ranking</a>
     <a href="llaves.html">Brackets</a>
     <a href="clips.html">Clips</a>
+    <a href="noticias.html" data-i18n="nav_noticias">Noticias</a>
     <a class="sf-nav-cta" href="membresias.html"><i data-lucide="crown"></i>MEMBRESÍAS</a>
   </div>
 </nav>
@@ -99,9 +104,9 @@
   </div>
   <div class="wrap sf-tabs-row">
     <div class="sf-tabswrap">
-      <button class="sf-tab" data-est="curso">EN CURSO</button>
-      <button class="sf-tab on" data-est="prox">PRÓXIMOS</button>
-      <button class="sf-tab" data-est="arch">ARCHIVO</button>
+      <button class="sf-tab" data-est="curso" data-i18n="tab_curso">EN CURSO</button>
+      <button class="sf-tab on" data-est="prox" data-i18n="tab_prox">PRÓXIMOS</button>
+      <button class="sf-tab" data-est="arch" data-i18n="tab_arch">ARCHIVO</button>
     </div>
     <span class="sf-live-note" id="liveDataBadge">CALENDARIO S4 · CARGANDO…</span>
     <!-- Compatibilidad arena.js: IDs exigidos por el rotador de juego -->
@@ -233,7 +238,7 @@
         <a href="equipo.html" aria-label="Equipo VANTS DE 5"><i data-lucide="users"></i></a>
       </div>
     </div>
-    <div class="sf-fcol"><h5>COMPETIR</h5><a href="torneos.html">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="gpr.html">Global Power Rankings</a><a href="ranking.html">Ranking global</a><a href="rangos.html">VANTS RANKED</a><a href="partidos.html">Partidas</a></div>
+    <div class="sf-fcol"><h5>COMPETIR</h5><a href="torneos.html">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="gpr.html">Global Power Rankings</a><a href="ranking.html">Ranking global</a><a href="rangos.html">VANTS RANKED</a><a href="partidos.html" data-i18n="nav_partidas">Partidas</a></div>
     <div class="sf-fcol"><h5>TÍTULOS</h5><a href="index.html" data-game-link="valorant">VALORANT</a><a href="index.html" data-game-link="cs2">Counter-Strike 2</a><a href="guia.html">+ Más juegos PC</a><a href="jugadores.html">Sala de jugadores</a><a href="equipo.html">Equipo VANTS DE 5</a></div>
     <div class="sf-fcol"><h5>SOPORTE</h5><a href="preguntas-frecuentes.html">Preguntas frecuentes</a><a href="descargar.html">Descargar el HUB</a><a href="membresias.html">Membresías</a><a href="tienda.html">Tienda oficial</a><a href="guia.html">Guía de la arena</a></div>
   </div>
@@ -285,7 +290,8 @@
 <script src="./assets/js/session.js?v=1" defer></script>
 <script src="./assets/js/components.js?v=2" defer></script>
 <script src="./assets/js/menu-preview.js?v=3" defer></script>
-<script src="./assets/js/strafe-shell.js?v=1" defer></script>
-<script src="./assets/js/strafe-home.js?v=2" defer></script>
+<script src="./assets/js/i18n.js?v=1" defer></script>
+<script src="./assets/js/strafe-shell.js?v=2" defer></script>
+<script src="./assets/js/strafe-home.js?v=2.1" defer></script>
 </body>
 </html>

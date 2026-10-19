@@ -1,5 +1,5 @@
 /* ============================================================
-   VANTS · STRAFE SHELL — v1
+   VANTS · STRAFE SHELL — v2
    ------------------------------------------------------------
    Convierte CUALQUIER página al shell strafe (barra superior de
    juegos + nav de tabs + breadcrumb) SIN tocar la lógica:
@@ -7,7 +7,9 @@
      #proBadge del header viejo al nuevo (los listeners de
      arena.js/Auth0 sobreviven al movimiento).
    · Breadcrumb por body[data-crumb="A|B|C"] (o autodetectado).
-   · Switch de juego (data-game) con evento 'vants:game'.
+   · Switch de juego (data-game) con evento 'vants:game'; en las
+     rutas /es|en/tournaments/:juego/:estado navega al nuevo juego.
+   · Selector de idioma ES/EN (i18n.js) + búsqueda global.
    · body class normalizada a 'sf' (strafe/strafe-t legacy).
    · No hace nada si la página ya trae .sf-top (index estático).
    Cero dependencias. Corre con defer DESPUÉS de arena.js.
@@ -18,13 +20,28 @@
   var NAV = [
     ['index.html', 'Inicio'],
     ['partidos.html', 'Partidas'],
-    ['torneos.html', 'Torneos'],
-    ['equipo.html', 'Equipos'],
+    ['/es/tournaments/valorant/upcoming/', 'Torneos'],
+    ['equipos.html', 'Equipos'],
     ['jugadores.html', 'Jugadores'],
     ['ranking.html', 'Ranking'],
     ['llaves.html', 'Brackets'],
-    ['clips.html', 'Clips']
+    ['clips.html', 'Clips'],
+    ['noticias.html', 'Noticias']
   ];
+
+  var mTorneos = location.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
+  var langActual = (document.body.getAttribute('data-lang') || (mTorneos ? mTorneos[1] : '') || '').toLowerCase();
+
+  function langSiguiente(l) {
+    try { localStorage.setItem('vants-lang', l); } catch (e) {}
+    if (mTorneos) {
+      location.href = '/' + l + '/tournaments/' + mTorneos[2] + '/' + mTorneos[3] + '/';
+      return;
+    }
+    var u = new URL(location.href);
+    u.searchParams.set('lang', l);
+    location.href = u.pathname + u.search;
+  }
 
   /* ---------- 0 · fuente Barlow Semi Condensed si falta ---------- */
   if (!document.querySelector('link[href*="Barlow+Semi+Condensed"]')) {
@@ -62,9 +79,15 @@
   var cuentaBtn = document.getElementById('miCuentaBtn');
   var proBadge = document.getElementById('proBadge');
 
-  var cur = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-  var activo = cur === 'torneo.html' ? 'torneos.html' : 'index.html';
-  for (var i = 0; i < NAV.length; i++) { if (cur === NAV[i][0]) { activo = NAV[i][0]; break; } }
+  var cur = (location.pathname.split('/').pop() || '').toLowerCase().replace(/\.html$/, '');
+  var activo = cur === 'torneo' ? '/es/tournaments/valorant/upcoming/' : 'index';
+  if (mTorneos) activo = '/es/tournaments/valorant/upcoming/';
+  if (cur === 'noticia') activo = 'noticias.html';
+  if (cur === 'busqueda') activo = '';
+  for (var i = 0; i < NAV.length; i++) {
+    var navSin = String(NAV[i][0]).toLowerCase().replace(/\.html$/, '').replace(/^\//, '').replace(/\/$/, '');
+    if (cur && cur === navSin) { activo = NAV[i][0]; break; }
+  }
 
   var game = body.getAttribute('data-game') || 'valorant';
   if (!GAME_NAMES[game]) game = 'valorant';
@@ -85,8 +108,11 @@
         '<span class="sf-title soon">+ MÁS JUEGOS PC</span>' +
       '</div>' +
       '<div class="sf-top-right">' +
+        '<a class="sf-ico" href="busqueda.html" title="Búsqueda" aria-label="Búsqueda en VANTS"><i data-lucide="search"></i></a>' +
         '<a class="sf-ico" href="descargar.html" title="Descargar el HUB VANTS" aria-label="Descargar el HUB VANTS"><i data-lucide="download"></i></a>' +
-        '<span class="sf-lang"><span class="sf-flag"></span>ES</span>' +
+        '<button class="sf-lang" type="button" aria-label="Cambiar idioma" title="Español / English">' +
+          '<span class="sf-flag"></span><span class="sf-lang-cur">' + (langActual === 'en' ? 'EN' : 'ES') + '</span>' +
+        '</button>' +
       '</div>' +
     '</div></header>' +
     '<nav class="sf-nav"><div class="wrap sf-nav-in">' +
@@ -148,9 +174,24 @@
       body.setAttribute('data-game', g);
       shell.querySelectorAll('.sf-title[data-game]').forEach(function (x) { x.classList.toggle('on', x === b); });
       pintaCrumb();
+      /* En las rutas de torneos el switch navega al juego elegido
+         (el listado lo pinta la misma página: nunca sale del diseño) */
+      if (mTorneos) {
+        var estado = mTorneos[3];
+        location.href = '/' + (langActual || 'es') + '/tournaments/' + g + '/' + estado + '/';
+        return;
+      }
       try { document.dispatchEvent(new CustomEvent('vants:game', { detail: { game: g } })); } catch (e) {}
     });
   });
+
+  /* ---------- 6b · selector de idioma ---------- */
+  var langBtn = shell.querySelector('.sf-lang');
+  if (langBtn) {
+    langBtn.addEventListener('click', function () {
+      langSiguiente(langActual === 'en' ? 'es' : 'en');
+    });
+  }
 
   /* ---------- 7 · iconos ---------- */
   function iconos() { try { if (window.lucide && lucide.createIcons) lucide.createIcons(); } catch (e) {} }
@@ -167,5 +208,26 @@
         try { document.dispatchEvent(new CustomEvent('vants:game', { detail: { game: b.getAttribute('data-game') } })); } catch (e) {}
       });
     });
+    /* selector de idioma del index estático */
+    var lb = document.querySelector('.sf-top .sf-lang');
+    if (lb && !lb.dataset.sfBound) {
+      lb.dataset.sfBound = '1';
+      lb.style.cursor = 'pointer';
+      lb.setAttribute('role', 'button');
+      lb.setAttribute('tabindex', '0');
+      lb.setAttribute('aria-label', 'Cambiar idioma / Change language');
+      var mIdx = location.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
+      var langIdx = (document.body.getAttribute('data-lang') || (mIdx ? mIdx[1] : 'es')).toLowerCase();
+      var cambia = function () {
+        var destino = langIdx === 'en' ? 'es' : 'en';
+        try { localStorage.setItem('vants-lang', destino); } catch (e) {}
+        if (mIdx) { location.href = '/' + destino + '/tournaments/' + mIdx[2] + '/' + mIdx[3] + '/'; return; }
+        var u = new URL(location.href);
+        u.searchParams.set('lang', destino);
+        location.href = u.pathname + u.search;
+      };
+      lb.addEventListener('click', cambia);
+      lb.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cambia(); } });
+    }
   }
 })();

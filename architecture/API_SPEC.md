@@ -1,0 +1,82 @@
+# API_SPEC — Contratos de la API pública de torneos
+
+Base: `https://vants.vants.workers.dev` · Autenticación: ninguna para lectura pública.
+Formato: JSON siempre. Éxito `{ok:true, data:…}`. Error `{ok:false, error:{message}}` (400/404/429/500).
+Caché: `Cache-Control: public, max-age=60` en GET de listados. Rate limit: bucket de lectura
+general (existentes LIMIT_*; 429 al exceder).
+
+Convención de parámetros validados server-side (400 si inválido):
+`estado ∈ upcoming|ongoing|archive|finished` (según recurso) · `juego` = slug de `games`
+· `pag ≥ 1` · `porPagina ≤ 50` · `region` texto 2-8 · `q` 2-64 chars.
+
+## GET /api/games
+```json
+{ "ok": true, "data": [ { "slug": "valorant", "nombre": "VALORANT", "corto": "VALORANT",
+  "logo_url": null, "color": "#FF4655", "activo": true } ] }
+```
+Solo juegos `activo=true`, ordenados por `orden`.
+
+## GET /api/tournaments?estado=upcoming&juego=valorant&region=EU&pag=1&porPagina=12
+- `estado` default `upcoming`; `juego`/`region` opcionales; `pag` default 1; `porPagina` default 12 (máx 50).
+- Orden: `upcoming/ongoing` → `starts_at ASC`; `archive/finished` → `starts_at DESC`.
+- Respuesta:
+```json
+{ "ok": true, "data": { "pag": 1, "porPagina": 12, "total": 4, "items": [ {
+  "slug": "demo-copa-comunidad-s4", "nombre": "DEMO · Copa Comunidad S4",
+  "game": { "slug": "valorant", "nombre": "VALORANT" },
+  "estado": "upcoming", "major": false, "region": "LATAM",
+  "prize": { "value": 50000, "currency": "USD" },
+  "starts_at": "2026-11-08T18:00:00Z", "ends_at": "2026-11-12T23:00:00Z",
+  "logo_url": null, "equipos": 6, "is_demo": true, "source": "demo" } ] } }
+```
+
+## GET /api/tournaments/:slug
+- 200 con la ficha completa (incluye `formato`, `reglas`, `max_teams`, `fee`,
+  `participantes` desde `tournament_teams` confirmados).
+- 404 `{ok:false,error:{message:"Torneo no encontrado"}}` si slug inexistente.
+
+## GET /api/matches?estado=live&juego=valorant&pag=1
+- `estado ∈ live|upcoming|finished` (default `upcoming`).
+- Orden: `live` → `empieza_at DESC`; `upcoming` → ASC; `finished` → DESC.
+- Items: `{ slug?, game, equipos:{a,b}, score:{a,b}|null, estado, empieza_at, best_of, is_demo }`.
+
+## GET /api/teams?juego=valorant&pag=1
+- Items: `{ slug, nombre, tag, game, region, logo_url, is_demo }`.
+
+## GET /api/players?pag=1
+- Sobre `players` existente (solo columnas públicas sin PII):
+  `{ id, nombre/display, game?, rating, tipo, role }` — SIN email ni auth0_sub.
+
+## GET /api/articles?pag=1&juego=…
+- `estado='published'` únicamente; orden `publicado_at DESC`.
+- Items: `{ slug, titulo, resumen, autor, game, publicado_at, is_demo }`.
+
+## GET /api/articles/:slug
+- 200 ficha completa (`cuerpo` incluido) / 404 consistente.
+
+## GET /api/search?q=copa
+- `q` requerido (2-64). Búsqueda `ILIKE %q%` (y tsvector cuando aplique) sobre
+  `tournaments.nombre`, `teams.nombre`, `articles.titulo` (+`players` público).
+```json
+{ "ok": true, "data": { "q": "copa", "torneos": [ { "slug": "…", "nombre": "…" } ],
+  "equipos": [], "jugadores": [], "articulos": [] } }
+```
+
+## GET /api/discord/events (existente, sin cambios)
+- POST con firma Ed25519 del Developer Portal; sin firma → 401 (verificado en producción).
+
+## Códigos
+
+| Caso | HTTP | Cuerpo |
+|---|---|---|
+| Éxito | 200 | `{ok:true,data}` |
+| Parámetro inválido | 400 | `{ok:false,error:{message:"…"}}` |
+| Recurso no encontrado | 404 | `{ok:false,error:{message:"…"}}` |
+| Rate limit | 429 | texto corto (patrón existente) |
+| Error interno | 500 | `{ok:false,error:{message:"Error interno"}}` (sin internals) |
+
+## No-objetivos
+
+- Sin escrituras públicas nuevas (inscripción/gestión siguen en `/api/torneos/inscribir` y
+  `/api/torneos/gestionar` con sesión Auth0 existente).
+- Sin webhooks nuevos (FACEIT ya tiene su pipeline `faceit_webhook_events`).
