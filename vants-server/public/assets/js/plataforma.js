@@ -238,6 +238,20 @@
   }
 
   /* ---------------- fila de partido (client, misma marca que plataforma-core.filaMatch) ---------------- */
+  /* El proxy serializa timestamptz con variantes que V8 a veces rechaza
+     (ej. "2026-10-19T19:30:56.123456+00"): parser defensivo. */
+  function fechaSegura(v) {
+    if (!v) return null;
+    var d = new Date(v);
+    if (!isNaN(d.getTime())) return d;
+    var m = String(v).match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2}(?:\.\d+)?)(?:\s*(Z|[+-]\d{1,2}(?::?\d{2})?))?$/);
+    if (m) {
+      var tz = !m[3] ? 'Z' : (m[3] === 'Z' ? 'Z' : (/^[+-]\d{2}$/.test(m[3]) ? m[3] + ':00' : m[3].replace(':', '')));
+      d = new Date(m[1] + 'T' + m[2] + tz);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return null;
+  }
   function filaMatchCli(m, locale) {
     var juego = m.game && m.game.slug ? m.game.slug : 'valorant';
     var estado = m.estado || 'upcoming';
@@ -248,8 +262,9 @@
     var score = (m.score && m.score.a != null && m.score.b != null)
       ? '<span class="sf-mscore"><b>' + Number(m.score.a) + '</b><i>:</i><b>' + Number(m.score.b) + '</b></span>'
       : '<span class="sf-mscore sin"><i>' + (estado === 'finished' ? '—' : 'vs') + '</i></span>';
-    var fecha = m.empieza_at
-      ? esc(fechaCorta(m.empieza_at)) + ' · ' + esc(new Date(m.empieza_at).toLocaleTimeString(lang() === 'en' ? 'en-GB' : 'es-ES', { hour: '2-digit', minute: '2-digit' }))
+    var dF = fechaSegura(m.empieza_at);
+    var fecha = dF
+      ? esc(fechaCorta(dF)) + ' · ' + esc(dF.toLocaleTimeString(lang() === 'en' ? 'en-GB' : 'es-ES', { hour: '2-digit', minute: '2-digit' }))
       : esc((I() && I().t('fecha_anuncio')) || 'POR ANUNCIAR');
     return '<a class="sf-row sf-mrow" href="/calendario.html" data-est="' + esc(estado) + '">' +
       '<span class="sf-rlogo" aria-hidden="true"></span>' +
@@ -288,7 +303,8 @@
       .then(function (res) {
         if (!res) { error(host, paginaEquipo); return; }
         var dd = res[0].data.data;
-        var ficha = Array.isArray(dd) ? dd[0] : dd;
+        // El proxy envuelve listas en {items:[…]} y el Worker API devuelve el objeto directo
+        var ficha = Array.isArray(dd) ? dd[0] : (dd && dd.items && dd.items.length ? dd.items[0] : (dd && dd.slug ? dd : null));
         if (!ficha || !ficha.nombre) { empty(host, ''); return; }
         var roster = res[1] || [];
         // Las partidas por nombre del equipo (equipo_a guarda el NOMBRE, no el slug)
@@ -337,7 +353,7 @@
     skeleton(host, 2);
     get('/api/players/' + slug).then(function (r) {
       var dd = r.ok && r.data && r.data.ok ? r.data.data : null;
-      var jug = Array.isArray(dd) ? dd[0] : dd;
+      var jug = Array.isArray(dd) ? dd[0] : (dd && dd.items && dd.items.length ? dd.items[0] : (dd && dd.slug ? dd : null));
       if (!jug || !jug.nombre) { empty(host, ''); return; }
       host.innerHTML = '<article class="pf-ficha">' +
         '<div class="pf-ficha-head"><span class="pf-avatar big" aria-hidden="true">' + esc(String(jug.nombre).replace(/^DEMO\s·\s/, '').slice(0, 2).toUpperCase()) + '</span>' +
@@ -397,5 +413,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  window.VANTS_PLAT = { skeleton: skeleton, empty: empty, error: error, chipDemo: chipDemo, get: get, fechaCorta: fechaCorta, fechaLarga: fechaLarga };
+  window.VANTS_PLAT = { skeleton: skeleton, empty: empty, error: error, chipDemo: chipDemo, get: get, fechaCorta: fechaCorta, fechaLarga: fechaLarga, fechaSegura: fechaSegura };
 })();

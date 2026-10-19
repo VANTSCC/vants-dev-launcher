@@ -9,6 +9,19 @@
    ============================================================ */
 const { test, expect } = require('@playwright/test');
 
+const PROXY = 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
+// Detector de BUGS: si el proxy es alcanzable desde este entorno y la fila existe,
+// la página NO puede quedarse en estado vacío/error — eso es un bug de render, no
+// un "estado honesto" (lección T53: la ficha mostraba SIN RESULTADOS con datos vivos).
+async function proxyTieneFilas(request, tabla, filtro) {
+  try {
+    const r = await request.get(PROXY + '?table=' + tabla + (filtro || '') + '&limit=1', { headers: { Accept: 'application/json' } });
+    if (!r.ok()) return null; // inalcanzable → no se puede juzgar
+    const filas = await r.json();
+    return Array.isArray(filas) && filas.length > 0;
+  } catch (e) { return null; }
+}
+
 const RUTA_TORNEOS_ES = '/es/tournaments/valorant/upcoming/';
 const RUTA_TORNEOS_EN = '/en/tournaments/cs2/archive/';
 
@@ -37,7 +50,7 @@ test.describe('Rutas de torneos estilo strafe (F6)', () => {
 });
 
 test.describe('Datos de la plataforma (F7/F9 · T53)', () => {
-  test('calendario: panel con datos o estado honesto, nunca en blanco', async ({ page }) => {
+  test('calendario: panel con datos o estado honesto, nunca en blanco', async ({ page, request }) => {
     await page.goto('/calendario.html');
     await expect(page.locator('#pfCalendario')).toBeVisible();
     await page.waitForFunction(() => {
@@ -48,6 +61,12 @@ test.describe('Datos de la plataforma (F7/F9 · T53)', () => {
     const conDatos = html.includes('sf-mrow');
     const estadoHonesto = html.includes('pf-empty') || html.includes('pf-error');
     expect(conDatos || estadoHonesto).toBeTruthy();
+    // fecha NUNCA "Invalid Date" (bug T53 del formato timestamptz del proxy)
+    expect(html).not.toContain('Invalid Date');
+    if (!conDatos) {
+      const hay = await proxyTieneFilas(request, 'pt_matches', '&estado.eq=upcoming');
+      if (hay === true) throw new Error('BUG de render: el proxy tiene partidas upcoming pero el calendario quedó vacío');
+    }
   });
 
   test('resultados: igual contrato que calendario', async ({ page }) => {
@@ -59,6 +78,7 @@ test.describe('Datos de la plataforma (F7/F9 · T53)', () => {
     }, { timeout: 15000 }).catch(() => {});
     const html = await page.locator('#pfResultados').innerHTML();
     expect(html.includes('sf-mrow') || html.includes('pf-empty') || html.includes('pf-error')).toBeTruthy();
+    expect(html).not.toContain('Invalid Date');
   });
 
   test('equipos: tarjetas con enlace a ficha cuando hay datos', async ({ page }) => {
@@ -76,7 +96,7 @@ test.describe('Datos de la plataforma (F7/F9 · T53)', () => {
     }
   });
 
-  test('ficha de equipo demo: plantilla + partidas o estados honestos', async ({ page }) => {
+  test('ficha de equipo demo: plantilla + partidas o estados honestos', async ({ page, request }) => {
     await page.goto('/equipo-ficha.html?slug=demo-equipo-fenix');
     await expect(page.locator('#pfEquipo')).toBeVisible();
     await page.waitForFunction(() => {
@@ -93,9 +113,14 @@ test.describe('Datos de la plataforma (F7/F9 · T53)', () => {
       // plantilla enlaza fichas de jugador
       if (html.includes('pf-player')) expect(html).toContain('/jugador.html?slug=');
     }
+    // ¿Hay datos vivos y la página no renderizó la ficha? → BUG, no estado honesto
+    if (!ficha) {
+      const hay = await proxyTieneFilas(request, 'pt_teams', '&slug.eq=demo-equipo-fenix');
+      if (hay === true) throw new Error('BUG de render: el proxy tiene el equipo demo pero la ficha quedó vacía');
+    }
   });
 
-  test('ficha de jugador demo: carga con rol/país o estado honesto', async ({ page }) => {
+  test('ficha de jugador demo: carga con rol/país o estado honesto', async ({ page, request }) => {
     await page.goto('/jugador.html?slug=demo-jugador-alex');
     await expect(page.locator('#pfJugador')).toBeVisible();
     await page.waitForFunction(() => {
@@ -103,7 +128,12 @@ test.describe('Datos de la plataforma (F7/F9 · T53)', () => {
       return h && h.children.length > 0 && !h.querySelector('.pf-skeleton');
     }, { timeout: 15000 }).catch(() => {});
     const html = await page.locator('#pfJugador').innerHTML();
-    expect(html.includes('pf-ficha') || html.includes('pf-empty') || html.includes('pf-error')).toBeTruthy();
+    const ficha = html.includes('pf-ficha');
+    expect(ficha || html.includes('pf-empty') || html.includes('pf-error')).toBeTruthy();
+    if (!ficha) {
+      const hay = await proxyTieneFilas(request, 'pt_players', '&slug.eq=demo-jugador-alex');
+      if (hay === true) throw new Error('BUG de render: el proxy tiene el jugador demo pero la ficha quedó vacía');
+    }
   });
 });
 
