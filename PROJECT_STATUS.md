@@ -1,6 +1,6 @@
 # PROJECT_STATUS — Plataforma VANTS (estilo Strafe)
 
-> Archivo vivo de estado. Última actualización: 2026-10-20 · Sesión T53 (fases que faltaban) · sobre `e23ab2a`/`324371f`
+> Archivo vivo de estado. Última actualización: 2026-10-20 · Sesión T53+b/c/d/e (fases que faltaban + 3 bugs de producción corregidos) · commits `69dc4d0`→`d539d9f` · CI 5/5 VERDE
 
 ## Misión
 
@@ -27,7 +27,7 @@ modo autónomo continuo, sin presentar datos ficticios como reales y sin copiar 
 | 13 | Pruebas automatizadas | ✅✅ | **T53: Playwright real** (tests/e2e, desktop+móvil contra producción) + 90 asserts plataforma + 241 regresión |
 | 14 | Despliegue | ✅ | CI verde; producción verificada por curl+navegador; rollback documentado |
 | 15 | Documentación y entrega | ✅ | README, TESTING, DEPLOYMENT, TROUBLESHOOTING, API_SPEC actualizada, este archivo |
-| 16 | Auditoría final y corrección | ✅ | crawler **723 enlaces/0 rotos** (32 páginas); QA local T53 10/10 sin errores de consola |
+| 16 | Auditoría final y corrección | ✅ | crawler **723 enlaces/0 rotos** (32 páginas); QA local 10/10; **bucle en producción: 3 bugs reales corregidos** (desenvoltura {items}, Invalid Date, stripSensible destruía fechas a {}) con regresión permanente y capturas del CI con datos vivos |
 
 ## Qué cerró exactamente la T53 ("FALTAN FASES")
 
