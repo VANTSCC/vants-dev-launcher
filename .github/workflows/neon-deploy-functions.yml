@@ -39,6 +39,9 @@ jobs:
       VANTSBOT_URL: https://br-sweet-shape-b42xhogj-vantsbot.compute.c-6.us-east-2.aws.neon.tech
       DISCORD_PUBLIC_KEY: ${{ secrets.DISCORD_PUBLIC_KEY }}
       DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      # App id: el dueño lo guardó como DISCORD_ID_APP (fallback si no hay
+      # DISCORD_APP_ID); /setup lo usa si no puede derivarlo del token.
+      DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID || secrets.DISCORD_ID_APP }}
       VANTS_BOT_SECRET: ${{ secrets.VANTS_BOT_SECRET }}
       SUPERVISOR_DM_ID: ${{ secrets.SUPERVISOR_DM_ID }}
     steps:
@@ -87,6 +90,7 @@ jobs:
             --wait \
             ${DISCORD_PUBLIC_KEY:+--env DISCORD_PUBLIC_KEY=$DISCORD_PUBLIC_KEY} \
             ${DISCORD_BOT_TOKEN:+--env DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN} \
+            ${DISCORD_APP_ID:+--env DISCORD_APP_ID=$DISCORD_APP_ID} \
             ${VANTS_BOT_SECRET:+--env VANTS_BOT_SECRET=$VANTS_BOT_SECRET} \
             ${SUPERVISOR_DM_ID:+--env SUPERVISOR_DM_ID=$SUPERVISOR_DM_ID}
 

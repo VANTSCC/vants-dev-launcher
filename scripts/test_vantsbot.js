@@ -411,5 +411,113 @@ await ok('definicionComandoAgente: 5 subcomandos con opciones correctas', async 
   assert.equal(subs.comando.options[0].required, true);
 });
 
+// ── Eventos de la app de Discord (/evento-discord desde el Worker) ─────────
+console.log('\n— Eventos de Discord (/evento-discord) —');
+
+await ok('GET → 405 · POST sin token → 401 · body inválido → 400', async () => {
+  const h = construir({ env: envBase(), pool: poolFalso(), fetch: fetchFalso(), saltarFirma: true });
+  assert.equal((await h(req('/evento-discord', { metodo: 'GET' }))).status, 405);
+  assert.equal((await h(req('/evento-discord', { body: {} }))).status, 401);
+  const r = await h(req('/evento-discord', { body: 'no-json', headers: { 'x-vants-bot': SECRET } }));
+  assert.equal(r.status, 400);
+});
+
+await ok('Guarda el evento en web_events con el event_id recibido', async () => {
+  const pool = poolFalso();
+  pool.cuando('INSERT INTO web_events', { filas: [{ id: 1 }] });
+  const h = construir({ env: { ...envBase(), DISCORD_BOT_TOKEN: undefined }, pool, fetch: fetchFalso(), saltarFirma: true });
+  const r = await h(req('/evento-discord', {
+    body: { evento_id: 'discord:abc123', payload: { type: 0, data: { type: 'ENTITLEMENT_UPDATE' } } },
+    headers: { 'x-vants-bot': SECRET },
+  }));
+  const b = await r.json();
+  assert.equal(r.status, 200);
+  assert.equal(b.ok, true);
+  assert.equal(b.guardado, true);
+  assert.equal(b.evento_id, 'discord:abc123');
+  const ins = pool.llamadas.find((l) => l.sql.includes('INSERT INTO web_events'));
+  assert.ok(ins, 'inserta en web_events');
+  assert.equal(ins.params[0], 'discord:abc123');
+  assert.equal(ins.params[1], 'discord_event');
+  assert.equal(ins.params[3], 'discord');
+});
+
+await ok('Sin evento_id genera id determinista discord:<sha256×40>', async () => {
+  const pool = poolFalso();
+  pool.cuando('INSERT INTO web_events', { filas: [{ id: 2 }] });
+  const h = construir({ env: envBase(), pool, fetch: fetchFalso(), saltarFirma: true });
+  await h(req('/evento-discord', {
+    body: { payload: { type: 0, data: { type: 'APPLICATION_AUTHORIZED' } } },
+    headers: { 'x-vants-bot': SECRET },
+  }));
+  const ins = pool.llamadas.find((l) => l.sql.includes('INSERT INTO web_events'));
+  assert.match(String(ins.params[0]), /^discord:[0-9a-f]{40}$/);
+});
+
+await ok('ENTITLEMENT_CREATE con token → DM al dueño ("enviado")', async () => {
+  const pool = poolFalso();
+  pool.cuando('INSERT INTO web_events', { filas: [{ id: 3 }] });
+  const f = fetchFalso().cuando('/users/@me/channels', () =>
+    new Response(JSON.stringify({ id: 'canal-1' }), { status: 200, headers: { 'content-type': 'application/json' } })
+  );
+  const h = construir({ env: envBase(), pool, fetch: f, saltarFirma: true });
+  const b = await (
+    await h(req('/evento-discord', {
+      body: { payload: { type: 0, data: { type: 'ENTITLEMENT_CREATE', sku: 'vants-pro' } } },
+      headers: { 'x-vants-bot': SECRET },
+    }))
+  ).json();
+  assert.equal(b.dm, 'enviado');
+  const msg = f.llamadas.find((l) => l.url.includes('/channels/canal-1/messages'));
+  assert.ok(msg, 'envía mensaje al canal DM');
+  assert.ok(String(msg.payload.embeds[0].title).includes('ENTITLEMENT_CREATE'));
+  assert.ok(msg.payload.embeds[0].description.includes('vants-pro'));
+});
+
+await ok('Evento no-compra (RELATIONSHIP_ADD) no dispara DM', async () => {
+  const pool = poolFalso();
+  pool.cuando('INSERT INTO web_events', { filas: [{ id: 4 }] });
+  const f = fetchFalso();
+  const h = construir({ env: envBase(), pool, fetch: f, saltarFirma: true });
+  const b = await (
+    await h(req('/evento-discord', {
+      body: { payload: { type: 0, data: { type: 'RELATIONSHIP_ADD' } } },
+      headers: { 'x-vants-bot': SECRET },
+    }))
+  ).json();
+  assert.equal(b.ok, true);
+  assert.equal(b.dm, undefined);
+  assert.equal(f.llamadas.length, 0);
+});
+
+await ok('Sin token de bot guarda igual y no intenta DM', async () => {
+  const pool = poolFalso();
+  pool.cuando('INSERT INTO web_events', { filas: [{ id: 5 }] });
+  const f = fetchFalso();
+  const h = construir({ env: { ...envBase(), DISCORD_BOT_TOKEN: undefined }, pool, fetch: f, saltarFirma: true });
+  const b = await (
+    await h(req('/evento-discord', {
+      body: { payload: { type: 0, data: { type: 'ENTITLEMENT_CREATE' } } },
+      headers: { 'x-vants-bot': SECRET },
+    }))
+  ).json();
+  assert.equal(b.ok, true);
+  assert.equal(b.guardado, true);
+  assert.equal(b.dm, undefined);
+  assert.equal(f.llamadas.length, 0);
+});
+
+await ok('Fallo de BD → ok:false con mensaje (sin 500 opaco)', async () => {
+  const h = construir({ env: envBase(), pool: { query: async () => { throw new Error('db caída'); } }, fetch: fetchFalso(), saltarFirma: true });
+  const r = await h(req('/evento-discord', {
+    body: { payload: { type: 0, data: { type: 'ENTITLEMENT_CREATE' } } },
+    headers: { 'x-vants-bot': SECRET },
+  }));
+  const b = await r.json();
+  assert.equal(r.status, 200);
+  assert.equal(b.ok, false);
+  assert.ok(b.error.message.includes('db caída'));
+});
+
 console.log(`\nResultado: ${pass} PASS · ${fail} FAIL`);
 process.exit(fail ? 1 : 0);

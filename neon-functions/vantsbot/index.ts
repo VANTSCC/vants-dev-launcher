@@ -13,6 +13,10 @@
 //                       (agent_comandos.entregado=false). La dispara
 //                       agente.yml cada 30 min y cualquier integración.
 //   POST /setup       → registra /agente como comando global (REST)
+//   POST /evento-discord → guarda eventos de la app de Discord (entitlements,
+//                       app autorizada...) reenviados por el Worker (que ya
+//                       verificó la firma Ed25519 del Developer Portal) en
+//                       web_events (migra 01) + DM de compras al dueño.
 //   GET  /salud       → diagnóstico de configuración (sin secretos)
 //
 // Autenticación de /tarea y /setup: cabecera x-vants-bot = VANTS_BOT_SECRET
@@ -24,7 +28,7 @@
 // ============================================
 
 import { Pool } from 'pg';
-import { timingSafeEqual, createPublicKey, verify as cryptoVerify } from 'node:crypto';
+import { timingSafeEqual, createPublicKey, verify as cryptoVerify, createHash } from 'node:crypto';
 
 const API = 'https://discord.com/api/v10';
 const DM_POR_DEFECTO = '1532612429295521930'; // dueño (mismo default que agent_bridge.py)
@@ -299,6 +303,57 @@ export function definicionComandoAgente(): Record<string, unknown> {
   };
 }
 
+// ── Eventos de la app de Discord (el Worker los reenvía ya verificados) ────
+// El Worker (https://vants.vants.workers.dev/api/discord/events) valida la
+// firma Ed25519 del Developer Portal y reenvía el payload aquí; se guarda en
+// web_events (migración 01, cero duplicación) y las compras/instalaciones
+// avisan por DM al dueño. Dedupe: event_id del Worker o sha256 del payload.
+const TIPOS_DM = new Set(['ENTITLEMENT_CREATE', 'ENTITLEMENT_UPDATE', 'APPLICATION_AUTHORIZED']);
+const SQL_GUARDAR_EVENTO =
+  'INSERT INTO web_events (event_id, kind, severity, page, payload) ' +
+  'VALUES ($1, $2, $3, $4, $5::jsonb) ON CONFLICT (event_id) DO NOTHING RETURNING id';
+
+async function guardarEventoDiscord(dep: Dependencias, body: Fila | null): Promise<Record<string, unknown>> {
+  if (!body || typeof body !== 'object') return { ok: false, error: { message: 'bad_request' } };
+  const payload = ((body.payload as Fila | undefined) ?? body) as Fila;
+  const data = (payload.data as Fila | undefined) ?? {};
+  const tipo = String(data.type ?? payload.type ?? 'evento').slice(0, 60);
+  let eventoId = String(body.evento_id ?? '').slice(0, 120);
+  if (!eventoId) {
+    eventoId = 'discord:' + createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 40);
+  }
+  let guardado = false;
+  try {
+    guardado = (await dep.pool.query(SQL_GUARDAR_EVENTO, [
+      eventoId, 'discord_event', 'info', 'discord', JSON.stringify(payload),
+    ])).rows.length > 0;
+  } catch (e) {
+    return { ok: false, error: { message: txt(String((e as Error).message), 120) } };
+  }
+
+  // Compras e instalación de la app → DM directo al dueño (si hay token)
+  let dm: string | null = null;
+  const token = String(dep.env.DISCORD_BOT_TOKEN ?? '');
+  if (TIPOS_DM.has(tipo) && token) {
+    const dmId = String(dep.env.SUPERVISOR_DM_ID || DM_POR_DEFECTO);
+    const canal = await abrirDM(dep.fetch, token, dmId);
+    if (canal.ok && canal.id) {
+      const r = await dapi(dep.fetch, token, 'POST', `/channels/${canal.id}/messages`, {
+        embeds: [{
+          title: `Discord · ${tipo}`,
+          description: '```json\n' + txt(JSON.stringify(data), 600) + '\n```',
+          color: 0x57f287,
+        }],
+        allowed_mentions: { parse: [] },
+      });
+      dm = r.ok ? 'enviado' : `fallo:${r.status}`;
+    } else {
+      dm = `dm:${canal.status}`;
+    }
+  }
+  return { ok: true, guardado, evento_id: eventoId, ...(dm ? { dm } : {}) };
+}
+
 // ── Ciclo del puente (reemplazo serverless de agent_bridge.py) ─────────────
 async function cicloTarea(dep: Dependencias): Promise<Record<string, unknown>> {
   const token = String(dep.env.DISCORD_BOT_TOKEN ?? '');
@@ -406,12 +461,17 @@ export function construir(sobre: Partial<Dependencias> = {}) {
     if (req.method === 'GET' && (ruta === '/' || ruta === '/salud')) return salud(dep);
 
     const secret = dep.env.VANTS_BOT_SECRET;
-    if (ruta === '/tarea' || ruta === '/setup') {
+    if (ruta === '/tarea' || ruta === '/setup' || ruta === '/evento-discord') {
       if (req.method !== 'POST') return json({ ok: false, error: { message: 'usa POST' } }, 405);
       if (!autorizado(req.headers.get('x-vants-bot'), secret)) {
         return json({ ok: false, error: { message: 'unauthorized' } }, 401);
       }
       if (ruta === '/tarea') return json({ ok: true, resultado: await cicloTarea(dep) });
+      if (ruta === '/evento-discord') {
+        const body = (await req.json().catch(() => null)) as Fila | null;
+        if (!body || typeof body !== 'object') return json({ ok: false, error: { message: 'bad_request' } }, 400);
+        return json(await guardarEventoDiscord(dep, body));
+      }
       return json(await setupComandos(dep));
     }
 

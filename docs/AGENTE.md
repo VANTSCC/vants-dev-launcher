@@ -89,6 +89,16 @@ necesario para controlar el agente** — nada de Railway/Render.
   - `/agente resolver <id>` — cierra un incidente.
   - `/agente comando <texto>` — orden libre; queda en cola en Neon y la
     respuesta llega por DM tras el próximo ciclo.
+- **Eventos de la app de Discord** (punto de conexión del Developer Portal →
+  `https://vants.vants.workers.dev/api/discord/events`, ya configurado):
+  el **Worker** verifica la firma Ed25519 del portal y responde 204; cada
+  evento (app autorizada/desautorizada, **entitlements = compras**,
+  invitaciones de actividad, relaciones) se reenvía sin bloquear a
+  `vantsbot POST /evento-discord`, que lo **guarda en `web_events`** (Neon,
+  dedupe por `event_id`/sha256) y manda **DM al dueño** cuando es una compra
+  o instalación (`ENTITLEMENT_CREATE/UPDATE`, `APPLICATION_AUTHORIZED`) si
+  `DISCORD_BOT_TOKEN` está en el deploy. Cadena: Discord → Worker →
+  vantsbot → Neon → DM, todo 0 EUR.
 - Si **Discord no funciona**: la memoria queda íntegra en Neon, el workflow
   publica el resumen en GitHub, y si el dueño crea el secret
   `VANTS_DISCORD_WEBHOOK` el propio ciclo avisa a un canal. Nada se pierde.
@@ -120,8 +130,8 @@ key, el núcleo cae al modo reglas (degradación elegante, nunca se queda mudo).
 
 | Variable | Ejemplo |
 |----------|---------|
-| `AGENT_LLM_URL` | `https://api.z.ai/api/paas/v4` (GLM global) · `https://open.bigmodel.cn/api/paas/v4` (GLM CN) · `https://api.openai.com/v1` · `http://localhost:11434/v1` (Ollama) |
-| `AGENT_LLM_KEY` | la key del proveedor (Z.ai → API Keys) |
+| `AGENT_LLM_KEY` | la key del proveedor (Z.ai → API Keys). **Basta con ella**: sin URL se usa la global `https://api.z.ai/api/paas/v4` |
+| `AGENT_LLM_URL` | (opcional) `https://open.bigmodel.cn/api/paas/v4` si la key es de CN · `https://api.openai.com/v1` · `http://localhost:11434/v1` (Ollama) |
 | `AGENT_LLM_MODEL` | `glm-5.3-flash` por defecto (rápido/económico) · `glm-5.3` máxima calidad |
 
 Funciona igual en local (`node cli.js comando "..."`), en el servicio HTTP

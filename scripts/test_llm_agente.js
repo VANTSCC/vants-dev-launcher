@@ -199,8 +199,23 @@ async function principal() {
     await srv.cerrar();
   }
 
-  console.log('— Test: sin URL/KEY → null (modo reglas intacto) —');
-  ok(crearLlm({}) === null, 'crearLlm({}) devuelve null');
+  console.log('— Test: sin KEY → null · KEY sola → URL global de GLM por defecto —');
+  ok(crearLlm({}) === null, 'crearLlm({}) devuelve null (falta la key)');
+  {
+    let urlVista = '';
+    const fetchCap = async (u) => {
+      urlVista = String(u);
+      return new Response(
+        JSON.stringify({ choices: [{ message: { content: '{"intencion":"estado","args":{},"via":"llm"}' } }] }),
+        { headers: { 'content-type': 'application/json' } }
+      );
+    };
+    const llm = crearLlm({ AGENT_LLM_KEY: 'k-sola' }, fetchCap);
+    ok(!!llm && llm.activo(), 'con KEY sin URL el LLM está activo');
+    const r = await llm.interpretar('estado');
+    ok(!!r && r.intencion === 'estado', 'interpretar responde con la URL por defecto');
+    ok(urlVista === 'https://api.z.ai/api/paas/v4/chat/completions', 'usa la endpoint global de GLM por defecto (' + urlVista + ')');
+  }
 
   console.log(`\n${pasadas} PASS · ${fallos} FAIL`);
   if (fallos) process.exit(1);

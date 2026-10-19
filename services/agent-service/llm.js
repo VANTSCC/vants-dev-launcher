@@ -1,24 +1,28 @@
 'use strict';
 // ============================================================
-// LLM del AGENTE VANTS v2 — CEREBRO AGÉNTICO con function calling.
-// Si el dueño define AGENT_LLM_URL + AGENT_LLM_KEY (+ AGENT_LLM_MODEL),
-// el agente funciona en MODO AGENTE con GLM (o cualquier API OpenAI-
+// LLM del AGENTE VANTS v2.1 — CEREBRO AGÉNTICO con function calling.
+// Basta con AGENT_LLM_KEY (+ AGENT_LLM_MODEL opcional): sin AGENT_LLM_URL
+// se usa la endpoint GLOBAL de GLM por defecto (api.z.ai). Con una key de
+// bigmodel.cn el dueño define AGENT_LLM_URL apuntando al endpoint CN.
+// El agente funciona en MODO AGENTE con GLM (o cualquier API OpenAI-
 // compatible con tools): el modelo ELIGE y ENCADENA herramientas reales
 // (estado, informe, incidentes, resolver, ciclo, desplegar_web, migrar)
 // hasta responder. Sin key -> null y el cerebro cae al modo reglas
 // (NLU local en español, siempre disponible, 0 dependencias).
-// Endpoints GLM: https://api.z.ai/api/paas/v4 (global) o
-//                https://open.bigmodel.cn/api/paas/v4 (CN).
+// Endpoints GLM: https://api.z.ai/api/paas/v4 (global, por defecto) o
+//                https://open.bigmodel.cn/api/paas/v4 (CN, vía AGENT_LLM_URL).
 // ============================================================
 
 const TIMEOUT_MS = 20000;
 const MAX_PASOS = 5; // máximo de vueltas del bucle de herramientas (anti-bucle)
 
+const URL_GLM_GLOBAL = 'https://api.z.ai/api/paas/v4';
+
 function crearLlm(env = process.env, fetchImpl = fetch) {
-  const url = env.AGENT_LLM_URL || '';
-  const key = env.AGENT_LLM_KEY || '';
+  const url = String(env.AGENT_LLM_URL || '').trim() || URL_GLM_GLOBAL;
+  const key = String(env.AGENT_LLM_KEY || '').trim();
   const model = env.AGENT_LLM_MODEL || 'glm-5.3-flash';
-  if (!url || !key) return null;
+  if (!key) return null;
 
   // prompt del modo clásico (intención JSON) — usado por interpretar()
   const SISTEMA = [
@@ -118,4 +122,4 @@ function crearLlm(env = process.env, fetchImpl = fetch) {
   };
 }
 
-module.exports = { crearLlm, MAX_PASOS };
+module.exports = { crearLlm, MAX_PASOS, URL_GLM_GLOBAL };

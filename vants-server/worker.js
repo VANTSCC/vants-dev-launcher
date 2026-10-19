@@ -577,7 +577,7 @@ async function handleGpr() {
 /* ==================== WORKER PRINCIPAL ==================== */
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const ip = request.headers.get('cf-connecting-ip') || 'desconocida';
     const ua = (request.headers.get('user-agent') || '').toLowerCase();
@@ -694,6 +694,26 @@ export default {
       try { payload = JSON.parse(raw); } catch (eJson) {}
       if (payload && payload.type === 1) {
         return json({ type: 1 }, 200);
+      }
+      // Persistencia 0 EUR: el evento ya verificado se reenvía a vantsbot
+      // (Neon Functions) para guardarlo en web_events y avisar al dueño de
+      // compras/instalaciones. waitUntil: Discord recibe su 204 aunque Neon
+      // esté frío — un webhook nunca falla por la persistencia.
+      if (payload && ctx && typeof ctx.waitUntil === 'function') {
+        const botUrl = String((env && env.VANTS_BOT_URL) || '').replace(/\/+$/, '');
+        const botSec = String((env && env.VANTS_BOT_SECRET) || '');
+        if (botUrl && botSec) {
+          const cuerpo = JSON.stringify({ payload });
+          if (cuerpo.length <= 32768) {
+            ctx.waitUntil(
+              fetch(botUrl + '/evento-discord', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json', 'x-vants-bot': botSec },
+                body: cuerpo,
+              }).catch(() => {})
+            );
+          }
+        }
       }
       return new Response(null, { status: 204 });
     }

@@ -15,6 +15,13 @@ directory = "./public"
 binding = "ASSETS"
 run_worker_first = true
 
+# Puente de eventos de Discord hacia vantsbot (Neon Functions): el Worker
+# verifica la firma Ed25519 del Developer Portal (/api/discord/events) y
+# reenvía el evento a POST /evento-discord (auth x-vants-bot) para guardarlo
+# en Neon (web_events) y avisar por DM de compras/instalaciones.
+[vars]
+VANTS_BOT_URL = "https://br-sweet-shape-b42xhogj-vantsbot.compute.c-6.us-east-2.aws.neon.tech"
+
 # DOMINIO PROPIO (vantsgg.com) — descomentar cuando la zona vantsgg.com esté
 # activa en la cuenta de Cloudflare (o añadirlo por panel: Workers & Pages ->
 # vants -> Configuración -> Dominios y rutas -> Agregar dominio personalizado):
