@@ -983,21 +983,32 @@ async function completarClipsFicha(p){
     icons();
   }catch(e){}
 }
-/* VER MI PERFIL abre SIEMPRE el perfil real (CUENTA REAL VANTS, ver
-   arena-live.js); sin sesión, manda al login */
+/* ABRIR MI PERFIL (helper único): con sesión abre la ficha editable
+   (PERFIL DE JUGADOR); sin sesión devuelve false y el llamador ofrece ENTRAR. */
+function abrirPerfilPropio(){
+  try{
+    var a=window.VANTS_AUTH;
+    if(!a||!a.sub||!window.openPlayerProfile)return false;
+    var mio=(window.VANTS_ME&&window.VANTS_ME.player)||null;
+    if(!mio&&a.playerId){mio=(window.VANTS_PLAYERS||[]).find(function(x){return String(x.id)===String(a.playerId);})||null;}
+    if(mio){window.openPlayerProfile(mio);return true;}
+  }catch(e){}
+  return false;
+}
+/* VER MI PERFIL abre SIEMPRE el PERFIL DE JUGADOR; sin sesión, manda al login */
 const meStripBtnEl=$('#meStripBtn');
 if(meStripBtnEl)meStripBtnEl.addEventListener('click',()=>{
-  const acc=$('#accBtn'),lb=$('#arenaLoginBtn');
-  if(acc&&!acc.hidden){acc.click();return;}
+  if(abrirPerfilPropio())return;
+  const lb=$('#arenaLoginBtn');
   if(lb&&!lb.hidden){lb.click();return;}
   toast('Ingresá con ENTRAR para crear tu perfil de jugador','info');
 });
-/* REPORTAR SERIE (cta de la sección RANGOS): manda al perfil real,
+/* REPORTAR SERIE (cta de la sección RANGOS): manda al PERFIL DE JUGADOR,
    donde vive el bloque VANTS RANKED · SERIES */
 const rankedReportBtn=$('#rankedReportBtn');
 if(rankedReportBtn)rankedReportBtn.addEventListener('click',()=>{
-  const acc=$('#accBtn'),lb=$('#arenaLoginBtn');
-  if(acc&&!acc.hidden){if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil();else acc.click();return;}
+  if(abrirPerfilPropio())return;
+  const lb=$('#arenaLoginBtn');
   if(lb&&!lb.hidden){lb.click();return;}
   toast('Ingresá con ENTRAR para reportar tu serie','info');
 });
@@ -1316,7 +1327,7 @@ function closeMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.remove('s
   b.addEventListener('click',openMenu);
   const c=$('#menuClose');if(c)c.addEventListener('click',closeMenu);
   const ov=$('#menuOv');if(ov)ov.addEventListener('click',closeMenu);
-  const mp=$('#mdPerfil');if(mp)mp.addEventListener('click',function(e){e.preventDefault();closeMenu();const acc=$('#accBtn'),lb=$('#arenaLoginBtn');if(acc&&!acc.hidden){acc.click();return;}if(lb&&!lb.hidden){lb.click();return;}if(typeof toast==='function')toast('Iniciá sesión para abrir tu perfil de jugador','info');});
+  const mp=$('#mdPerfil');if(mp)mp.addEventListener('click',function(e){e.preventDefault();closeMenu();if(abrirPerfilPropio())return;const lb=$('#arenaLoginBtn');if(lb&&!lb.hidden){lb.click();return;}if(typeof toast==='function')toast('Iniciá sesión para abrir tu perfil de jugador','info');});
   $$('#menuDrawer [data-md-close]').forEach(el=>el.addEventListener('click',closeMenu));
 })();
 
