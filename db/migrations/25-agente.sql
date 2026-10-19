@@ -72,7 +72,7 @@ DO $$ BEGIN
       WHERE agent_events.estado IN ('resuelto','archivado');
     SELECT id INTO v_id FROM agent_events WHERE dedupe_key = p_dedupe;
     RETURN v_id;
-  END $fn;
+  END $fn$;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- 3) Comandos del dueno hacia el agente ------------------------------
