@@ -35,7 +35,7 @@
       "provider": "github",
       "owner": "feispla",
       "repo": "Vants",
-      "releaseType": "release"
+      "releaseType": "draft"
     },
     "files": [
       "main.js",

@@ -2,9 +2,11 @@ name: "VANTS HUB · instalador Windows (Electron)"
 
 # Compila el instalador NSIS de VANTS HUB (Electron) en un runner
 # Windows real y lo publica en GitHub Releases al crear un tag v*.
-# En tags publica con electron-builder (--publish always): sube el .exe
-# + latest.yml + blockmap — pieza que consume electron-updater para las
-# ACTUALIZACIONES AUTOMÁTICAS del HUB (el usuario no reinstala a mano).
+# En tags, electron-builder sube el .exe + latest.yml + blockmap a un
+# release BORRADOR (draft) y luego se publica — pieza que consume
+# electron-updater para las ACTUALIZACIONES AUTOMÁTICAS del HUB.
+# El borrador es la vía correcta: este repo tiene "Immutable releases"
+# activo y un release publicado rechaza assets (HTTP 422).
 
 on:
   push:
@@ -47,9 +49,20 @@ jobs:
           path: desktop-electron/dist/*.exe
           if-no-files-found: error
 
-      - name: Publicar en GitHub Releases (solo tags v*)
+      - name: Publicar el borrador del release (tags v*)
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: desktop-electron/dist/*.exe
-          generate_release_notes: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF.Replace('refs/tags/','')
+          $h = @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = 'application/vnd.github+json' }
+          $rels = Invoke-RestMethod -Headers $h -Uri "https://api.github.com/repos/feispla/Vants/releases?per_page=100"
+          $draft = $rels | Where-Object { $_.draft -eq $true -and $_.tag_name -eq $tag } | Select-Object -First 1
+          if ($draft) {
+            $body = @{ draft = $false; generate_release_notes = $true } | ConvertTo-Json
+            Invoke-RestMethod -Method PATCH -Headers $h -ContentType 'application/json' -Uri "https://api.github.com/repos/feispla/Vants/releases/$($draft.id)" -Body $body | Out-Null
+            Write-Host "Release $tag publicado · assets: $($draft.assets | ForEach-Object { $_.name })"
+          } else {
+            Write-Host "No hay borrador para $tag (¿ya publicado antes?)"
+          }
