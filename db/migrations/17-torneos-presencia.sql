@@ -85,6 +85,21 @@ CREATE POLICY tt_baja_propia ON tournament_teams FOR DELETE
 -- ============================================================
 -- B) LLAVES DEL TORNEO (q/s/f + inferiores l1/l2/lf)
 -- ============================================================
+-- Defensa: una tournament_matches LEGACY (creada por un sistema
+-- anterior, SIN la columna ronda y VACÍA) bloquea este esquema.
+-- Solo se elimina si es la versión vieja (sin 'ronda'); si ya
+-- existe con el esquema nuevo, se respeta con todos sus datos.
+DO $$
+BEGIN
+  IF to_regclass('public.tournament_matches') IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'tournament_matches'
+                       AND column_name = 'ronda') THEN
+    DROP TABLE tournament_matches CASCADE;
+    RAISE NOTICE 'tournament_matches legacy (sin columna ronda) eliminada';
+  END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS tournament_matches (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tournament_id text NOT NULL,
