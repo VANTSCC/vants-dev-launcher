@@ -149,3 +149,49 @@ jobs:
         env:
           CI: "true"
         run: npx playwright test
+
+      - name: Capturas de producción con datos (el runner SÍ alcanza el proxy de Neon)
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p artefactos/qa-t53
+          node -e '
+          const { chromium } = require("@playwright/test");
+          const fs = require("fs");
+          (async () => {
+            const b = await chromium.launch();
+            const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, locale: "es-ES" });
+            const page = await ctx.newPage();
+            const B = "https://vants.vants.workers.dev";
+            const shots = [
+              ["/calendario.html", "prod-calendario.png"],
+              ["/resultados.html", "prod-resultados.png"],
+              ["/equipo-ficha.html?slug=demo-equipo-fenix", "prod-ficha-equipo.png"],
+              ["/jugador.html?slug=demo-jugador-alex", "prod-ficha-jugador.png"],
+              ["/equipos.html", "prod-equipos.png"],
+            ];
+            for (const [ruta, archivo] of shots) {
+              try {
+                await page.goto(B + ruta, { waitUntil: "networkidle", timeout: 30000 });
+                await page.waitForTimeout(2500);
+                await page.screenshot({ path: "artefactos/qa-t53/" + archivo, fullPage: true });
+                const n = await page.evaluate(() => document.querySelectorAll(".sf-mrow, .pf-card, .pf-ficha, .pf-error, .pf-empty").length);
+                console.log(archivo + " · elementos=" + n);
+              } catch (e) { console.log(archivo + " ERROR " + e.message.split("\n")[0]); }
+            }
+            const mp = await ctx.newPage();
+            await mp.setViewportSize({ width: 390, height: 844 });
+            try {
+              await mp.goto(B + "/equipo-ficha.html?slug=demo-equipo-fenix", { waitUntil: "networkidle", timeout: 30000 });
+              await mp.waitForTimeout(2500);
+              await mp.screenshot({ path: "artefactos/qa-t53/prod-movil-ficha.png", fullPage: true });
+            } catch (e) {}
+            await b.close();
+          })();'
+
+      - name: Subir capturas como artefacto
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-t53-capturas-produccion
+          path: artefactos/qa-t53/
+          retention-days: 30
