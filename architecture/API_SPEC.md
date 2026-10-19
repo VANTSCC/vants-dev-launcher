@@ -75,6 +75,18 @@ Solo juegos `activo=true`, ordenados por `orden`.
 | Rate limit | 429 | texto corto (patrón existente) |
 | Error interno | 500 | `{ok:false,error:{message:"Error interno"}}` (sin internals) |
 
+## Limitación operativa conocida (documentada, T52)
+
+El WAF del endpoint de Neon Functions (`*.compute.c-6.us-east-2.aws.neon.tech`) devuelve 403
+al egreso de Cloudflare Workers (bloqueo por ASN — verificado con diagnóstico en producción:
+el mismo endpoint responde JSON correcto desde navegadores residenciales). Por eso:
+
+- La LECTURA pública del frontend se hace DIRECTO del proxy `vantsdata` desde el navegador
+  (patrón de la casa, CORS abierto, `plataforma.js` traduce los endpoints a queries `pt_*`).
+- Esta API del Worker sigue siendo el contrato server-side (validación completa, paginación,
+  proyecciones sin PII) y funciona para cualquier cliente cuyo egreso no esté en la lista de
+  bloqueo del WAF de Neon. La UI usa `/api/…` solo como fallback.
+
 ## No-objetivos
 
 - Sin escrituras públicas nuevas (inscripción/gestión siguen en `/api/torneos/inscribir` y

@@ -1,12 +1,21 @@
 # TROUBLESHOOTING — Problemas conocidos y soluciones
 
-## La API responde `{"ok":false,"error":{"message":"Datos no disponibles"}}` (HTTP 502)
+## La API del Worker responde `{"ok":false,"error":{"message":"Datos no disponibles (proxy 403)"}}`
 
-**Causa**: la migración 28 (tablas `pt_*`) aún no se aplicó en Neon o el deploy de la función
-`vantsdata` (que incluye las tablas nuevas en su whitelist) sigue en cola.
-**Solución**: verificar en Actions que "Neon · migraciones" y "Neon · deploy de funciones"
-terminaron en verde; re-ejecutar `neon-migrate.yml` manualmente si quedó atascado.
-Mientras tanto la UI muestra estados vacíos/DEMO honestos (nunca datos falsos).
+**Causa**: el WAF del endpoint de Neon Functions bloquea el egreso de Cloudflare Workers por
+ASN (403 HTML de nginx, confirmado con diagnóstico en producción). Los navegadores de
+usuarios reales NO están bloqueados.
+**Solución**: es la esperada — la UI del navegador lee pt_* DIRECTO del proxy vantsdata
+(plan C, T52f). La API `/api/…` del Worker mantiene el contrato server-side para clientes
+cuyo egreso no esté bloqueado. Si el dueño quiere la API server-side 100% operativa,
+alternativa: una Neon Function propia de solo-lectura en el mismo dominio del Worker o
+regla de WAF personalizada en el panel de Neon.
+
+## La API responde "Datos no disponibles" sin `(proxy NNN)`
+
+**Causa**: la migración 28 (tablas `pt_*`) aún no se aplicó en Neon.
+**Solución**: re-ejecutar `neon-migrate.yml` desde Actions; verificar el inventario final
+del log (`pt_games 6`, `pt_torneos 4`, `pt_teams 4`).
 
 ## `403 "Bloqueado"` con curl
 
