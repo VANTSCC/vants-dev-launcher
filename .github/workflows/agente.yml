@@ -30,6 +30,10 @@ on:
         description: "Orden en lenguaje natural (solo si modo=comando)"
         required: false
         default: ""
+      modelo_ia:
+        description: "Modelo GLM para ESTA ejecución (ej: glm-4.5-flash). Vacío = secret AGENT_LLM_MODEL"
+        required: false
+        default: ""
 
 # Fase 6 · despliegues controlados: un agente a la vez
 concurrency:
@@ -53,7 +57,8 @@ jobs:
       # api.z.ai; solo se define si la key es de bigmodel.cn).
       AGENT_LLM_URL: ${{ secrets.AGENT_LLM_URL || 'https://api.z.ai/api/paas/v4' }}
       AGENT_LLM_KEY: ${{ secrets.AGENT_LLM_KEY }}
-      AGENT_LLM_MODEL: ${{ secrets.AGENT_LLM_MODEL }}
+      # Modelo: input manual para probar modelos al vuelo (429 = sin cuota para ese modelo)
+      AGENT_LLM_MODEL: ${{ github.event.inputs.modelo_ia || secrets.AGENT_LLM_MODEL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
