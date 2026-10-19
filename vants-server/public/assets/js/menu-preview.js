@@ -1,22 +1,22 @@
 /* ============================================================
-   VANTS · MENÚ CAJÓN CON VISTA PREVIA (hover / touch)
+   VANTS · VISTA PREVIA DE CATEGORÍAS (nav superior + cajón)
    ------------------------------------------------------------
-   Al pasar el mouse por una fila del cajón, el panel se ensancha y
-   muestra una vista previa de esa sección (portada, descripción y qué
-   hay dentro). Clic = abre la sección. En dispositivos táctiles, el
-   primer toque muestra la vista previa con botón ABRIR.
-   Módulo independiente: no toca arena.js ni el resto de la app.
+   · Barra superior: al pasar el mouse por SALA/PARTIDOS/RANKING/...,
+     se despliega un panel de vista previa (portada, descripción y qué
+     hay dentro). Clic = abre la sección.
+   · Cajón (MENÚ): el panel lateral sigue mostrando la preview al pasar
+     el mouse; al abrirlo vuelve siempre a PERFIL DE JUGADOR (no se
+     queda pegado el último hover).
+   · Móvil: primer toque en una fila del cajón abre la preview con
+     botón ABRIR; la nav navega directo.
+   Módulo independiente: no toca arena.js ni Auth0.
    ============================================================ */
 (function () {
   'use strict';
-  var d = document.getElementById('menuDrawer');
-  if (!d) return;
-  var body = d.querySelector('.md-body');
-  if (!body) return;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-
   var ACC = '#FF0D2E';
+
   var DATA = {
     perfil: {
       k: 'IDENTIDAD', t: 'PERFIL DE JUGADOR', i: 'user', c: ACC,
@@ -96,114 +96,10 @@
     return m ? m[1] : 'perfil';
   }
 
-  /* ---- estructura: lista + panel de vista previa ---- */
-  var split = document.createElement('div');
-  split.className = 'md-split';
-  body.parentNode.insertBefore(split, body);
-  split.appendChild(body);
-
-  var pv = document.createElement('aside');
-  pv.className = 'md-preview';
-  pv.setAttribute('aria-live', 'polite');
-  pv.innerHTML =
-    '<button type="button" class="pv-back" id="pvBack"><i data-lucide="arrow-left"></i>VOLVER</button>' +
-    '<div class="pv-media">' +
-      '<span class="pv-kick" id="pvKick"></span>' +
-      '<span class="pv-ic" id="pvIc"><i data-lucide="crosshair"></i></span>' +
-      '<svg class="pv-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#vmark"/></svg>' +
-    '</div>' +
-    '<div class="pv-body">' +
-      '<p class="pv-title" id="pvTitle"></p>' +
-      '<p class="pv-desc" id="pvDesc"></p>' +
-      '<p class="pv-sub">DENTRO DE LA SECCIÓN</p>' +
-      '<ul class="pv-list" id="pvList"></ul>' +
-    '</div>' +
-    '<div class="pv-foot">' +
-      '<a class="pv-cta" id="pvCta" href="#"><i data-lucide="arrow-up-right"></i>ABRIR SECCIÓN</a>' +
-      '<span class="pv-hint" id="pvHint"></span>' +
-    '</div>';
-  split.appendChild(pv);
-  d.classList.add('has-preview');
-
   var touchMode = !window.matchMedia || !window.matchMedia('(hover: hover)').matches;
-  var activeKey = null;
 
-  function paint(key, href) {
-    var x = DATA[key] || DATA.perfil;
-    activeKey = key;
-    $('#pvKick').textContent = '/// ' + x.k;
-    $('#pvTitle').textContent = x.t;
-    $('#pvDesc').textContent = x.d;
-    $('#pvIc').innerHTML = '<i data-lucide="' + x.i + '"></i>';
-    $('#pvList').innerHTML = (x.li || []).map(function (t) { return '<li>' + t + '</li>'; }).join('');
-    pv.style.setProperty('--pvc', x.c || ACC);
-    $('#pvCta').setAttribute('href', href || '#');
-    $('#pvHint').textContent = touchMode ? 'Tocá ABRIR SECCIÓN para entrar' : 'Pasá el mouse por una opción · clic para abrir';
-    if (window.lucide && lucide.createIcons) { try { lucide.createIcons(); } catch (e) {} }
-  }
-
-  var rows = $$('.md-row', body);
-  rows.forEach(function (r) {
-    var href = r.getAttribute('href') || '';
-    var key = keyFor(href);
-    r.setAttribute('data-pv', key);
-    if (touchMode) {
-      r.addEventListener('click', function (ev) {
-        if (!d.classList.contains('pv-open')) {
-          ev.preventDefault();
-          paint(key, href);
-          d.classList.add('pv-open');
-        }
-      });
-    } else {
-      r.addEventListener('mouseenter', function () { paint(key, href); marcar(r); });
-      r.addEventListener('focus', function () { paint(key, href); marcar(r); });
-    }
-  });
-
-  function marcar(r) {
-    $$('.md-row', body).forEach(function (x) { x.classList.toggle('pv-on', x === r); });
-  }
-
-  var back = $('#pvBack');
-  if (back) back.addEventListener('click', function () { d.classList.remove('pv-open'); });
-
-  if (rows.length) paint(keyFor(rows[0].getAttribute('href') || ''), rows[0].getAttribute('href'));
-  else paint('perfil', '#');
-
-  /* al abrir el cajón se pinta la vista previa; al cerrarlo, se limpia el modo móvil */
-  try {
-    new MutationObserver(function () {
-      if (d.classList.contains('show')) {
-        if (!activeKey) paint('perfil', '#');
-        if (!touchMode) {
-          var act = $('.md-row[data-pv="' + activeKey + '"]', body);
-          if (act) act.classList.add('pv-on');
-        }
-      } else {
-        d.classList.remove('pv-open');
-      }
-    }).observe(d, { attributes: true, attributeFilter: ['class'] });
-  } catch (eObs) {}
-
-  /* ---- estilos (autocontenidos) ---- */
+  /* ---------------- estilos (compartidos) ---------------- */
   var css = ''
-    + '#menuDrawer.has-preview{width:min(880px,100vw)}'
-    + '#menuDrawer .md-split{display:flex;flex:1;min-height:0}'
-    + '#menuDrawer .md-split .md-body{flex:1;min-width:0}'
-    + '#menuDrawer .md-preview{display:none;position:relative;--pvc:' + ACC + '}'
-    + '@media (hover:hover) and (min-width:981px){'
-    + '  #menuDrawer.has-preview{width:min(880px,100vw)}'
-    + '  #menuDrawer .md-preview{display:flex;flex-direction:column;flex:none;width:420px;border-left:1px solid var(--line2);background:radial-gradient(120% 80% at 85% 0%,rgba(255,13,46,.14),transparent 55%),linear-gradient(180deg,#0C0C11,#09090C);overflow:hidden}'
-    + '  #menuDrawer .md-preview .pv-back{display:none}'
-    + '  #menuDrawer .md-row.pv-on{background:var(--panel2);border-left-color:var(--accent)}'
-    + '}'
-    + '@media (hover:none),(max-width:980px){'
-    + '  #menuDrawer.pv-open{width:min(430px,100vw)}'
-    + '  #menuDrawer.pv-open .md-preview{display:flex;flex-direction:column;position:absolute;inset:0;z-index:6;background:linear-gradient(180deg,#0C0C11,#09090C)}'
-    + '  #menuDrawer.pv-open .pv-back{display:inline-flex}'
-    + '}'
-    + '.pv-back{display:none;align-items:center;gap:8px;margin:14px 18px 0;background:none;border:0;color:var(--muted);font:700 10px var(--mono);letter-spacing:.14em;cursor:pointer}'
     + '.pv-media{position:relative;flex:none;height:200px;border-bottom:1px solid var(--line2);background:radial-gradient(90% 120% at 20% 0%,color-mix(in srgb,var(--pvc) 22%,transparent),transparent 60%),linear-gradient(160deg,#101014,#0A0A0D 70%);overflow:hidden}'
     + '.pv-media:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.015) 3px 4px);pointer-events:none}'
     + '.pv-kick{position:absolute;top:18px;left:22px;font:700 9px var(--mono);letter-spacing:.3em;color:var(--pvc)}'
@@ -220,9 +116,175 @@
     + '.pv-foot{flex:none;padding:14px 22px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}'
     + '.pv-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--pvc);color:#fff;font:800 11px var(--mono);letter-spacing:.1em;padding:13px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);text-decoration:none}'
     + '.pv-cta svg{width:14px;height:14px}'
-    + '.pv-hint{font:500 9px var(--mono);letter-spacing:.12em;color:var(--dim);text-align:center}';
+    + '.pv-hint{font:500 9px var(--mono);letter-spacing:.12em;color:var(--dim);text-align:center}'
+    /* nav dropdown */
+    + '#navPv{position:fixed;z-index:130;width:370px;max-width:calc(100vw - 24px);background:linear-gradient(180deg,#0C0C11,#09090C);border:1px solid var(--line2,#303039);box-shadow:0 30px 70px rgba(0,0,0,.65);clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .16s ease,transform .16s ease;--pvc:' + ACC + ';display:flex;flex-direction:column;overflow:hidden}'
+    + '#navPv.on{opacity:1;transform:none;pointer-events:auto}'
+    + '#navPv .pv-media{height:128px}'
+    + '#navPv .pv-kick{top:14px;left:18px}'
+    + '#navPv .pv-ic{left:18px;bottom:14px;width:52px;height:52px}'
+    + '#navPv .pv-ic svg{width:22px;height:22px}'
+    + '#navPv .pv-mark{width:150px;height:150px;right:-24px;bottom:-30px}'
+    + '#navPv .pv-body{padding:16px 18px 8px}'
+    + '#navPv .pv-title{font-size:19px;margin-bottom:8px}'
+    + '#navPv .pv-desc{font-size:10.5px;margin-bottom:12px}'
+    + '#navPv .pv-list li{font-size:10px}'
+    + '#navPv .pv-foot{padding:12px 18px 14px}'
+    + '#navPv .pv-hint{display:none}'
+    + '@media (max-width:980px),(hover:none){#navPv{display:none}}'
+    /* cajon */
+    + '#menuDrawer.has-preview{width:min(880px,100vw)}'
+    + '#menuDrawer .md-split{display:flex;flex:1;min-height:0}'
+    + '#menuDrawer .md-split .md-body{flex:1;min-width:0}'
+    + '#menuDrawer .md-preview{display:none;position:relative;--pvc:' + ACC + '}'
+    + '@media (hover:hover) and (min-width:981px){'
+    + '  #menuDrawer .md-preview{display:flex;flex-direction:column;flex:none;width:420px;border-left:1px solid var(--line2);background:radial-gradient(120% 80% at 85% 0%,rgba(255,13,46,.14),transparent 55%),linear-gradient(180deg,#0C0C11,#09090C);overflow:hidden}'
+    + '  #menuDrawer .md-preview .pv-back{display:none}'
+    + '  #menuDrawer .md-row.pv-on{background:var(--panel2);border-left-color:var(--accent)}'
+    + '}'
+    + '@media (hover:none),(max-width:980px){'
+    + '  #menuDrawer.pv-open{width:min(430px,100vw)}'
+    + '  #menuDrawer.pv-open .md-preview{display:flex;flex-direction:column;position:absolute;inset:0;z-index:6;background:linear-gradient(180deg,#0C0C11,#09090C)}'
+    + '  #menuDrawer.pv-open .pv-back{display:inline-flex}'
+    + '}'
+    + '.pv-back{display:none;align-items:center;gap:8px;margin:14px 18px 0;background:none;border:0;color:var(--muted);font:700 10px var(--mono);letter-spacing:.14em;cursor:pointer}';
   var st = document.createElement('style');
   st.id = 'pv-style';
   st.textContent = css;
   document.head.appendChild(st);
+
+  /* ---------------- relleno genérico ---------------- */
+  function buildHTML(withBack) {
+    return (withBack ? '<button type="button" class="pv-back" id="pvBack"><i data-lucide="arrow-left"></i>VOLVER</button>' : '')
+      + '<div class="pv-media"><span class="pv-kick" data-pv-kick></span>'
+      + '<span class="pv-ic" data-pv-ic><i data-lucide="crosshair"></i></span>'
+      + '<svg class="pv-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#vmark"/></svg></div>'
+      + '<div class="pv-body"><p class="pv-title" data-pv-title></p><p class="pv-desc" data-pv-desc></p>'
+      + '<p class="pv-sub">DENTRO DE LA SECCIÓN</p><ul class="pv-list" data-pv-list></ul></div>'
+      + '<div class="pv-foot"><a class="pv-cta" data-pv-cta href="#"><i data-lucide="arrow-up-right"></i>ABRIR SECCIÓN</a>'
+      + '<span class="pv-hint" data-pv-hint></span></div>';
+  }
+  function fill(root, key, href) {
+    var x = DATA[key] || DATA.perfil;
+    root.style.setProperty('--pvc', x.c || ACC);
+    var k = $('[data-pv-kick]', root); if (k) k.textContent = '/// ' + x.k;
+    var ic = $('[data-pv-ic]', root); if (ic) ic.innerHTML = '<i data-lucide="' + x.i + '"></i>';
+    var tt = $('[data-pv-title]', root); if (tt) tt.textContent = x.t;
+    var ds = $('[data-pv-desc]', root); if (ds) ds.textContent = x.d;
+    var ls = $('[data-pv-list]', root); if (ls) ls.innerHTML = (x.li || []).map(function (t) { return '<li>' + t + '</li>'; }).join('');
+    var ct = $('[data-pv-cta]', root); if (ct) ct.setAttribute('href', href || '#');
+    var hn = $('[data-pv-hint]', root); if (hn) hn.textContent = touchMode ? 'Tocá ABRIR SECCIÓN para entrar' : 'Pasá el mouse por una opción · clic para abrir';
+    if (window.lucide && lucide.createIcons) { try { lucide.createIcons(); } catch (e) {} }
+  }
+
+  /* ---------------- 1) NAV SUPERIOR: preview desplegable ---------------- */
+  var navPv = document.createElement('div');
+  navPv.id = 'navPv';
+  navPv.setAttribute('aria-live', 'polite');
+  navPv.innerHTML = buildHTML(false);
+  document.body.appendChild(navPv);
+
+  var hideTimer = null;
+  function showNavPv(link) {
+    if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    var href = link.getAttribute('href') || '';
+    var key = keyFor(href);
+    if (!DATA[key]) return;
+    fill(navPv, key, href);
+    var r = link.getBoundingClientRect();
+    var w = 370;
+    var left = Math.min(Math.max(12, r.left), Math.max(12, window.innerWidth - w - 12));
+    var top = r.bottom + 10;
+    navPv.style.left = left + 'px';
+    navPv.style.top = top + 'px';
+    navPv.classList.add('on');
+  }
+  function hideNavPv(delay) {
+    if (hideTimer) clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () { navPv.classList.remove('on'); }, delay || 160);
+  }
+
+  var navLinks = $$('.nav-links a');
+  navLinks.forEach(function (a) {
+    var key = keyFor(a.getAttribute('href') || '');
+    if (!DATA[key]) return;
+    a.setAttribute('data-pv', key);
+    if (touchMode) return;
+    a.addEventListener('mouseenter', function () { showNavPv(a); });
+    a.addEventListener('focus', function () { showNavPv(a); });
+    a.addEventListener('mouseleave', function () { hideNavPv(160); });
+  });
+  navPv.addEventListener('mouseenter', function () { if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } });
+  navPv.addEventListener('mouseleave', function () { hideNavPv(120); });
+  window.addEventListener('scroll', function () { navPv.classList.remove('on'); }, { passive: true });
+  window.addEventListener('resize', function () { navPv.classList.remove('on'); });
+
+  /* ---------------- 2) CAJÓN: panel lateral ---------------- */
+  var d = document.getElementById('menuDrawer');
+  if (d) {
+    var body = d.querySelector('.md-body');
+    if (body) {
+      var split = document.createElement('div');
+      split.className = 'md-split';
+      body.parentNode.insertBefore(split, body);
+      split.appendChild(body);
+
+      var pv = document.createElement('aside');
+      pv.className = 'md-preview';
+      pv.setAttribute('aria-live', 'polite');
+      pv.innerHTML = buildHTML(true);
+      split.appendChild(pv);
+      d.classList.add('has-preview');
+
+      var rows = $$('.md-row', body);
+      var activeKey = null;
+
+      function paintDrawer(key, href) {
+        activeKey = key;
+        fill(pv, key, href);
+      }
+      function marcar(r) {
+        $$('.md-row', body).forEach(function (x) { x.classList.toggle('pv-on', x === r); });
+      }
+
+      rows.forEach(function (r) {
+        var href = r.getAttribute('href') || '';
+        var key = keyFor(href);
+        r.setAttribute('data-pv', key);
+        if (touchMode) {
+          r.addEventListener('click', function (ev) {
+            if (!d.classList.contains('pv-open')) {
+              ev.preventDefault();
+              paintDrawer(key, href);
+              d.classList.add('pv-open');
+            }
+          });
+        } else {
+          r.addEventListener('mouseenter', function () { paintDrawer(key, href); marcar(r); });
+          r.addEventListener('focus', function () { paintDrawer(key, href); marcar(r); });
+        }
+      });
+
+      var back = $('.pv-back', pv);
+      if (back) back.addEventListener('click', function () { d.classList.remove('pv-open'); });
+
+      function resetDrawer() {
+        var first = rows[0];
+        if (first) { paintDrawer(keyFor(first.getAttribute('href') || ''), first.getAttribute('href')); marcar(first); }
+        else paintDrawer('perfil', '#');
+      }
+      resetDrawer();
+
+      try {
+        new MutationObserver(function () {
+          if (d.classList.contains('show')) {
+            /* al abrir: siempre arranca en PERFIL (no queda pegado el último hover) */
+            resetDrawer();
+          } else {
+            d.classList.remove('pv-open');
+          }
+        }).observe(d, { attributes: true, attributeFilter: ['class'] });
+      } catch (eObs) {}
+    }
+  }
 })();
