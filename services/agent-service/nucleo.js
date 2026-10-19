@@ -161,7 +161,21 @@ async function ejecutarCiclo(ctx, opciones = {}) {
     catch {}
 
     await memoria.cerrarRun(runId, { estado_global: decision.estadoGlobal, hallazgos: resultados, acciones: registro.acciones, resumen: decision.resumen });
-    return { run_id: runId, estado: decision.estadoGlobal, resumen: decision.resumen, hallazgos: resultados, acciones: registro.acciones };
+    // estado de la capa IA (diagnóstico: probar() = llamada mínima de ~8 tokens)
+    let ia = { activa: false, modo: 'reglas' };
+    if (ctx.llm && typeof ctx.llm.activo === 'function' && ctx.llm.activo() && typeof ctx.llm.probar === 'function') {
+      try {
+        const p = await ctx.llm.probar();
+        ia = p && p.ok
+          ? { activa: true, modelo: p.modelo, estado: 'ok' }
+          : { activa: true, modelo: (p && p.modelo) || null, estado: `fallo:${(p && p.motivo) || 'desconocido'}` };
+      } catch { ia = { activa: true, modelo: null, estado: 'fallo:excepcion' }; }
+    }
+    const resumenFinal = decision.resumen + (ia.activa && ia.estado !== 'ok' ? ` · IA ${ia.estado}` : '');
+    if (resumenFinal !== decision.resumen) {
+      await memoria.cerrarRun(runId, { estado_global: decision.estadoGlobal, hallazgos: resultados, acciones: registro.acciones, resumen: resumenFinal }).catch(() => {});
+    }
+    return { run_id: runId, estado: decision.estadoGlobal, resumen: resumenFinal, hallazgos: resultados, acciones: registro.acciones, ia };
   } catch (e) {
     await memoria.cerrarRun(runId, { estado_global: 'DESCONOCIDO', hallazgos: registro.resultados || [], acciones: registro.acciones, resumen: 'ciclo interrumpido', error: String(e.message).slice(0, 300) });
     throw e;

@@ -119,8 +119,12 @@ jobs:
           }
           const icono = { UP: '🟢', DEGRADED: '🟡', DOWN: '🔴' }[r.estado] || '⚪';
           const lineas = [`## ${icono} Agente VANTS — ${r.estado}`, '', `**Resumen:** ${r.resumen || '—'}`, ''];
-          // IA visible sin filtrar la key: solo se muestra si está definida
-          lineas.push(`**IA (GLM):** ${process.env.AGENT_LLM_KEY ? 'activa · ' + (process.env.AGENT_LLM_MODEL || 'glm-5.3-flash') : 'modo reglas (falta AGENT_LLM_KEY)'}`, '');
+          // IA visible sin filtrar la key: estado real del ciclo (probar() =
+          // llamada mínima); si falla, el motivo exacto (http_401, timeout…)
+          const iaTxt = r.ia
+            ? (r.ia.activa ? `${r.ia.modelo || 'glm'} · ${r.ia.estado || 'ok'}` : 'modo reglas (falta AGENT_LLM_KEY)')
+            : (process.env.AGENT_LLM_KEY ? 'activa (sin diagnóstico)' : 'modo reglas');
+          lineas.push(`**IA (GLM):** ${iaTxt}`, '');
           if (Array.isArray(r.hallazgos) && r.hallazgos.length) {
             lineas.push('| Chequeo | Estado | Detalle |', '|---|---|---|');
             for (const h of r.hallazgos) {

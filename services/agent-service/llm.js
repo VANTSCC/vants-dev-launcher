@@ -41,6 +41,9 @@ function crearLlm(env = process.env, fetchImpl = fetch) {
 
   // llamada cruda /chat/completions. Devuelve el MESSAGE completo
   // (content + tool_calls) para soportar function calling.
+  // Si falla, deja en ultimoFallo el motivo exacto (http_401 = key inválida,
+  // http_404 = modelo inexistente, timeout, red:… ) para diagnóstico.
+  let ultimoFallo = null;
   async function chat(mensajes, extra = {}) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
@@ -48,20 +51,36 @@ function crearLlm(env = process.env, fetchImpl = fetch) {
       const cuerpo = { model, messages: mensajes, temperature: 0.2, max_tokens: 700 };
       if (extra.tools && extra.tools.length) cuerpo.tools = extra.tools;
       if (extra.forzarTexto) { cuerpo.tools = undefined; cuerpo.max_tokens = 400; }
+      if (extra.maxTokens) cuerpo.max_tokens = extra.maxTokens;
       const r = await fetchImpl(url.replace(/\/$/, '') + '/chat/completions', {
         method: 'POST',
         signal: ctrl.signal,
         headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
         body: JSON.stringify(cuerpo),
       });
+      if (!r.ok) { ultimoFallo = `http_${r.status}`; return null; }
       const j = await r.json().catch(() => null);
-      return j && j.choices && j.choices[0] && j.choices[0].message ? j.choices[0].message : null;
-    } catch { return null; } finally { clearTimeout(timer); }
+      if (j && j.choices && j.choices[0] && j.choices[0].message) { ultimoFallo = null; return j.choices[0].message; }
+      ultimoFallo = 'respuesta_invalida';
+      return null;
+    } catch (e) {
+      ultimoFallo = ctrl.signal.aborted ? `timeout_${Math.round(TIMEOUT_MS / 1000)}s` : `red:${String((e && e.message) || e).slice(0, 60)}`;
+      return null;
+    } finally { clearTimeout(timer); }
   }
 
   return {
     activo: () => true,
     modelo: () => model,
+    url: () => url,
+    // ── diagnóstico: llamada mínima (≈8 tokens) que confirma que la key,
+    // el modelo y la red funcionan; sin coste real ni efectos. ──
+    async probar() {
+      const msg = await chat([{ role: 'user', content: 'Responde solo: OK' }], { forzarTexto: true, maxTokens: 8 });
+      return msg
+        ? { ok: true, modelo: model, url }
+        : { ok: false, motivo: ultimoFallo || 'desconocido', modelo: model, url };
+    },
     // ── modo clásico: orden libre -> intención del cerebro ──
     async interpretar(texto) {
       const msg = await chat([{ role: 'system', content: SISTEMA }, { role: 'user', content: String(texto || '') }], { forzarTexto: true });

@@ -199,6 +199,22 @@ async function principal() {
     await srv.cerrar();
   }
 
+  console.log('— Test: probar() diagnóstico (ok · http_401) —');
+  {
+    const okLlm = crearLlm({ AGENT_LLM_KEY: 'k' }, async () => new Response(
+      JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'OK' } }] }),
+      { status: 200, headers: { 'content-type': 'application/json' } }
+    ));
+    const p1 = await okLlm.probar();
+    ok(p1.ok === true && p1.modelo === 'glm-5.3-flash' && String(p1.url).includes('api.z.ai'), 'probar() ok con URL global por defecto');
+    const badLlm = crearLlm({ AGENT_LLM_KEY: 'k' }, async () => new Response(
+      JSON.stringify({ error: { message: 'invalid api key' } }),
+      { status: 401, headers: { 'content-type': 'application/json' } }
+    ));
+    const p2 = await badLlm.probar();
+    ok(p2.ok === false && p2.motivo === 'http_401', 'probar() reporta el motivo exacto (http_401 = key inválida)');
+  }
+
   console.log('— Test: sin KEY → null · KEY sola → URL global de GLM por defecto —');
   ok(crearLlm({}) === null, 'crearLlm({}) devuelve null (falta la key)');
   {

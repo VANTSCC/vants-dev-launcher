@@ -6,6 +6,7 @@
 //   node cli.js estado             → último estado + incidentes
 //   node cli.js informe            → diagnóstico completo legible
 //   node cli.js comando "texto"    → orden en lenguaje natural
+//   node cli.js ia                 → diagnóstico de la capa IA (key/modelo/URL)
 // Memoria: Neon (DATABASE_URL postgres://) o RAM si no hay credenciales.
 // ============================================================
 
@@ -28,6 +29,20 @@ async function principal() {
     } else if (comando === 'estado') {
       const r = await ejecutarIntencion(ctx, 'estado', {});
       console.log(r);
+    } else if (comando === 'ia') {
+      if (!ctx.llm || !ctx.llm.activo || !ctx.llm.activo()) {
+        console.log(JSON.stringify({ activa: false, modo: 'reglas', motivo: 'falta AGENT_LLM_KEY' }));
+        return;
+      }
+      const p = await ctx.llm.probar();
+      console.log(JSON.stringify({
+        activa: true,
+        modelo: ctx.llm.modelo(),
+        url: ctx.llm.url(),
+        ok: !!(p && p.ok),
+        ...(p && !p.ok ? { motivo: p.motivo } : {}),
+      }));
+      if (!p || !p.ok) process.exitCode = 1;
     } else if (comando === 'comando') {
       if (!textoLibre) { console.error('uso: node cli.js comando "texto de la orden"'); process.exitCode = 2; return; }
       const herramientas = crearHerramientas(ejecutarIntencion);
@@ -45,7 +60,7 @@ async function principal() {
       console.log(`[intencion: ${interpretado.intencion}${interpretado.via ? ' · ' + interpretado.via : ''}]`);
       console.log(clasica);
     } else {
-      console.log('uso: node cli.js <ciclo|estado|informe|comando "texto">');
+      console.log('uso: node cli.js <ciclo|estado|informe|ia|comando "texto">');
       process.exitCode = comando ? 2 : 0;
     }
   } finally {
