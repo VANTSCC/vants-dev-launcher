@@ -184,7 +184,14 @@ async function proxyConsulta(tabla, params, conCount) {
   u.searchParams.set('table', tabla);
   for (const [k, v] of Object.entries(params || {})) u.searchParams.set(k, String(v));
   if (conCount) u.searchParams.set('_count', 'exact');
-  const r = await fetch(u, { headers: { Accept: 'application/json' } });
+  const r = await fetch(u, {
+    headers: {
+      Accept: 'application/json',
+      // el WAF del endpoint de Neon Functions rechaza el UA por defecto del
+      // Worker; identificamos como navegador (la función solo lee, GET)
+      'User-Agent': 'Mozilla/5.0 (compatible; VANTS-Worker/1.0; +https://vants.vants.workers.dev)',
+    },
+  });
   if (!r.ok) return { ok: false, status: r.status, body: [], total: null };
   const arr = await r.json().catch(() => []);
   const cr = r.headers.get('Content-Range'); // "0-11/34"
