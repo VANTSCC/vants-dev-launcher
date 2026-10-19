@@ -32,7 +32,7 @@ lenguaje natural** y **canal Discord** vía el bot VANTCALL ya conectado.
 | Modo | Cómo | Cuándo usarlo |
 |------|------|---------------|
 | **CI (por defecto, 0 €)** | `.github/workflows/agente.yml` — cron cada 30 min + manual | Ya funcionando. Vigila, actúa, escribe en Neon y publica resumen. |
-| **Servicio HTTP (instantáneo)** | `node server.js` (:8082) en Railway/Render junto al bot | Si el dueño quiere `/agente comando` con respuesta inmediata (definir `AGENT_URL` en el bot). |
+| **Servicio HTTP (instantáneo)** | `node server.js` (:8082) donde el dueño quiera | Si se quiere `/agente comando` con respuesta inmediata (definir `AGENT_URL`). Opcional: la ruta Neon ya responde en ≤30 min sin host. |
 
 ## 2. Lo que vigila (chequeos)
 
@@ -69,24 +69,29 @@ propuestas, nunca a medias:
   agente → respuesta → DM**), sin necesidad de servidor encendido.
 - Vista **`agent_resumen`** para paneles; interruptor `bot_settings.agente`.
 
-## 5. Discord (el bot ya conectado)
+## 5. Discord (canal de control, sin hosting de pago)
 
-El bot VANTCALL ahora registra el grupo **`/agente`** y arranca
-`agent_bridge.py` (bucle cada 25 s):
+El mando del agente vive en la **Neon Function `vantsbot`**
+(`neon-functions/vantsbot`, desplegada gratis por CI): atiende los comandos
+`/agente` vía el **Interactions endpoint** de Discord (firma Ed25519, sin
+Gateway ni proceso residente) y entrega los **DMs del puente** leyendo
+`agent_events` / `agent_comandos` de Neon (`/tarea`, disparada por
+`agente.yml` tras cada ciclo). El bot Python VANTCALL sigue funcionando para
+los comandos de comunidad cuando el dueño lo enciende, pero **ya no es
+necesario para controlar el agente** — nada de Railway/Render.
 
 - **DMs automáticos**: incidentes nuevos/reabiertos de severidad
   warn/error/critical + respuestas a sus órdenes.
-- **Comandos**:
+- **Comandos** (registrados como comando global por `/setup`):
   - `/agente estado` — último ciclo + incidentes abiertos (embed con colores).
   - `/agente informe` — diagnóstico completo.
   - `/agente incidentes` — lista numerada.
   - `/agente resolver <id>` — cierra un incidente.
-  - `/agente comando <texto>` — orden libre. Con `AGENT_URL` responde al
-    instante; sin él encola en Neon y la respuesta llega por DM tras el ciclo.
-- Si **Discord no funciona** (caída del bot, DMs cerrados): la memoria queda
-  íntegra en Neon, el workflow publica el resumen en GitHub, y si el dueño
-  crea el secret `VANTS_DISCORD_WEBHOOK` el propio ciclo avisa a un canal.
-  Nada se pierde.
+  - `/agente comando <texto>` — orden libre; queda en cola en Neon y la
+    respuesta llega por DM tras el próximo ciclo.
+- Si **Discord no funciona**: la memoria queda íntegra en Neon, el workflow
+  publica el resumen en GitHub, y si el dueño crea el secret
+  `VANTS_DISCORD_WEBHOOK` el propio ciclo avisa a un canal. Nada se pierde.
 
 ## 6. La capa de IA (enchufable, hoy en modo reglas)
 
@@ -139,12 +144,27 @@ En CI el workflow ya inyecta `GITHUB_TOKEN` (permiso `actions: write`) y
 resuelve `DATABASE_URL` con `NEON_API_KEY` — no se necesita ningún secret
 nuevo para el modo básico.
 
-## 9. Despliegue del bot (para el dueño)
+## 9. Canal Discord con Neon Functions (para el dueño, ~2 min)
 
-El bot ya tiene el grupo `/agente` y el puente integrados en `main.py`
-(`start_agent_bridge`). En el host donde corre el bot (Railway/Render):
+El bot de control corre como **Neon Function `vantsbot`** — gratis, sin
+Railway/Render y desplegada automáticamente al hacer push (workflow
+`Neon · deploy de funciones`). Solo falta conectar tu app de Discord:
 
-1. `git pull` y `pip install -r bot/requirements.txt` (sin cambios nuevos).
-2. Reiniciar el bot → en el log aparecerá
-   `🤖 Agente VANTS activo: /agente estado · informe · …`.
-3. Opcional: `AGENT_URL` + `AGENT_TOKEN` para respuesta instantánea.
+1. **Secrets del repo** (https://github.com/feispla/Vants/settings/secrets/actions):
+   - `DISCORD_BOT_TOKEN` — el token del bot que ya conectaste
+     (Discord Developer Portal → tu app → Bot → Reset Token).
+   - `DISCORD_PUBLIC_KEY` — la *Public Key* de la app (portal → General
+     Information). Con estos dos, el workflow ya registra `/agente` global
+     y activa los DMs (`VANTS_BOT_SECRET` ya está creado; `SUPERVISOR_DM_ID`
+     es opcional, por defecto es tu id).
+2. **Interactions Endpoint URL** (portal → General Information): pega
+   `https://br-sweet-shape-b42xhogj-vantsbot.compute.c-6.us-east-2.aws.neon.tech/`
+   y **Save** (Discord envía un PING; la función lo responde).
+3. Listo: `/agente estado` en Discord funciona aunque el bot Python esté
+   apagado, y los DMs del agente llegan tras cada ciclo de vigilancia.
+   Verificación técnica en cualquier momento: `GET .../salud` y el paso
+   "Verificación vantsbot" del workflow de deploy.
+
+El bot Python (`bot/`) queda como refuerzo opcional para comandos de
+comunidad (perfil, torneos, moderación) cuando quieras tenerlo encendido;
+para el control del agente ya no hace falta ningún host.

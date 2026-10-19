@@ -1,12 +1,19 @@
-name: "Neon · deploy de funciones (linker + vantsdata)"
+name: "Neon · deploy de funciones (linker + vantsdata + vantsbot)"
 
-# Despliega las Neon Functions públicas con sus variables de entorno:
+# Despliega las Neon Functions con sus variables de entorno:
 #   · linker    — conectores OAuth de cuentas (FACEIT, Twitch, Kick...)
 #   · vantsdata — proxy público de lectura (lecturas anónimas de la web)
+#   · vantsbot  — mando del Agente VANTS por Discord (Interactions + puente
+#                 de DMs + /setup), 100% HTTP sin Gateway: sustituye el
+#                 hosting de pago (Railway/Render) del bot para el control.
 # Requiere los secretos del repo:
-#   NEON_API_KEY      — API key de Neon (ya existente, la usa neon-migrate)
-#   FACEIT_CLIENT_ID  — client ID OAuth PKCE de FACEIT (faceit.com/developers)
-#   FACEIT_API_KEY    — API key server-side de FACEIT (Data API v4)
+#   NEON_API_KEY        — API key de Neon (ya existente, la usa neon-migrate)
+#   FACEIT_CLIENT_ID    — client ID OAuth PKCE de FACEIT
+#   FACEIT_API_KEY      — API key server-side de FACEIT
+#   DISCORD_BOT_TOKEN   — token del bot (dueno; Discord Developer Portal)
+#   DISCORD_PUBLIC_KEY  — Public Key de la app de Discord (portal → General)
+#   VANTS_BOT_SECRET    — cabecera x-vants-bot para /tarea y /setup (>=32)
+#   SUPERVISOR_DM_ID    — (opcional) Discord id del dueño para DMs
 # Se ejecuta al cambiar neon-functions/** o manualmente (Run workflow).
 
 on:
@@ -29,6 +36,11 @@ jobs:
       FACEIT_CLIENT_ID: ${{ secrets.FACEIT_CLIENT_ID }}
       FACEIT_API_KEY: ${{ secrets.FACEIT_API_KEY }}
       LINKER_URL: https://br-sweet-shape-b42xhogj-linker.compute.c-6.us-east-2.aws.neon.tech
+      VANTSBOT_URL: https://br-sweet-shape-b42xhogj-vantsbot.compute.c-6.us-east-2.aws.neon.tech
+      DISCORD_PUBLIC_KEY: ${{ secrets.DISCORD_PUBLIC_KEY }}
+      DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+      VANTS_BOT_SECRET: ${{ secrets.VANTS_BOT_SECRET }}
+      SUPERVISOR_DM_ID: ${{ secrets.SUPERVISOR_DM_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,6 +77,19 @@ jobs:
             --api-key "$NK" \
             --wait
 
+      - name: Desplegar vantsbot (mando del Agente por Discord)
+        run: |
+          neon functions deploy vantsbot \
+            --project-id square-surf-41242074 \
+            --branch br-sweet-shape-b42xhogj \
+            --src neon-functions/vantsbot \
+            --api-key "$NK" \
+            --wait \
+            ${DISCORD_PUBLIC_KEY:+--env DISCORD_PUBLIC_KEY=$DISCORD_PUBLIC_KEY} \
+            ${DISCORD_BOT_TOKEN:+--env DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN} \
+            ${VANTS_BOT_SECRET:+--env VANTS_BOT_SECRET=$VANTS_BOT_SECRET} \
+            ${SUPERVISOR_DM_ID:+--env SUPERVISOR_DM_ID=$SUPERVISOR_DM_ID}
+
       - name: Verificación (diagnóstico público del linker)
         run: |
           sleep 5
@@ -84,4 +109,21 @@ jobs:
           CODE=$(echo "$RESP" | tail -1 | sed 's/HTTP://')
           if [ "$CODE" != "200" ]; then
             echo "::warning::vantsdata devolvió HTTP $CODE en la verificación (puede necesitar un reintento si el compute acaba de arrancar)"
+          fi
+
+      - name: "Verificación vantsbot (salud + registro de /agente + ciclo del puente)"
+        run: |
+          sleep 5
+          echo "--- GET /salud (config visible, sin secretos) ---"
+          curl -s --max-time 30 "$VANTSBOT_URL/salud" | head -c 600; echo
+          if [ -z "$VANTS_BOT_SECRET" ]; then
+            echo "::warning::Falta el secret VANTS_BOT_SECRET — /tarea y /setup quedan desactivados hasta añadirlo."
+            exit 0
+          fi
+          echo "--- POST /setup (registra /agente como comando global) ---"
+          curl -s --max-time 60 -X POST -H "x-vants-bot: $VANTS_BOT_SECRET" "$VANTSBOT_URL/setup" | head -c 400; echo
+          echo "--- POST /tarea (entrega DMs pendientes de incidentes/respuestas) ---"
+          curl -s --max-time 60 -X POST -H "x-vants-bot: $VANTS_BOT_SECRET" "$VANTSBOT_URL/tarea" | head -c 400; echo
+          if [ -z "$DISCORD_BOT_TOKEN" ] || [ -z "$DISCORD_PUBLIC_KEY" ]; then
+            echo "::warning::Faltan DISCORD_BOT_TOKEN y/o DISCORD_PUBLIC_KEY — añade los secrets para activar el mando /agente."
           fi

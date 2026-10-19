@@ -142,3 +142,20 @@ jobs:
           if [ -n "$VANTS_DISCORD_WEBHOOK" ]; then
             curl -sS -o /dev/null -X POST -H 'content-type: application/json' -d @/tmp/embed.json "$VANTS_DISCORD_WEBHOOK" || true
           fi
+
+      # El bot de Discord ya NO necesita hosting de pago (Railway/Render):
+      # la Neon Function "vantsbot" entrega los DMs del puente (incidentes y
+      # respuestas) y atiende /agente. Este paso la dispara tras cada ciclo.
+      - name: Entregar avisos por Discord (vantsbot · Neon Functions)
+        if: always()
+        env:
+          VANTS_BOT_URL: https://br-sweet-shape-b42xhogj-vantsbot.compute.c-6.us-east-2.aws.neon.tech
+          VANTS_BOT_SECRET: ${{ secrets.VANTS_BOT_SECRET }}
+        run: |
+          if [ -z "$VANTS_BOT_SECRET" ]; then
+            echo "::warning::Sin el secret VANTS_BOT_SECRET no se disparan los DMs del puente."
+            exit 0
+          fi
+          echo "--- ciclo del puente (incidentes + respuestas → DM al dueño) ---"
+          curl -sS --max-time 60 -X POST -H "x-vants-bot: $VANTS_BOT_SECRET" "$VANTS_BOT_URL/tarea" || true
+          echo

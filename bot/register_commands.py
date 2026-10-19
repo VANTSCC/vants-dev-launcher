@@ -86,6 +86,15 @@ COMMANDS = [
             opt(STRING, "nombre", "Nombre (por defecto Temporada N)"),
         ]),
     ]},
+    # Control del Agente VANTS (también lo atiende la Neon Function vantsbot
+    # vía Interactions endpoint — ver neon-functions/vantsbot)
+    {"name": "agente", "description": "Control del Agente VANTS (web, launcher, BD, CI)", "options": [
+        opt(SUB, "estado", "Ultimo ciclo del agente + incidentes abiertos"),
+        opt(SUB, "informe", "Diagnostico completo del agente"),
+        opt(SUB, "incidentes", "Lista los incidentes abiertos"),
+        opt(SUB, "resolver", "Marca un incidente como resuelto", options=[opt(INTEGER, "id_incidente", "Numero del incidente (ver /agente incidentes)", True)]),
+        opt(SUB, "comando", "Orden libre al agente (ej: despliega la web)", options=[opt(STRING, "texto", "Lo que quieres que haga el agente", True)]),
+    ]},
     # Moderación
     {"name": "warn", "description": "Advertir a un usuario", "options": [opt(USER, "usuario", "Usuario a advertir", True), opt(STRING, "razon", "Razón", True)]},
     {"name": "kick", "description": "Expulsar a un usuario", "options": [opt(USER, "usuario", "Usuario a expulsar", True), opt(STRING, "razon", "Razón", True)]},
