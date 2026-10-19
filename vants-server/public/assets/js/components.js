@@ -6,6 +6,10 @@
 //  · VANTS_UI.toast(msg, {type:'info|ok|warn|error', timeout}) → elemento
 //  · VANTS_UI.confirm({title, message, okText, cancelText}) → Promise<bool>
 //  · VANTS_UI.badge(text, tone) → span
+//  · VANTS_UI.reportErrors(on) → red de seguridad global: captura
+//    window.onerror / unhandledrejection y avisa con toast genérico
+//    (dedupe 15s; el detalle técnico solo en consola). arena.js sigue
+//    manejando sus propios errores; esto solo recoge lo que se escapa.
 // Respeta prefers-reduced-motion. Sin fetch, sin storage. Falla silencioso.
 // ============================================
 (function () {
@@ -148,5 +152,39 @@
     } catch (e) { return null; }
   }
 
-  window.VANTS_UI = { toast: toast, confirm: confirm, badge: badge, version: '1.0.0' };
+  // --- Red de seguridad de errores (Fase 2: manejo de errores unificado) ---
+  // Solo avisa de lo que OTROS módulos no capturaron. Con dedupe para no
+  // spamear y mensaje genérico para el usuario (el detalle va a consola).
+  var errInstalled = false;
+  var lastErrMsg = '';
+  var lastErrAt = 0;
+  function onEscapee(msg) {
+    try {
+      var key = String(msg).slice(0, 80);
+      var now = Date.now();
+      if (key === lastErrMsg && now - lastErrAt < 15000) return;
+      lastErrMsg = key; lastErrAt = now;
+      toast('Algo salió temporalmente. Recarga si persiste.', { type: 'error', timeout: 4200 });
+    } catch (e) {}
+  }
+  function reportErrors(on) {
+    try {
+      if (on && !errInstalled) {
+        errInstalled = true;
+        window.addEventListener('error', function (e) {
+          if (e && e.message) { console.warn('[VANTS] error escapado:', e.message); onEscapee(e.message); }
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e && e.reason;
+          var m = (r && (r.message || String(r))) || 'promesa rechazada';
+          console.warn('[VANTS] promesa sin manejar:', m);
+          onEscapee(m);
+        });
+      }
+    } catch (e) {}
+  }
+
+  window.VANTS_UI = { toast: toast, confirm: confirm, badge: badge, reportErrors: reportErrors, version: '1.1.0' };
+  // Activada por defecto: red de seguridad (dedupe 15s, mensaje genérico).
+  try { reportErrors(true); } catch (e) {}
 })();

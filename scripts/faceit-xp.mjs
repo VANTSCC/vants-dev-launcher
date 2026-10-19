@@ -19,7 +19,10 @@ const psql = (sql) => execFileSync('psql', [CS, '-t', '-A', '-F', '\t', '-v', 'O
   { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
 
 const api = async (path) => {
-  const r = await fetch('https://api.faceit.com' + path, {
+  // Host oficial de la Data API (docs FACEIT): open.faceit.com.
+  // api.faceit.com/data/v4 responde HTTP 500 con API keys server-side (verificado
+  // 2026-10-19 con la key del dueño), open.faceit.com responde 200.
+  const r = await fetch('https://open.faceit.com' + path, {
     headers: { Authorization: 'Bearer ' + KEY, Accept: 'application/json' },
     signal: AbortSignal.timeout(15000),
   });
