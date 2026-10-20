@@ -1,0 +1,86 @@
+# VANTS FULL STACK · CI de la nueva app (Astro/React/TS/Tailwind) + scraper Python + MCP + Docker
+name: fullstack · build + checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'webapp/**'
+      - 'scripts/build-webapp.mjs'
+      - 'scripts/scraper_vlr.py'
+      - 'scripts/requirements.txt'
+      - 'mcp/**'
+      - 'services/**'
+      - 'docker-compose.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: fullstack
+  cancel-in-progress: false
+
+jobs:
+  webapp:
+    name: Astro build + typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+      - name: npm ci
+        working-directory: webapp
+        run: npm ci --no-audit --no-fund
+      - name: astro check (TypeScript)
+        working-directory: webapp
+        run: npx astro check
+      - name: build
+        working-directory: webapp
+        run: npm run build
+      - name: conectar build con el deploy (index + _astro a los 3 árboles)
+        run: node scripts/build-webapp.mjs
+      - name: artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-dist
+          path: |
+            index.html
+            _astro/
+          if-no-files-found: error
+
+  scraper:
+    name: Python + BeautifulSoup (dry-run real)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r scripts/requirements.txt
+      - name: dry-run contra vlr.gg
+        run: python scripts/scraper_vlr.py --dry-run --limit 5
+
+  mcp:
+    name: MCP server (smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: initialize + tools/list
+        run: |
+          printf '%s\n%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | node mcp/server.mjs | tee /tmp/mcp.out
+          grep -q '"vants-mcp"' /tmp/mcp.out
+          grep -q '"estado_db"' /tmp/mcp.out
+
+  docker:
+    name: Docker build (api-gateway Express)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build imagen
+        run: docker build -t vants-api-gateway:ci services/api-gateway

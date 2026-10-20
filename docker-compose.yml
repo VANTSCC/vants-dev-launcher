@@ -1,0 +1,33 @@
+# VANTS FULL STACK — servicios Node en contenedores
+# Uso:
+#   cp services/api-gateway/.env.example services/api-gateway/.env  (y editar)
+#   cp services/matchmaking-service/.env.example services/matchmaking-service/.env  (y editar)
+#   docker compose up --build
+services:
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: vants-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      ALLOW_ORIGIN: ${ALLOW_ORIGIN:-https://vants.vants.workers.dev}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  matchmaking:
+    build: ./services/matchmaking-service
+    container_name: vants-matchmaking
+    ports:
+      - "8081:8081"
+    environment:
+      PORT: 8081
+      ALLOW_ORIGIN: ${ALLOW_ORIGIN:-https://vants.vants.workers.dev}
+      LOG_LEVEL: info
+      # Sin DATABASE_URL el servicio arranca en modo memoria (degradado, es su diseño)
+      DATABASE_URL: ${DATABASE_URL:-}
+    restart: unless-stopped

@@ -1,0 +1,4 @@
+/* Tailwind v4 sin preflight: arena.css es el dueño del sistema base.
+   Solo traemos el theme (tokens) y las utilities. */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";

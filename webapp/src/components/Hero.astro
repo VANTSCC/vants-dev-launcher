@@ -1,0 +1,41 @@
+---
+// Hero + panel EN VIVO. IDs requeridos por arena.js / arena-live.js:
+// heroTitle, heroSub, heroPrize, heroJoin, liveBadge, liveSpec, liveSpecLbl,
+// liveEvent, liveTagA, liveNameA, liveScore, liveTagB, liveNameB, pipsA, pipsB, liveFeed, liveMore
+---
+<section class="hero" id="inicio">
+  <div class="wrap hero-in">
+    <div class="hero-left">
+      <span class="kicker">VANTS GAMES PRESENTA · INSCRIPCIONES ABIERTAS</span>
+      <h1 id="heroTitle">ASCENSIÓN<br><span class="out">SERIES</span> <span class="acc">S4</span></h1>
+      <p class="hero-sub" id="heroSub">El circuito competitivo abierto de LATAM. Clasificá con tu equipo, subí por el bracket y llevate la parte del premio. Matchmaking por skill, anti-cheat obligatorio y servidores 128 tick.</p>
+      <div class="hero-meta">
+        <div class="hm"><i data-lucide="trophy"></i><b id="heroPrize">POR ANUNCIAR</b>&nbsp;PREMIOS</div>
+        <div class="hm"><i data-lucide="users"></i><b>5v5</b>&nbsp;FORMATO</div>
+        <div class="hm"><i data-lucide="swords"></i><b>BO3</b>&nbsp;DOBLE ELIM.</div>
+        <div class="hm"><i data-lucide="globe"></i><b>ONLINE</b>&nbsp;LATAM</div>
+      </div>
+      <p class="hero-note mono" style="font:700 10px/1 var(--mono);letter-spacing:.14em;color:var(--accent)">INSCRIPCIONES ABIERTAS · FECHA Y POZO POR ANUNCIAR EN DISCORD</p>
+      <div class="hero-ctas">
+        <button class="btn btn-cut" id="heroJoin"><i data-lucide="swords"></i>INSCRIBIR MI EQUIPO</button>
+        <a class="btn btn-ghost" href="llaves.html"><i data-lucide="git-fork"></i>VER BRACKET</a>
+      </div>
+      <p class="hero-note">Reembolso garantizado hasta 48 h antes del inicio si hubiera fee. Ganá RR de VANTS RANKED en cada serie.</p>
+    </div>
+    <div class="live-panel" data-tilt="2.2">
+      <div class="live-head">
+        <span class="live-badge" id="liveBadge"><i class="dot"></i>PRÓXIMO PARTIDO</span>
+        <span class="live-spec mono"><i data-lucide="eye"></i><b id="liveSpec">10:00</b>&nbsp;<span id="liveSpecLbl">INICIO (CARACAS)</span></span>
+      </div>
+      <div class="live-event mono" id="liveEvent">CHAMPIONS 2026 · GRAN FINAL · DOM 18 OCT · 10:00 (CARACAS)</div>
+      <div class="live-score">
+        <div class="ls-team"><span class="ls-tag" id="liveTagA">LOUD</span><span class="ls-name" id="liveNameA">LOUD</span></div>
+        <div class="ls-num" id="liveScore"><i>VS</i></div>
+        <div class="ls-team right"><span class="ls-tag" id="liveTagB">VIT</span><span class="ls-name" id="liveNameB">TEAM VITALITY</span></div>
+      </div>
+      <div class="pips"><div class="pip-row" id="pipsA"></div><div class="pip-row" id="pipsB"></div></div>
+      <div class="live-feed" id="liveFeed"></div>
+      <button class="live-more" id="liveMore">VER PARTIDO EN DETALLE <i data-lucide="chevron-right"></i></button>
+    </div>
+  </div>
+</section>

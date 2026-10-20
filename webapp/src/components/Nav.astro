@@ -1,0 +1,39 @@
+---
+// Nav principal de la arena + selector de juego. IDs requeridos por arena.js:
+// proBadge, arenaLoginBtn, miCuentaBtn, gbNext
+---
+<header class="nav">
+  <div class="wrap nav-in">
+    <a href="#inicio" class="nav-logo">
+      <svg class="mark"><use href="#vmark"></use></svg>
+      <span class="wordmark"><b>VANT<em>S</em></b><small>GAMES</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="jugadores.html">SALA</a>
+      <a href="partidos.html">PARTIDOS</a>
+      <a href="ranking.html">RANKING</a>
+      <a href="torneos.html">TORNEOS</a>
+      <a href="llaves.html">LLAVES</a>
+      <a href="tienda.html">TIENDA</a>
+      <a href="descargar.html" class="nav-dl">DESCARGAR</a>
+    </nav>
+    <div class="nav-right">
+      <span class="pro-badge" id="proBadge"><i data-lucide="zap"></i>PRO</span>
+      <a class="btn btn-ghost btn-sm" href="membresias.html"><i data-lucide="crown"></i>MEMBRESÍAS</a>
+      <button class="btn btn-ghost btn-sm" id="arenaLoginBtn" hidden><i data-lucide="log-in"></i>ENTRAR</button>
+      <button class="btn btn-ghost btn-sm" id="miCuentaBtn" hidden><i data-lucide="layout-dashboard"></i>MI CUENTA</button>
+    </div>
+  </div>
+</header>
+
+<!-- SELECTOR DE JUEGO -->
+<div class="gamebar">
+  <div class="wrap gamebar-in">
+    <span class="gb-label"><i data-lucide="crosshair"></i>ELIGE TU ARENA</span>
+    <div class="gswitch">
+      <button class="gbtn on" data-game="valorant"><b>VALORANT</b><small>VANTS RATING 2.0</small></button>
+      <button class="gbtn" data-game="cs2"><b>COUNTER-STRIKE 2</b><small>VANTS RATING 2.1</small></button>
+    </div>
+    <div class="gb-next" id="gbNext"><b>NEXT</b>PRÓXIMO EVENTO</div>
+  </div>
+</div>

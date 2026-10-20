@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/.astro
+webapp
+db
+docs
+.github
+*.md
+!services/**/README.md
+.git

@@ -1,0 +1,26 @@
+{
+  "name": "vants-webapp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/react": "^7.1.0",
+    "@astrojs/vue": "^7.1.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "astro": "^7.4.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.3",
+    "three": "^0.186.1",
+    "typescript": "^5.9.3",
+    "vue": "^3.5.44"
+  }
+}
