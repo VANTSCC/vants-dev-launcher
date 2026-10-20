@@ -1,4 +1,5 @@
 ---
+import Analytics from '@vercel/analytics/astro';
 interface Props {
   title?: string;
   description?: string;
@@ -24,6 +25,7 @@ const {
   <script is:inline src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
   <link rel="stylesheet" href="./assets/css/arena.css?v=10">
   <link rel="stylesheet" href="./assets/css/vants-shop.css?v=1">
+  <Analytics />
 </head>
 <body data-game="valorant">
   <slot />
