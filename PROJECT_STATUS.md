@@ -1,6 +1,10 @@
 # PROJECT_STATUS — Plataforma VANTS (estilo Strafe)
 
-> Archivo vivo de estado. Última actualización: 2026-10-20 · Sesión T53+b/c/d/e (fases que faltaban + 3 bugs de producción corregidos) · commits `69dc4d0`→`d539d9f` · CI 5/5 VERDE
+> Archivo vivo de estado. Última actualización: 2026-10-20 (noche) · **Auditoría externa completa
+> (CI + repo, 212 commits + 10 workflows + suites ejecutadas) con fixes aplicados en la rama
+> `audit/fixes-2026-10-20` — ver FASE 17 al pie.** Sesiones previas: T53+b/c/d/e
+> (`69dc4d0`→`d539d9f`) y pivote fullstack + MYKD (`8b0e247`→`a1c6d10`, 11 commits que esta
+> tabla no cubre — el plan vigente ahora es la FASE 17 de IMPLEMENTATION_PLAN.md).
 
 ## Misión
 
@@ -76,3 +80,25 @@ modo autónomo continuo, sin presentar datos ficticios como reales y sin copiar 
    diario 05:17 UTC). Torneos/equipos/partidas entrará con `source='faceit'`, sin chip DEMO.
 3. Opcional: regla de WAF en Neon para permitir el egreso de Cloudflare y habilitar la API
    server-side completa.
+
+
+---
+
+## FASE 17 · Consolidación fullstack — estado tras la auditoría nocturna (20-oct)
+
+**Alcance auditado**: 212 commits (13→20-oct), 10 workflows YAML (validados), Worker (1.862
+líneas), 29 migraciones, MCP, scraper, Docker ×2, webapp Astro (astro check + build), 8 suites
+de tests ejecutadas de verdad, crawler de enlaces, espejo ×3 (diff completo), forense de git.
+
+**Notas por área** (informes completos en la sesión de auditoría):
+- CI/CD 6.5→~8.5 tras fixes: 2 triggers de deploy a prod estaban CORRUPTOS (`branches: ain]`)
+  y solo corrían a mano; ya corren por push a main con cola `deploy-prod`.
+- Seguridad: 0 secretos filtrados (historia incluida). Críticos corregidos: PII en
+  `estado-db.json` (emails) y `AUTH0_SPA_CLIENT_ID` inexistente (verificación de email rota).
+- Calidad: 8 suites verdes — **347 asserts reales** (plataforma 90, agente 61, mm_fase4 54,
+  llm 30, sandbox 60, vantsbot 36, mm_neon 16) + **804 enlaces/0 rotos** + astro check 0
+  errores + build byte-idéntico. README/TESTING actualizados con los números reales.
+- Espejo ×3: drift real detectado y corregido (`menu-preview.js` en producción pisaba el
+  preview de la isla React) + check permanente en CI (`fullstack.yml`).
+- Gobierno: D11–D15 registradas; "Content Island" documentado en `docs/CONTENT-ISLANDS.md`;
+  pendientes de dueño en la checklist FASE 17 (D14 origen canónico, firma Electron, CSP).

@@ -108,3 +108,63 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   gratis (sin Railway/Render).
 - Historial de RR en Neon (migración 27, T46) — motivo/partida/temporada/fecha.
 - Matchmaking en Neon Functions (T47), cerebro agéntico GLM (T43), auto-diagnóstico IA (T48).
+
+## D11 · Pivote fullstack: Astro + islas React/Vue COMPLEMENTANDO (no reemplazando) al Worker
+- **Decisión**: la home se compila con Astro 7 (`webapp/`) con islas React (`Explore.tsx`)
+  y Vue + Three.js (`Emblema3D.vue`, `IntroJett.vue`); el resto del sitio sigue siendo
+  estático servido por el Worker. Los bundles `_astro/` se commitean en el espejo ×3.
+- **Motivo**: animaciones 3D reales con Vue (motor de Three) sin reescribir la plataforma;
+  "fin de los stickers" — código real corriendo. Supersede PARCIAL de D1: no hay reescritura
+  del backend ni de las páginas existentes, se añade una capa de presentación compilada.
+- **Consecuencias**: los bundles compilados son fuente de verdad (verificados byte a byte
+  en CI); `scripts/build-webapp.mjs` sincroniza y con `--check` vigila el espejo ×3;
+  `fullstack.yml` valida build+check en cada push de `webapp/**`.
+- Fecha: 2026-10-19 (hecho), 2026-10-20 (documentado por auditoría).
+
+## D12 · Identidad visual MYKD: rojo/negro reemplaza al lima
+- **Decisión**: paleta roja (#ff0d2e) sobre oscuro + menús estilo MYKD; el lima #D2DC59 de
+  D2/T51 queda retirado del skin (persiste solo en assets históricos).
+- **Motivo**: tercera iteración de identidad en 36 h (T52 → strafe → MYKD); el dueño la
+  aprobó en producción. Supersede D2 en cuanto al acento de color (lo demás: patrones,
+  no marcas de terceros — sigue vigente).
+- **Consecuencias**: los skins futuros deben registrar la decisión aquí para no perder
+  la traza (lección de la auditoría: dos caducidades de identidad sin registro).
+- Fecha: 2026-10-20.
+
+## D13 · Numeración de migraciones CONGELADA (sin renombres retroactivos)
+- **Decisión**: NO se renombran migraciones ya aplicadas (doble "05", "11" faltante con
+  "13" autotitulado "11"). Los números nuevos siguen la secuencia (30+).
+- **Motivo**: neon-migrate aplica por orden lexicográfico y las migras ya corrieron en
+  prod; renombrar puede reordenar ejecuciones y romper la idempotencia percibida. El SQL
+  suelto en `docs/*.sql` es histórico: no lo aplica el CI.
+- **Consecuencias**: la numeración queda "con huecos" a sabiendas; cualquier migración
+  nueva debe declarar dependencias en su cabecera.
+- Fecha: 2026-10-20 (auditoría).
+
+## D14 · Origen canónico PENDIENTE de decidir (workers.dev vs dominio propio)
+- **Decisión**: PENDIENTE. Hoy conviven canonical `feispla.github.io/Vants` (SEO) con
+  deploy principal `vants.vants.workers.dev` (Worker + CI + Electron) y arranque de
+  Android en GitHub Pages.
+- **Motivo**: elegir un origen único afecta SEO y firmas — decisión del dueño. Los
+  dominios vants.gg / vantsgg.com están preparados pero sin activar.
+- **Consecuencias**: mientras tanto, señales SEO divididas (riesgo bajo con poco tráfico,
+  alto al crecer). Recomendación de auditoría: unificar a workers.dev ahora y 301 al
+  dominio propio cuando se active.
+- Fecha: 2026-10-20 (auditoría — marcada como abierta a propósito).
+
+## D15 · Endurecimiento post-auditoría (2026-10-20)
+- **Decisión**: aplicar los fixes de la auditoría nocturna: `branches: [main]` en los 4
+  triggers que deployan (cloudflare-deploy, fullstack, neon-migrate, neon-deploy-functions
+  — dos estaban corruptos como `branches: ain]` y NUNCA corrían por push), concurrency
+  compartida `deploy-prod`, timeout en faceit-xp (144 runs/día), SHA-pinning de actions,
+  permissions mínimos, `estado-db.sql` SIN emails (rol `owner` en vez de email), ticket de
+  verificación Auth0 sin la constante inexistente `AUTH0_SPA_CLIENT_ID` (ahora es secret
+  opcional), `/api/teams` para pt_teams y legado movido a `/api/teams-live`, guarda
+  anti-bucle del agente fail-safe, agent-service fail-closed (AGENT_TOKEN o
+  AGENT_ALLOW_OPEN=1), sanitización de `/api/discord/notify` (anti markdown-injection),
+  robots.txt + backoff en el scraper, healthcheck de matchmaking, huérfanos fuera de main.
+- **Motivo**: hallazgos 🔴/🟡 de la auditoría (informe maestro en la sesión del 20-oct).
+- **Consecuencias**: riesgo residual documentado: `/api/discord/notify` sigue siendo
+  browser-facing (origen falseable) — mitigado con sanitización + rate limit; el fix
+  definitivo es emitir la notificación server-side desde `/api/torneos/inscribir`.
+- Fecha: 2026-10-20.

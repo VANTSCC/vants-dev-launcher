@@ -19,7 +19,7 @@
 - Evidencia: `research/REFERENCE_ANALYSIS.md`, `PAGE_STRUCTURE.md`, `NETWORK_FINDINGS.md`,
   `SEO_FINDINGS.md`, `REFERENCE_SCREENSHOTS.md` + `/home/z/my-project/download/qa-strafe3/`.
 
-### FASE 2 · Definición del producto — EN CURSO
+### FASE 2 · Definición del producto — ✅ COMPLETADA (T52, commits 343256e)
 - `product/REQUIREMENTS.md` (usuarios, historias, prioridades MoSCoW).
 - `product/USER_FLOWS.md` (flujos críticos).
 - `product/ACCEPTANCE_CRITERIA.md` (criterios comprobables).
@@ -122,3 +122,23 @@
 | Espejo ×3 divergente | Script de verificación de espejo antes de cada push |
 | CI rate limit de API GitHub | Verificación en vivo del workers.dev (método T50/T51) |
 | Datos reales inexistentes (torneos propios) | Seed demo etiquetado; FACEIT como fuente real documentada |
+
+## FASE 17 · Consolidación fullstack (post-plan original) — EN CURSO
+Añadida por auditoría del 20-oct: el plan original se cerró en T53 pero el HEAD siguió
+avanzando (pivote fullstack, reskin MYKD, hotfixes). Esta fase ordena lo que quedó suelto:
+
+- [x] Trigger `branches: [main]` en los 4 workflows que deployan (2 corruptos → nunca corrían)
+- [x] Concurrency compartida `deploy-prod` (migraciones + funciones + Worker en cola)
+- [x] faceit-xp con timeout + connect-timeout (144 runs/día bajo control)
+- [x] SHA-pinning de actions + permissions mínimos
+- [x] `estado-db.json` sin PII (email fuera; rol `owner` como identificador)
+- [x] Ticket de verificación Auth0 arreglado (`AUTH0_SPA_CLIENT_ID` = secret opcional)
+- [x] `/api/teams` = pt_teams (plataforma); legado en `/api/teams-live`
+- [x] Espejo ×3 sincronizado + `build-webapp.mjs --check` en CI
+- [x] Guarda anti-bucle fail-safe + agent-service fail-closed
+- [x] Huérfanos autogenerados fuera de main; `.gitignore` actualizado
+- [ ] Decidir origen canónico único (D14) y activar dominio propio
+- [ ] Emitir `/api/discord/notify` desde `inscribir` (eliminar el endpoint browser-facing)
+- [ ] CSP sin `unsafe-inline` (refactor de scripts inline)
+- [ ] Firma de código del HUB Windows (requiere certificado — coste del dueño)
+- [ ] Activar Dependabot (`.github/dependabot.yml` nunca existió)

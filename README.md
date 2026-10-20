@@ -33,10 +33,17 @@ automático en **Cloudflare Workers**.
 ├── services/                   ← agent-service (cerebro agéntico GLM), matchmaking
 ├── bot/                        ← bot ORION de Discord (Python)
 ├── desktop-electron/           ← HUB/launcher Electron con auto-update
-├── scripts/                    ← tests (test_plataforma, test_agente, …), auditoría
-├── docs/                       ← TESTING.md, DEPLOYMENT.md, TROUBLESHOOTING.md, …
+├── scripts/                    ← tests (test_plataforma, test_agente, …), auditoría,
+│                                  build-webapp.mjs (sincroniza/verifica el espejo ×3),
+│                                  scraper_vlr.py (vlr.gg → vlr_matches, idempotente)
+├── docs/                       ← TESTING.md, DEPLOYMENT.md, CONTENT-ISLANDS.md, …
+├── webapp/                     ← Astro 7: home compilada + islas React (Explore) y
+│                                  Vue+Three (Emblema3D, IntroJett) — ver docs/CONTENT-ISLANDS.md
+├── mcp/                        ← server MCP stdio sin dependencias (4 tools)
+├── docker-compose.yml          ← api-gateway (Express :8080) + matchmaking (:8081)
 └── .github/workflows/          ← tests, neon-migrate, neon-deploy-functions,
-                                   cloudflare-deploy, agente, electron, android
+                                   cloudflare-deploy, fullstack, agente, faceit-*,
+                                   electron, android (deploy-prod en cola; actions SHA-pinned)
 ```
 
 ## Requisitos previos
@@ -72,8 +79,11 @@ público `vantsdata` y reenvía el JWT del usuario cuando hay sesión.
 ## Ejecución de pruebas
 
 ```bash
-node scripts/test_plataforma.js    # 47 asserts (lógica de la plataforma + integración)
-node scripts/audit_enlaces.js      # crawler interno (603 enlaces, 0 rotos)
+node scripts/test_plataforma.js    # 90 asserts (lógica de la plataforma + integración)
+node scripts/test_agente.js        # 61 asserts (agente)
+node scripts/test_mm_fase4.js      # 54 asserts (matchmaking)
+node scripts/test_llm_agente.js    # 30 asserts · test_sandbox_agente.js 60 · test_vantsbot.js 36 · test_mm_neon.js 16
+node scripts/audit_enlaces.js      # crawler interno (804 enlaces, 0 rotos)
 node scripts/test_agente.js        # 61 asserts (agente)
 node scripts/test_mm_fase4.js      # 54 asserts (matchmaking)
 # suite completa: ver docs/TESTING.md

@@ -4,14 +4,14 @@
 
 | Suite | Comando | Cobertura | Estado esperado |
 |---|---|---|---|
-| Plataforma de torneos | `node scripts/test_plataforma.js` | Lógica pura compartida con el Worker: validación de query, clasificación de estados, orden, paginación, fechas es/en, render XSS-safe + **integración real** con el proxy (si hay red; si no, `~skip` honesto) | 47 ✓ · 0 ✗ |
+| Plataforma de torneos | `node scripts/test_plataforma.js` | Lógica pura compartida con el Worker: validación de query, clasificación de estados, orden, paginación, fechas es/en, render XSS-safe + **integración real** con el proxy (si hay red; si no, `~skip` honesto) | **90** ✓ · 0 ✗ (README viejo decía 47) |
 | Agente VANTS | `node scripts/test_agente.js` | Núcleo, reglas, memoria, chequeos | 61 ✓ |
 | Cerebro agéntico GLM | `node scripts/test_llm_agente.js` | Function calling, bucle tools, anti-bucle | 30 ✓ |
 | Sandbox del agente | `node scripts/test_sandbox_agente.js` | Memoria autoalojada + exec aislado | 60 ✓ |
 | Matchmaking (fase 4) | `node scripts/test_mm_fase4.js` | Cola, emparejamiento, RR | 54 ✓ |
 | Matchmaking Neon | `node scripts/test_mm_neon.js` | Funciones serverless | 16 ✓ |
 | Vantsbot Discord | `node scripts/test_vantsbot.js` | Interactions, puente | 36 ✓ |
-| Auditoría de enlaces | `node scripts/audit_enlaces.js` | 28 páginas, crawler interno | 603 ✓ · 0 rotos |
+| Auditoría de enlaces | `node scripts/audit_enlaces.js` | 34 páginas, crawler interno (espejo completo) | **804** ✓ · 0 rotos (README viejo decía 603) |
 
 ## CI (GitHub Actions — `tests.yml`)
 
