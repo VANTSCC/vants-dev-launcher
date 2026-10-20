@@ -277,11 +277,11 @@ function articuloPublico(a) {
   };
 }
 
-// Sirve index.html reescrito para /es|en/tournaments/:juego/:estado/
+// Sirve torneos.html reescrito para /es|en/tournaments/:juego/:estado/ (shell con hooks del rewriter)
 async function paginaTorneos(env, request, url, lang, juego, estado) {
   const t = (TEXTOS_TORNEOS[lang] || TEXTOS_TORNEOS.es)[estado];
   const g = JUEGOS_RUTA[juego] || 'VALORANT';
-  const target = new URL('/', url.origin); // /index.html → Assets redirige 307 a / : pedir la raíz
+  const target = new URL('/torneos.html', url.origin); // la pagina REAL de torneos (rojo/negro, con .sf-tab[data-est])
   const page = await env.ASSETS.fetch(new Request(target, request));
   if (!page.ok) return page;
   const can = urlTorneos(lang, juego, estado);

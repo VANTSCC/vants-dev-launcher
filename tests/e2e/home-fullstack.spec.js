@@ -36,7 +36,7 @@ test.describe('Home full stack (Astro + React)', () => {
     const row = page.locator('#explorar a.hc-row', { hasText: 'RANKING' }).first();
     await row.hover();
     await expect(preview).toContainText('RANKING', { timeout: 5000 });
-    await expect(preview).toContainText('Líderes del circuito');
+    await expect(preview).toContainText('La tabla de líderes');
   });
 
   test('las islands de Astro (_astro) están referenciadas y cargan', async ({ page }) => {
