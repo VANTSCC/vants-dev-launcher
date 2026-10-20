@@ -30,4 +30,10 @@ services:
       LOG_LEVEL: info
       # Sin DATABASE_URL el servicio arranca en modo memoria (degradado, es su diseño)
       DATABASE_URL: ${DATABASE_URL:-}
+    # /healthz nunca responde 500 (reporta degradado) → healthcheck seguro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped

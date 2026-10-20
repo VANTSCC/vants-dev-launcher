@@ -49,3 +49,9 @@ monitor/state.json
 # Archivos personales
 Evolution-of-AI-Agents.pptx
 vants-server/.wrangler/
+
+# Estado de la base: SOLO viven en la rama estado-db (los escribe neon-migrate)
+# Nunca en main: son archivos autogenerados (y antes filtraban PII)
+/estado-db.json
+/estado-db-error.txt
+/migracion-error.txt

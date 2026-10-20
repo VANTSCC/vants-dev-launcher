@@ -30,12 +30,40 @@ UA = (
 )
 
 
-def fetch_html(timeout: int = 25) -> str:
-    req = urllib.request.Request(BASE_URL, headers={"User-Agent": UA, "Accept-Language": "en"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        if resp.status != 200:
-            raise RuntimeError(f"HTTP {resp.status}")
-        return resp.read().decode("utf-8", "replace")
+def robots_permitido() -> bool:
+    """Consulta robots.txt de vlr.gg. Falla ABIERTO solo si robots es ilegible
+    (red caída al pedirlo = el scrape también fallaría); un Disallow explícito
+    para nuestro UA aborta con salida 3 (ética antes que datos)."""
+    try:
+        import urllib.robotparser
+
+        rp = urllib.robotparser.RobotFileParser()
+        rp.set_url("https://www.vlr.gg/robots.txt")
+        rp.read()
+        return rp.can_fetch(UA, BASE_URL) or rp.can_fetch("*", BASE_URL)
+    except Exception:
+        return True  # robots.txt inalcanzable: se intenta igual (el fetch real validará)
+
+
+def fetch_html(timeout: int = 25, reintentos: int = 2) -> str:
+    """Descarga con backoff exponencial (2 s, 4 s) entre reintentos."""
+    ultimo_err: Exception | None = None
+    for intento in range(reintentos + 1):
+        if intento:
+            espera = 2 ** intento
+            print(f"  reintento {intento}/{reintentos} en {espera}s ({ultimo_err})")
+            import time
+
+            time.sleep(espera)
+        req = urllib.request.Request(BASE_URL, headers={"User-Agent": UA, "Accept-Language": "en"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                if resp.status != 200:
+                    raise RuntimeError(f"HTTP {resp.status}")
+                return resp.read().decode("utf-8", "replace")
+        except Exception as e:
+            ultimo_err = e
+    raise ultimo_err if ultimo_err else RuntimeError("fetch fallido")
 
 
 def parse_matches(html: str, limit: int) -> list[dict]:
@@ -116,6 +144,9 @@ def main() -> int:
     args = ap.parse_args()
 
     try:
+        if not robots_permitido():
+            print("vlr.gg/robots.txt no permite este scrape (Abortado, salida 3)")
+            return 3
         html = fetch_html()
     except Exception as e:  # red, DNS o bloqueo anti-bot
         print(f"NO SE PUDO DESCARGAR {BASE_URL}: {e}", file=sys.stderr)
