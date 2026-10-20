@@ -38,4 +38,23 @@
       <button class="live-more" id="liveMore">VER PARTIDO EN DETALLE <i data-lucide="chevron-right"></i></button>
     </div>
   </div>
+  <div class="hero-dock" id="heroDock" aria-hidden="true"></div>
 </section>
+
+<style>
+  /* Anclaje del cuchillo 3D (IntroJett lo rellena al aterrizar) */
+  .hero-dock {
+    position: absolute;
+    right: 3%;
+    top: 5%;
+    width: 210px;
+    height: 250px;
+    pointer-events: none;
+    z-index: 3;
+  }
+  @media (max-width: 1100px) {
+    .hero-dock {
+      display: none;
+    }
+  }
+</style>

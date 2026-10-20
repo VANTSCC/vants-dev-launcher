@@ -1,0 +1,44 @@
+/* ============================================================
+   VANTS · ARENA RESKIN v1
+   ------------------------------------------------------------
+   El skin "strafe" (web verde) pinta todo con tokens CSS. Este
+   archivo se carga DESPUÉS de strafe.css y remapea esos tokens
+   a la paleta de la ARENA: rojo #FF0D2E sobre negro. Un solo
+   archivo, todo el sitio consistente — cero toques al markup.
+   ============================================================ */
+body.sf {
+  --bg: #0B0C10;
+  --bg2: #0D0E12;
+  --panel: #12141A;
+  --panel2: #181B22;
+  --line: #23262E;
+  --line2: #2E323C;
+  --text: #F2F4F7;
+  --muted: #9AA3AD;
+  --dim: #6B7280;
+  --accent: #FF0D2E;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(255, 13, 46, 0.12);
+  --gold: #FFB84D;
+  --cy: #4CC9F0;
+  --vi: #B44CFF;
+  --grn: #3ECF6E;
+}
+
+/* CS2 mantenía su propio mapa de acento: también a la arena */
+body.sf[data-game="cs2"] {
+  --accent: #FF0D2E;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(255, 13, 46, 0.12);
+}
+
+/* Selección y scrollbar con el rojo de la arena */
+body.sf ::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Filas de tabla con hover rojo tenue (el lima venía por token, esto refuerza) */
+body.sf .sf-row:hover {
+  border-color: rgba(255, 13, 46, 0.45);
+}
