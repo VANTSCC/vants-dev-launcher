@@ -862,6 +862,34 @@ export default {
       });
     }
 
+    // --- 7b) PLATAFORMA DE TORNEOS · rutas de página /es|en/tournaments/:juego/:estado/
+    const mT = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
+    if (mT && (method === 'GET' || method === 'HEAD')) {
+      /* canonical SIN barra final: la URL con barra quedó envenenada en la caché
+         de borde (workers.dev no se puede purgar por API) → 308 a la nueva */
+      if (url.pathname.endsWith('/')) {
+        return harden(new Response(null, { status: 308, headers: { Location: '/' + mT[1] + '/tournaments/' + mT[2] + '/' + mT[3] } }));
+      }
+      // Juego no catalogado → 307 al juego principal del mismo estado
+      if (!JUEGOS_RUTA[mT[2]]) {
+        return harden(new Response(null, { status: 307, headers: { Location: '/' + mT[1] + '/tournaments/valorant/' + mT[3] } }));
+      }
+      if (env.ASSETS) {
+        const p = await paginaTorneos(env, request, url, mT[1], mT[2], mT[3]);
+        return method === 'HEAD' ? new Response(null, { status: p.status, headers: p.headers }) : p;
+      }
+    }
+    // Rutas parciales → 307 a la canónica (juego por defecto valorant, estado upcoming)
+    const mT3 = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/?$/);
+    if (mT3 && method === 'GET') {
+      const destino = '/' + mT3[1] + '/tournaments/' + (JUEGOS_RUTA[mT3[2]] ? mT3[2] : 'valorant') + '/upcoming';
+      return harden(new Response(null, { status: 307, headers: { Location: destino } }));
+    }
+    if (/^\/(es|en)\/tournaments\/?$/.test(url.pathname) && method === 'GET') {
+      const lang = url.pathname.startsWith('/en') ? 'en' : 'es';
+      return harden(new Response(null, { status: 307, headers: { Location: '/' + lang + '/tournaments/valorant/upcoming' } }));
+    }
+
     // --- 6) API de notificaciones: protegida
     if (url.pathname === '/api/discord/notify') {
       if (method !== 'POST') {
@@ -1608,34 +1636,6 @@ export default {
       res.headers.set('Access-Control-Allow-Origin', origin || '*');
       res.headers.set('Cache-Control', 'public, max-age=3600');
       return res;
-    }
-
-    // --- 7b) PLATAFORMA DE TORNEOS · rutas de página /es|en/tournaments/:juego/:estado/
-    const mT = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
-    if (mT && (method === 'GET' || method === 'HEAD')) {
-      /* canonical SIN barra final: la URL con barra quedó envenenada en la caché
-         de borde (workers.dev no se puede purgar por API) → 308 a la nueva */
-      if (url.pathname.endsWith('/')) {
-        return harden(new Response(null, { status: 308, headers: { Location: '/' + mT[1] + '/tournaments/' + mT[2] + '/' + mT[3] } }));
-      }
-      // Juego no catalogado → 307 al juego principal del mismo estado
-      if (!JUEGOS_RUTA[mT[2]]) {
-        return harden(new Response(null, { status: 307, headers: { Location: '/' + mT[1] + '/tournaments/valorant/' + mT[3] } }));
-      }
-      if (env.ASSETS) {
-        const p = await paginaTorneos(env, request, url, mT[1], mT[2], mT[3]);
-        return method === 'HEAD' ? new Response(null, { status: p.status, headers: p.headers }) : p;
-      }
-    }
-    // Rutas parciales → 307 a la canónica (juego por defecto valorant, estado upcoming)
-    const mT3 = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/?$/);
-    if (mT3 && method === 'GET') {
-      const destino = '/' + mT3[1] + '/tournaments/' + (JUEGOS_RUTA[mT3[2]] ? mT3[2] : 'valorant') + '/upcoming';
-      return harden(new Response(null, { status: 307, headers: { Location: destino } }));
-    }
-    if (/^\/(es|en)\/tournaments\/?$/.test(url.pathname) && method === 'GET') {
-      const lang = url.pathname.startsWith('/en') ? 'en' : 'es';
-      return harden(new Response(null, { status: 307, headers: { Location: '/' + lang + '/tournaments/valorant/upcoming' } }));
     }
 
     // --- 7c) PLATAFORMA DE TORNEOS · API pública de lectura (JSON {ok,data})
