@@ -19,13 +19,18 @@ name: "Neon · deploy de funciones (linker + vantsdata + vantsbot)"
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "neon-functions/**"
       - ".github/workflows/neon-deploy-functions.yml"
 
 concurrency:
-  group: neon-deploy-functions
+  group: deploy-prod
   cancel-in-progress: false
+
+# Mínimo privilegio: el job no escribe en el repo
+permissions:
+  contents: read
 
 jobs:
   deploy:
@@ -47,7 +52,7 @@ jobs:
       SUPERVISOR_DM_ID: ${{ secrets.SUPERVISOR_DM_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Instalar Neon CLI
         run: npm install -g neon@latest

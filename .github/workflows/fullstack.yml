@@ -18,13 +18,17 @@ concurrency:
   group: fullstack
   cancel-in-progress: false
 
+# Mínimo privilegio: el CI de fullstack solo lee
+permissions:
+  contents: read
+
 jobs:
   webapp:
     name: Astro build + typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           cache: npm
@@ -40,8 +44,10 @@ jobs:
         run: npm run build
       - name: conectar build con el deploy (index + _astro a los 3 árboles)
         run: node scripts/build-webapp.mjs
+      - name: Verificar espejo ×3 sincronizado (falla si hay drift)
+        run: node scripts/build-webapp.mjs --check
       - name: artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: webapp-dist
           path: |
@@ -53,8 +59,8 @@ jobs:
     name: Python + BeautifulSoup (dry-run real)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
       - run: pip install -r scripts/requirements.txt
@@ -65,8 +71,8 @@ jobs:
     name: MCP server (smoke)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
       - name: initialize + tools/list
@@ -81,6 +87,6 @@ jobs:
     name: Docker build (api-gateway Express)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: build imagen
         run: docker build -t vants-api-gateway:ci services/api-gateway

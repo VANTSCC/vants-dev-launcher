@@ -11,11 +11,17 @@ on:
 
 concurrency:
   group: faceit-xp
-  cancel-in-progress: false
+  cancel-in-progress: true  # si una corrida se cuelga, la siguiente la cancela
+
+# Mínimo privilegio
+permissions:
+  contents: read
 
 jobs:
   procesar:
     runs-on: ubuntu-latest
+    # 144 runs/día: sin esto, una corrida colgada encola en cascada hasta 6 h
+    timeout-minutes: 5
     env:
       NK: ${{ secrets.NEON_API_KEY }}
       # El contexto `secrets` NO está disponible en los `if` de los pasos:
@@ -25,7 +31,7 @@ jobs:
       FACEIT_DISCORD_WEBHOOK: ${{ secrets.FACEIT_DISCORD_WEBHOOK }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Comprobar acceso a Neon
         run: |
@@ -33,6 +39,9 @@ jobs:
             echo "::error::Falta el secreto NEON_API_KEY (Settings → Secrets and variables → Actions)."
             exit 1
           fi
+
+      - name: Corte de conexión psql (anti-cuelgue)
+        run: echo "PGCONNECT_TIMEOUT=10" >> "$GITHUB_ENV"
 
       - name: Install Neon CLI
         run: npm install -g neon@latest
@@ -58,7 +67,7 @@ jobs:
 
       - name: Procesar partidas FACEIT pendientes
         run: |
-          psql "$NEON_CS" -v ON_ERROR_STOP=1 -At -c "SELECT faceit_procesar_eventos();"
+          PGCONNECT_TIMEOUT=10 psql "$NEON_CS" -v ON_ERROR_STOP=1 -At -c "SELECT faceit_procesar_eventos();"
 
       # Respaldo del webhook: sondea la Data API v4 y registra partidas que
       # el webhook no alcanzó a entregar (idempotente por faceit_match_id).

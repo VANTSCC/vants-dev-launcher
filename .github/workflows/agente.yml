@@ -61,10 +61,10 @@ jobs:
       AGENT_LLM_MODEL: ${{ github.event.inputs.modelo_ia || secrets.AGENT_LLM_MODEL }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Node 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
 
@@ -156,7 +156,7 @@ jobs:
           NODE
           cat /tmp/resumen.md >> "$GITHUB_STEP_SUMMARY" || true
           if [ -n "$VANTS_DISCORD_WEBHOOK" ]; then
-            curl -sS -o /dev/null -X POST -H 'content-type: application/json' -d @/tmp/embed.json "$VANTS_DISCORD_WEBHOOK" || true
+            curl -sS --max-time 15 -o /dev/null -X POST -H 'content-type: application/json' -d @/tmp/embed.json "$VANTS_DISCORD_WEBHOOK" || true
           fi
 
       # El bot de Discord ya NO necesita hosting de pago (Railway/Render):

@@ -13,6 +13,7 @@ name: "Neon · migraciones de la base real"
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "db/migrations/*.sql"
       - ".github/workflows/neon-migrate.yml"
@@ -20,7 +21,7 @@ on:
 
 # Fase 6 · despliegues controlados: migraciones de a una, el resto en cola
 concurrency:
-  group: neon-migrate
+  group: deploy-prod
   cancel-in-progress: false
 
 # Para publicar estado-db.json en la rama estado-db (verificación del
@@ -35,7 +36,10 @@ jobs:
       NK: ${{ secrets.NEON_API_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        env:
+          # psql corta en 10 s si la BD no responde (no cuelga el runner 6 h)
+          PGCONNECT_TIMEOUT: "10"
 
       - name: Comprobar acceso a Neon
         run: |
@@ -50,8 +54,8 @@ jobs:
       - name: Resolver cadena de conexión (Neon CLI)
         run: |
           neon --version
-          CS=$(neon connection-string br-sweet-shape-b42xhogj \
-            --project-id square-surf-41242074 \
+          CS=$(neon connection-string ${{ vars.NEON_BRANCH_ID || 'br-sweet-shape-b42xhogj' }} \
+            --project-id ${{ vars.NEON_PROJECT_ID || 'square-surf-41242074' }} \
             --database neondb --api-key "$NK" 2>/tmp/cs_err || true)
           if [ -z "$CS" ]; then
             CS=$(neon cs br-sweet-shape-b42xhogj \

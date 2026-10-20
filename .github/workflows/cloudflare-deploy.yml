@@ -12,18 +12,22 @@ on:
 
 # Fase 6 · despliegues controlados: un deploy a la vez, el resto en cola
 concurrency:
-  group: cloudflare-deploy
+  group: deploy-prod
   cancel-in-progress: false
+
+# Mínimo privilegio: el deploy no toca el repo
+permissions:
+  contents: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
 
@@ -35,7 +39,7 @@ jobs:
         working-directory: vants-server
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 8f2424e95fec4860e19257226f209fbc
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || '8f2424e95fec4860e19257226f209fbc' }}
         run: npx wrangler deploy
 
       # Activa la agenda Valorant en vivo (api.henrikdev.xyz) sin exponer la
@@ -44,7 +48,7 @@ jobs:
         working-directory: vants-server
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 8f2424e95fec4860e19257226f209fbc
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || '8f2424e95fec4860e19257226f209fbc' }}
           HENRIKDEV_API_KEY: ${{ secrets.HENRIKDEV_API_KEY }}
         run: |
           if [ -n "$HENRIKDEV_API_KEY" ]; then
@@ -61,7 +65,7 @@ jobs:
         working-directory: vants-server
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 8f2424e95fec4860e19257226f209fbc
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || '8f2424e95fec4860e19257226f209fbc' }}
           DISCORD_PUBLIC_KEY: ${{ secrets.DISCORD_PUBLIC_KEY }}
           VANTS_BOT_SECRET: ${{ secrets.VANTS_BOT_SECRET }}
         run: |
@@ -84,7 +88,7 @@ jobs:
         continue-on-error: true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 8f2424e95fec4860e19257226f209fbc
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || '8f2424e95fec4860e19257226f209fbc' }}
         run: |
           api() { curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
                        -H "Content-Type: application/json" "$@"; }
