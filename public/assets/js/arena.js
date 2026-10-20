@@ -1333,7 +1333,7 @@ function closeMenu(){const d=$('#menuDrawer');if(!d)return;d.classList.remove('s
 
 /* ============================================================
    EQUIPOS ASOCIADOS · INSCRIPCIÓN EN VIVO
-   Fuente: GET /api/teams (el Worker lee los anuncios "🏆 Nueva
+   Fuente: GET /api/teams-live (el Worker lee los anuncios "🏆 Nueva
    inscripción" del canal de Discord) + merge con las inscripciones
    locales (mismo dispositivo) para que tu equipo se vea al instante.
    ============================================================ */
@@ -1410,7 +1410,7 @@ async function loadTeams(){
   }catch(e){}
   if(!api){
     try{
-      const r=await fetchWorker('/api/teams',{headers:{'Accept':'application/json'}});
+      const r=await fetchWorker('/api/teams-live',{headers:{'Accept':'application/json'}});
       if(r.ok)api=await r.json();
     }catch(e){}
     if(api){try{sessionStorage.setItem(K_TEAMS_API,JSON.stringify({at:Date.now(),data:api}))}catch(e){}}

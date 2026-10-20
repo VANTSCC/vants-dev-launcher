@@ -54,7 +54,6 @@
     tienda: { k: 'OFICIAL', t: 'TIENDA', i: 'shopping-bag', c: '#F5C044',
       d: 'La tienda oficial VANTS × VegaStore: indumentaria y gear del circuito, con envíos a toda LATAM.',
       li: ['Colección oficial', 'Gear y accesorios', 'Envíos y soporte'] },
-    stack: { k: 'INGENIERÍA', t: 'STACK', i: 'layers', c: '#4CC9F0', d: 'Con qué está construida VANTS: frontend, backend, base de datos en Neon, DevOps y agentes de IA.', li: ['Frontend: HTML, CSS, JS, React, Vue, TresJS', 'Datos: Neon + SQL', 'DevOps: Git, Docker y GitHub Actions'] },
     descargar: { k: 'WINDOWS', t: 'DESCARGAR', i: 'monitor-down', c: '#4CC9F0',
       d: 'VANTS HUB para Windows: tu biblioteca, membresía, partidos y conexiones desde una app propia.',
       li: ['Instalador oficial', 'Login con tu cuenta VANTS', 'Auto-actualizaciones'] }
@@ -202,7 +201,8 @@
 
   /* ---------------- 2) INICIO · EXPLORAR ---------------- */
   var hcPrev = document.getElementById('hcPreview');
-  if (hcPrev) {
+  var exploreReact = document.documentElement.getAttribute('data-explore') === 'react';
+  if (hcPrev && !exploreReact) {
     hcPrev.innerHTML = buildHTML();
     var hcRows = $$('.hc-row');
     var activeKey = null;
