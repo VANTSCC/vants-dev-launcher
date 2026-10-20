@@ -1,18 +1,16 @@
 // Conecta el build de Astro (webapp/dist) con el deploy actual:
-// - index.html compilado -> raíz + public/ + vants-server/public/
-// - islands de Astro (_astro/) -> _astro/ en los tres árboles
+// - TODO webapp/dist (index.html compilado + assets con nombre hasheado en
+//   _astro/ y cualquier carpeta que agregue el build) -> raíz + public/ +
+//   vants-server/public/
 // Uso: node scripts/build-webapp.mjs
 //      node scripts/build-webapp.mjs --check   (solo verifica espejo ×3; exit 1 si hay drift)
 //
 // El espejo ×3 (raíz / public/ / vants-server/public/) se sincronizaba a mano
 // y ya produjo drift en producción (menu-preview.js pisando el preview de la
 // isla React). --check lo vigila desde CI (fullstack.yml).
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, rmSync, statSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-
-// Entradas del espejo que DEBEN ser idénticas en los 3 árboles
-const ENTRADAS_ESPEJO = ['index.html', '_astro', 'assets', 'sw.js', 'robots.txt', 'sitemap.xml'];
 
 const root = process.cwd();
 const dist = join(root, 'webapp', 'dist');
@@ -60,17 +58,16 @@ if (MODO_CHECK) {
 }
 
 for (const t of targets) {
-  // index compilado
-  cpSync(join(dist, 'index.html'), join(t, 'index.html'));
-  // islands
-  const srcAstro = join(dist, '_astro');
-  if (existsSync(srcAstro)) {
-    const dstAstro = join(t, '_astro');
-    rmSync(dstAstro, { recursive: true, force: true });
-    mkdirSync(dstAstro, { recursive: true });
-    for (const f of readdirSync(srcAstro)) {
-      cpSync(join(srcAstro, f), join(dstAstro, f));
+  // Copia el build COMPLETO sin listas hardcodeadas: cada entrada de dist/
+  // (index.html, _astro/, assets/, fonts/, …) se replica tal cual a los tres
+  // árboles, conservando los nombres hasheados y la estructura de carpetas.
+  // Las carpetas del build se vacían antes en el destino para no arrastrar
+  // hashes viejos; los archivos sueltos se sobreescriben.
+  for (const e of readdirSync(dist)) {
+    if (statSync(join(dist, e)).isDirectory()) {
+      rmSync(join(t, e), { recursive: true, force: true });
     }
+    cpSync(join(dist, e), join(t, e), { recursive: true });
   }
   console.log('deploy ->', t.replace(root, '.') || '.');
 }
