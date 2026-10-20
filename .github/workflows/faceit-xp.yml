@@ -6,6 +6,7 @@ name: "FACEIT · procesador de partidas (XP + rango)"
 
 on:
   schedule:
+    # NOTA: evaluar bajar frecuencia si el coste de runs no justifica */10
     - cron: "*/10 * * * *"
   workflow_dispatch:
 
@@ -67,7 +68,7 @@ jobs:
 
       - name: Procesar partidas FACEIT pendientes
         run: |
-          PGCONNECT_TIMEOUT=10 psql "$NEON_CS" -v ON_ERROR_STOP=1 -At -c "SELECT faceit_procesar_eventos();"
+          PGCONNECT_TIMEOUT=10 psql --connect-timeout=10 "$NEON_CS" -v ON_ERROR_STOP=1 -At -c "SELECT faceit_procesar_eventos();"
 
       # Respaldo del webhook: sondea la Data API v4 y registra partidas que
       # el webhook no alcanzó a entregar (idempotente por faceit_match_id).

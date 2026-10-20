@@ -35,6 +35,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # environment: production  (configurar en Settings→Environments con revisores)
     env:
       NK: ${{ secrets.NEON_API_KEY }}
       NEON_API_KEY: ${{ secrets.NEON_API_KEY }}

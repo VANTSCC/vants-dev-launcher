@@ -32,6 +32,7 @@ permissions:
 jobs:
   migrar:
     runs-on: ubuntu-latest
+    # environment: production  (configurar en Settings→Environments con revisores)
     env:
       NK: ${{ secrets.NEON_API_KEY }}
     steps:
