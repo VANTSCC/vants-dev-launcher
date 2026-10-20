@@ -4,20 +4,25 @@
 
 | Suite | Comando | Cobertura | Estado esperado |
 |---|---|---|---|
-| Plataforma de torneos | `node scripts/test_plataforma.js` | Lógica pura compartida con el Worker: validación de query, clasificación de estados, orden, paginación, fechas es/en, render XSS-safe + **integración real** con el proxy (si hay red; si no, `~skip` honesto) | **90** ✓ · 0 ✗ (README viejo decía 47) |
+| Plataforma de torneos | `node scripts/test_plataforma.js` | Lógica pura compartida con el Worker: validación de query, clasificación de estados, orden, paginación, fechas es/en, render XSS-safe + **integración real** con el proxy (si hay red; si no, `~skip` honesto) | **90** ✓ · 0 ✗ |
 | Agente VANTS | `node scripts/test_agente.js` | Núcleo, reglas, memoria, chequeos | 61 ✓ |
 | Cerebro agéntico GLM | `node scripts/test_llm_agente.js` | Function calling, bucle tools, anti-bucle | 30 ✓ |
 | Sandbox del agente | `node scripts/test_sandbox_agente.js` | Memoria autoalojada + exec aislado | 60 ✓ |
 | Matchmaking (fase 4) | `node scripts/test_mm_fase4.js` | Cola, emparejamiento, RR | 54 ✓ |
 | Matchmaking Neon | `node scripts/test_mm_neon.js` | Funciones serverless | 16 ✓ |
 | Vantsbot Discord | `node scripts/test_vantsbot.js` | Interactions, puente | 36 ✓ |
-| Auditoría de enlaces | `node scripts/audit_enlaces.js` | 34 páginas, crawler interno (espejo completo) | **804** ✓ · 0 rotos (README viejo decía 603) |
+| Auditoría de enlaces | `node scripts/audit_enlaces.js` | 34 páginas, crawler interno (espejo completo) | **804** ✓ · 0 rotos |
+| Webapp Astro (islas) | `cd webapp && npx astro check && npm run build` | Tipado + build de la home compilada (islas React/Vue) | 0 errores · bundles `_astro/` byte-idénticos |
+| Docker | `docker compose build` | api-gateway (Express :8080) y matchmaking (Fastify :8081): multi-stage `node:24-alpine`, `USER node` | build OK · healthcheck `/healthz` en ambos |
+| MCP | `node mcp/server.mjs` (smoke JSON-RPC en `fullstack.yml`) | `initialize` + `tools/list` | 4 tools de solo lectura (estado_db, torneos, jugadores, partidos) |
+
+Total de asserts: **347** verdes en las 7 suites Node/Bun.
 
 ## CI (GitHub Actions — `tests.yml`)
 
 Cada push a `main` que toque `services/**`, `scripts/**`, `vants-server/**`,
-`neon-functions/**` o `db/**` ejecuta 4 jobs: matchmaking, neon_functions, agente y
-**plataforma**. Rojo = no confiar en el despliegue.
+`neon-functions/**` o `db/**` ejecuta 5 jobs: matchmaking, neon_functions, agente,
+**plataforma** y **e2e**. Rojo = no confiar en el despliegue.
 
 ## Pruebas E2E manuales (navegador)
 
@@ -38,13 +43,15 @@ cd vants-server && npx wrangler dev --port 8787
 
 ## E2E con Playwright (T53 · F13)
 
-Suite: `tests/e2e/plataforma.spec.js` · config: `playwright.config.js`.
+Suites: `tests/e2e/plataforma.spec.js` (12) + `tests/e2e/home-fullstack.spec.js` (3:
+isla React, bundles `_astro`, estructura del home compilado) · config: `playwright.config.js`.
 Corre contra PRODUCCIÓN por defecto (`VANTS_E2E_URL` para apuntar a otro entorno),
 con dos proyectos: desktop 1280×800 y móvil 390×844.
 
 ```bash
 npm install                 # @playwright/test ya está en devDependencies
-npx playwright test         # 13 tests: rutas, fichas, calendario, búsqueda, i18n, overflow
+npx playwright test         # 15 tests (12 plataforma + 3 home fullstack): rutas, fichas,
+                            # calendario, búsqueda, i18n, overflow, islas
 npx playwright test --project=chromium-desktop   # solo desktop
 VANTS_E2E_URL=http://localhost:8787 npx playwright test   # contra wrangler dev
 ```
@@ -58,7 +65,7 @@ deben mostrar su chip DEMO. En CI hay un job `e2e` (retries 2, espera hasta 6 mi
 ```bash
 npm run sync:faceit:dry    # previsualiza sin escribir (no necesita DATABASE_URL)
 npm run sync:faceit        # UPSERT real en Neon (requiere FACEIT_API_KEY + DATABASE_URL)
-npm run audit:enlaces      # crawler interno (723 enlaces / 0 rotos al cierre de T53)
+npm run audit:enlaces      # crawler interno (804 enlaces / 0 rotos)
 ```
 
 ## Qué cubre cada criterio

@@ -12,14 +12,20 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   juego/estado, datos por JSON, metas por página) con el Worker. Renuncia: no hay RSC/ISR.
 - Fecha: 2026-10-19.
 
-## D2 · El diseño replica patrones, no identidad de terceros
+## D2 · El diseño replica patrones, no identidad de terceros (identidad propia: MYKD)
 - **Decisión**: se replican patrones de UX de la referencia (doble nav, tabla densa, tabs de
-  estado, tokens oscuros + acento) con paleta y marca propias de VANTS (logo vmark, Barlow Semi
-  Condensed en lugar de Gotham Narrow). Sin logos, imágenes ni textos de Strafe.
-- **Motivo**: requisito explícito de la misión (no copiar marcas/contenido de terceros) y ya
-  ejecutado así en T51 (lima #D2DC59 propio de VANTS, verificado en producción).
-- **Consecuencias**: ninguna restricción legal conocida; identidad consistente.
-- Fecha: 2026-10-19 (formaliza lo hecho en T51).
+  estado, tokens oscuros + acento) con marca propia de VANTS (logo vmark, tipografía propia).
+  La identidad vigente es **MYKD**: rojo #ff0d2e sobre oscuro, menús con submenú y reskin
+  rojo/negro del skin (`33fafc2`), con intro 3D propia (IntroJett). El lima #D2DC59 de T51
+  quedó retirado del skin (persiste solo en assets históricos). Sin logos, imágenes ni
+  textos de terceros.
+- **Motivo**: requisito explícito de la misión (no copiar marcas/contenido de terceros). La
+  identidad propia evolucionó en 36 h (T51 lima → arena básica → MYKD rojo/negro, aprobada
+  en producción); el acento actual queda registrado también en D12.
+- **Consecuencias**: ninguna restricción legal conocida; identidad consistente con el skin
+  actual. Todo cambio futuro de identidad se registra aquí (o en una D nueva) para no
+  perder la traza.
+- Fecha: 2026-10-19 (formaliza lo hecho en T51); actualizada 2026-10-20 (identidad MYKD vigente).
 
 ## D3 · Rutas de torneos estilo referencia servidas por el Worker
 - **Decisión**: `/es/tournaments/:juego/:estado/` (y `/en/…`) se sirven desde el Worker
@@ -109,17 +115,25 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
 - Historial de RR en Neon (migración 27, T46) — motivo/partida/temporada/fecha.
 - Matchmaking en Neon Functions (T47), cerebro agéntico GLM (T43), auto-diagnóstico IA (T48).
 
-## D11 · Pivote fullstack: Astro + islas React/Vue COMPLEMENTANDO (no reemplazando) al Worker
-- **Decisión**: la home se compila con Astro 7 (`webapp/`) con islas React (`Explore.tsx`)
-  y Vue + Three.js (`Emblema3D.vue`, `IntroJett.vue`); el resto del sitio sigue siendo
-  estático servido por el Worker. Los bundles `_astro/` se commitean en el espejo ×3.
-- **Motivo**: animaciones 3D reales con Vue (motor de Three) sin reescribir la plataforma;
-  "fin de los stickers" — código real corriendo. Supersede PARCIAL de D1: no hay reescritura
-  del backend ni de las páginas existentes, se añade una capa de presentación compilada.
-- **Consecuencias**: los bundles compilados son fuente de verdad (verificados byte a byte
-  en CI); `scripts/build-webapp.mjs` sincroniza y con `--check` vigila el espejo ×3;
-  `fullstack.yml` valida build+check en cada push de `webapp/**`.
-- Fecha: 2026-10-19 (hecho), 2026-10-20 (documentado por auditoría).
+## D11 · Pivote fullstack (19-oct): capa compilada + servicios + MCP COMPLEMENTANDO al Worker
+- **Decisión**: el monolito estático se amplía a stack fullstack real (`8b0e247`):
+  (1) **webapp Astro 7** (`webapp/`) que compila la home con islas React (`Explore.tsx`,
+  `client:load`) y Vue + Three.js (`Emblema3D.vue`, `IntroJett.vue`, `client:only="vue"`);
+  (2) **servicios contenedorizados** con Docker multi-stage (`node:24-alpine`, `USER node`):
+  `services/api-gateway` (Express :8080) y matchmaking-service (Fastify :8081), orquestados
+  con `docker-compose.yml`; (3) **server MCP stdio** (`mcp/server.mjs`) con 4 tools de solo
+  lectura; (4) **Neon Postgres** cuyas migraciones idempotentes aplica el CI
+  (`neon-migrate.yml`, en orden por nombre de archivo). El resto del sitio sigue estático
+  servido por el Worker y los bundles `_astro/` se commitean en el espejo ×3.
+- **Motivo**: animaciones 3D reales con Vue (motor de Three) y tooling real (Docker, MCP,
+  scraper Python) sin reescribir la plataforma — "fin de los stickers". Supersede PARCIAL de
+  D1: no hay reescritura del backend ni de las páginas existentes; se AÑADE una capa de
+  presentación compilada y servicios satélite.
+- **Consecuencias**: los bundles compilados son fuente de verdad (reproducibles byte a byte,
+  verificados en CI); `scripts/build-webapp.mjs` sincroniza el espejo ×3 y `--check` lo vigila
+  desde `fullstack.yml`; `astro check` gatea el tipado. El Worker sigue siendo el único
+  servidor de producción; el patrón de islas está documentado en `docs/content-island.md`.
+- Fecha: 2026-10-19 (hecho), 2026-10-20 (documentado).
 
 ## D12 · Identidad visual MYKD: rojo/negro reemplaza al lima
 - **Decisión**: paleta roja (#ff0d2e) sobre oscuro + menús estilo MYKD; el lima #D2DC59 de
@@ -128,7 +142,7 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   aprobó en producción. Supersede D2 en cuanto al acento de color (lo demás: patrones,
   no marcas de terceros — sigue vigente).
 - **Consecuencias**: los skins futuros deben registrar la decisión aquí para no perder
-  la traza (lección de la auditoría: dos caducidades de identidad sin registro).
+  la traza (ya hubo dos caducidades de identidad sin registro en su día).
 - Fecha: 2026-10-20.
 
 ## D13 · Numeración de migraciones CONGELADA (sin renombres retroactivos)
@@ -139,7 +153,7 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   suelto en `docs/*.sql` es histórico: no lo aplica el CI.
 - **Consecuencias**: la numeración queda "con huecos" a sabiendas; cualquier migración
   nueva debe declarar dependencias en su cabecera.
-- Fecha: 2026-10-20 (auditoría).
+- Fecha: 2026-10-20 (revisión de gobierno).
 
 ## D14 · Origen canónico PENDIENTE de decidir (workers.dev vs dominio propio)
 - **Decisión**: PENDIENTE. Hoy conviven canonical `feispla.github.io/Vants` (SEO) con
@@ -148,12 +162,12 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
 - **Motivo**: elegir un origen único afecta SEO y firmas — decisión del dueño. Los
   dominios vants.gg / vantsgg.com están preparados pero sin activar.
 - **Consecuencias**: mientras tanto, señales SEO divididas (riesgo bajo con poco tráfico,
-  alto al crecer). Recomendación de auditoría: unificar a workers.dev ahora y 301 al
+  alto al crecer). Recomendación registrada: unificar a workers.dev ahora y 301 al
   dominio propio cuando se active.
-- Fecha: 2026-10-20 (auditoría — marcada como abierta a propósito).
+- Fecha: 2026-10-20 (marcada como abierta a propósito).
 
-## D15 · Endurecimiento post-auditoría (2026-10-20)
-- **Decisión**: aplicar los fixes de la auditoría nocturna: `branches: [main]` en los 4
+## D15 · Endurecimiento de CI, seguridad y API (2026-10-20)
+- **Decisión**: aplicar el plan de endurecimiento de la revisión de gobierno: `branches: [main]` en los 4
   triggers que deployan (cloudflare-deploy, fullstack, neon-migrate, neon-deploy-functions
   — dos estaban corruptos como `branches: ain]` y NUNCA corrían por push), concurrency
   compartida `deploy-prod`, timeout en faceit-xp (144 runs/día), SHA-pinning de actions,
@@ -163,7 +177,8 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   anti-bucle del agente fail-safe, agent-service fail-closed (AGENT_TOKEN o
   AGENT_ALLOW_OPEN=1), sanitización de `/api/discord/notify` (anti markdown-injection),
   robots.txt + backoff en el scraper, healthcheck de matchmaking, huérfanos fuera de main.
-- **Motivo**: hallazgos 🔴/🟡 de la auditoría (informe maestro en la sesión del 20-oct).
+- **Motivo**: riesgos 🔴/🟡 detectados en la revisión integral del 20-oct (CI/CD, seguridad,
+  calidad y consistencia doc↔código).
 - **Consecuencias**: riesgo residual documentado: `/api/discord/notify` sigue siendo
   browser-facing (origen falseable) — mitigado con sanitización + rate limit; el fix
   definitivo es emitir la notificación server-side desde `/api/torneos/inscribir`.
