@@ -161,7 +161,7 @@ async function principal() {
   console.log('— API: /api/v1/memoria y /api/v1/archivos (fastify inject) —');
   {
     const memoria = crearMemoriaMemoria();
-    const app = construir({ memoria, llm: null });
+    const app = construir({ memoria, llm: null, allowOpen: true }); // modo abierto EXPLÍCITO (default de producción es cerrado)
     const post = await app.inject({ method: 'POST', url: '/api/v1/memoria', payload: { clave: 'dueño-zona', valor: 'Caracas UTC-4', tipo: 'preferencia', importancia: 5 } });
     ok(post.statusCode === 200 && JSON.parse(post.body).ok, 'POST memoria guarda');
     const get = await app.inject({ method: 'GET', url: '/api/v1/memoria?q=caracas' });

@@ -44,11 +44,21 @@ function construir(opts = {}) {
     if (req.method === 'OPTIONS') return reply.code(204).send();
   });
 
-  // auth Bearer en /api/v1/* solo si AGENT_TOKEN está definido
+  // Auth de /api/v1/* — FAIL-CLOSED por defecto:
+  //   · AGENT_TOKEN definido  → exige Bearer correcto (401 si no)
+  //   · sin AGENT_TOKEN       → 503, salvo AGENT_ALLOW_OPEN=1 (o allowOpen en
+  //     opts, para tests). Antes el modo abierto era el default silencioso.
+  const allowOpen = opts.allowOpen === true || String(process.env.AGENT_ALLOW_OPEN || '') === '1';
   fastify.addHook('preHandler', async (req, reply) => {
-    if (!token || !req.url.startsWith('/api/v1')) return;
-    const h = req.headers.authorization || '';
-    if (h !== `Bearer ${token}`) return reply.code(401).send({ ok: false, error: { message: 'token del agente requerido' } });
+    if (!req.url.startsWith('/api/v1')) return;
+    if (token) {
+      const h = req.headers.authorization || '';
+      if (h !== `Bearer ${token}`) return reply.code(401).send({ ok: false, error: { message: 'token del agente requerido' } });
+      return;
+    }
+    if (!allowOpen) {
+      return reply.code(503).send({ ok: false, error: { message: 'API del agente cerrada: define AGENT_TOKEN (recomendado) o AGENT_ALLOW_OPEN=1 para permitir acceso sin token' } });
+    }
   });
 
   fastify.get('/healthz', async () => ({ ok: true, service: 'agent-service', version: VERSION, uptime: Math.round(process.uptime()), memoria: memoria.tipo(), cerebro: llm ? 'reglas+llm' : 'reglas', sandbox: 'activa' }));
