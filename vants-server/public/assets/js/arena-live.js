@@ -218,7 +218,7 @@
     document.head.appendChild(st);
   }
 
-  /* -------- RANGO VANTS RANKED (real) -------- */
+  /* -------- RANGO (real) -------- */
   function escHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
@@ -237,34 +237,37 @@
       '<div class="rr-num">' + nivel + '<small>NIVEL</small></div></div>';
   }
 
+  /* RANGO por XP FACEIT/Valorant (players.xp, el mismo valor que muestra
+     EXPERIENCIA FACEIT). Escala acumulativa: FUNDICIÓN <100 · ACERO ≥100 ·
+     TITANIO ≥500 · OBSIDIANA ≥1000 · CROMO ≥1500 · PLASMA ≥2250 ·
+     ÉTER ≥3000 · APEX ≥4000. Sin Elo/MMR: solo XP ganada. */
   function rangoRealHTML(p) {
-    var linea = '<p class="d-sec">RANGO VANTS RANKED</p>';
+    var linea = '<p class="d-sec">RANGO</p>';
     var xpExtra = xpFaceitHTML(p.xp);
-    var sps = (ME.extra && ME.extra.sps) || null;
-    /* mismo motor que la ficha pública: ratingDe aplica el boost del owner
-       para que el rango del editor coincida SIEMPRE con el perfil de jugador */
-    var raw = null;
-    try { raw = (typeof ratingDe === 'function') ? ratingDe(p) : ((typeof p.rating === 'number' && p.rating > 0) ? p.rating : null); } catch (eRl) { raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating : null; }
-    if (raw == null && sps && sps.rank != null && sps.rank !== '' && !isNaN(parseFloat(sps.rank)) && parseFloat(sps.rank) >= 0.5 && parseFloat(sps.rank) <= 2) raw = parseFloat(sps.rank);
-    var mmr = (sps && sps.mmr != null) ? sps.mmr : null;
-    var wl = (sps && sps.wins != null) ? (sps.wins + 'V · ' + (sps.losses || 0) + 'D · ') : '';
-    var sin = linea + '<div class="pf-rank" style="--rc:#5C5C66;opacity:.85">' + rankSVG('fundicion', 64) +
-      '<div class="info"><b>SIN RANGO</b><small>' + wl + 'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>' +
-      '<div class="rr-bar"><i style="width:0%"></i></div></div>' +
-      '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>' + xpExtra;
+    var xp = (typeof p.xp === 'number' && isFinite(p.xp) && p.xp > 0) ? Math.floor(p.xp) : 0;
+    var ESCALA = [
+      { k: 'fundicion', lo: 0 }, { k: 'acero', lo: 100 }, { k: 'titanio', lo: 500 },
+      { k: 'obsidiana', lo: 1000 }, { k: 'cromo', lo: 1500 }, { k: 'plasma', lo: 2250 },
+      { k: 'eter', lo: 3000 }, { k: 'vants', lo: 4000 }
+    ];
+    var fmtXP = function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); };
     try {
-      if (raw == null || typeof RANKS === 'undefined') return sin;
-      var k = rankFor(raw);
-      var s = subFor(k, raw) || 'APEX';
-      var rc = RANKS[k];
-      var i = TIER_ORDER.indexOf(k);
-      var hi = TIER_ORDER[i - 1] ? RANKS[TIER_ORDER[i - 1]].lo : (RANKS[k].lo + 1);
-      var f = Math.max(0, Math.min(100, ((raw - RANKS[k].lo) / (hi - RANKS[k].lo)) * 100));
-      return linea + '<div class="pf-rank" style="--rc:' + rc.c1 + '">' + rankSVG(k, 64) +
-        '<div class="info"><b>' + rc.name + ' ' + s + '</b><small>' + wl + 'TEMPORADA ACTIVA</small>' +
+      var it = 0, ix;
+      for (ix = 0; ix < ESCALA.length; ix++) { if (xp >= ESCALA[ix].lo) it = ix; }
+      var t = ESCALA[it], nx = ESCALA[it + 1] || null;
+      var rc = RANKS[t.k];
+      var f = nx ? Math.max(0, Math.min(100, ((xp - t.lo) / (nx.lo - t.lo)) * 100)) : 100;
+      var subTxt = nx ? (fmtXP(nx.lo - xp) + ' XP PARA ' + RANKS[nx.k].name) : 'ESCALA COMPLETA · RANGO MÁXIMO';
+      return linea + '<div class="pf-rank" style="--rc:' + rc.c1 + '">' + rankSVG(t.k, 64) +
+        '<div class="info"><b>' + rc.name + '</b><small>' + subTxt + '</small>' +
         '<div class="rr-bar"><i style="width:' + f.toFixed(0) + '%;background:' + rc.c1 + '"></i></div></div>' +
-        '<div class="rr-num">' + (mmr != null ? mmr : '—') + '<small>MMR</small></div></div>' + xpExtra;
-    } catch (eR) { return sin; }
+        '<div class="rr-num">' + fmtXP(xp) + '<small>XP</small></div></div>' + xpExtra;
+    } catch (eR) {
+      return linea + '<div class="pf-rank" style="--rc:#5C5C66;opacity:.85">' + rankSVG('fundicion', 64) +
+        '<div class="info"><b>FUNDICIÓN</b><small>SIN XP REGISTRADA TODAVÍA</small>' +
+        '<div class="rr-bar"><i style="width:0%"></i></div></div>' +
+        '<div class="rr-num">0<small>XP</small></div></div>' + xpExtra;
+    }
   }
 
   /* -------- CUENTAS CONECTADAS (real) -------- */
@@ -286,19 +289,18 @@
     var acc = (ME.extra && ME.extra.accounts) || [];
     var porJuego = {};
     acc.forEach(function (a) { if (a && a.game) porJuego[a.game] = a; });
+    /* whitelist de cuentas esenciales (Discord se dibuja arriba con su fila propia);
+       mantener la lista al día = editar solo este arreglo */
+    var PLATFORMS = ['twitch', 'youtube', 'riot', 'faceit'];
     var handles = {
       discord: stats.discord_tag || null,
       twitch: p.twitch_channel || null,
-      kick: p.kick_channel || null,
       youtube: stats.youtube || null,
-      tiktok: stats.tiktok || null,
-      x: stats.x || null,
       riot: (porJuego.riot && porJuego.riot.handle) || stats.riot || p.summoner_name || null,
-      steam: (porJuego.steam && porJuego.steam.handle) || stats.steam || null,
       faceit: (porJuego.faceit && porJuego.faceit.handle) || stats.faceit || null,
     };
     var lineas = filaDiscordReal(handles.discord);
-    var keys = ['twitch', 'kick', 'youtube', 'tiktok', 'x', 'riot', 'steam', 'faceit'];
+    var keys = PLATFORMS;
     try {
       lineas += keys.map(function (k) { return platRow(k, handles[k] ? escHtml(handles[k]) : null, !handles[k]); }).join('');
     } catch (eP) {
@@ -364,14 +366,6 @@
   function fotoEquipoHTML(eq) {
     if (eq && eq.foto) return '<img src="' + eq.foto + '" alt="" style="width:100%;height:100%;object-fit:cover">';
     return escHtml(((eq && eq.tag) || 'EQ').slice(0, 3));
-  }
-  function equipoRealHTML(p) {
-    var eq = equipoDe(p);
-    if (!eq) return '';
-    return '<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line2,#303039);background:rgba(255,13,46,.05);padding:10px 12px;margin-bottom:14px">'
-      + '<span style="width:44px;height:44px;flex:none;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 13px var(--mono);color:var(--accent)">' + fotoEquipoHTML(eq) + '</span>'
-      + '<div style="min-width:0"><div style="font:800 12px var(--mono);letter-spacing:.08em;color:var(--ink,#EDEDE7)">' + escHtml(eq.nombre.toUpperCase()) + '</div>'
-      + '<div style="font:600 9px var(--mono);color:var(--mut,#93939D);margin-top:2px">MI EQUIPO' + (eq.tag ? ' · ' + escHtml(eq.tag) : '') + '</div></div></div>';
   }
   /* foto del equipo: recorte cuadrado + redimensionado local (≤170KB como dataURL) */
   function fotoEquipoDataURL(file, cb) {
@@ -446,7 +440,7 @@
     window.VANTS_BANNER = bannerSel;
     window.VANTS_BANNER_FOTO = bannerFoto;
     injectBannerCSS();
-    /* rango real con el MISMO motor del demo (RANKS/rankFor/subFor) + boost owner */
+    /* color del anillo y del banner: tier del rating real (RANKS/rankFor) */
     var sps = (ME.extra && ME.extra.sps) || null;
     var raw = null;
     try { raw = (typeof ratingDe === 'function') ? ratingDe(p) : ((typeof p.rating === 'number' && p.rating > 0) ? p.rating : null); } catch (eRl2) { raw = (typeof p.rating === 'number' && p.rating > 0) ? p.rating : null; }
@@ -486,38 +480,14 @@
 
     var inp = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
     var bs = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
+    var btnEdit = '<button id="rp-editar-datos" class="btn btn-sm" aria-label="Editar mis datos" title="Editar mis datos" style="font:700 9px/1 var(--mono);letter-spacing:.08em;padding:6px 9px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)">EDITAR MIS DATOS</button>';
     return '<div class="d-head"><span class="kicker">PERFIL DE JUGADOR</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
       '<div class="d-body" style="--rc:' + rc.c1 + '">' +
       pfBannerHTML(bannerSel, raw) +
       '<div class="pf-head">' +
         '<span class="ava s2" style="--rc:' + rc.c1 + '">' + ava + '</span>' +
-        '<div class="pf-id"><div class="pf-name">' + escHtml((p.display_name || p.username || 'JUGADOR').toUpperCase()) + '</div>' +
+        '<div class="pf-id"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="pf-name">' + escHtml((p.display_name || p.username || 'JUGADOR').toUpperCase()) + '</div>' + btnEdit + '</div>' +
         '<p class="pf-sub">@' + escHtml(p.username || '') + ' · ' + escHtml(p.country || '—') + (p.region ? ' · ' + escHtml(p.region) : '') + ' · ' + membre + '</p></div></div>' +
-      equipoRealHTML(p) +
-      '<div class="pf-badges">' + (badges.length ? badges.map(function (b) { return badgeChip(b); }).join('') : '<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>') + '</div>' +
-      '<p class="pf-bio">' + escHtml(bio) + '</p>' +
-      statsGrid +
-      rangoRealHTML(p) +
-      cuentasRealHTML(p) +
-      transmisionRealHTML(p) +
-      '<div id="rp-series"></div>' +
-      '<div id="rp-faceit"></div>' +
-      '<p class="d-sec">BANNER DEL PERFIL</p>' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
-      '<button class="btn btn-sm" data-banner="bananim" style="' + bs + '">ANIMADO</button>' +
-      '<button class="btn btn-sm" data-banner="dorado" style="' + bs + '">DORADO</button>' +
-      '<button class="btn btn-sm" data-banner="" style="' + bs + '">CLÁSICO</button>' +
-      '<button class="btn btn-sm" id="rp-bn-foto" style="' + bs + '">SUBIR IMAGEN</button>' +
-      (bannerFoto ? '<button class="btn btn-sm" id="rp-bn-sinfoto" style="' + bs + '">QUITAR IMAGEN</button>' : '') +
-      '</div>' +
-      '<input type="file" id="rp-bn-file" accept="image/*" hidden>' +
-      '<div id="rp-bn-msg" style="font:500 10.5px/1.7 var(--mono);color:var(--mut);margin-bottom:12px"></div>' +
-      '<p class="d-sec">MIS DATOS</p>' +
-      '<input id="rp-pais" placeholder="País" value="' + escHtml(p.country || '') + '" style="' + inp + 'margin-bottom:10px">' +
-      '<input id="rp-region" placeholder="Región (LATAM, EU…)" value="' + escHtml(p.region || '') + '" style="' + inp + 'margin-bottom:10px">' +
-      '<input id="rp-dc" placeholder="Tu tag de Discord (usuario#1234)" value="' + escHtml(stats.discord_tag || '') + '" style="' + inp + 'margin-bottom:12px">' +
-      '<button class="btn btn-sm" id="rp-guardar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">GUARDAR MIS DATOS</button>' +
-      '<div id="rp-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
       '<p class="d-sec">MI EQUIPO · NOMBRE Y FOTO</p>' +
       '<input type="file" id="rp-eq-file" accept="image/*" hidden>' +
       '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">' +
@@ -531,6 +501,31 @@
       '<input id="rp-eq-tag" placeholder="Tag del equipo (2-5 letras)" maxlength="5" value="' + escHtml(equipoDe(p) ? equipoDe(p).tag : '') + '" style="' + inp + 'margin-bottom:12px">' +
       '<button class="btn btn-sm" id="rp-eq-guardar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">GUARDAR MI EQUIPO</button>' +
       '<div id="rp-eq-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
+      '<p class="d-sec">BANNER DEL PERFIL</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+      '<button class="btn btn-sm" data-banner="bananim" style="' + bs + '">ANIMADO</button>' +
+      '<button class="btn btn-sm" data-banner="dorado" style="' + bs + '">DORADO</button>' +
+      '<button class="btn btn-sm" data-banner="" style="' + bs + '">CLÁSICO</button>' +
+      '<button class="btn btn-sm" id="rp-bn-foto" style="' + bs + '">SUBIR IMAGEN</button>' +
+      (bannerFoto ? '<button class="btn btn-sm" id="rp-bn-sinfoto" style="' + bs + '">QUITAR IMAGEN</button>' : '') +
+      '</div>' +
+      '<input type="file" id="rp-bn-file" accept="image/*" hidden>' +
+      '<div id="rp-bn-msg" style="font:500 10.5px/1.7 var(--mono);color:var(--mut);margin-bottom:12px"></div>' +
+      cuentasRealHTML(p) +
+      '<div id="rp-datos">' +
+      '<p class="d-sec">MIS DATOS</p>' +
+      '<input id="rp-pais" placeholder="País" value="' + escHtml(p.country || '') + '" style="' + inp + 'margin-bottom:10px">' +
+      '<input id="rp-region" placeholder="Región (LATAM, EU…)" value="' + escHtml(p.region || '') + '" style="' + inp + 'margin-bottom:10px">' +
+      '<input id="rp-dc" placeholder="Tu tag de Discord (usuario#1234)" value="' + escHtml(stats.discord_tag || '') + '" style="' + inp + 'margin-bottom:12px">' +
+      '<button class="btn btn-sm" id="rp-guardar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">GUARDAR MIS DATOS</button>' +
+      '<div id="rp-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:10px;white-space:pre-wrap"></div>' +
+      '</div>' +
+      '<div class="pf-badges">' + (badges.length ? badges.map(function (b) { return badgeChip(b); }).join('') : '<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Todavía no tenés insignias. Activá un plan o verificá tu identidad para emitir la primera.</span>') + '</div>' +
+      '<p class="pf-bio">' + escHtml(bio) + '</p>' +
+      statsGrid +
+      rangoRealHTML(p) +
+      '<div id="rp-faceit"></div>' +
+      transmisionRealHTML(p) +
       '<p class="d-sec">MEMBRESÍA</p>' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line2,#303039);background:rgba(255,13,46,.05);padding:12px">' +
         '<div><b style="font:800 11px var(--mono);color:var(--ink,#EDEDE7);letter-spacing:.06em">' + (esOwner ? 'VANTS PRO · OWNER' : ((me && me.plan) ? me.plan : 'VANTS FREE')) + '</b><br><span style="font:500 9.5px var(--mono);color:var(--mut,#93939D)">' + (esOwner ? 'Dueño de la arena: todo el contenido premium desbloqueado' : 'Tu plan actual acompaña a tu perfil') + '</span></div>' +
@@ -549,128 +544,6 @@
       '<button class="btn btn-ghost btn-sm" id="rp-ajustes" style="margin-top:14px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button>' +
       '<button class="btn btn-ghost btn-sm" id="rp-salir" style="margin-top:8px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">CERRAR SESIÓN</button>' +
       '</div>';
-  }
-
-  /* -------- VANTS RANKED · SERIES (motor Elo real, migración 07) --------
-     Reportás una serie contra un rival real, el rival la confirma y la
-     base aplica el Elo: rating, RR y wins/losses quedan en Neon. */
-  var SERIE_ERRORES = {
-    sin_sesion: 'Iniciá sesión para jugar ranked',
-    rival_no_encontrado: 'No encontramos ese nick en la sala de jugadores',
-    mismo_jugador: 'No podés reportar una serie contra vos mismo',
-    rival_sin_sesion: 'Ese jugador nunca inició sesión: no podría confirmar la serie',
-    serie_ya_pendiente: 'Ya hay una serie pendiente con ese rival',
-    enfriamiento: 'Enfriamiento: esperá 15 minutos para otra serie contra el mismo rival',
-    solo_el_rival: 'Solo el rival puede confirmar esta serie',
-    estado_invalido: 'Esa serie ya no está pendiente'
-  };
-  var serieResultado = null; /* true = gané · false = perdí */
-
-  async function rpcRanked(nombre, args) {
-    var t = await jwt();
-    if (!t) return { ok: false, error: 'sin_sesion' };
-    var r = await fetch(API + '/rpc/' + nombre, { method: 'POST', headers: authHeaders(t), body: JSON.stringify(args || {}) });
-    var d = await r.json().catch(function () { return null; });
-    if (Array.isArray(d)) d = d[0];
-    return d || { ok: false, error: 'error_de_red' };
-  }
-
-  async function cargarSeriesReal() {
-    var host = document.getElementById('rp-series');
-    if (!host) return;
-    var d = null;
-    try { d = await rpcRanked('mis_series'); } catch (eS) { d = null; }
-    if (!d || !d.ok) { host.innerHTML = ''; return; }
-    var inp2 = 'width:100%;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--ink,#EDEDE7);padding:11px 12px;font:500 12px var(--mono)';
-    var bs2 = 'font:700 10px/1 var(--mono);letter-spacing:.08em;padding:10px 12px;cursor:pointer;background:#0d0d10;border:1px solid var(--line2,#303039);color:var(--mut,#93939D)';
-    var html = '<p class="d-sec">VANTS RANKED · SERIES</p>';
-    var pc = d.por_confirmar || [];
-    if (pc.length) {
-      html += '<div style="border:1px solid rgba(255,13,46,.45);background:rgba(255,13,46,.05);padding:12px;margin-bottom:12px">';
-      pc.forEach(function (s) {
-        html += '<div style="font:500 11px/1.7 var(--mono);color:var(--mut);margin-bottom:6px"><b style="color:var(--ink)">' + escHtml(s.rival || 'JUGADOR') + '</b> reportó que ' + (s.gano_retador ? 'GANÓ' : 'PERDIÓ') + ' la serie contra vos' + (s.mapa ? ' · ' + escHtml(s.mapa) : '') + '</div>'
-          + '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">'
-          + '<button class="btn btn-sm" data-sconf="' + s.serie + '" style="flex:1;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 10px var(--mono);padding:10px;cursor:pointer;letter-spacing:.06em">CONFIRMAR RESULTADO</button>'
-          + '<button class="btn btn-sm" data-srej="' + s.serie + '" style="' + bs2 + '">RECHAZAR</button></div>';
-      });
-      html += '</div>';
-    }
-    html += '<input id="sr-rival" placeholder="Nick del rival (como aparece en su perfil)" style="' + inp2 + 'margin-bottom:8px">'
-      + '<div style="display:flex;gap:8px;margin-bottom:8px">'
-      + '<input id="sr-mapa" placeholder="Mapa (opcional)" maxlength="30" style="' + inp2 + ';flex:1"></div>'
-      + '<div style="display:flex;gap:8px;margin-bottom:10px">'
-      + '<button class="btn btn-sm" id="sr-gane" style="flex:1;justify-content:center;' + bs2 + '">GANÉ</button>'
-      + '<button class="btn btn-sm" id="sr-perdi" style="flex:1;justify-content:center;' + bs2 + '">PERDÍ</button></div>'
-      + '<button class="btn btn-sm" id="sr-reportar" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">REPORTAR SERIE</button>'
-      + '<div id="sr-msg" style="font:500 11px/1.6 var(--mono);color:var(--mut);margin-top:8px;white-space:pre-wrap"></div>';
-    var rec = (d.recientes || []).filter(function (s) { return s.estado === 'confirmada'; });
-    if (rec.length) {
-      html += '<p class="d-sec">ÚLTIMAS SERIES</p>';
-      rec.forEach(function (s) {
-        var delta = (s.mmr_despues != null && s.mmr_antes != null) ? Math.round(s.mmr_despues - s.mmr_antes) : null;
-        html += '<div style="display:flex;justify-content:space-between;gap:8px;font:500 10.5px/1.7 var(--mono);color:var(--mut);border-bottom:1px solid var(--line,#222);padding:6px 0">'
-          + '<span>' + (s.gane ? '<b style="color:var(--grn,#3EE6A0)">VICTORIA</b>' : '<b style="color:#FF0D2E">DERROTA</b>') + ' vs ' + escHtml(s.rival || '—') + (s.mapa ? ' · ' + escHtml(s.mapa) : '') + '</span>'
-          + '<span style="color:' + (delta > 0 ? 'var(--grn,#3EE6A0)' : (delta < 0 ? '#FF0D2E' : 'var(--dim)')) + '">' + (delta == null ? '' : (delta > 0 ? '+' : '') + delta + ' RR') + '</span></div>';
-      });
-    }
-    host.innerHTML = html;
-
-    var bG = document.getElementById('sr-gane'), bP = document.getElementById('sr-perdi');
-    function pintarRes() {
-      if (bG) { bG.style.borderColor = serieResultado === true ? '#FF0D2E' : 'var(--line2,#303039)'; bG.style.color = serieResultado === true ? '#FF0D2E' : 'var(--mut,#93939D)'; }
-      if (bP) { bP.style.borderColor = serieResultado === false ? '#FF0D2E' : 'var(--line2,#303039)'; bP.style.color = serieResultado === false ? '#FF0D2E' : 'var(--mut,#93939D)'; }
-    }
-    if (bG) bG.onclick = function () { serieResultado = true; pintarRes(); };
-    if (bP) bP.onclick = function () { serieResultado = false; pintarRes(); };
-
-    var bR = document.getElementById('sr-reportar');
-    if (bR) bR.onclick = async function () {
-      var rival = ((document.getElementById('sr-rival') || {}).value || '');
-      var mapa = ((document.getElementById('sr-mapa') || {}).value || '');
-      var msg = document.getElementById('sr-msg');
-      if (serieResultado === null) { if (msg) msg.textContent = 'Marcá si ganaste o perdiste la serie'; return; }
-      if (!rival.trim()) { if (msg) msg.textContent = 'Escribí el nick del rival'; return; }
-      bR.disabled = true; bR.textContent = 'REPORTANDO…';
-      var res = await rpcRanked('reportar_serie', { p_rival: rival.trim(), p_gano: serieResultado, p_mapa: mapa.trim() });
-      bR.disabled = false; bR.textContent = 'REPORTAR SERIE';
-      if (res && res.ok) {
-        if (typeof toast === 'function') { try { toast('Serie reportada: tu rival debe confirmarla para mover el RR'); } catch (eT) {} }
-        renderPerfilReal();
-      } else if (msg) {
-        msg.textContent = SERIE_ERRORES[res.error] || ('No se pudo reportar: ' + (res.error || 'error'));
-      }
-    };
-
-    host.querySelectorAll('[data-sconf]').forEach(function (b) {
-      b.onclick = async function () {
-        b.disabled = true; b.textContent = 'CONFIRMANDO…';
-        var res = await rpcRanked('confirmar_serie', { p_serie: b.getAttribute('data-sconf') });
-        if (res && res.ok) {
-          if (typeof toast === 'function') { try { toast('Serie confirmada: rating actualizado'); } catch (eT2) {} }
-          try { if (typeof window.vantsRecargarJugadores === 'function') window.vantsRecargarJugadores(); } catch (eR) {}
-          await cargarPerfilReal();
-          if (window.VANTS_AUTH) window.VANTS_AUTH.playerId = (ME && ME.pid) || null;
-          renderPerfilReal();
-        } else {
-          b.disabled = false; b.textContent = 'CONFIRMAR RESULTADO';
-          if (typeof toast === 'function') { try { toast(SERIE_ERRORES[res.error] || 'No se pudo confirmar', 'info'); } catch (eT3) {} }
-        }
-      };
-    });
-    host.querySelectorAll('[data-srej]').forEach(function (b) {
-      b.onclick = async function () {
-        b.disabled = true;
-        var res = await rpcRanked('rechazar_serie', { p_serie: b.getAttribute('data-srej') });
-        if (res && res.ok) {
-          if (typeof toast === 'function') { try { toast('Serie rechazada', 'info'); } catch (eT4) {} }
-          renderPerfilReal();
-        } else {
-          b.disabled = false;
-          if (typeof toast === 'function') { try { toast(SERIE_ERRORES[res.error] || 'No se pudo rechazar', 'info'); } catch (eT5) {} }
-        }
-      };
-    });
-    pintarRes();
   }
 
   /* -------- FACEIT · ÚLTIMAS PARTIDAS (XP + rango por partida real) --------
@@ -707,7 +580,15 @@
     if (typeof renderAccount === 'function') { try { renderAccount(); } catch (eRA2) {} }
     openDrawer(perfilRealHTML());
     if (window.lucide) lucide.createIcons();
-    cargarSeriesReal();
+    /* EDITAR MIS DATOS: scroll suave al formulario MIS DATOS + foco en su primer input */
+    var edBtn = document.getElementById('rp-editar-datos');
+    if (edBtn) edBtn.onclick = function () {
+      var sec = document.getElementById('rp-datos');
+      if (!sec) return;
+      sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var first = document.getElementById('rp-pais');
+      if (first) { try { first.focus({ preventScroll: true }); } catch (eFo) { first.focus(); } }
+    };
     cargarFaceitReal();
     if (typeof completarClipsFicha === 'function' && ME && ME.player) { try { completarClipsFicha(ME.player); } catch (eCl) {} }
     var p = ME.player;

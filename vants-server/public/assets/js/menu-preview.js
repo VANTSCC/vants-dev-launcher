@@ -16,8 +16,8 @@
 
   var DATA = {
     perfil: { k: 'IDENTIDAD', t: 'PERFIL DE JUGADOR', i: 'user', c: ACC,
-      d: 'Tu ficha única en el circuito: rango VANTS RANKED, insignias verificadas, estadísticas reales y todo lo editable en un solo lugar.',
-      li: ['Banner, datos y equipo editables', 'Series VANTS RANKED y partidas FACEIT', 'Cuentas conectadas, ajustes y sesión'] },
+      d: 'Tu ficha única en el circuito: rango APEX, insignias verificadas, estadísticas reales y todo lo editable en un solo lugar.',
+      li: ['Banner, datos y equipo editables', 'Partidas FACEIT y progreso APEX', 'Cuentas conectadas, ajustes y sesión'] },
     partidos: { k: 'AGENDA', t: 'PARTIDOS', i: 'swords', c: ACC,
       d: 'Los partidos del día con horarios y resultados reales, hora de Caracas. Cobertura de vlr.gg, sin simulación.',
       li: ['Partidos y resultados en vivo', 'Cara a cara con detalle de la serie', 'Enlace a la fuente oficial'] },
@@ -30,8 +30,8 @@
     torneos: { k: 'CALENDARIO', t: 'TORNEOS', i: 'trophy', c: '#F5C044',
       d: 'Torneos abiertos con inscripción por equipo: los PRO tienen fee y los FREE son entrada libre.',
       li: ['Calendario y premios', 'Inscripción con tu equipo', 'Cupos y fee por torneo'] },
-    rangos: { k: 'VANTS RANKED', t: 'RANGOS', i: 'medal', c: ACC,
-      d: 'Ocho tiers, un solo destino: de FUNDICIÓN a VANTS APEX. Conocé cómo se gana RR y qué rango te espera.',
+    rangos: { k: 'APEX', t: 'RANGOS', i: 'medal', c: ACC,
+      d: 'Ocho tiers, un solo destino: de FUNDICIÓN a APEX. Conocé los tiers y qué rango te espera.',
       li: ['Los 8 emblemas por tier', 'Sub-niveles I · II · III', 'Cómo subir y cómo se pierde RR'] },
     jugadores: { k: 'IDENTIDADES', t: 'SALA DE JUGADORES', i: 'users', c: '#4CC9F0',
       d: 'Las identidades del circuito: perfiles reales creados al iniciar sesión, con insignias y canales vinculados.',

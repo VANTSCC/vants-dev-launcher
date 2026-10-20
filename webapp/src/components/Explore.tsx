@@ -18,8 +18,8 @@ const PERFIL: Cat = {
   title: 'PERFIL DE JUGADOR',
   small: 'Tu ficha, tu rango y tu cuenta',
   color: '#ff0d2e',
-  desc: 'Tu ficha única y editable: banner, datos, equipo, cuentas conectadas, series jugadas, FACEIT, clips, membresía y estado en vivo.',
-  items: ['Ficha editable en un solo lugar', 'Cuentas conectadas (Google, Discord, Kick)', 'Series, XP y rating en tiempo real'],
+  desc: 'Tu ficha única y editable: banner, datos, equipo, cuentas conectadas, progreso APEX, FACEIT, clips, membresía y estado en vivo.',
+  items: ['Ficha editable en un solo lugar', 'Cuentas conectadas (Google, Discord, Kick)', 'XP FACEIT y progreso APEX en tiempo real'],
 };
 
 const COLS: { label: string; cats: Cat[] }[] = [
@@ -30,7 +30,7 @@ const COLS: { label: string; cats: Cat[] }[] = [
       { key: 'ranking', href: 'ranking.html', icon: 'bar-chart-3', title: 'RANKING', small: 'Líderes del circuito', color: '#22d3ee', desc: 'La tabla de líderes por VANTS RATING: XP, series ganadas, racha y posición de cada jugador.', items: ['VANTS RATING 2.0 / 2.1', 'XP y series verificadas'] },
       { key: 'llaves', href: 'llaves.html', icon: 'git-fork', title: 'LLAVES', small: 'Bracket principal', color: '#eab308', desc: 'El bracket de la temporada: fase de grupos, elimination y gran final, ronda por ronda.', items: ['Doble eliminación', 'Avance automático por ronda'] },
       { key: 'torneos', href: 'torneos.html', icon: 'trophy', title: 'TORNEOS', small: 'Calendario abierto', color: '#ff0d2e', desc: 'Calendario de torneos abiertos con fechas, formato, pozo e inscripción directa desde la web.', items: ['Inscripción con tu equipo', 'Fecha, pozo y formato por evento'] },
-      { key: 'rangos', href: 'rangos.html', icon: 'medal', title: 'RANGOS', small: 'VANTS RANKED', color: '#22d3ee', desc: 'El sistema de rangos propio: RR ganados por serie, divisiones y cómo se calcula tu rating.', items: ['Rating por serie jugada', 'Divisiones de la arena'] },
+      { key: 'rangos', href: 'rangos.html', icon: 'medal', title: 'RANGOS', small: 'De FUNDICIÓ' + 'N a APEX', color: '#22d3ee', desc: 'El sistema de rangos propio: refleja los puntos que ganás en FACEIT y Valorant, de FUNDICIÓ' + 'N a APEX.', items: ['Puntos FACEIT y Valorant', 'De FUNDICIÓ' + 'N a APEX'] },
     ],
   },
   {

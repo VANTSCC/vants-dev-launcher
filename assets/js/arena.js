@@ -114,7 +114,7 @@ const RANKS={
   cromo:{name:'CROMO',c1:'#7fe6c8',c2:'#2c7d64',lo:1.11,svg:'<defs><linearGradient id="cr-p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#122420"/><stop offset="1" stop-color="#081210"/></linearGradient><linearGradient id="cr-e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bdfcec"/><stop offset=".55" stop-color="#5ec8a9"/><stop offset="1" stop-color="#2c7d64"/></linearGradient><linearGradient id="cr-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8fff2"/><stop offset="1" stop-color="#2f8f74"/></linearGradient><radialGradient id="cr-s" cx=".32" cy=".15" r="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".17"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#cr-p)" stroke="url(#cr-e)" stroke-width="2"/><path d="M15.5 5.5 H48.5 L58.5 15.5 V48.5 L48.5 58.5 H15.5 L5.5 48.5 V15.5 Z" fill="none" stroke="#bdfcec" stroke-opacity=".2" stroke-width="1"/><ellipse cx="22" cy="13" rx="19" ry="10" fill="url(#cr-s)"/><path d="M12.5 45.5 20 19.5 26.5 33.5 32 13.5 37.5 33.5 44 19.5 51.5 45.5 44.5 42.5 39 28.5 32 44 25 28.5 19.5 42.5Z" fill="url(#cr-m)" stroke="#bdfcec" stroke-opacity=".35" stroke-width="1"/>'},
   plasma:{name:'PLASMA',c1:'#ff5ad4',c2:'#7a1fd0',lo:1.17,svg:'<defs><linearGradient id="pl-p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f0e2e"/><stop offset="1" stop-color="#0d0616"/></linearGradient><linearGradient id="pl-e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ae6"/><stop offset=".55" stop-color="#e33cb8"/><stop offset="1" stop-color="#7a1fd0"/></linearGradient><linearGradient id="pl-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8ce2"/><stop offset="1" stop-color="#8a24d6"/></linearGradient><radialGradient id="pl-s" cx=".32" cy=".15" r="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".17"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#pl-p)" stroke="url(#pl-e)" stroke-width="2"/><path d="M15.5 5.5 H48.5 L58.5 15.5 V48.5 L48.5 58.5 H15.5 L5.5 48.5 V15.5 Z" fill="none" stroke="#ff9ae6" stroke-opacity=".2" stroke-width="1"/><ellipse cx="22" cy="13" rx="19" ry="10" fill="url(#pl-s)"/><path d="M32 8.5 37.8 26.2 55.5 32 37.8 37.8 32 55.5 26.2 37.8 8.5 32 26.2 26.2Z" fill="url(#pl-m)"/><circle cx="32" cy="32" r="4.2" fill="#ffe3f7"/>'},
   eter:{name:'ÉTER',c1:'#5fe6ff',c2:'#0e7fa8',lo:1.24,svg:'<defs><linearGradient id="et-p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e1c26"/><stop offset="1" stop-color="#071016"/></linearGradient><linearGradient id="et-e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8f4ff"/><stop offset=".55" stop-color="#3fc9e8"/><stop offset="1" stop-color="#0e7fa8"/></linearGradient><linearGradient id="et-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9fbff"/><stop offset="1" stop-color="#1899c4"/></linearGradient><radialGradient id="et-s" cx=".32" cy=".15" r="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".17"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/></radialGradient><linearGradient id="et-m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#0e7fa8"/></linearGradient></defs><path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#et-p)" stroke="url(#et-e)" stroke-width="2"/><path d="M15.5 5.5 H48.5 L58.5 15.5 V48.5 L48.5 58.5 H15.5 L5.5 48.5 V15.5 Z" fill="none" stroke="#b8f4ff" stroke-opacity=".2" stroke-width="1"/><ellipse cx="22" cy="13" rx="19" ry="10" fill="url(#et-s)"/><path d="M22.5 18.5 8.5 32 22.5 45.5 26.8 40.5 17.8 32 26.8 23.5Z" fill="url(#et-m)"/><path d="M41.5 18.5 55.5 32 41.5 45.5 37.2 40.5 46.2 32 37.2 23.5Z" fill="url(#et-m)"/><path d="M32 12.5 40.8 32 32 51.5 23.2 32Z" fill="url(#et-m2)"/>'},
-  vants:{name:'VANTS',c1:'#FF0D2E',c2:'#5b000f',lo:1.30,svg:'<defs><linearGradient id="vn-p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0a12"/><stop offset="1" stop-color="#0c0508"/></linearGradient><linearGradient id="vn-e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#e00a28"/><stop offset="1" stop-color="#5b000f"/></linearGradient><linearGradient id="vn-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset="1" stop-color="#a30018"/></linearGradient><radialGradient id="vn-s" cx=".32" cy=".15" r="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".17"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/></radialGradient><linearGradient id="vn-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f5f8"/><stop offset="1" stop-color="#8b95a1"/></linearGradient><linearGradient id="vn-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset="1" stop-color="#a30018"/></linearGradient><radialGradient id="vn-g" cx=".5" cy=".5" r=".5"><stop offset=".62" stop-color="#ff0d2e" stop-opacity="0"/><stop offset=".88" stop-color="#ff0d2e" stop-opacity=".38"/><stop offset="1" stop-color="#ff0d2e" stop-opacity="0"/></radialGradient></defs><path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#vn-p)" stroke="url(#vn-e)" stroke-width="2.5"/><path d="M15.5 5.5 H48.5 L58.5 15.5 V48.5 L48.5 58.5 H15.5 L5.5 48.5 V15.5 Z" fill="none" stroke="#ff5d70" stroke-opacity=".3" stroke-width="1"/><ellipse cx="22" cy="13" rx="19" ry="10" fill="url(#vn-s)"/><path d="M11 13.5 H24.5 L35 44.2 32.6 50.8Z" fill="url(#vn-steel)"/><path d="M53 13.5 H39.5 L32.7 36.3 42.3 36.3Z" fill="url(#vn-red)"/><path d="M39 40.2 41.6 40.2 32.6 50.8 34.2 46.2Z" fill="#ff2a47"/>'}
+  vants:{name:'APEX',c1:'#FF0D2E',c2:'#5b000f',lo:1.30,svg:'<defs><linearGradient id="vn-p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0a12"/><stop offset="1" stop-color="#0c0508"/></linearGradient><linearGradient id="vn-e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset=".55" stop-color="#e00a28"/><stop offset="1" stop-color="#5b000f"/></linearGradient><linearGradient id="vn-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset="1" stop-color="#a30018"/></linearGradient><radialGradient id="vn-s" cx=".32" cy=".15" r="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".17"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/></radialGradient><linearGradient id="vn-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f5f8"/><stop offset="1" stop-color="#8b95a1"/></linearGradient><linearGradient id="vn-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5d70"/><stop offset="1" stop-color="#a30018"/></linearGradient><radialGradient id="vn-g" cx=".5" cy=".5" r=".5"><stop offset=".62" stop-color="#ff0d2e" stop-opacity="0"/><stop offset=".88" stop-color="#ff0d2e" stop-opacity=".38"/><stop offset="1" stop-color="#ff0d2e" stop-opacity="0"/></radialGradient></defs><path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#vn-p)" stroke="url(#vn-e)" stroke-width="2.5"/><path d="M15.5 5.5 H48.5 L58.5 15.5 V48.5 L48.5 58.5 H15.5 L5.5 48.5 V15.5 Z" fill="none" stroke="#ff5d70" stroke-opacity=".3" stroke-width="1"/><ellipse cx="22" cy="13" rx="19" ry="10" fill="url(#vn-s)"/><path d="M11 13.5 H24.5 L35 44.2 32.6 50.8Z" fill="url(#vn-steel)"/><path d="M53 13.5 H39.5 L32.7 36.3 42.3 36.3Z" fill="url(#vn-red)"/><path d="M39 40.2 41.6 40.2 32.6 50.8 34.2 46.2Z" fill="#ff2a47"/>'}
 };
 const TIER_ORDER=['vants','eter','plasma','cromo','obsidiana','titanio','acero','fundicion'];
 const rankSVG=(k,size,cls)=>'<svg class="rank-emblem '+(cls||'')+'" viewBox="0 0 64 64" width="'+size+'" height="'+size+'" style="--r1:'+RANKS[k].c1+'">'+RANKS[k].svg+'</svg>';
@@ -129,7 +129,7 @@ function subFor(k,r){
   return f>=.66?'III':f>=.33?'II':'I';
 }
 const rankCell=(r)=>{const k=rankFor(r),s=subFor(k,r);
-  return '<div class="rk-wrap" title="'+RANKS[k].name+' '+(s||'APEX')+'">'+rankSVG(k,22)+'<small>'+(s||'APEX')+'</small></div>';};
+  return '<div class="rk-wrap" title="'+RANKS[k].name+(s?' '+s:'')+'">'+rankSVG(k,22)+'<small>'+(s||'APEX')+'</small></div>';};
 
 /* ================= DATOS DE JUEGO ================= */
 const DATA={
@@ -167,7 +167,7 @@ const DATA={
     lb1:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
     lb2:[{a:null,b:null,meta:'POR DEFINIR'},{a:null,b:null,meta:'POR DEFINIR'}],
     lbf:{a:null,b:null,meta:'POR DEFINIR · BO3'}},
-  ticker:['INSCRIPCIONES ABIERTAS: ASCENSIÓN SERIES S4','PREMIOS Y FECHAS POR ANUNCIAR EN DISCORD','SEGUÍ EL CIRCUITO PRO REAL EN LA AGENDA · VLR.GG','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','GANA SERIES Y SUBÍ TU RANGO VANTS RANKED']
+  ticker:['INSCRIPCIONES ABIERTAS: ASCENSIÓN SERIES S4','PREMIOS Y FECHAS POR ANUNCIAR EN DISCORD','SEGUÍ EL CIRCUITO PRO REAL EN LA AGENDA · VLR.GG','NUEVO: INSIGNIAS PRO Y CREADOR EN TU PERFIL','GANA SERIES Y SUBÍ DE RANGO']
  },
  cs2:{
   title:'STRATOS<br><span class="out">MAJOR</span> <span class="acc">S4</span>',short:'STRATOS MAJOR S4',
@@ -307,7 +307,7 @@ const DATA={
     lb1:[{a:'NORTE UNIDO',b:'SQUAD 47',sa:2,sb:3,meta:'BO5 · COMPLETADO'},{a:'TROPA DEL 9',b:'TEAM CHAMO',sa:3,sb:0,meta:'BO5 · COMPLETADO'}],
     lb2:[{a:null,b:'NORTE UNIDO',meta:'TRAS SEMIS · BO5'},{a:null,b:'TROPA DEL 9',meta:'TRAS SEMIS · BO5'}],
     lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO5'}},
-  ticker:['BOOYAH CIRCUIT S4 · ETAPA 4 EN JUEGO','CLASH SQUAD NOCTURNO #44: 61/64','EL YOYA (CREADOR) EN DIRECTO EN TIKTOK','NUEVO: INSIGNIA PRO FREE FIRE EN TU PERFIL','LA BOOYAH VALE DOBLE RR EN VANTS RANKED FF']
+  ticker:['BOOYAH CIRCUIT S4 · ETAPA 4 EN JUEGO','CLASH SQUAD NOCTURNO #44: 61/64','EL YOYA (CREADOR) EN DIRECTO EN TIKTOK','NUEVO: INSIGNIA PRO FREE FIRE EN TU PERFIL','LA BOOYAH VALE DOBLE RR EN EL RANKED FF']
  },
  rl:{
   gameLabel:'ROCKET LEAGUE',
@@ -346,7 +346,7 @@ const DATA={
     lb1:[{a:'OCTANE CLUB',b:'RUEDA SUELTA',sa:3,sb:1,meta:'BO5 · COMPLETADO'},{a:'GATO BOOST',b:'AERO LATAM',sa:2,sb:3,meta:'BO5 · COMPLETADO'}],
     lb2:[{a:null,b:'OCTANE CLUB',meta:'TRAS SEMIS · BO5'},{a:null,b:'AERO LATAM',meta:'TRAS SEMIS · BO5'}],
     lbf:{a:null,b:null,meta:'SÁBADO · 20:00 · BO5'}},
-  ticker:['TURBO CLASH S4 · SEMIFINALES HOY','OT DOBLE ELIM #33: 31/48 EQUIPOS','AÉREA (CREADORA) EN DIRECTO EN TWITCH','NUEVO: INSIGNIA PRO ROCKET LEAGUE','GANÁ EL OT Y LLEVÁTE RR DOBLE EN VANTS RANKED RL']
+  ticker:['TURBO CLASH S4 · SEMIFINALES HOY','OT DOBLE ELIM #33: 31/48 EQUIPOS','AÉREA (CREADORA) EN DIRECTO EN TWITCH','NUEVO: INSIGNIA PRO ROCKET LEAGUE','GANÁ EL OT Y LLEVÁTE RR DOBLE EN EL RANKED RL']
  }
 };
 
@@ -711,11 +711,9 @@ window.VANTS_STATS={};
 const PROXY_PUBLICO='https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/';
 const escHtml=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const badgesDeRol=p=>{const b=[];if(p.verified)b.push('verified');if(p.role==='owner'){b.push('owner');b.push('streamer');b.push('creator');}if(p.role==='admin')b.push('admin');if(p.role==='streamer')b.push('streamer');if(p.role==='creator')b.push('creator');if(p.role==='partner')b.push('partner');return b;};
-/* El OWNER de la arena es la cima del circuito: su rango se muestra como
-   VANTS APEX (tier máximo de la escala, sub APEX) sin depender de su rating.
-   El resto de jugadores sigue la escala normal por rating. */
-const VANTS_APEX_MIN=1.30;
-function ratingDe(p){let r=(typeof p.rating==='number'&&p.rating>0)?p.rating:null;try{if(p&&p.role==='owner')r=Math.max(r||0,VANTS_APEX_MIN);return r;}catch(e){return r;}}
+/* Rango real: el rating de la base son los puntos ganados en FACEIT/Valorant,
+   sin boost por rol. El tier y el color salen de esa escala (rankFor). */
+function ratingDe(p){let r=(typeof p.rating==='number'&&p.rating>0)?p.rating:null;try{return r;}catch(e){return r;}}
 function rankKeyDe(p){const r=ratingDe(p);try{return r==null?'fundicion':rankFor(r);}catch(e){return 'fundicion';}}
 
 async function cargarJugadores(){
@@ -799,7 +797,7 @@ function renderProfileGrid(){
       +'<div class="pc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'<small>'+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+'</small></div>'
       +'<div class="pc-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
       +eqChip
-      +'<div class="pc-rank">'+rankSVG(k,30)+'<div class="rk-name">'+rc.name+(k==='vants'?' APEX':'')+'<small>VANTS RANKED</small></div><span class="rr mono">'+(mmr!=null?mmr:'—')+' MMR</span></div>'
+      +'<div class="pc-rank">'+rankSVG(k,30)+'<div class="rk-name">'+rc.name+'</div><span class="rr mono">'+(mmr!=null?mmr:'—')+' MMR</span></div>'
       +'</div></div>';
   }).join('');
   icons();
@@ -823,16 +821,16 @@ function rangoPublicoHTML(raw,mmr,wins,losses,xp){
   const wl=(wins||losses)?(wins+'V · '+losses+'D · '):'';
   try{
     if(raw==null)throw 0;
-    const k=rankFor(raw),s=subFor(k,raw)||'APEX',rc=RANKS[k];
+    const k=rankFor(raw),s=subFor(k,raw),rc=RANKS[k];
     const i=TIER_ORDER.indexOf(k);
     const hi=TIER_ORDER[i-1]?RANKS[TIER_ORDER[i-1]].lo:(RANKS[k].lo+1);
     const f=Math.max(0,Math.min(100,((raw-RANKS[k].lo)/(hi-RANKS[k].lo))*100));
-    return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:'+rc.c1+'">'+rankSVG(k,64)
-      +'<div class="info"><b>'+rc.name+' '+s+'</b><small>'+wl+'TEMPORADA ACTIVA</small>'
+    return '<p class="d-sec">RANGO</p><div class="pf-rank" style="--rc:'+rc.c1+'">'+rankSVG(k,64)
+      +'<div class="info"><b>'+rc.name+(s?' '+s:'')+'</b><small>'+wl+'TEMPORADA ACTIVA</small>'
       +'<div class="rr-bar"><i style="width:'+f.toFixed(0)+'%;background:'+rc.c1+'"></i></div></div>'
       +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>'+xpExtra;
   }catch(e){
-    return '<p class="d-sec">RANGO VANTS RANKED</p><div class="pf-rank" style="--rc:#5C5C66;opacity:.85">'+rankSVG('fundicion',64)
+    return '<p class="d-sec">RANGO</p><div class="pf-rank" style="--rc:#5C5C66;opacity:.85">'+rankSVG('fundicion',64)
       +'<div class="info"><b>SIN RANGO</b><small>'+wl+'JUEGA TUS PARTIDAS DE PLACEMENT PARA OBTENER RANGO</small>'
       +'<div class="rr-bar"><i style="width:0%"></i></div></div>'
       +'<div class="rr-num">'+(mmr!=null?mmr:'—')+'<small>MMR</small></div></div>'+xpExtra;
@@ -863,7 +861,7 @@ function openPlayerProfile(pid){
   const mmr=(st&&st.mmr!=null)?st.mmr:null;
   const wins=(st&&st.wins)||stats.wins||0,losses=(st&&st.losses)||stats.losses||0;
   const raw0=(typeof p.rating==='number'&&p.rating>0)?p.rating:((st&&st.rank!=null&&st.rank!==''&&!isNaN(parseFloat(st.rank))&&parseFloat(st.rank)>=.5&&parseFloat(st.rank)<=2)?parseFloat(st.rank):null);
-  const raw=(p.role==='owner')?Math.max(raw0||0,VANTS_APEX_MIN):raw0;
+  const raw=raw0;
   const mPart=(stats.matches!=null)?stats.matches:((wins+losses)>0?wins+losses:null);
   const mWr=((wins+losses)>0)?Math.round((wins/(wins+losses))*100):(stats.wr!=null?stats.wr:null);
   const mRtg=(raw!=null)?raw:(stats.rtg!=null?stats.rtg:null);
@@ -1003,8 +1001,7 @@ if(meStripBtnEl)meStripBtnEl.addEventListener('click',()=>{
   if(lb&&!lb.hidden){lb.click();return;}
   toast('Ingresá con ENTRAR para crear tu perfil de jugador','info');
 });
-/* REPORTAR SERIE (cta de la sección RANGOS): manda al PERFIL DE JUGADOR,
-   donde vive el bloque VANTS RANKED · SERIES */
+/* VER MI PERFIL (cta de la sección RANGOS): manda al PERFIL DE JUGADOR */
 const rankedReportBtn=$('#rankedReportBtn');
 if(rankedReportBtn)rankedReportBtn.addEventListener('click',()=>{
   if(abrirPerfilPropio())return;
@@ -1931,7 +1928,7 @@ window.abrirMiCuenta=async function(){
       ,'<div class="pf-mini"><span class="ava s2" style="--rc:'+rc.c1+'">'+(mio&&mio.avatar_url?'<img src="'+escHtml(mio.avatar_url)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml(((mio&&(mio.display_name||mio.username))||me.name||'V').slice(0,2).toUpperCase()))+'</span>'
       +'<div class="pf-mini-i"><b>'+escHtml(((mio&&(mio.display_name||mio.username))||me.name||'JUGADOR').toUpperCase())+'</b>'
       +'<small>@'+escHtml((mio&&mio.username)||'—')+' · '+(mio&&mio.verified?'VERIFICADO':'SIN VERIFICAR')+'</small>'
-      +'<div class="rk-wrap" style="margin-top:6px">'+rankSVG(k,26)+'<small>'+(RANKS[k].name+(k==='vants'?' APEX':''))+'</small><span class="rr mono">'+(st.mmr!=null?st.mmr+' MMR':'— MMR')+'</span></div></div></div>'
+      +'<div class="rk-wrap" style="margin-top:6px">'+rankSVG(k,26)+'<small>'+RANKS[k].name+'</small><span class="rr mono">'+(st.mmr!=null?st.mmr+' MMR':'— MMR')+'</span></div></div></div>'
       +'<div class="cta-btns"><button class="btn btn-ghost btn-sm" id="mcFicha">VER FICHA</button>'
       +'<button class="btn btn-ghost btn-sm" id="mcEditar">EDITAR PERFIL</button>'
       +'<button class="btn btn-ghost btn-sm" id="mcAjustes">AJUSTES</button></div>')
@@ -1940,9 +1937,9 @@ window.abrirMiCuenta=async function(){
       +'<p class="cta-note">'+(vantsEsOwner()?'Tu cuenta es la dueña de la arena: todo el contenido premium desbloqueado.':(planTxt==='FREE'?'Subí a PRO para insignia verificable, columnas exclusivas del ranking y prioridad en torneos.':'Tu insignia ya acompaña a tu perfil en toda la arena.'))+'</p>'
       +'<div class="cta-btns"><button class="btn btn-cut btn-sm" id="mcPlanes">VER MEMBRESÍAS</button></div>')
     +g('PARTIDOS Y RESULTADOS'
-      ,(series.length?'<p class="cta-sub">VANTS RANKED · ÚLTIMAS SERIES</p>'+series.map(serieRow).join(''):'<p class="cta-note">Todavía no reportaste series. Gana series contra otros jugadores y subí de rango.</p>')
+      ,(series.length?'<p class="cta-sub">ÚLTIMAS SERIES</p>'+series.map(serieRow).join(''):'<p class="cta-note">Todavía no reportaste series. Gana series contra otros jugadores y subí de rango.</p>')
       +(fme.length?'<p class="cta-sub" style="margin-top:12px">FACEIT · ÚLTIMAS PARTIDAS</p>'+fme.map(fmRow).join(''):'')
-      +'<div class="cta-btns"><button class="btn btn-ghost btn-sm" id="mcReportar">REPORTAR SERIE</button></div>')
+      +'<div class="cta-btns"><button class="btn btn-ghost btn-sm" id="mcReportar">VER MI PERFIL</button></div>')
     +g('EQUIPOS · MIS INSCRIPCIONES'
       ,(equipos.length?equipos.map(eqRow).join(''):'<p class="cta-note">Aún no inscribiste ningún equipo. Cuando lo hagas, tu equipo aparece acá y en el bracket.</p>')
       +'<div class="cta-btns"><button class="btn btn-ghost btn-sm" id="mcTorneos">VER TORNEOS</button></div>')

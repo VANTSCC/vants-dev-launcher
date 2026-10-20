@@ -100,7 +100,7 @@
         <a class="sf-mini-row" href="torneos.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="calendar-days" style="width:16px;height:16px;color:var(--dim)"></i>CALENDARIO COMPLETO</a>
         <a class="sf-mini-row" href="llaves.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="git-branch" style="width:16px;height:16px;color:var(--dim)"></i>BRACKETS EN VIVO</a>
         <a class="sf-mini-row" href="ranking.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="bar-chart-3" style="width:16px;height:16px;color:var(--dim)"></i>RANKING GLOBAL</a>
-        <a class="sf-mini-row" href="rangos.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="medal" style="width:16px;height:16px;color:var(--dim)"></i>VANTS RANKED · RR</a>
+        <a class="sf-mini-row" href="rangos.html" style="display:flex;align-items:center;gap:12px;padding:13px 18px;font:600 13px/1 var(--sans);color:var(--muted)"><i data-lucide="medal" style="width:16px;height:16px;color:var(--dim)"></i>RANGOS APEX · XP</a>
       </div>
     </div>
     <div class="sf-aside">
@@ -118,7 +118,7 @@
         <span class="nav-logo"><svg class="mark" style="width:34px;height:34px"><use href="#vmark"/></svg><span class="wordmark"><b style="font-size:24px">VANT<em>S</em></b><small>GAMES</small></span></span>
         <p>La arena competitiva de VALORANT y Counter-Strike 2: torneos con premio, rangos propios, insignias verificadas y una comunidad que juega para subir. Donde nace la ventaja.</p>
       </div>
-      <div class="f-col"><h5>COMPETIR</h5><a href="torneos.html">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="gpr.html">Global Power Rankings</a><a href="ranking.html">Ranking global</a><a href="rangos.html">VANTS RANKED</a><a href="clips.html">Clips · Momentos destacados</a><a href="guia.html">Guía de la arena</a></div>
+      <div class="f-col"><h5>COMPETIR</h5><a href="torneos.html">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="ranking.html">Ranking global</a><a href="rangos.html">Rangos APEX</a><a href="clips.html">Clips · Momentos destacados</a><a href="guia.html">Guía de la arena</a></div>
       <div class="f-col"><h5>IDENTIDAD</h5><a href="jugadores.html">Sala de jugadores</a><a href="equipo.html">Equipo VANTS DE 5</a><a href="identidad.html">Tienda de identidad</a><a href="historia.html">Historia de la marca</a><a href="membresias.html">Programa de socios</a></div>
       <div class="f-col"><h5>SOPORTE</h5><a href="preguntas-frecuentes.html">Preguntas frecuentes</a><a href="descargar.html">Descargar el HUB</a><a href="membresias.html">VANTS PRO</a><a href="tienda.html">Tienda oficial</a></div>
     </div>
@@ -220,7 +220,7 @@
   function intentoVentDB(n, DB, id){
     try{
       /* fallback S4 cuando Neon aún no tiene el torneo */
-      var FB={'s4-asc':{name:'ASCENSIÓN SERIES S4',status:'abierto',tier:'open',game:'valorant',day:'24',mon:'OCT',max_participants:32},'s4-ranked':{name:'VANTS RANKED NOCTURNA',status:'abierto',tier:'ranked',game:'valorant',max_participants:64},'s4-copa':{name:'COPA COMUNIDAD S4',status:'proximamente',tier:'open',game:'valorant',prize_pool:500,day:'08',mon:'NOV',max_participants:16},'s4-stratos':{name:'STRATOS MAJOR S4',status:'proximamente',tier:'major',game:'cs2',prize_pool:1000,day:'15',mon:'NOV',max_participants:24}};
+      var FB={'s4-asc':{name:'ASCENSIÓN SERIES S4',status:'abierto',tier:'open',game:'valorant',day:'24',mon:'OCT',max_participants:32},'s4-ranked':{name:'RANKED NOCTURNA',status:'abierto',tier:'ranked',game:'valorant',max_participants:64},'s4-copa':{name:'COPA COMUNIDAD S4',status:'proximamente',tier:'open',game:'valorant',prize_pool:500,day:'08',mon:'NOV',max_participants:16},'s4-stratos':{name:'STRATOS MAJOR S4',status:'proximamente',tier:'major',game:'cs2',prize_pool:1000,day:'15',mon:'NOV',max_participants:24}};
       if(!DB||typeof DB.tournaments!=='function'){if(n>0)setTimeout(function(){intentoVentDB(n-1, DB, id);},900);else if(FB[id])pinta(FB[id]);return;}
       Promise.resolve(DB.tournaments()).then(function(rows){
         var t=(rows||[]).find(function(x){return String(x.id)===String(id)||String(x.slug)===String(id);});
