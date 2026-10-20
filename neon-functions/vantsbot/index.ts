@@ -514,6 +514,21 @@ export function construir(sobre: Partial<Dependencias> = {}) {
         });
       }
 
+      // Allowlist de usuarios de Discord: si AGENT_DISCORD_IDS está definido
+      // (ids separados por comas), SOLO esos usuarios pueden usar /agente y
+      // el resto recibe 403. Sin la variable, comportamiento de siempre.
+      const idsAgente = String(dep.env.AGENT_DISCORD_IDS ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (idsAgente.length) {
+        const miembro = (body.member as Fila | undefined)?.user as Fila | undefined;
+        const quien = String(miembro?.id ?? (body.user as Fila | undefined)?.id ?? '');
+        if (!quien || !idsAgente.includes(quien)) {
+          return json({ ok: false, error: { message: 'no permitido' } }, 403);
+        }
+      }
+
       // Respuesta en < 3s garantizada: si el trabajo termina a tiempo se
       // contesta directo (type 4); si no, defer (type 5) + followup REST.
       const trabajo = procesarAgente(body, dep);

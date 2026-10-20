@@ -55,3 +55,7 @@ vants-server/.wrangler/
 /estado-db.json
 /estado-db-error.txt
 /migracion-error.txt
+/docs/estado-db.json
+/docs/estado-db-error.txt
+/docs/migracion-error.txt
+*-error.txt

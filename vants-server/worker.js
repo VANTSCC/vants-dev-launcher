@@ -609,10 +609,58 @@ function textoNotify(v, max) {
   return limpio.slice(0, max);
 }
 
+// Comparación en tiempo constante entre dos cadenas (sin dependencias):
+// recorre ambas enteras aunque no coincidan, para que el tiempo de respuesta
+// no revele cuántos caracteres acierta quien adivina un secreto.
+function comparacionConstante(a, b) {
+  const x = String(a == null ? '' : a);
+  const y = String(b == null ? '' : b);
+  const len = Math.max(x.length, y.length);
+  let diff = x.length === y.length ? 0 : 1;
+  for (let i = 0; i < len; i++) {
+    diff |= (x.charCodeAt(i) || 0) ^ (y.charCodeAt(i) || 0);
+  }
+  return diff === 0;
+}
+
+// HMAC-SHA256 → hex con Web Crypto (Workers y Node modernos, 0 dependencias).
+async function hmacSha256Hex(clave, mensaje) {
+  const enc = new TextEncoder();
+  const k = await crypto.subtle.importKey('raw', enc.encode(String(clave)), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = await crypto.subtle.sign('HMAC', k, enc.encode(String(mensaje)));
+  let hex = '';
+  for (const b of new Uint8Array(mac)) hex += b.toString(16).padStart(2, '0');
+  return hex;
+}
+
 async function handleNotify(request, env) {
   try {
-    const crudo = await request.json();
-    const type = textoNotify(crudo.type, 32);
+    const crudoTxt = await request.text();
+    // Firma opcional del remitente: se exige cuando DISCORD_NOTIFY_SECRET
+    // está configurado — cabeceras X-Vants-Signature ("sha256=<hex>" del
+    // HMAC-SHA256 de "<timestamp>.<cuerpo>") y X-Vants-Timestamp (se rechazan
+    // marcas con más de 5 minutos de diferencia, anti-replay).
+    // exigencia activa cuando DISCORD_NOTIFY_SECRET esté configurado
+    const secretoNotify = String((env && env.DISCORD_NOTIFY_SECRET) || '');
+    if (secretoNotify) {
+      const tsCab = String(request.headers.get('x-vants-timestamp') || '');
+      const ts = Number(tsCab);
+      const edad = Math.floor(Date.now() / 1000) - ts;
+      if (!tsCab || !Number.isFinite(ts) || Math.abs(edad) > 300) {
+        return json({ ok: false, error: 'Firma caducada' }, 401);
+      }
+      const firma = String(request.headers.get('x-vants-signature') || '');
+      const esperada = await hmacSha256Hex(secretoNotify, tsCab + '.' + crudoTxt);
+      if (firma.slice(0, 7).toLowerCase() !== 'sha256=' || !comparacionConstante(firma.slice(7).trim().toLowerCase(), esperada)) {
+        return json({ ok: false, error: 'Firma inválida' }, 401);
+      }
+    }
+    const crudo = JSON.parse(crudoTxt);
+    // El tipo se valida contra una lista cerrada (nunca se interpola en el
+    // embed): así el `_` de `torneo_inscripcion` no choca con la limpieza de
+    // markdown que se aplica a los campos del payload.
+    const tiposNotify = new Set(['torneo_inscripcion', 'membresia', 'live', 'campeon']);
+    const type = tiposNotify.has(String(crudo.type || '')) ? String(crudo.type) : 'tipo_desconocido';
     const d0 = crudo.data || {};
     const data = {
       team: textoNotify(d0.team, 48),
@@ -862,7 +910,7 @@ export default {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
           'Access-Control-Allow-Methods': url.pathname === '/api/clips/featured' ? 'GET, POST, DELETE, OPTIONS' : (isGetApi ? 'GET, OPTIONS' : 'POST, OPTIONS'),
-          'Access-Control-Allow-Headers': isPostApi ? 'Content-Type, ' + AUTH_HEADER : 'Content-Type',
+          'Access-Control-Allow-Headers': isPostApi ? 'Content-Type, ' + AUTH_HEADER + ', X-Vants-Signature, X-Vants-Timestamp' : 'Content-Type',
           'Access-Control-Max-Age': '86400',
         });
       }
@@ -1386,10 +1434,12 @@ export default {
           emailFinal = nuevo;
         }
         // client_id del SPA es OPCIONAL en el ticket de verificación de Auth0
-        // (el Management Token ya autoriza). Solo se envía si el secret está
-        // configurado; antes se referenciaba una constante inexistente y el
-        // flujo entero caía en ReferenceError.
-        const spaId = String((env && env.AUTH0_SPA_CLIENT_ID) || '');
+        // (el Management Token ya autoriza). Se lee con el nombre que ya usa
+        // el resto del código para la app SPA (AUTH0_CLIENT_ID; se acepta
+        // AUTH0_SPA_CLIENT_ID como alias). Si no hay ninguno configurado, el
+        // ticket se crea igual: fail-safe — antes se referenciaba una variable
+        // inexistente y el flujo entero caía en ReferenceError.
+        const spaId = String((env && (env.AUTH0_CLIENT_ID || env.AUTH0_SPA_CLIENT_ID)) || '');
         const cuerpoTicket = { user_id: info.sub, ttl_sec: 259200 };
         if (spaId) cuerpoTicket.client_id = spaId;
         const tk = await fetch('https://' + AUTH0_TENANT + '/api/v2/tickets/email-verification', {

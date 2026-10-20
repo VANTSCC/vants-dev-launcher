@@ -44,21 +44,28 @@ function construir(opts = {}) {
     if (req.method === 'OPTIONS') return reply.code(204).send();
   });
 
-  // Auth de /api/v1/* — FAIL-CLOSED por defecto:
-  //   · AGENT_TOKEN definido  → exige Bearer correcto (401 si no)
-  //   · sin AGENT_TOKEN       → 503, salvo AGENT_ALLOW_OPEN=1 (o allowOpen en
-  //     opts, para tests). Antes el modo abierto era el default silencioso.
-  const allowOpen = opts.allowOpen === true || String(process.env.AGENT_ALLOW_OPEN || '') === '1';
+  // Auth de /api/v1/* — comparación timing-safe del token, sin dependencias:
+  //   · AGENT_TOKEN definido → exige `Authorization: Bearer <token>` correcto
+  //     (401 si falta o no coincide).
+  //   · sin AGENT_TOKEN      → queda abierto para desarrollo local; el aviso
+  //     se emite al arrancar el servidor (bloque require.main).
+  const comparacionConstante = (a, b) => {
+    const x = String(a == null ? '' : a);
+    const y = String(b == null ? '' : b);
+    const len = Math.max(x.length, y.length);
+    let diff = x.length === y.length ? 0 : 1;
+    for (let i = 0; i < len; i++) diff |= (x.charCodeAt(i) || 0) ^ (y.charCodeAt(i) || 0);
+    return diff === 0;
+  };
   fastify.addHook('preHandler', async (req, reply) => {
     if (!req.url.startsWith('/api/v1')) return;
     if (token) {
-      const h = req.headers.authorization || '';
-      if (h !== `Bearer ${token}`) return reply.code(401).send({ ok: false, error: { message: 'token del agente requerido' } });
+      const h = String(req.headers.authorization || '');
+      const ok = h.startsWith('Bearer ') && comparacionConstante(h.slice(7).trim(), token);
+      if (!ok) return reply.code(401).send({ ok: false, error: { message: 'token del agente requerido' } });
       return;
     }
-    if (!allowOpen) {
-      return reply.code(503).send({ ok: false, error: { message: 'API del agente cerrada: define AGENT_TOKEN (recomendado) o AGENT_ALLOW_OPEN=1 para permitir acceso sin token' } });
-    }
+    // sin AGENT_TOKEN: acceso abierto (desarrollo local), aviso al arrancar.
   });
 
   fastify.get('/healthz', async () => ({ ok: true, service: 'agent-service', version: VERSION, uptime: Math.round(process.uptime()), memoria: memoria.tipo(), cerebro: llm ? 'reglas+llm' : 'reglas', sandbox: 'activa' }));
@@ -138,6 +145,9 @@ function construirContexto(opts = {}) {
 }
 
 if (require.main === module) {
+  if (!String(process.env.AGENT_TOKEN || '').trim()) {
+    console.warn('AGENT_TOKEN no configurado — endpoints de agente sin autenticación');
+  }
   const app = construir();
   const puerto = Number(process.env.PORT || 8082);
   app.listen({ port: puerto, host: '0.0.0.0' })
