@@ -17,7 +17,6 @@
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <link rel="stylesheet" href="./assets/css/arena.css?v=10">
 <link rel="stylesheet" href="./assets/css/vants-shop.css?v=1">
-<link rel="stylesheet" href="./assets/css/vants-cinematic.css?v=1">
 <link rel="stylesheet" href="./assets/css/strafe.css?v=2">
 </head>
 <body class="sf" data-game="valorant">
@@ -240,7 +239,7 @@
     </div>
     <div class="sf-fcol"><h5>COMPETIR</h5><a href="torneos.html">Torneos abiertos</a><a href="llaves.html">Brackets</a><a href="gpr.html">Global Power Rankings</a><a href="ranking.html">Ranking global</a><a href="rangos.html">VANTS RANKED</a><a href="partidos.html" data-i18n="nav_partidas">Partidas</a></div>
     <div class="sf-fcol"><h5>TÍTULOS</h5><a href="index.html" data-game-link="valorant">VALORANT</a><a href="index.html" data-game-link="cs2">Counter-Strike 2</a><a href="guia.html">+ Más juegos PC</a><a href="jugadores.html">Sala de jugadores</a><a href="equipo.html">Equipo VANTS DE 5</a></div>
-    <div class="sf-fcol"><h5>SOPORTE</h5><a href="preguntas-frecuentes.html">Preguntas frecuentes</a><a href="descargar.html">Descargar el HUB</a><a href="membresias.html">Membresías</a><a href="tienda.html">Tienda oficial</a><a href="guia.html">Guía de la arena</a></div>
+    <div class="sf-fcol"><h5>SOPORTE</h5><a href="preguntas-frecuentes.html">Preguntas frecuentes</a><a href="descargar.html">Descargar el HUB</a><a href="membresias.html">Membresías</a><a href="tienda.html">Tienda oficial</a><a href="guia.html">Guía de la arena</a><a href="stack.html">Stack técnico</a></div>
   </div>
   <div class="sf-fbot">
     <span>© 2026 VANTS GAMES. Todos los derechos reservados. No afiliado a Riot Games ni a Valve.</span>
@@ -254,29 +253,6 @@
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<!-- CINEMATIC -->
-<div class="cin" id="cin">
-  <canvas id="cinCanvas"></canvas>
-  <div class="cin-grain"></div>
-  <div class="cin-bar top"></div><div class="cin-bar bot"></div>
-  <div class="cin-inner">
-    <svg class="cin-mark" viewBox="0 0 64 64">
-      <g class="cplate"><path d="M12 2 H52 L62 12 V52 L52 62 H12 L2 52 V12 Z" fill="url(#vm-plate)" stroke="url(#vm-edge)" stroke-width="1.5"/></g>
-      <g class="csteel"><path d="M9 14 H23 L34.5 44.5 L32 52 Z" fill="url(#vm-steel)"/><path d="M9 14 H23 L23.8 16.2 H9.9 Z" fill="#fff" opacity=".75"/></g>
-      <g class="cred"><path d="M55 14 H41 L32.4 37 L42.2 37 Z" fill="url(#vm-red)"/><path d="M38.6 41 L41 41 L32 52 L33.6 47.6 Z" fill="#ff0d2e" opacity=".9"/></g>
-    </svg>
-    <div class="cin-word">
-      <span style="--i:0">V</span><span style="--i:1">A</span><span style="--i:2">N</span><span style="--i:3">T</span><span style="--i:4" class="acc">S</span>
-    </div>
-    <div class="cin-tag">DONDE NACE LA VENTAJA</div>
-    <div class="cin-ctas">
-      <button class="btn btn-cut" id="cinEnter"><i data-lucide="crosshair"></i>ENTRAR A LA ARENA</button>
-      <button class="btn btn-ghost" id="cinStory"><i data-lucide="book-open"></i>NUESTRA HISTORIA</button>
-    </div>
-  </div>
-  <button class="cin-skip" id="cinSkip">SALTAR FILM →</button>
-  <div class="cin-meta">VANTS GAMES — BRAND FILM 2026</div>
-</div>
 
 <script src="./assets/js/arena.js?v=30"></script>
 <!-- Capa viva: Auth0 (login) + Neon (torneos reales) -->
@@ -284,12 +260,11 @@
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
 <script src="./assets/js/vants-supervisor.js?v=1" defer></script>
 <script src="./assets/js/arena-live.js?v=32" defer></script>
-<script src="./assets/js/vants-cinematic.js?v=1" defer></script>
 <script src="./assets/js/vants-shop.js?v=1" defer></script>
 <script src="./assets/js/api-client.js?v=1" defer></script>
 <script src="./assets/js/session.js?v=1" defer></script>
 <script src="./assets/js/components.js?v=2" defer></script>
-<script src="./assets/js/menu-preview.js?v=3" defer></script>
+<script src="./assets/js/menu-preview.js?v=4" defer></script>
 <script src="./assets/js/i18n.js?v=2" defer></script>
 <script src="./assets/js/strafe-shell.js?v=3" defer></script>
 <script src="./assets/js/strafe-home.js?v=2.1" defer></script>

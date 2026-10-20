@@ -39,4 +39,5 @@
   <url><loc>https://vants.vants.workers.dev/resultados.html</loc><lastmod>2026-10-19</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://vants.vants.workers.dev/equipo-ficha.html</loc><lastmod>2026-10-19</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://vants.vants.workers.dev/jugador.html</loc><lastmod>2026-10-19</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://vants.vants.workers.dev/stack.html</loc><changefreq>monthly</changefreq></url>
 </urlset>
