@@ -12,10 +12,11 @@
  *    api.henrikdev.xyz. La clave NUNCA va en el código: se configura como secret
  *    del Worker (HENRIKDEV_API_KEY). Sin clave, responde 503 y la web usa su
  *    agenda verificada de vlr.gg.
- *  - Endpoint /api/teams (GET): equipos asociados EN VIVO. Lee de vuelta los
- *    anuncios "🏆 Nueva inscripción" y "👑 Nuevo campeón" que el propio Worker
- *    publica en el canal de Discord (mismo bot, sin storage adicional). El
- *    resultado se cachea 60 s para no golpear la API de Discord en cada visita.
+ *  - Endpoint /api/teams-live (GET): equipos asociados EN VIVO (legado). Lee de
+ *    vuelta los anuncios "🏆 Nueva inscripción" y "👑 Nuevo campeón" que el
+ *    propio Worker publica en el canal de Discord (mismo bot, sin storage
+ *    adicional). El resultado se cachea 60 s para no golpear la API de Discord
+ *    en cada visita. /api/teams quedó reservado para la plataforma (pt_teams).
  *  - Endpoint /api/gpr (GET): Global Power Rankings EN VIVO. Lee la página
  *    oficial de Riot (valorantesports.com), extrae los puntos GPR de los 48
  *    equipos por liga y los sirve como JSON. Caché de 1 h: Riot recalcula cada
@@ -594,9 +595,33 @@ function json(data, status = 200, extraHeaders = {}) {
   );
 }
 
+// Sanitiza campos del notify: el payload llega del navegador (origen
+// verificable pero falseable) y va PARTE ADENTRO de un embed de Discord.
+// Sin límites ni limpieza, cualquiera podía inyectar markdown/mentions
+// (@everyone) o Strings kilométricos en el canal oficial.
+function textoNotify(v, max) {
+  const s = String(v == null ? '' : v);
+  const limpio = s
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/[@*_`~|>]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return limpio.slice(0, max);
+}
+
 async function handleNotify(request, env) {
   try {
-    const { type, data } = await request.json();
+    const crudo = await request.json();
+    const type = textoNotify(crudo.type, 32);
+    const d0 = crudo.data || {};
+    const data = {
+      team: textoNotify(d0.team, 48),
+      tag: textoNotify(d0.tag, 12),
+      tournament: textoNotify(d0.tournament, 80),
+      user: textoNotify(d0.user, 48),
+      plan: textoNotify(d0.plan, 16),
+      title: textoNotify(d0.title, 100),
+    };
     let embed;
 
     switch (type) {
@@ -831,7 +856,7 @@ export default {
     // --- 2) Pre-flight CORS solo para la API propia
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
-      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo' || url.pathname === '/api/games' || url.pathname === '/api/tournaments' || url.pathname === '/api/matches' || url.pathname === '/api/players' || url.pathname === '/api/articles' || url.pathname === '/api/search' || /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/teams\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/players\/[a-z0-9-]+$/.test(url.pathname);
+      const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/teams-live' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo' || url.pathname === '/api/games' || url.pathname === '/api/tournaments' || url.pathname === '/api/matches' || url.pathname === '/api/players' || url.pathname === '/api/articles' || url.pathname === '/api/search' || /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/teams\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/players\/[a-z0-9-]+$/.test(url.pathname);
       const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/inscribir' || url.pathname === '/api/torneos/gestionar';
       if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
@@ -1028,8 +1053,10 @@ export default {
       }
     }
 
-    // --- 7b) Equipos asociados en vivo (lectura del canal de Discord)
-    if (url.pathname === '/api/teams') {
+    // --- 7b) Equipos asociados en vivo (lectura del canal de Discord) — LEGADO.
+    // Ruta /api/teams-live: /api/teams pertenece a la plataforma (pt_teams, más
+    // abajo). Antes esta ruta eclipsaba la rama pt_teams (shadowing).
+    if (url.pathname === '/api/teams-live') {
       if (method !== 'GET') {
         return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
       }
@@ -1358,10 +1385,17 @@ export default {
           }
           emailFinal = nuevo;
         }
+        // client_id del SPA es OPCIONAL en el ticket de verificación de Auth0
+        // (el Management Token ya autoriza). Solo se envía si el secret está
+        // configurado; antes se referenciaba una constante inexistente y el
+        // flujo entero caía en ReferenceError.
+        const spaId = String((env && env.AUTH0_SPA_CLIENT_ID) || '');
+        const cuerpoTicket = { user_id: info.sub, ttl_sec: 259200 };
+        if (spaId) cuerpoTicket.client_id = spaId;
         const tk = await fetch('https://' + AUTH0_TENANT + '/api/v2/tickets/email-verification', {
           method: 'POST',
           headers: mgmtH,
-          body: JSON.stringify({ user_id: info.sub, client_id: AUTH0_SPA_CLIENT_ID, ttl_sec: 259200 }),
+          body: JSON.stringify(cuerpoTicket),
         });
         const tj = await tk.json().catch(() => null);
         if (!tk.ok || !tj || !tj.ticket) {
