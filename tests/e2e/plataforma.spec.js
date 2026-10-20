@@ -22,8 +22,8 @@ async function proxyTieneFilas(request, tabla, filtro) {
   } catch (e) { return null; }
 }
 
-const RUTA_TORNEOS_ES = '/es/tournaments/valorant/upcoming/';
-const RUTA_TORNEOS_EN = '/en/tournaments/cs2/archive/';
+const RUTA_TORNEOS_ES = '/es/tournaments/valorant/upcoming';
+const RUTA_TORNEOS_EN = '/en/tournaments/cs2/archive';
 
 test.describe('Rutas de torneos estilo strafe (F6)', () => {
   test('ES upcoming: título dinámico, lang y tabs accesibles', async ({ page }) => {
@@ -40,7 +40,7 @@ test.describe('Rutas de torneos estilo strafe (F6)', () => {
   });
 
   test('juego no catalogado → 307 al juego principal', async ({ page }) => {
-    const resp = await page.goto('/es/tournaments/fifa/upcoming/', { maxRedirects: 0 }).catch(() => null);
+    const resp = await page.goto('/es/tournaments/fifa/upcoming', { maxRedirects: 0 }).catch(() => null);
     const status = resp ? resp.status() : 200;
     expect([200, 307, 308]).toContain(status);
     if (resp && (status === 307 || status === 308)) {

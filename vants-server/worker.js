@@ -171,7 +171,7 @@ const TEXTOS_TORNEOS = {
 const BASE_URL = 'https://vants.vants.workers.dev';
 
 function urlTorneos(lang, juego, estado) {
-  return BASE_URL + '/' + lang + '/tournaments/' + juego + '/' + estado + '/';
+  return BASE_URL + '/' + lang + '/tournaments/' + juego + '/' + estado;
 }
 
 // Proxy público de lectura (vantsdata · Neon Function): whitelist de tablas,
@@ -282,11 +282,14 @@ async function paginaTorneos(env, request, url, lang, juego, estado) {
   const t = (TEXTOS_TORNEOS[lang] || TEXTOS_TORNEOS.es)[estado];
   const g = JUEGOS_RUTA[juego] || 'VALORANT';
   const target = new URL('/torneos.html', url.origin); // la pagina REAL de torneos (rojo/negro, con .sf-tab[data-est])
-  const page = await env.ASSETS.fetch(new Request(target, request));
+  let page;
+  try { page = await env.ASSETS.fetch(new Request(target, request)); }
+  catch (e1) { return new Response('PT-FETCH-ERR: ' + (e1 && e1.message ? e1.message : String(e1)), { status: 500, headers: { 'content-type': 'text/plain; charset=utf-8' } }); }
   if (!page.ok) return page;
   const can = urlTorneos(lang, juego, estado);
   const otros = ['es', 'en'].filter((l) => l !== lang);
-  const res = new HTMLRewriter()
+  let res;
+  try { res = new HTMLRewriter()
     .on('html', { element(el) { el.setAttribute('lang', lang); } })
     .on('body', {
       element(el) {
@@ -359,8 +362,11 @@ async function paginaTorneos(env, request, url, lang, juego, estado) {
       },
     })
     .transform(new Response(page.body, page));
+  } catch (e2) { return new Response('PT-REWRITE-ERR: ' + (e2 && e2.message ? e2.message : String(e2)), { status: 500, headers: { 'content-type': 'text/plain; charset=utf-8' } }); }
   res.headers.set('Cache-Control', 'public, max-age=60');
+  res.headers.set('x-vants-shell', 'torneos-html-v2');
   return harden(res);
+  /* PT-TRY-END */
 }
 
 // Tenant Auth0 del sitio (misma configuración que assets/js/auth0-config.js)
@@ -1607,9 +1613,14 @@ export default {
     // --- 7b) PLATAFORMA DE TORNEOS · rutas de página /es|en/tournaments/:juego/:estado/
     const mT = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
     if (mT && (method === 'GET' || method === 'HEAD')) {
+      /* canonical SIN barra final: la URL con barra quedó envenenada en la caché
+         de borde (workers.dev no se puede purgar por API) → 308 a la nueva */
+      if (url.pathname.endsWith('/')) {
+        return harden(new Response(null, { status: 308, headers: { Location: '/' + mT[1] + '/tournaments/' + mT[2] + '/' + mT[3] } }));
+      }
       // Juego no catalogado → 307 al juego principal del mismo estado
       if (!JUEGOS_RUTA[mT[2]]) {
-        return harden(new Response(null, { status: 307, headers: { Location: '/' + mT[1] + '/tournaments/valorant/' + mT[3] + '/' } }));
+        return harden(new Response(null, { status: 307, headers: { Location: '/' + mT[1] + '/tournaments/valorant/' + mT[3] } }));
       }
       if (env.ASSETS) {
         const p = await paginaTorneos(env, request, url, mT[1], mT[2], mT[3]);
@@ -1619,12 +1630,12 @@ export default {
     // Rutas parciales → 307 a la canónica (juego por defecto valorant, estado upcoming)
     const mT3 = url.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/?$/);
     if (mT3 && method === 'GET') {
-      const destino = '/' + mT3[1] + '/tournaments/' + (JUEGOS_RUTA[mT3[2]] ? mT3[2] : 'valorant') + '/upcoming/';
+      const destino = '/' + mT3[1] + '/tournaments/' + (JUEGOS_RUTA[mT3[2]] ? mT3[2] : 'valorant') + '/upcoming';
       return harden(new Response(null, { status: 307, headers: { Location: destino } }));
     }
     if (/^\/(es|en)\/tournaments\/?$/.test(url.pathname) && method === 'GET') {
       const lang = url.pathname.startsWith('/en') ? 'en' : 'es';
-      return harden(new Response(null, { status: 307, headers: { Location: '/' + lang + '/tournaments/valorant/upcoming/' } }));
+      return harden(new Response(null, { status: 307, headers: { Location: '/' + lang + '/tournaments/valorant/upcoming' } }));
     }
 
     // --- 7c) PLATAFORMA DE TORNEOS · API pública de lectura (JSON {ok,data})
