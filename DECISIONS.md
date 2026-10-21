@@ -204,3 +204,22 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   en 25/24 html ×3 + `webapp/src/layouts/Base.astro` (`fc99429`; v=32/v=33 de arena.js en la
   revisión posterior).
 - Fecha: 2026-10-21 (`fc99429`).
+
+## D17 · Sin tarjeta de SALA DE JUGADORES en los submenús (preview de nav)
+- **Decisión**: el hover del tab SALA (y cualquier link a `jugadores.html`) NO
+  despliega la tarjeta de vista previa. El entry `jugadores` sale de `DATA` en
+  `assets/js/menu-preview.js` ×3; `showNavPv` corta con `if (!DATA[key])` y el
+  modo clásico de EXPLORAR no bindea el hover de filas sin tarjeta. La página
+  `jugadores.html`, el tab SALA y su submenú (Sala de jugadores / Equipos /
+  Equipo VANTS DE 5) siguen existiendo: solo la tarjeta del preview se retira.
+- **Motivo**: petición del dueño — "los submenús no tenían eso porque lo había
+  quitado y lo colocaste de nuevo". La tarjeta (/// IDENTIDADES · SALA DE
+  JUGADORES · ABRIR SECCIÓN) quedó fuera y fue re-introducida por el feature
+  de previews; se restaura el estado del dueño.
+- **Qué la invalidaría**: que el dueño pida volver a mostrar la tarjeta de
+  IDENTIDADES en el preview del nav (re-agregar el entry en `DATA` y bump de
+  cache), o que se rediseñe el preview para que el tab SALA muestre otra cosa.
+- **Consecuencias**: cache bumped `menu-preview.js?v=6 → v=7` en 75 html ×3 +
+  `webapp/src/layouts/Base.astro`; rebuild de webapp y espejos verificados
+  (76 archivos ×3). El resto de las tarjetas del preview no cambia.
+- Fecha: 2026-10-21.

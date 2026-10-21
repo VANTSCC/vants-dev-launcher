@@ -33,9 +33,9 @@
     rangos: { k: 'APEX', t: 'RANGOS', i: 'medal', c: ACC,
       d: 'Ocho tiers, un solo destino: de FUNDICIÓN a APEX. Conocé los tiers y qué rango te espera.',
       li: ['Los 8 emblemas por tier', 'Sub-niveles I · II · III', 'Cómo subir y cómo se pierde RR'] },
-    jugadores: { k: 'IDENTIDADES', t: 'SALA DE JUGADORES', i: 'users', c: '#4CC9F0',
-      d: 'Las identidades del circuito: perfiles reales creados al iniciar sesión, con insignias y canales vinculados.',
-      li: ['Fichas reales de cada jugador', 'Canales en directo de creadores', 'Clips destacados de la comunidad'] },
+    /* SIN tarjeta de SALA DE JUGADORES en los submenús: la pidió fuera el
+       dueño (decisión D17). keyFor('jugadores.html') cae en DATA[jugadores]
+       que no existe → showNavPv corta y el tab SALA no despliega preview. */
     equipo: { k: 'VANTS DE 5', t: 'EQUIPO', i: 'shield', c: '#F5C044',
       d: 'Tu equipo del circuito: nombre, tag y foto; inscripciones en vivo y campeones de la temporada.',
       li: ['Inscripciones en vivo', 'Mosaico de equipos asociados', 'Campeones con corona'] },
@@ -208,6 +208,7 @@
       var href = r.getAttribute('href') || '';
       var key = keyFor(href);
       r.setAttribute('data-pv', key);
+      if (!DATA[key]) return; /* sin tarjeta en el submenu (D17): sin preview */
       if (!touchMode) {
         r.addEventListener('mouseenter', function () { paintHc(key, href); });
         r.addEventListener('focus', function () { paintHc(key, href); });
