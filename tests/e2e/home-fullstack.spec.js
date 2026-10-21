@@ -9,7 +9,7 @@
    ============================================================ */
 const { test, expect } = require('@playwright/test');
 
-const BASE = process.env.E2E_BASE || 'https://vants.vants.workers.dev';
+const BASE = process.env.E2E_BASE || process.env.VANTS_E2E_URL || 'https://vants.vants.workers.dev';
 
 test.describe('Home full stack (Astro + React)', () => {
   test('estructura: hero, panel EN VIVO, EXPLORAR y footer', async ({ page }) => {

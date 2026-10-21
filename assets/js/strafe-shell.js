@@ -17,17 +17,37 @@
 (function () {
   'use strict';
   var GAME_NAMES = { valorant: 'VALORANT', cs2: 'COUNTER-STRIKE 2' };
+  /* Cada grupo: t título, h enlace principal, sub submenú opcional
+     (hrefs reales, mismos que data/menu-data.ts del webapp). */
   var NAV = [
-    ['index.html', 'Inicio'],
-    ['partidos.html', 'Partidas'],
-    ['calendario.html', 'Calendario'],
-    ['/es/tournaments/valorant/upcoming/', 'Torneos'],
-    ['equipos.html', 'Equipos'],
-    ['jugadores.html', 'Jugadores'],
-    ['ranking.html', 'Ranking'],
-    ['llaves.html', 'Brackets'],
-    ['clips.html', 'Clips'],
-    ['noticias.html', 'Noticias']
+    { t: 'Inicio', h: 'index.html' },
+    { t: 'SALA', h: 'jugadores.html', sub: [
+      ['jugadores.html', 'Sala de jugadores'],
+      ['equipos.html', 'Equipos del circuito'],
+      ['equipo.html', 'Equipo VANTS DE 5']
+    ] },
+    { t: 'PARTIDOS', h: 'partidos.html', sub: [
+      ['partidos.html', 'Agenda en vivo'],
+      ['resultados.html', 'Resultados'],
+      ['calendario.html', 'Calendario']
+    ] },
+    { t: 'RANKING', h: 'ranking.html', sub: [
+      ['ranking.html', 'Ranking global'],
+      ['rangos.html', 'Rangos']
+    ] },
+    { t: 'TORNEOS', h: 'torneos.html', sub: [
+      ['torneos.html', 'Calendario abierto'],
+      ['torneo.html', 'Torneo actual · Ascensión S4'],
+      ['llaves.html', 'Llaves · Bracket']
+    ] },
+    { t: 'CLIPS', h: 'clips.html', sub: [
+      ['clips.html', 'Momentos destacados'],
+      ['historia.html', 'Historia'],
+      ['guia.html', 'Guía de la arena']
+    ] },
+    { t: 'TIENDA', h: 'tienda.html' },
+    { t: 'DESCARGAR', h: 'descargar.html' },
+    { t: 'NOTICIAS', h: 'noticias.html' }
   ];
 
   var mTorneos = location.pathname.match(/^\/(es|en)\/tournaments\/([a-z0-9-]{2,24})\/(upcoming|ongoing|archive)\/?$/);
@@ -81,14 +101,20 @@
   var proBadge = document.getElementById('proBadge');
 
   var cur = (location.pathname.split('/').pop() || '').toLowerCase().replace(/\.html$/, '');
-  var activo = cur === 'torneo' ? '/es/tournaments/valorant/upcoming/' : 'index';
-  if (mTorneos) activo = '/es/tournaments/valorant/upcoming/';
+  var activo = cur === 'torneo' ? 'torneos.html' : 'index.html';
+  var activoSub = cur === 'torneo' ? 'torneo.html' : '';
+  if (mTorneos) activo = 'torneos.html';
   if (cur === 'noticia') activo = 'noticias.html';
   if (cur === 'busqueda') activo = '';
-  for (var i = 0; i < NAV.length; i++) {
-    var navSin = String(NAV[i][0]).toLowerCase().replace(/\.html$/, '').replace(/^\//, '').replace(/\/$/, '');
-    if (cur && cur === navSin) { activo = NAV[i][0]; break; }
-  }
+  (function () {
+    for (var i = 0; i < NAV.length; i++) {
+      var hrefs = [NAV[i].h].concat(NAV[i].sub ? NAV[i].sub.map(function (s) { return s[0]; }) : []);
+      for (var j = 0; j < hrefs.length; j++) {
+        var navSin = String(hrefs[j]).toLowerCase().replace(/\.html$/, '').replace(/^\//, '').replace(/\/$/, '');
+        if (cur && cur === navSin) { activo = NAV[i].h; activoSub = hrefs[j]; return; }
+      }
+    }
+  })();
 
   var game = body.getAttribute('data-game') || 'valorant';
   if (!GAME_NAMES[game]) game = 'valorant';
@@ -118,7 +144,16 @@
     '</div></header>' +
     '<nav class="sf-nav"><div class="wrap sf-nav-in">' +
       NAV.map(function (n) {
-        return '<a href="' + n[0] + '"' + (n[0] === activo ? ' class="on"' : '') + '>' + n[1] + '</a>';
+        var on = n.h === activo ? ' on' : '';
+        if (!n.sub) return '<a href="' + n.h + '" class="sf-item' + on + '">' + n.t + '</a>';
+        var panel = n.sub.map(function (s) {
+          return '<a href="' + s[0] + '" role="menuitem"' + (s[0] === activoSub ? ' class="cur"' : '') + '>' + s[1] + '</a>';
+        }).join('');
+        return '<div class="sf-dd">' +
+          '<a class="sf-dd-top' + on + '" href="' + n.h + '" aria-haspopup="true" aria-expanded="false">' + n.t +
+          '<svg class="sf-caret" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></a>' +
+          '<div class="sf-dd-panel" role="menu">' + panel + '</div>' +
+        '</div>';
       }).join('') +
       '<a class="sf-nav-cta" href="membresias.html"><i data-lucide="crown"></i>MEMBRESÍAS</a>' +
     '</div></nav>' +
@@ -155,15 +190,87 @@
     });
   } catch (e) {}
 
-  /* ---------- 5 · breadcrumb ---------- */
+  /* ---------- 4b · submenús: hover en escritorio, toque/teclado en el resto ----------
+     El panel es position:fixed (colocado por JS bajo la barra) para no
+     quedar recortado por el overflow-x del carrusel de navegación. */
+  var sfNavIn = shell.querySelector('.sf-nav-in');
+  var dds = [].slice.call(shell.querySelectorAll('.sf-dd'));
+  function ddPanel(d) { return d.querySelector('.sf-dd-panel'); }
+  function ddTop(d) { return d.querySelector('.sf-dd-top'); }
+  function colocaPanel(d) {
+    var p = ddPanel(d);
+    p.style.top = sfNavIn.getBoundingClientRect().bottom + 'px';
+    var izq = d.getBoundingClientRect().left;
+    izq = Math.min(izq, window.innerWidth - p.offsetWidth - 8);
+    p.style.left = Math.max(8, izq) + 'px';
+  }
+  function abreDd(d) {
+    cierraDds(d);
+    colocaPanel(d);
+    d.classList.add('open');
+    ddTop(d).setAttribute('aria-expanded', 'true');
+  }
+  function cierraDds(excepto) {
+    dds.forEach(function (d) {
+      if (d === excepto) return;
+      d.classList.remove('open');
+      ddTop(d).setAttribute('aria-expanded', 'false');
+    });
+  }
+  var conHover = window.matchMedia('(hover: hover)');
+  dds.forEach(function (d) {
+    var top = ddTop(d);
+    var tapPendiente = false;
+    d.addEventListener('mouseenter', function () { if (conHover.matches) abreDd(d); });
+    d.addEventListener('mouseleave', function () { if (conHover.matches) cierraDds(); });
+    d.addEventListener('pointerdown', function (e) {
+      /* primer toque: abrir el panel en vez de navegar */
+      tapPendiente = e.pointerType === 'touch' && !d.classList.contains('open');
+    });
+    top.addEventListener('click', function (e) {
+      if (tapPendiente) { tapPendiente = false; e.preventDefault(); abreDd(d); return; }
+      if (!d.classList.contains('open') && !conHover.matches) { e.preventDefault(); abreDd(d); }
+      cierraDds(d);
+    });
+    d.addEventListener('focusin', function () { abreDd(d); });
+    d.addEventListener('focusout', function (e) { if (!d.contains(e.relatedTarget)) cierraDds(); });
+    top.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { cierraDds(); top.focus(); }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        abreDd(d);
+        var primero = ddPanel(d).querySelector('a');
+        if (primero) primero.focus();
+      }
+    });
+    ddPanel(d).addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { cierraDds(); top.focus(); }
+    });
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target || !e.target.closest || !e.target.closest('.sf-dd')) cierraDds();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cierraDds(); });
+  sfNavIn.addEventListener('scroll', function () { cierraDds(); }, { passive: true });
+  window.addEventListener('resize', function () { cierraDds(); });
+
+  /* ---------- 5 · breadcrumb (arranca en el juego; sin enlace de portada duplicado) ---------- */
   var crumbEl = document.getElementById('sfCrumb');
+  var homeLbl = NAV[0].t;
   function pintaCrumb() {
     if (!crumbEl) return;
     var g = body.getAttribute('data-game') || 'valorant';
-    var html = '<a href="index.html">INICIO</a><i>|</i><b id="sfCrumbGame">' + (GAME_NAMES[g] || 'VALORANT') + '</b>';
-    crumb.forEach(function (c, ix) {
-      html += '<i>|</i>' + (ix === crumb.length - 1 ? '<b>' + c + '</b>' : '<span>' + c + '</span>');
+    var partes = [GAME_NAMES[g] || 'VALORANT'];
+    crumb.forEach(function (c) {
+      var t = String(c).trim();
+      if (t && t.toLocaleUpperCase('es') !== homeLbl.toLocaleUpperCase('es')) partes.push(c);
     });
+    if (!partes.length) { crumbEl.hidden = true; return; }
+    var html = '<b id="sfCrumbGame">' + partes[0] + '</b>';
+    for (var i = 1; i < partes.length; i++) {
+      html += '<i>|</i>' + (i === partes.length - 1 ? '<b>' + partes[i] + '</b>' : '<span>' + partes[i] + '</span>');
+    }
+    crumbEl.hidden = false;
     crumbEl.innerHTML = html;
   }
   pintaCrumb();

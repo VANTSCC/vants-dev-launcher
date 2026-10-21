@@ -33,18 +33,19 @@ BEGIN
   EXCEPTION WHEN undefined_table THEN v := jsonb_set(v, '{vants_links_faceit}', 'null'::jsonb);
   END;
 
+  -- perfil del dueño identificado por ROL (role = 'owner'), nunca por email:
+  -- este SQL alimenta un JSON público (rama estado-db + MCP), cero PII.
   BEGIN
-    v := jsonb_set(v, '{perfil_dueno}', (SELECT coalesce(jsonb_agg(j), 'null'::jsonb) FROM (SELECT jsonb_build_object('username', username, 'xp', xp, 'rating', round(rating::numeric, 3)) j FROM players WHERE lower(coalesce(email, '')) = 'geimerjhoan099@gmail.com' LIMIT 1) s));
+    v := jsonb_set(v, '{perfil_dueno}', (SELECT coalesce(jsonb_agg(j), 'null'::jsonb) FROM (SELECT jsonb_build_object('username', username, 'xp', xp, 'rating', round(rating::numeric, 3)) j FROM players WHERE role = 'owner' LIMIT 1) s));
   EXCEPTION WHEN undefined_table OR undefined_column THEN v := jsonb_set(v, '{perfil_dueno}', 'null'::jsonb);
   END;
 
-  -- jugadores reales de la sala (sub enmascarado: identificación sin exponer identidad)
+  -- jugadores reales de la sala (SIN email y sub enmascarado: identificación sin exponer identidad)
   BEGIN
     v := jsonb_set(v, '{jugadores}', (SELECT coalesce(jsonb_agg(j), '[]'::jsonb) FROM (
       SELECT jsonb_build_object(
         'username', username,
         'nombre', display_name,
-        'email', email,
         'sub', CASE WHEN auth0_sub IS NULL THEN NULL ELSE left(auth0_sub, 20) || '…' END,
         'rol', role,
         'verificado', verified,

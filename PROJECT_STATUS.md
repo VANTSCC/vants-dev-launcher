@@ -1,6 +1,10 @@
 # PROJECT_STATUS — Plataforma VANTS (estilo Strafe)
 
-> Archivo vivo de estado. Última actualización: 2026-10-20 · Sesión T53+b/c/d/e (fases que faltaban + 3 bugs de producción corregidos) · commits `69dc4d0`→`d539d9f` · CI 5/5 VERDE
+> Archivo vivo de estado. Última actualización: 2026-10-20 (noche) · **Revisión de gobierno y
+> calidad del repo completo (212 commits, 10 workflows, 8 suites ejecutadas) con las
+> correcciones aplicadas el mismo día — ver FASE 17 al pie.** Sesiones previas: T53+b/c/d/e
+> (`69dc4d0`→`d539d9f`) y pivote fullstack + MYKD (`8b0e247`→`a1c6d10`, resumidos en la
+> sección "Pivote fullstack" y en la FASE 17 de IMPLEMENTATION_PLAN.md).
 
 ## Misión
 
@@ -27,7 +31,31 @@ modo autónomo continuo, sin presentar datos ficticios como reales y sin copiar 
 | 13 | Pruebas automatizadas | ✅✅ | **T53: Playwright real** (tests/e2e, desktop+móvil contra producción) + 90 asserts plataforma + 241 regresión |
 | 14 | Despliegue | ✅ | CI verde; producción verificada por curl+navegador; rollback documentado |
 | 15 | Documentación y entrega | ✅ | README, TESTING, DEPLOYMENT, TROUBLESHOOTING, API_SPEC actualizada, este archivo |
-| 16 | Auditoría final y corrección | ✅ | crawler **723 enlaces/0 rotos** (32 páginas); QA local 10/10; **bucle en producción: 3 bugs reales corregidos** (desenvoltura {items}, Invalid Date, stripSensible destruía fechas a {}) con regresión permanente y capturas del CI con datos vivos |
+| 16 | Auditoría final y corrección | ✅ | crawler de enlaces sin rotos (723 al cierre de T53; **804** en la revisión del 20-oct); QA local 10/10; **bucle en producción: 3 bugs reales corregidos** (desenvoltura {items}, Invalid Date, stripSensible destruía fechas a {}) con regresión permanente y capturas del CI con datos vivos |
+
+## Pivote fullstack (19-oct, `8b0e247`→`a1c6d10`) — lo que corre además de la misión
+
+El plan de 16 fases se cerró en T53, pero el HEAD siguió avanzando el mismo día (pivote
+fullstack, reskin MYKD y hotfixes de caché edge). Hoy, además de las 16 fases:
+
+- **Webapp fullstack** (`webapp/`): la home se compila con Astro 7 + React 19 + Tailwind 4
+  e islas hidratadas — `Explore.tsx` (React, `client:load`) y `Emblema3D.vue` + `IntroJett.vue`
+  (Vue 3.5 + Three.js 0.186, `client:only="vue"`) — servidas por el Worker como estático
+  (bundles `_astro/` commiteados en el espejo ×3 y verificados por hash en CI). Patrón
+  documentado en `docs/content-island.md`.
+- **Migraciones Neon por CI**: `neon-migrate.yml` aplica las 29 migraciones idempotentes en
+  orden; `neon-deploy-functions.yml` despliega las 8 Neon Functions.
+- **Docker multi-stage**: `services/api-gateway` (Express :8080) y matchmaking-service
+  (Fastify :8081) con `docker-compose.yml` (healthcheck `/healthz` en ambos), imágenes
+  `node:24-alpine` que corren como `USER node`.
+- **MCP**: `mcp/server.mjs` — server stdio sin dependencias con 4 tools de solo lectura
+  (estado_db, torneos, jugadores, partidos); smoke JSON-RPC en CI (`fullstack.yml`).
+- **E2E Playwright**: `tests/e2e/` — 15 tests (12 plataforma + 3 home fullstack) en desktop
+  + móvil contra producción, con job `e2e` en `tests.yml`.
+- **Clientes nativos**: HUB Electron 2.4.1 con auto-update (CI por tags `v*`) y app Android
+  (TWA `com.vantsports.app`, CI que genera APK/AAB).
+- **Identidad MYKD**: reskin rojo/negro + intro 3D propia (`33fafc2`), registrada en
+  DECISIONS (D2/D12).
 
 ## Qué cerró exactamente la T53 ("FALTAN FASES")
 
@@ -76,3 +104,26 @@ modo autónomo continuo, sin presentar datos ficticios como reales y sin copiar 
    diario 05:17 UTC). Torneos/equipos/partidas entrará con `source='faceit'`, sin chip DEMO.
 3. Opcional: regla de WAF en Neon para permitir el egreso de Cloudflare y habilitar la API
    server-side completa.
+
+
+---
+
+## FASE 17 · Consolidación fullstack — revisión de gobierno y calidad (20-oct)
+
+**Alcance revisado**: 212 commits (13→20-oct), 10 workflows YAML (validados), Worker (1.862
+líneas), 29 migraciones, MCP, scraper, Docker ×2, webapp Astro (astro check + build), 8 suites
+de tests ejecutadas de verdad, crawler de enlaces, espejo ×3 (diff completo), historial git.
+
+**Notas por área** (detalle en la sesión de trabajo del 20-oct):
+- CI/CD 6.5→~8.5 tras fixes: 2 triggers de deploy a prod estaban CORRUPTOS (`branches: ain]`)
+  y solo corrían a mano; ya corren por push a main con cola `deploy-prod`.
+- Seguridad: 0 secretos filtrados (historia incluida). Críticos corregidos: PII en
+  `estado-db.json` (emails) y `AUTH0_SPA_CLIENT_ID` inexistente (verificación de email rota).
+- Calidad: 8 suites verdes — **347 asserts reales** (plataforma 90, agente 61, mm_fase4 54,
+  llm 30, sandbox 60, vantsbot 36, mm_neon 16) + **804 enlaces/0 rotos** + astro check 0
+  errores + build byte-idéntico. README/TESTING actualizados con los números reales.
+- Espejo ×3: drift real detectado y corregido (`menu-preview.js` en producción pisaba el
+  preview de la isla React) + check permanente en CI (`fullstack.yml`).
+- Gobierno: D11–D15 registradas; el patrón "Content Island" documentado en
+  `docs/content-island.md`; pendientes de dueño en la checklist FASE 17 (D14 origen canónico,
+  firma Electron, CSP).

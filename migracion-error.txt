@@ -1,2 +1,0 @@
-psql:db/migrations/19-borrado-perfiles-no-dueno.sql:34: NOTICE:  players borradas (no-dueño): 0
-psql:db/migrations/19-borrado-perfiles-no-dueno.sql:68: NOTICE:  vants_links huérfanos borrados: 0

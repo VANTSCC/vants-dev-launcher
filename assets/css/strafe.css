@@ -102,6 +102,20 @@ body.sf .sf-nav-cta{margin-left:auto;display:inline-flex;align-items:center;gap:
 body.sf .sf-nav-cta::after{display:none}
 body.sf .sf-nav-cta svg{width:13px;height:13px}
 
+/* ---------- 4b · SUBMENÚS DEL SHELL (panel fijo bajo la barra) ---------- */
+body.sf .sf-dd{position:relative;display:inline-flex;align-items:stretch}
+body.sf .sf-dd-top{gap:6px;letter-spacing:.04em}
+body.sf .sf-dd-top .sf-caret{width:9px;height:7px;opacity:.6;transition:transform .16s ease;flex:none}
+body.sf .sf-dd.open .sf-dd-top .sf-caret{transform:rotate(180deg)}
+body.sf .sf-dd.open .sf-dd-top{color:var(--text)}
+body.sf .sf-nav .sf-dd-panel{position:fixed;top:0;left:-9999px;z-index:80;min-width:236px;max-width:calc(100vw - 16px);padding:7px;display:flex;flex-direction:column;gap:1px;background:linear-gradient(180deg,#141416,#0b0b0d);border:1px solid #23262e;border-top:2px solid var(--accent,#ff0d2e);border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,.55);opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .16s ease,transform .16s ease,visibility 0s linear .16s}
+body.sf .sf-nav .sf-dd.open .sf-dd-panel{opacity:1;visibility:visible;transform:translateY(0);transition:opacity .16s ease,transform .16s ease,visibility 0s}
+body.sf .sf-nav .sf-dd-panel a{position:relative;display:flex;align-items:center;min-height:44px;height:auto;padding:0 13px;font:700 11px/1.35 var(--sans);letter-spacing:.08em;color:#b9c0c9;border-left:2px solid transparent;border-radius:4px;white-space:normal}
+body.sf .sf-nav .sf-dd-panel a:hover,body.sf .sf-nav .sf-dd-panel a:focus-visible{background:rgba(255,13,46,.1);border-left-color:var(--accent,#ff0d2e);color:#fff;outline:none}
+body.sf .sf-nav .sf-dd-panel a.cur{color:var(--text);border-left-color:var(--accent,#ff0d2e)}
+body.sf .sf-nav .sf-dd-panel a.cur::after{display:none}
+body.sf .sf-nav .sf-dd-panel a.on::after{display:none}
+
 /* ---------- 5 · BREADCRUMB ---------- */
 body.sf .sf-crumb{display:flex;align-items:center;gap:10px;padding:16px 32px 6px;font:700 10px/1 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
 body.sf .sf-crumb a{color:var(--dim)}

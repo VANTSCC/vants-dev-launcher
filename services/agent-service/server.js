@@ -44,11 +44,28 @@ function construir(opts = {}) {
     if (req.method === 'OPTIONS') return reply.code(204).send();
   });
 
-  // auth Bearer en /api/v1/* solo si AGENT_TOKEN está definido
+  // Auth de /api/v1/* — comparación timing-safe del token, sin dependencias:
+  //   · AGENT_TOKEN definido → exige `Authorization: Bearer <token>` correcto
+  //     (401 si falta o no coincide).
+  //   · sin AGENT_TOKEN      → queda abierto para desarrollo local; el aviso
+  //     se emite al arrancar el servidor (bloque require.main).
+  const comparacionConstante = (a, b) => {
+    const x = String(a == null ? '' : a);
+    const y = String(b == null ? '' : b);
+    const len = Math.max(x.length, y.length);
+    let diff = x.length === y.length ? 0 : 1;
+    for (let i = 0; i < len; i++) diff |= (x.charCodeAt(i) || 0) ^ (y.charCodeAt(i) || 0);
+    return diff === 0;
+  };
   fastify.addHook('preHandler', async (req, reply) => {
-    if (!token || !req.url.startsWith('/api/v1')) return;
-    const h = req.headers.authorization || '';
-    if (h !== `Bearer ${token}`) return reply.code(401).send({ ok: false, error: { message: 'token del agente requerido' } });
+    if (!req.url.startsWith('/api/v1')) return;
+    if (token) {
+      const h = String(req.headers.authorization || '');
+      const ok = h.startsWith('Bearer ') && comparacionConstante(h.slice(7).trim(), token);
+      if (!ok) return reply.code(401).send({ ok: false, error: { message: 'token del agente requerido' } });
+      return;
+    }
+    // sin AGENT_TOKEN: acceso abierto (desarrollo local), aviso al arrancar.
   });
 
   fastify.get('/healthz', async () => ({ ok: true, service: 'agent-service', version: VERSION, uptime: Math.round(process.uptime()), memoria: memoria.tipo(), cerebro: llm ? 'reglas+llm' : 'reglas', sandbox: 'activa' }));
@@ -128,6 +145,9 @@ function construirContexto(opts = {}) {
 }
 
 if (require.main === module) {
+  if (!String(process.env.AGENT_TOKEN || '').trim()) {
+    console.warn('AGENT_TOKEN no configurado — endpoints de agente sin autenticación');
+  }
   const app = construir();
   const puerto = Number(process.env.PORT || 8082);
   app.listen({ port: puerto, host: '0.0.0.0' })

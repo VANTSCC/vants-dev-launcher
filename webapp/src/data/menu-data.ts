@@ -44,8 +44,7 @@ export const menu_data: MenuData[] = [
     link: 'ranking.html',
     sub_menu: [
       { title: 'Ranking global', link: 'ranking.html' },
-      { title: 'Global Power Rankings', link: 'gpr.html' },
-      { title: 'VANTS RANKED · Rangos', link: 'rangos.html' },
+      { title: 'Rangos', link: 'rangos.html' },
     ],
   },
   {
@@ -61,4 +60,15 @@ export const menu_data: MenuData[] = [
   { id: 5, title: 'LLAVES', link: 'llaves.html' },
   { id: 6, title: 'TIENDA', link: 'tienda.html' },
   { id: 7, title: 'DESCARGAR', link: 'descargar.html' },
+  {
+    id: 8,
+    title: 'CLIPS',
+    link: 'clips.html',
+    sub_menu: [
+      { title: 'Momentos destacados', link: 'clips.html' },
+      { title: 'Historia', link: 'historia.html' },
+      { title: 'Guía de la arena', link: 'guia.html' },
+    ],
+  },
+  { id: 9, title: 'NOTICIAS', link: 'noticias.html' },
 ];

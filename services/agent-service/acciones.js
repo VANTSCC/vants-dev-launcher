@@ -28,14 +28,27 @@ function crearAcciones(cfg = {}) {
     return { status: r.status, ok: r.ok, json };
   }
 
+  // Marca la acción en memoria con FAIL-SAFE: si la memoria no está
+  // disponible (Neon caído / error), la acción NO se ejecuta — antes la
+  // guarda se omitía silenciosamente y un bucle del agente podía
+  // re-disparar workflows sin límite.
+  async function marcarConGuarda(clave, titulo, detalle) {
+    if (!memoria) return 'sin-memoria';
+    try {
+      const nueva = await memoria.marcarAccion(clave, titulo, detalle);
+      return nueva ? 'nueva' : 'repetida';
+    } catch (eMem) {
+      return 'memoria-indispuesta';
+    }
+  }
+
   async function redispatch(workflowId, motivo, sha) {
     if (!token) return { ejecutada: false, resultado: 'sin GITHUB_TOKEN — solo propuesta' };
     // Guarda anti-bucle: una vez por sha (o por minuto si no hay sha)
     const clave = `redispatch:${workflowId}:${sha || new Date().toISOString().slice(0, 16)}`;
-    if (memoria) {
-      const nueva = await memoria.marcarAccion(clave, `Re-despliegue ${workflowId} (${motivo})`, { workflowId, sha, motivo });
-      if (!nueva) return { ejecutada: false, resultado: 'ya ejecutada para este commit (guarda anti-bucle)' };
-    }
+    const estado = await marcarConGuarda(clave, `Re-despliegue ${workflowId} (${motivo})`, { workflowId, sha, motivo });
+    if (estado === 'repetida') return { ejecutada: false, resultado: 'ya ejecutada para este commit (guarda anti-bucle)' };
+    if (estado === 'memoria-indispuesta') return { ejecutada: false, resultado: 'memoria no disponible — acción no ejecutada (fail-safe anti-bucle)' };
     const r = await ghApi(`/repos/${repo}/actions/workflows/${workflowId}/dispatches`, { method: 'POST', body: { ref: 'main' } });
     if (r.status === 204) return { ejecutada: true, resultado: `${workflowId} re-lanzado en main (${motivo})` };
     return { ejecutada: false, resultado: `GitHub respondio ${r.status} al lanzar ${workflowId}` };
@@ -47,10 +60,9 @@ function crearAcciones(cfg = {}) {
     rerun_fallidos: async (a) => {
       if (!token || !a.runId) return { ejecutada: false, resultado: 'sin token o runId — solo propuesta' };
       const clave = `rerun:${a.runId}`;
-      if (memoria) {
-        const nueva = await memoria.marcarAccion(clave, `Re-run workflow #${a.runId}`, { runId: a.runId });
-        if (!nueva) return { ejecutada: false, resultado: 'ya re-lanzado (guarda)' };
-      }
+      const estado = await marcarConGuarda(clave, `Re-run workflow #${a.runId}`, { runId: a.runId });
+      if (estado === 'repetida') return { ejecutada: false, resultado: 'ya re-lanzado (guarda)' };
+      if (estado === 'memoria-indispuesta') return { ejecutada: false, resultado: 'memoria no disponible — acción no ejecutada (fail-safe anti-bucle)' };
       const r = await ghApi(`/repos/${repo}/actions/runs/${a.runId}/rerun`, { method: 'POST' });
       return r.status === 202 ? { ejecutada: true, resultado: `run #${a.runId} re-lanzado` } : { ejecutada: false, resultado: `GitHub respondio ${r.status}` };
     },

@@ -213,7 +213,7 @@
   /* ---------------- FALLBACK S4 (datos DEMO etiquetados) ---------------- */
   var FALLBACK = [
     { id: 's4-asc', slug: 'demo-ascension-series-s4', name: 'DEMO · ASCENSIÓN SERIES S4', status: 'abierto', tier: 'open', game: 'valorant', prize_pool: null, starts_at: null, day: '24', mon: 'OCT', region: 'LATAM', max_participants: 32, is_demo: true },
-    { id: 's4-ranked', slug: 'demo-ranked-nocturna', name: 'DEMO · VANTS RANKED NOCTURNA', status: 'abierto', tier: 'ranked', game: 'valorant', prize_pool: null, region: 'LATAM', max_participants: 64, is_demo: true },
+    { id: 's4-ranked', slug: 'demo-ranked-nocturna', name: 'DEMO · RANKED NOCTURNA', status: 'abierto', tier: 'ranked', game: 'valorant', prize_pool: null, region: 'LATAM', max_participants: 64, is_demo: true },
     { id: 's4-copa', slug: 'demo-copa-comunidad-s4', name: 'DEMO · COPA COMUNIDAD S4', status: 'proximamente', tier: 'open', game: 'valorant', prize_pool: 500, day: '08', mon: 'NOV', region: 'LATAM', max_participants: 16, is_demo: true },
     { id: 's4-stratos', slug: 'demo-stratos-major-s4', name: 'DEMO · STRATOS MAJOR S4', status: 'proximamente', tier: 'major', game: 'cs2', prize_pool: 1000, day: '15', mon: 'NOV', region: 'LATAM', max_participants: 24, is_demo: true }
   ];
