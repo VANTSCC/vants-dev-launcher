@@ -54,7 +54,7 @@
 4. Pagos reales: Stripe account → claves en vants-server (webhook ya existe en neon-functions/stripe-webhook)
 5. Better Auth dashboard: requiere servidor Better Auth propio (opcional; hoy no se usa)
 6. Edición de país/región del dueño desde el drawer: requiere el mismo patrón de escritura (entregado por chat)
-7. RANGO VANTS RANKED: automático cuando se registren partidas (tablas ranked hoy vacías)
+7. RANGO APEX: automático cuando se registren partidas (tablas ranked hoy vacías)
 8. Limpieza: release vacío desktop-v2.0.0-build27 + 2 corridas en cola en Actions (borrar/cancelar a mano)
 
 ## Registro de capturas que rotan (hechos preservados)

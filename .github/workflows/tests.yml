@@ -38,6 +38,7 @@ jobs:
   matchmaking:
     name: Matchmaking service (51 asserts)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -58,6 +59,7 @@ jobs:
   neon_functions:
     name: Neon Functions (vantsbot 36 + mm 16 asserts)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -78,6 +80,7 @@ jobs:
   agente:
     name: Agente VANTS (61 + 60 + 28 asserts)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -104,6 +107,7 @@ jobs:
   plataforma:
     name: Plataforma de torneos (90 asserts unit + integración)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 

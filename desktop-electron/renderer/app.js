@@ -327,7 +327,7 @@ const PLANES = [
   {
     id: 'free', nombre: 'VANTS FREE', precio: { mo: '$0', yr: '$0' }, per: 'PARA SIEMPRE',
     desc: 'Para arrancar a competir hoy mismo.',
-    feats: ['Inscripción a torneos free y ladder nocturna', 'Perfil con rango VANTS RANKED y RR', 'Stats básicas de temporada', 'Conexión de cuentas de juego'],
+    feats: ['Inscripción a torneos free y ladder nocturna', 'Perfil con rango APEX y RR', 'Stats básicas de temporada', 'Conexión de cuentas de juego'],
     btn: 'PLAN ACTUAL', cls: ''
   },
   {

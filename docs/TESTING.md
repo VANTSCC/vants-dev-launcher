@@ -11,7 +11,7 @@
 | Matchmaking (fase 4) | `node scripts/test_mm_fase4.js` | Cola, emparejamiento, RR | 54 ✓ |
 | Matchmaking Neon | `node scripts/test_mm_neon.js` | Funciones serverless | 16 ✓ |
 | Vantsbot Discord | `node scripts/test_vantsbot.js` | Interactions, puente | 36 ✓ |
-| Auditoría de enlaces | `node scripts/audit_enlaces.js` | 34 páginas, crawler interno (espejo completo) | **804** ✓ · 0 rotos |
+| Auditoría de enlaces | `node scripts/audit_enlaces.js` | 33 páginas, crawler interno (espejo completo) | **752** ✓ · 0 rotos |
 | Webapp Astro (islas) | `cd webapp && npx astro check && npm run build` | Tipado + build de la home compilada (islas React/Vue) | 0 errores · bundles `_astro/` byte-idénticos |
 | Docker | `docker compose build` | api-gateway (Express :8080) y matchmaking (Fastify :8081): multi-stage `node:24-alpine`, `USER node` | build OK · healthcheck `/healthz` en ambos |
 | MCP | `node mcp/server.mjs` (smoke JSON-RPC en `fullstack.yml`) | `initialize` + `tools/list` | 4 tools de solo lectura (estado_db, torneos, jugadores, partidos) |
@@ -65,7 +65,7 @@ deben mostrar su chip DEMO. En CI hay un job `e2e` (retries 2, espera hasta 6 mi
 ```bash
 npm run sync:faceit:dry    # previsualiza sin escribir (no necesita DATABASE_URL)
 npm run sync:faceit        # UPSERT real en Neon (requiere FACEIT_API_KEY + DATABASE_URL)
-npm run audit:enlaces      # crawler interno (804 enlaces / 0 rotos)
+npm run audit:enlaces      # crawler interno (752 enlaces / 0 rotos)
 ```
 
 ## Qué cubre cada criterio

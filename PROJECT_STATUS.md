@@ -31,7 +31,7 @@ modo autónomo continuo, sin presentar datos ficticios como reales y sin copiar 
 | 13 | Pruebas automatizadas | ✅✅ | **T53: Playwright real** (tests/e2e, desktop+móvil contra producción) + 90 asserts plataforma + 241 regresión |
 | 14 | Despliegue | ✅ | CI verde; producción verificada por curl+navegador; rollback documentado |
 | 15 | Documentación y entrega | ✅ | README, TESTING, DEPLOYMENT, TROUBLESHOOTING, API_SPEC actualizada, este archivo |
-| 16 | Auditoría final y corrección | ✅ | crawler de enlaces sin rotos (723 al cierre de T53; **804** en la revisión del 20-oct); QA local 10/10; **bucle en producción: 3 bugs reales corregidos** (desenvoltura {items}, Invalid Date, stripSensible destruía fechas a {}) con regresión permanente y capturas del CI con datos vivos |
+| 16 | Auditoría final y corrección | ✅ | crawler de enlaces sin rotos (723 al cierre de T53; 804 al inicio de la revisión del 20-oct, **752** al cierre tras retirar GPR); QA local 10/10; **bucle en producción: 3 bugs reales corregidos** (desenvoltura {items}, Invalid Date, stripSensible destruía fechas a {}) con regresión permanente y capturas del CI con datos vivos |
 
 ## Pivote fullstack (19-oct, `8b0e247`→`a1c6d10`) — lo que corre además de la misión
 
@@ -39,8 +39,9 @@ El plan de 16 fases se cerró en T53, pero el HEAD siguió avanzando el mismo d�
 fullstack, reskin MYKD y hotfixes de caché edge). Hoy, además de las 16 fases:
 
 - **Webapp fullstack** (`webapp/`): la home se compila con Astro 7 + React 19 + Tailwind 4
-  e islas hidratadas — `Explore.tsx` (React, `client:load`) y `Emblema3D.vue` + `IntroJett.vue`
-  (Vue 3.5 + Three.js 0.186, `client:only="vue"`) — servidas por el Worker como estático
+  e islas hidratadas — `Explore.tsx` (React, `client:load`) y `Emblema3D.vue`
+  (Vue 3.5 + Three.js 0.186, `client:only="vue"`; IntroJett retirada del home en `cd7f9f1`) —
+  servidas por el Worker como estático
   (bundles `_astro/` commiteados en el espejo ×3 y verificados por hash en CI). Patrón
   documentado en `docs/content-island.md`.
 - **Migraciones Neon por CI**: `neon-migrate.yml` aplica las 29 migraciones idempotentes en
@@ -119,8 +120,8 @@ de tests ejecutadas de verdad, crawler de enlaces, espejo ×3 (diff completo), h
   y solo corrían a mano; ya corren por push a main con cola `deploy-prod`.
 - Seguridad: 0 secretos filtrados (historia incluida). Críticos corregidos: PII en
   `estado-db.json` (emails) y `AUTH0_SPA_CLIENT_ID` inexistente (verificación de email rota).
-- Calidad: 8 suites verdes — **347 asserts reales** (plataforma 90, agente 61, mm_fase4 54,
-  llm 30, sandbox 60, vantsbot 36, mm_neon 16) + **804 enlaces/0 rotos** + astro check 0
+- Calidad: 7 suites verdes — **347 asserts reales** (plataforma 90, agente 61, mm_fase4 54,
+  llm 30, sandbox 60, vantsbot 36, mm_neon 16) + **752 enlaces/0 rotos** + astro check 0
   errores + build byte-idéntico. README/TESTING actualizados con los números reales.
 - Espejo ×3: drift real detectado y corregido (`menu-preview.js` en producción pisaba el
   preview de la isla React) + check permanente en CI (`fullstack.yml`).

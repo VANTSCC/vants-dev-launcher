@@ -302,7 +302,7 @@
     var lineas = filaDiscordReal(handles.discord);
     var keys = PLATFORMS;
     try {
-      lineas += keys.map(function (k) { return platRow(k, handles[k] ? escHtml(handles[k]) : null, !handles[k]); }).join('');
+      lineas += keys.map(function (k) { return platRow(k, handles[k] || null, !handles[k]); }).join('');
     } catch (eP) {
       lineas += keys.map(function (k) {
         return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line,#222);font:600 10px var(--mono)"><span style="color:var(--ink)">' + k.toUpperCase() + '</span><span style="color:' + (handles[k] ? 'var(--grn,#3EE6A0)' : 'var(--dim)') + '">' + (handles[k] ? '✓ ' + escHtml(handles[k]) : '— NO CONECTADA') + '</span></div>';
@@ -540,7 +540,7 @@
       '<p class="d-sec">MIS INSCRIPCIONES</p>' +
       '<div id="rp-equipos" style="font:500 10.5px/1.7 var(--mono);color:var(--dim,#5C5C66);margin-bottom:4px">Cargando…</div>' +
       '<p class="d-sec">CUENTA</p>' +
-      '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">Rol en VANTS: <b style="color:var(--ink)">' + (p.role ? p.role.toUpperCase() : 'JUGADOR') + '</b><br>Verificado: <b style="color:' + (p.verified ? 'var(--grn)' : 'var(--dim)') + '">' + (p.verified ? 'SÍ' : 'NO') + '</b><br>Correo: ' + ((user && user.email) || '—') + '</div>' +
+      '<div style="font:500 11px/1.8 var(--mono);color:var(--mut)">Rol en VANTS: <b style="color:var(--ink)">' + escHtml(p.role ? p.role.toUpperCase() : 'JUGADOR') + '</b><br>Verificado: <b style="color:' + (p.verified ? 'var(--grn)' : 'var(--dim)') + '">' + (p.verified ? 'SÍ' : 'NO') + '</b><br>Correo: ' + escHtml((user && user.email) || '—') + '</div>' +
       '<button class="btn btn-ghost btn-sm" id="rp-ajustes" style="margin-top:14px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">AJUSTES DE CUENTA · EMAIL · CONTRASEÑA</button>' +
       '<button class="btn btn-ghost btn-sm" id="rp-salir" style="margin-top:8px;width:100%;justify-content:center;background:none;border:1px solid var(--line2);color:var(--ink);font:700 10px var(--mono);padding:11px;cursor:pointer;letter-spacing:.1em">CERRAR SESIÓN</button>' +
       '</div>';
@@ -832,7 +832,7 @@
     openDrawer('<div class="d-head"><span class="kicker">MI PERFIL · PRIMERA VEZ</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>' +
       '<div class="d-body">' +
       '<p style="font:500 12px/1.7 var(--mono);color:var(--mut);margin:16px 0">Crea tu jugador oficial en la base de VANTS. Se guarda en Neon y queda ligado a tu cuenta.</p>' +
-      '<input id="cp-user" placeholder="Tu usuario (nick)" value="' + (nombreSugerido || '') + '" style="' + inp + 'margin-bottom:10px">' +
+      '<input id="cp-user" placeholder="Tu usuario (nick)" value="' + escHtml(nombreSugerido || '') + '" style="' + inp + 'margin-bottom:10px">' +
       '<input id="cp-pais" placeholder="País" style="' + inp + 'margin-bottom:10px">' +
       '<input id="cp-region" placeholder="Región (LATAM, EU…)" style="' + inp + 'margin-bottom:12px">' +
       '<button class="btn btn-sm" id="cp-crear" style="width:100%;justify-content:center;background:#FF0D2E;color:#fff;border:0;font:700 11px var(--mono);padding:12px;cursor:pointer;letter-spacing:.08em">CREAR MI PERFIL EN NEON</button>' +
@@ -937,7 +937,7 @@
     var accName = document.getElementById('accName');
     var dot = document.getElementById('accLive');
     if (ava) {
-      if (ME && ME.player && ME.player.avatar_url) ava.innerHTML = '<img alt="" src="' + ME.player.avatar_url + '">';
+      if (ME && ME.player && ME.player.avatar_url) ava.innerHTML = '<img alt="" src="' + escHtml(ME.player.avatar_url) + '">';
       else ava.textContent = nombreReal.slice(0, 2);
     }
     if (accName) accName.textContent = esOwner ? nombreReal.toUpperCase() : nombreReal.slice(0, 12).toUpperCase();
