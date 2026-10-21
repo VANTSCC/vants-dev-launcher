@@ -14,5 +14,8 @@ contextBridge.exposeInMainWorld('vantsHub', {
   ventana:     (acc) => ipcRenderer.invoke('hub:ventana', acc),
   onEstado:    (cb) => ipcRenderer.on('hub:estado', (e, d) => cb(d)),
   onActualizacion: (cb) => ipcRenderer.on('hub:update', (e, d) => cb(d)),
-  actualizarInstalar: () => ipcRenderer.invoke('hub:actualizar-instalar')
+  actualizarInstalar: () => ipcRenderer.invoke('hub:actualizar-instalar'),
+  captura:     (accion) => ipcRenderer.invoke('hub:captura', accion), // 'iniciar' | 'detener' | 'carpeta' | undefined = estado
+  onCaptura:   (cb) => ipcRenderer.on('hub:captura-estado', (e, d) => cb(d)),
+  exitlag:     (accion) => ipcRenderer.invoke('hub:exitlag', accion)  // 'activar' | 'desactivar' | 'recargar' | 'abrir-config' | undefined = estado
 });

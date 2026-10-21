@@ -286,7 +286,7 @@ async function cargarVivoEn(id) {
       <div class="fila">
         <div class="dot ${f.estado === 'jugando' ? 'naranja' : 'verde'}"></div>
         <div class="nom ${f.role === 'owner' ? 'oro-nombre' : ''}">${esc(f.display_name || f.username)}${f.verified ? ' ✅' : ''}</div>
-        <div class="meta">${f.estado === 'jugando' ? '🎮 JUGANDO ' + esc(f.juego || '').toUpperCase() : '🟢 EN LÍNEA'}</div>
+        <div class="meta">${f.estado === 'jugando' ? '🎮 JUGANDO ' + esc(VANTS_JUEGOS.nombreDe(f.juego).toUpperCase()) : '🟢 EN LÍNEA'}</div>
       </div>`).join('') : '<div class="dim">nadie conectado ahora mismo — tú podrías ser el primero</div>';
   } catch (e) {
     ['#nav-vivo-n', '#rail-vivo-n'].forEach(sel => { const b = $(sel); if (b) b.classList.add('oculto'); });
