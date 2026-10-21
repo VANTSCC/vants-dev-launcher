@@ -3,8 +3,9 @@
    ------------------------------------------------------------
    · Nav superior: al pasar el mouse por SALA/PARTIDOS/RANKING/...,
      se despliega un panel de vista previa. Clic = abre la sección.
-   · Inicio: sección EXPLORAR (las categorías del viejo cajón) con
-     panel de vista previa al pasar el mouse. Clic = abre.
+   · La sección EXPLORAR de la portada (isla React y modo clásico) fue
+     retirada por el dueño (decisión D20): este módulo queda SOLO
+     para el preview del nav.
    · El cajón MENÚ fue eliminado: todo vive en la portada.
    Módulo independiente: no toca arena.js ni Auth0.
    ============================================================ */
@@ -24,9 +25,10 @@
     ranking: { k: 'LÍDERES', t: 'RANKING', i: 'bar-chart-3', c: '#4CC9F0',
       d: 'La tabla real del circuito: rating, RR, partidos y winrate de cada jugador registrado en Neon.',
       li: ['Datos reales de la base', 'Ordená por cualquier columna', 'Buscador de jugadores y equipos'] },
-    llaves: { k: 'LLAVES', t: 'BRACKET', i: 'git-fork', c: ACC,
-      d: 'El bracket principal del torneo: doble eliminación al mejor de tres, actualizado con cada serie.',
-      li: ['Cuartos, semifinales y final', 'Llaves inferiores incluidas', 'Cada cruce abre su detalle'] },
+    /* SIN tarjeta de LLAVES en las vistas previas: la pidió fuera el dueño
+       (decisión D18). LLAVES ya vive en el submenú de torneo.html → el tab no
+       despliega preview. keyFor cae en DATA[llaves] que no existe →
+       showNavPv corta; el tab sigue navegable. */
     torneos: { k: 'CALENDARIO', t: 'TORNEOS', i: 'trophy', c: '#F5C044',
       d: 'Torneos abiertos con inscripción por equipo: los PRO tienen fee y los FREE son entrada libre.',
       li: ['Calendario y premios', 'Inscripción con tu equipo', 'Cupos y fee por torneo'] },
@@ -53,10 +55,10 @@
       li: ['FREE · PRO · CREATOR', 'Insignias verificables', 'Pase de temporada y patrocinios'] },
     tienda: { k: 'OFICIAL', t: 'TIENDA', i: 'shopping-bag', c: '#F5C044',
       d: 'La tienda oficial VANTS × VegaStore: indumentaria y gear del circuito, con envíos a toda LATAM.',
-      li: ['Colección oficial', 'Gear y accesorios', 'Envíos y soporte'] },
-    descargar: { k: 'WINDOWS', t: 'DESCARGAR', i: 'monitor-down', c: '#4CC9F0',
-      d: 'VANTS HUB para Windows: tu biblioteca, membresía, partidos y conexiones desde una app propia.',
-      li: ['Instalador oficial', 'Login con tu cuenta VANTS', 'Auto-actualizaciones'] }
+      li: ['Colección oficial', 'Gear y accesorios', 'Envíos y soporte'] }
+    /* SIN tarjeta de DESCARGAR en las vistas previas (decisión D18, misma
+       petición del dueño): keyFor('descargar.html') cae en DATA[descargar]
+       que no existe → showNavPv corta y el tab no despliega preview. */
   };
 
   function keyFor(href) {
@@ -95,38 +97,9 @@
     + '#navPv .pv-desc{font-size:10.5px;margin-bottom:12px}'
     + '#navPv .pv-foot{padding:12px 18px 14px}'
     + '#navPv .pv-hint{display:none}'
-    + '@media (max-width:980px),(hover:none){#navPv{display:none}}'
-    /* inicio · explorar */
-    + '.home-cats .hc-grid{display:flex;border:1px solid var(--line2);background:linear-gradient(180deg,#0C0C10,#0A0A0C);clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}'
-    + '.hc-list{flex:1;min-width:0;display:flex;flex-direction:column}'
-    + '.hc-row{display:flex;align-items:center;gap:13px;padding:11px 18px;border-bottom:1px solid rgba(34,34,40,.55);border-left:3px solid transparent;text-decoration:none;transition:.16s;cursor:pointer}'
-    + '.hc-row:hover,.hc-row.pv-on{background:#131318;border-left-color:var(--accent)}'
-    + '.hc-row>svg:first-child{width:17px;height:17px;color:var(--muted);flex:none;transition:.16s}'
-    + '.hc-row:hover>svg:first-child{color:var(--accent)}'
-    + '.hc-row .md-txt{flex:1;display:flex;flex-direction:column;gap:2px;font:800 11.5px/1 var(--sans);letter-spacing:.07em;color:var(--text);text-transform:uppercase}'
-    + '.hc-row .md-txt small{font:600 8.5px/1.2 var(--mono);letter-spacing:.12em;color:var(--dim);text-transform:uppercase}'
-    + '.hc-row .md-go{width:14px;height:14px;color:var(--dim);flex:none}'
-    + '.hc-row .md-new{font:800 8px/1 var(--mono);letter-spacing:.14em;color:#0A0A0C;background:var(--accent);padding:3px 6px;flex:none}'
-    + '.hc-perfil{border-bottom:1px solid var(--line2)}'
-    + '.hc-cols{display:grid;grid-template-columns:1fr 1fr 1fr}'
-    + '.hc-col{border-right:1px solid var(--line);padding-bottom:4px}'
-    + '.hc-col:last-child{border-right:0}'
-    + '.hc-col .md-label{font:700 8.5px/1 var(--mono);letter-spacing:.28em;color:var(--dim);padding:12px 18px 7px}'
-    + '.hc-preview{width:380px;flex:none;border-left:1px solid var(--line2);display:flex;flex-direction:column;--pvc:' + ACC + ';background:radial-gradient(120% 80% at 85% 0%,rgba(255,13,46,.12),transparent 55%),linear-gradient(180deg,#0C0C11,#09090C)}'
-    + '.hc-preview .pv-media{height:170px}'
-    + '.hc-preview .pv-body{padding:18px 20px 8px}'
-    + '.hc-preview .pv-title{font-size:21px}'
-    + '.hc-preview .pv-desc{font-size:11px}'
-    + '.hc-preview .pv-foot{padding:12px 20px 16px}'
-    + '@media (max-width:980px){'
-    + '  .home-cats .hc-grid{flex-direction:column}'
-    + '  .hc-preview{display:none}'
-    + '  .hc-cols{grid-template-columns:1fr 1fr}'
-    + '}'
-    + '@media (max-width:620px){'
-    + '  .hc-cols{grid-template-columns:1fr}'
-    + '  .hc-row{padding:10px 14px}'
-    + '}';
+    + '@media (max-width:980px),(hover:none){#navPv{display:none}}';
+    /* Las reglas .hc-* del EXPLORAR clásico se retiraron con la sección
+       (D20): la portada ya no tiene categorías ni panel de preview. */
   var st = document.createElement('style');
   st.id = 'pv-style';
   st.textContent = css;
@@ -192,46 +165,7 @@
   window.addEventListener('scroll', function () { navPv.classList.remove('on'); }, { passive: true });
   window.addEventListener('resize', function () { navPv.classList.remove('on'); });
 
-  /* ---------------- 2) INICIO · EXPLORAR ---------------- */
-  var hcPrev = document.getElementById('hcPreview');
-  var exploreReact = document.documentElement.getAttribute('data-explore') === 'react';
-  if (hcPrev && !exploreReact) {
-    hcPrev.innerHTML = buildHTML();
-    var hcRows = $$('.hc-row');
-    var activeKey = null;
-    function paintHc(key, href) {
-      activeKey = key;
-      fill(hcPrev, key, href);
-      $$('.hc-row').forEach(function (x) { x.classList.toggle('pv-on', x.getAttribute('data-pv') === key && key !== 'perfil'); });
-    }
-    hcRows.forEach(function (r) {
-      var href = r.getAttribute('href') || '';
-      var key = keyFor(href);
-      r.setAttribute('data-pv', key);
-      if (!DATA[key]) return; /* sin tarjeta en el submenu (D17): sin preview */
-      if (!touchMode) {
-        r.addEventListener('mouseenter', function () { paintHc(key, href); });
-        r.addEventListener('focus', function () { paintHc(key, href); });
-      }
-    });
-    paintHc('perfil', '#');
-
-    var perfilRow = document.getElementById('hcPerfil');
-    if (perfilRow) {
-      perfilRow.addEventListener('click', function (e) {
-        e.preventDefault();
-        try {
-          var a = window.VANTS_AUTH;
-          if (a && a.sub && window.openPlayerProfile) {
-            var mio = (window.VANTS_ME && window.VANTS_ME.player) || null;
-            if (!mio && a.playerId) { mio = (window.VANTS_PLAYERS || []).find(function (x) { return String(x.id) === String(a.playerId); }) || null; }
-            if (mio) { window.openPlayerProfile(mio); return; }
-          }
-        } catch (err) {}
-        var lb = document.getElementById('arenaLoginBtn');
-        if (lb && !lb.hidden) { lb.click(); return; }
-        if (typeof window.toast === 'function') { try { window.toast('Ingresá para abrir tu perfil de jugador', 'info'); } catch (e2) {} }
-      });
-    }
-  }
+  /* ---------------- 2) INICIO · EXPLORAR: RETIRADO (D20) ----------------
+     La sección de categorías de la portada salió del sitio (isla React y
+     modo clásico). El preview de categorías vive solo en el nav de arriba. */
 })();

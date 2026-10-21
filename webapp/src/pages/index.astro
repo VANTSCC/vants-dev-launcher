@@ -4,7 +4,6 @@ import Vmark from '../components/Vmark.astro';
 import Ticker from '../components/Ticker.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
-import Explore from '../components/Explore';
 import Emblema3D from '../components/Emblema3D.vue';
 import Footer from '../components/Footer.astro';
 ---
@@ -16,6 +15,5 @@ import Footer from '../components/Footer.astro';
   <div class="relative mx-auto h-[230px] w-[230px] opacity-60" aria-hidden="true">
     <Emblema3D client:only="vue" />
   </div>
-  <Explore client:load />
   <Footer />
 </Base>

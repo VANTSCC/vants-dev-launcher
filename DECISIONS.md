@@ -223,3 +223,84 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   `webapp/src/layouts/Base.astro`; rebuild de webapp y espejos verificados
   (76 archivos ×3). El resto de las tarjetas del preview no cambia.
 - Fecha: 2026-10-21.
+
+## D18 · Sin tarjetas de LLAVES ni DESCARGAR en las vistas previas
+- **Decisión**: el hover del tab LLAVES y del tab DESCARGAR en el nav (y de sus
+  filas en la sección EXPLORAR) NO despliega tarjeta de vista previa. En
+  `assets/js/menu-preview.js` ×3 los entries `llaves` y `descargar` salen de
+  `DATA` → `showNavPv` corta con `if (!DATA[key])`. En la isla React
+  (`webapp/src/components/Explore.tsx`) las categorías `llaves` y `descargar`
+  llevan `noPreview: true` y el `onMouseEnter` de las filas lo respeta: el
+  panel conserva la última categoría válida. Fila/tab siguen navegables con
+  clic (llaves.html, descargar.html no cambian).
+- **Motivo**: petición del dueño — LLAVES ya vive en el submenú de torneo.html
+  (tarjeta redundante) y la tarjeta de DESCARGAR del EXPLORAR se pidió fuera
+  ("lo de la otra imagen también quítalo").
+- **Qué la invalidaría**: que el dueño pida volver a mostrar esas tarjetas
+  (re-agregar los entries en `DATA` / quitar los `noPreview: true` y bump de
+  cache), o que se rediseñe el preview.
+- **Consecuencias**: cache bumped `menu-preview.js?v=7 → v=8` en 33 html ×3 +
+  `webapp/src/layouts/Base.astro`; rebuild de webapp y espejos verificados
+  (77 archivos ×3, incluye el CSS de Tailwind de la isla). QA Playwright hover
+  real 9/9: LLAVES/DESCARGAR sin tarjeta
+  en nav e isla; TIENDA/CLIPS/RANKING/TORNEOS intactas. El resto no cambia.
+- Fecha: 2026-10-21.
+
+## D19 · La isla EXPLORAR compila su Tailwind y el canonical vive en la fuente
+- **Decisión**: (1) `webapp/src/layouts/Base.astro` importa `../styles/tw.css`
+  (Tailwind v4 utilities SIN preflight — arena.css sigue siendo dueño del
+  sistema base). Sin ese import, las clases de `components/Explore.tsx` no se
+  compilan a ningún CSS y el panel de preview sale sin estilos (texto pegado al
+  borde, <ul> con estilos de navegador). (2) El canonical/og:url de la home
+  vive en `Base.astro` apuntando a `https://vants.vants.workers.dev/` — nunca
+  se corrige solo en el index.html compilado: el próximo build lo pisa.
+- **Motivo**: la captura del dueño mostró la tarjeta de preview sin estilos
+  (causa raíz: tw.css existía pero nadie lo importaba); y el rebuild verificó
+  que el fix de canonical del agente 9-f era solo sobre artefacto y se
+  revertía con cada build.
+- **Qué la invalidaría**: que el dueño decida canonical distinto (cambiar la
+  URL en Base.astro), o que la isla deje de usar Tailwind (entonces quitar el
+  import y tw.css).
+- **Consecuencias**: build emite `_astro/index.*.css` (~7 KB, utilities only,
+  0 preflight) linkeado desde la home; espejo ×3 = 77 archivos; el panel usa
+  `p-5` (padding del aside, sustituye al `.pv-body` del modo clásico).
+- Fecha: 2026-10-21.
+
+## D20 · La sección EXPLORAR sale por completo de la portada
+- **Decisión**: la sección `/// EXPLORAR · CATEGORÍAS DE LA ARENA` (título,
+  grid de categorías y panel de preview) sale ENTERA de la portada. Aclaración
+  del dueño: cuando marcó la imagen con la tarjeta DESCARGAR rota, pedía
+  quitar la sección EXPLORAR completa, no solo esa tarjeta. Se retiran: la
+  isla React (`webapp/src/components/Explore.tsx` — archivo eliminado), su
+  montaje en `index.astro`, el modo clásico y el CSS `.hc-*` de
+  `assets/js/menu-preview.js` (que queda SOLO para el preview del nav) y el
+  flag `data-explore` del `<html>` en `Base.astro`. **El import de
+  `styles/tw.css` SE MANTIENE**: lo sigue necesitando el wrapper del emblema
+  3D (`Emblema3D.vue`, clases h-[230px] etc.) — D19 queda vigente en esa parte.
+- **Motivo**: petición explícita del dueño ("Te dije quita /// EXPLORAR
+  Categorías de la arena").
+- **Qué la invalidaría**: que el dueño pida volver a tener la sección (recuperar
+  Explore.tsx del historial git y re-montarla en index.astro).
+- **Consecuencias**: el spec e2e pierde sus asertos de isla (home-fullstack.
+  spec.js reescrito: #explorar/#hcPreview ahora esperan count=0); cache bumps
+  `menu-preview.js v=8→v=9`, `arena.js v=33→v=34`, `arena-live.js v=34→v=35`
+  en todos los HTML ×3 + Base.astro; espejo ×3 = 75 archivos. El preview del
+  nav (TIENDA, CLIPS, etc.) NO cambia; D17/D18 siguen aplicando a los tabs.
+- Fecha: 2026-10-21.
+
+## D21 · Sin emblema de rango en los banners de perfil
+- **Decisión**: el banner del perfil NO muestra el emblema de rango. Fuera en
+  las 3 superficies: `pc-banner` de las tarjetas de jugador (arena.js),
+  `bannerPublicoHTML` (ficha pública, arena.js) y `pfBannerHTML` (perfil real,
+  arena-live.js). El rango sigue apareciendo donde corresponde: `pc-rank` del
+  card, sección RANGO de la ficha (`rangoPublicoHTML` / `pf-rank` en
+  arena-live.js) y el grid RANGOS (`renderRanks`).
+- **Motivo**: petición del dueño — "quita que aparezca el rango en banner
+  porque ya está en rango" (el hexágono del banner duplicaba la info).
+- **Qué la invalidaría**: que el dueño pida volver a ver el emblema sobre el
+  banner (re-agregar el `rankSVG(...,'remblem')` en los 3 builders + bump de
+  cache de arena/arena-live).
+- **Consecuencias**: bumps `arena.js v=33→v=34` y `arena-live.js v=34→v=35`
+  (compartidos con D20); spec e2e actualizado a `arena.js?v=34`. El CSS
+  `.remblem` queda (lo usa renderRanks).
+- Fecha: 2026-10-21.
