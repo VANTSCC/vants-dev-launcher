@@ -78,10 +78,6 @@
     + '.pv-body{padding:20px 22px 12px;overflow-y:auto;flex:1;min-height:0}'
     + '.pv-title{font:800 24px/1.05 var(--sans);letter-spacing:.02em;text-transform:uppercase;color:var(--text);margin:0 0 10px}'
     + '.pv-desc{font:500 11.5px/1.75 var(--mono);color:var(--muted);margin:0 0 16px}'
-    + '.pv-sub{font:700 8.5px var(--mono);letter-spacing:.28em;color:var(--dim);margin:0 0 8px}'
-    + '.pv-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}'
-    + '.pv-list li{position:relative;padding-left:16px;font:600 10.5px/1.6 var(--mono);color:var(--muted)}'
-    + '.pv-list li:before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;background:var(--pvc)}'
     + '.pv-foot{flex:none;padding:14px 22px 20px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}'
     + '.pv-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--pvc);color:#fff;font:800 11px var(--mono);letter-spacing:.1em;padding:13px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);text-decoration:none}'
     + '.pv-cta svg{width:14px;height:14px}'
@@ -97,7 +93,6 @@
     + '#navPv .pv-body{padding:16px 18px 8px}'
     + '#navPv .pv-title{font-size:19px;margin-bottom:8px}'
     + '#navPv .pv-desc{font-size:10.5px;margin-bottom:12px}'
-    + '#navPv .pv-list li{font-size:10px}'
     + '#navPv .pv-foot{padding:12px 18px 14px}'
     + '#navPv .pv-hint{display:none}'
     + '@media (max-width:980px),(hover:none){#navPv{display:none}}'
@@ -142,8 +137,7 @@
     return '<div class="pv-media"><span class="pv-kick" data-pv-kick></span>'
       + '<span class="pv-ic" data-pv-ic><i data-lucide="crosshair"></i></span>'
       + '<svg class="pv-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#vmark"/></svg></div>'
-      + '<div class="pv-body"><p class="pv-title" data-pv-title></p><p class="pv-desc" data-pv-desc></p>'
-      + '<p class="pv-sub">DENTRO DE LA SECCIÓN</p><ul class="pv-list" data-pv-list></ul></div>'
+      + '<div class="pv-body"><p class="pv-title" data-pv-title></p><p class="pv-desc" data-pv-desc></p></div>'
       + '<div class="pv-foot"><a class="pv-cta" data-pv-cta href="#"><i data-lucide="arrow-up-right"></i>ABRIR SECCIÓN</a>'
       + '<span class="pv-hint" data-pv-hint></span></div>';
   }
@@ -154,7 +148,6 @@
     var ic = $('[data-pv-ic]', root); if (ic) ic.innerHTML = '<i data-lucide="' + x.i + '"></i>';
     var tt = $('[data-pv-title]', root); if (tt) tt.textContent = x.t;
     var ds = $('[data-pv-desc]', root); if (ds) ds.textContent = x.d;
-    var ls = $('[data-pv-list]', root); if (ls) ls.innerHTML = (x.li || []).map(function (t) { return '<li>' + t + '</li>'; }).join('');
     var ct = $('[data-pv-cta]', root); if (ct) ct.setAttribute('href', href || '#');
     var hn = $('[data-pv-hint]', root); if (hn) hn.textContent = touchMode ? 'Tocá ABRIR SECCIÓN para entrar' : 'Pasá el mouse por una opción · clic para abrir';
     if (window.lucide && lucide.createIcons) { try { lucide.createIcons(); } catch (e) {} }
