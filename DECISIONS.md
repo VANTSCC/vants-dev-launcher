@@ -26,6 +26,9 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   actual. Todo cambio futuro de identidad se registra aquí (o en una D nueva) para no
   perder la traza.
 - Fecha: 2026-10-19 (formaliza lo hecho en T51); actualizada 2026-10-20 (identidad MYKD vigente).
+- Actualización (2026-10-20, `cd7f9f1`): la intro 3D propia (IntroJett) y su dock (`heroDock`)
+  quedaron FUERA del home; el componente permanece en `webapp/src/components/IntroJett.vue`
+  sin montar. La identidad MYKD (rojo #ff0d2e sobre oscuro) no cambia.
 
 ## D3 · Rutas de torneos estilo referencia servidas por el Worker
 - **Decisión**: `/es/tournaments/:juego/:estado/` (y `/en/…`) se sirven desde el Worker
@@ -134,6 +137,9 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   desde `fullstack.yml`; `astro check` gatea el tipado. El Worker sigue siendo el único
   servidor de producción; el patrón de islas está documentado en `docs/content-island.md`.
 - Fecha: 2026-10-19 (hecho), 2026-10-20 (documentado).
+- Actualización (2026-10-20, `cd7f9f1`): IntroJett.vue dejó de ser isla montada (fuera de
+  `index.astro` y `Hero.astro`); las islas vivas de la home son `Explore.tsx` y `Emblema3D.vue`
+  (ver tabla vigente en `docs/content-island.md`).
 
 ## D12 · Identidad visual MYKD: rojo/negro reemplaza al lima
 - **Decisión**: paleta roja (#ff0d2e) sobre oscuro + menús estilo MYKD; el lima #D2DC59 de
@@ -183,3 +189,18 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   browser-facing (origen falseable) — mitigado con sanitización + rate limit; el fix
   definitivo es emitir la notificación server-side desde `/api/torneos/inscribir`.
 - Fecha: 2026-10-20.
+
+## D16 · MI CUENTA abre la ficha de jugador (el dashboard deja de ser la cara de MI CUENTA)
+- **Decisión**: el botón MI CUENTA lleva SIEMPRE al flujo de perfil: sin ficha →
+  `vantsAbrirMiPerfil` ("MI PERFIL · PRIMERA VEZ" → ficha de jugador); con ficha →
+  `openPlayerProfile(mio)`. El dashboard "MI CUENTA · DASHBOARD" queda como respaldo
+  inalcanzable desde la UI (solo alcanzable llamando `abrirMiCuenta()` por consola).
+- **Motivo**: petición del dueño — "a los NUEVOS que le salga el perfil de antes, no este":
+  el arranque caía al dashboard cuando `VANTS_ME.player`/`VANTS_PLAYERS` aún no tenían la
+  ficha (exactamente el caso de los usuarios nuevos).
+- **Consecuencias**: `abrirMiCuenta` delega PRIMERO a `vantsAbrirMiPerfil` (try/catch +
+  return) y el fallback del click de `#miCuentaBtn` llama al perfil; sin bucles (el perfil
+  nunca llama a `abrirMiCuenta`). Cache bumped arena.js v=30→v=31 y arena-live.js v=32→v=33
+  en 25/24 html ×3 + `webapp/src/layouts/Base.astro` (`fc99429`; v=32/v=33 de arena.js en la
+  revisión posterior).
+- Fecha: 2026-10-21 (`fc99429`).

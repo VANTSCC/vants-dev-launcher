@@ -41,7 +41,8 @@ if (MODO_CHECK) {
   };
   const relativos = new Set();
   // Referencia = public/ completo: cubre TODOS los archivos espejados
-  // (34 HTML + assets + _astro + sw/robots/sitemap), no solo los típicos.
+  // (33 HTML + assets + _astro + sw/robots/sitemap — hoy son 76 en total,
+  //  el conteo lo calcula este script, nunca hardcodeado), no solo los típicos.
   recorrer(targets[1], '', relativos);
   for (const rel of relativos) {
     const firmas = targets.map((b) => comoClave(b, rel));

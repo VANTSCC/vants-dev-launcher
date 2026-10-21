@@ -39,9 +39,13 @@ producción, el Worker sirve el HTML compilado y las islas hidratan client-side.
 
 | Isla | Archivo | Framework | Hidratación | Bundle |
 |---|---|---|---|---|
-| Explorador EXPLORAR | `webapp/src/components/Explore.tsx` | React 19 | `client:load` | `_astro/Explore.DuxJ7iP9.js` |
-| Emblema 3D | `webapp/src/components/Emblema3D.vue` | Vue 3.5 + Three | `client:only="vue"` | `_astro/Emblema3D.BiCJqfOx.js` |
-| Intro Jett | `webapp/src/components/IntroJett.vue` | Vue 3.5 + Three | `client:only="vue"` | `_astro/IntroJett.DejkFndp.js` |
+| Explorador EXPLORAR | `webapp/src/components/Explore.tsx` | React 19 | `client:load` | `_astro/Explore.ZD4a5hKY.js` |
+| Emblema 3D | `webapp/src/components/Emblema3D.vue` | Vue 3.5 + Three | `client:only="vue"` | `_astro/Emblema3D.Cq3vLdgo.js` |
+
+> Actualización (2026-10-20, `cd7f9f1`): la isla **Intro Jett** (`IntroJett.vue`, bundle
+> `_astro/IntroJett.DejkFndp.js`) quedó RETIRADA del home (sin `<div class="hero-dock">` ni
+> `client:only` en `index.astro`/`Hero.astro`); el componente permanece en el árbol sin usar.
+> Los hashes de la tabla corresponden al build vigente (reproducible byte a byte).
 
 Verificación: `astro check` 0 errores y el build reproduce bundles **byte-idénticos** a los
 commiteados.
