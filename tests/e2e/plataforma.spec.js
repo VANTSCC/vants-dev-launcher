@@ -28,6 +28,9 @@ const RUTA_TORNEOS_EN = '/en/tournaments/cs2/archive';
 test.describe('Rutas de torneos estilo strafe (F6)', () => {
   test('ES upcoming: título dinámico, lang y tabs accesibles', async ({ page }) => {
     await page.goto(RUTA_TORNEOS_ES);
+    // Regresión 20-oct: paginaTorneos pedía /torneos.html, Assets respondía 307 → /torneos y el Worker
+    // se lo reenviaba al visitante. Esta aserción NO depende de la caché de borde: la ruta no redirige.
+    expect(new URL(page.url()).pathname).toBe(RUTA_TORNEOS_ES);
     // NOTA (cache de workers.dev): el edge puede servir una copia cacheada del
     // shell para esta ruta (los workers.dev no se purgan por API). La pagina
     // renderiza igual (tabs, lang, datos); el titulo reescrito solo se ve cuando
@@ -40,6 +43,9 @@ test.describe('Rutas de torneos estilo strafe (F6)', () => {
 
   test('EN archive: título en inglés (o shell cacheado por el edge)', async ({ page }) => {
     await page.goto(RUTA_TORNEOS_EN);
+    // Regresión 20-oct: paginaTorneos pedía /torneos.html, Assets respondía 307 → /torneos y el Worker
+    // se lo reenviaba al visitante. Esta aserción NO depende de la caché de borde: la ruta no redirige.
+    expect(new URL(page.url()).pathname).toBe(RUTA_TORNEOS_EN);
     // NOTA (cache de workers.dev): idéntico al test ES de arriba — el borde
     // puede servir una copia cacheada del shell para esta ruta (los
     // workers.dev no se purgan por API y la entrada envenenada no siempre

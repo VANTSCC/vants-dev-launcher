@@ -282,7 +282,9 @@ function articuloPublico(a) {
 async function paginaTorneos(env, request, url, lang, juego, estado) {
   const t = (TEXTOS_TORNEOS[lang] || TEXTOS_TORNEOS.es)[estado];
   const g = JUEGOS_RUTA[juego] || 'VALORANT';
-  const target = new URL('/torneos.html', url.origin); // la pagina REAL de torneos (rojo/negro, con .sf-tab[data-est])
+  // la pagina REAL de torneos (rojo/negro, con .sf-tab[data-est]). SIN extension: Assets responde 307 a
+  // /torneos.html → /torneos y `if (!page.ok) return page` se lo reenviaba al visitante (la ruta acababa en /torneos).
+  const target = new URL('/torneos', url.origin);
   let page;
   try { page = await env.ASSETS.fetch(new Request(target, request)); }
   catch (e1) { return new Response('PT-FETCH-ERR: ' + (e1 && e1.message ? e1.message : String(e1)), { status: 500, headers: { 'content-type': 'text/plain; charset=utf-8' } }); }
