@@ -223,3 +223,24 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   `webapp/src/layouts/Base.astro`; rebuild de webapp y espejos verificados
   (76 archivos ×3). El resto de las tarjetas del preview no cambia.
 - Fecha: 2026-10-21.
+
+## D18 · Sin tarjetas de LLAVES ni DESCARGAR en las vistas previas
+- **Decisión**: el hover del tab LLAVES y del tab DESCARGAR en el nav (y de sus
+  filas en la sección EXPLORAR) NO despliega tarjeta de vista previa. En
+  `assets/js/menu-preview.js` ×3 los entries `llaves` y `descargar` salen de
+  `DATA` → `showNavPv` corta con `if (!DATA[key])`. En la isla React
+  (`webapp/src/components/Explore.tsx`) las categorías `llaves` y `descargar`
+  llevan `noPreview: true` y el `onMouseEnter` de las filas lo respeta: el
+  panel conserva la última categoría válida. Fila/tab siguen navegables con
+  clic (llaves.html, descargar.html no cambian).
+- **Motivo**: petición del dueño — LLAVES ya vive en el submenú de torneo.html
+  (tarjeta redundante) y la tarjeta de DESCARGAR del EXPLORAR se pidió fuera
+  ("lo de la otra imagen también quítalo").
+- **Qué la invalidaría**: que el dueño pida volver a mostrar esas tarjetas
+  (re-agregar los entries en `DATA` / quitar los `noPreview: true` y bump de
+  cache), o que se rediseñe el preview.
+- **Consecuencias**: cache bumped `menu-preview.js?v=7 → v=8` en 33 html ×3 +
+  `webapp/src/layouts/Base.astro`; rebuild de webapp y espejos verificados
+  (76 archivos ×3). QA Playwright hover real 9/9: LLAVES/DESCARGAR sin tarjeta
+  en nav e isla; TIENDA/CLIPS/RANKING/TORNEOS intactas. El resto no cambia.
+- Fecha: 2026-10-21.

@@ -24,9 +24,11 @@
     ranking: { k: 'LÍDERES', t: 'RANKING', i: 'bar-chart-3', c: '#4CC9F0',
       d: 'La tabla real del circuito: rating, RR, partidos y winrate de cada jugador registrado en Neon.',
       li: ['Datos reales de la base', 'Ordená por cualquier columna', 'Buscador de jugadores y equipos'] },
-    llaves: { k: 'LLAVES', t: 'BRACKET', i: 'git-fork', c: ACC,
-      d: 'El bracket principal del torneo: doble eliminación al mejor de tres, actualizado con cada serie.',
-      li: ['Cuartos, semifinales y final', 'Llaves inferiores incluidas', 'Cada cruce abre su detalle'] },
+    /* SIN tarjeta de LLAVES en las vistas previas: la pidió fuera el dueño
+       (decisión D18). LLAVES ya vive en el submenú de torneo.html → el tab no
+       despliega preview. También fuera en la isla React del EXPLORAR
+       (webapp/src/components/Explore.tsx, flag noPreview). keyFor cae en
+       DATA[llaves] que no existe → showNavPv corta; el tab sigue navegable. */
     torneos: { k: 'CALENDARIO', t: 'TORNEOS', i: 'trophy', c: '#F5C044',
       d: 'Torneos abiertos con inscripción por equipo: los PRO tienen fee y los FREE son entrada libre.',
       li: ['Calendario y premios', 'Inscripción con tu equipo', 'Cupos y fee por torneo'] },
@@ -53,10 +55,10 @@
       li: ['FREE · PRO · CREATOR', 'Insignias verificables', 'Pase de temporada y patrocinios'] },
     tienda: { k: 'OFICIAL', t: 'TIENDA', i: 'shopping-bag', c: '#F5C044',
       d: 'La tienda oficial VANTS × VegaStore: indumentaria y gear del circuito, con envíos a toda LATAM.',
-      li: ['Colección oficial', 'Gear y accesorios', 'Envíos y soporte'] },
-    descargar: { k: 'WINDOWS', t: 'DESCARGAR', i: 'monitor-down', c: '#4CC9F0',
-      d: 'VANTS HUB para Windows: tu biblioteca, membresía, partidos y conexiones desde una app propia.',
-      li: ['Instalador oficial', 'Login con tu cuenta VANTS', 'Auto-actualizaciones'] }
+      li: ['Colección oficial', 'Gear y accesorios', 'Envíos y soporte'] }
+    /* SIN tarjeta de DESCARGAR en las vistas previas (decisión D18, misma
+       petición del dueño): keyFor('descargar.html') cae en DATA[descargar]
+       que no existe → showNavPv corta y el tab no despliega preview. */
   };
 
   function keyFor(href) {

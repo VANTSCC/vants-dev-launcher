@@ -9,6 +9,9 @@ export type Cat = {
   color: string;
   desc: string;
   items: string[];
+  /* D18: categorías sin tarjeta en el panel de preview (pedido del dueño).
+     La fila sigue navegable; el panel conserva la última categoría válida. */
+  noPreview?: boolean;
 };
 
 const PERFIL: Cat = {
@@ -28,7 +31,7 @@ const COLS: { label: string; cats: Cat[] }[] = [
     cats: [
       { key: 'partidos', href: 'partidos.html', icon: 'swords', title: 'PARTIDOS', small: 'Agenda en vivo', color: '#ff0d2e', desc: 'La agenda del circuito: partidos por jugarse, en curso y resultados, con los equipos enlazados a su ficha.', items: ['Agenda en vivo y resultados', 'Equipos enlazados a su ficha'] },
       { key: 'ranking', href: 'ranking.html', icon: 'bar-chart-3', title: 'RANKING', small: 'Líderes del circuito', color: '#22d3ee', desc: 'La tabla de líderes por VANTS RATING: XP, series ganadas, racha y posición de cada jugador.', items: ['VANTS RATING 2.0 / 2.1', 'XP y series verificadas'] },
-      { key: 'llaves', href: 'llaves.html', icon: 'git-fork', title: 'LLAVES', small: 'Bracket principal', color: '#eab308', desc: 'El bracket de la temporada: fase de grupos, elimination y gran final, ronda por ronda.', items: ['Doble eliminación', 'Avance automático por ronda'] },
+      { key: 'llaves', href: 'llaves.html', icon: 'git-fork', title: 'LLAVES', small: 'Bracket principal', color: '#eab308', desc: 'El bracket de la temporada: fase de grupos, elimination y gran final, ronda por ronda.', items: ['Doble eliminación', 'Avance automático por ronda'], noPreview: true },
       { key: 'torneos', href: 'torneos.html', icon: 'trophy', title: 'TORNEOS', small: 'Calendario abierto', color: '#ff0d2e', desc: 'Calendario de torneos abiertos con fechas, formato, pozo e inscripción directa desde la web.', items: ['Inscripción con tu equipo', 'Fecha, pozo y formato por evento'] },
       { key: 'rangos', href: 'rangos.html', icon: 'medal', title: 'RANGOS', small: 'De FUNDICIÓ' + 'N a APEX', color: '#22d3ee', desc: 'El sistema de rangos propio: refleja los puntos que ganás en FACEIT y Valorant, de FUNDICIÓ' + 'N a APEX.', items: ['Puntos FACEIT y Valorant', 'De FUNDICIÓ' + 'N a APEX'] },
     ],
@@ -48,7 +51,7 @@ const COLS: { label: string; cats: Cat[] }[] = [
     cats: [
       { key: 'membresias', href: 'membresias.html', icon: 'crown', title: 'MEMBRESÍAS', small: 'Planes, insignias y pase', color: '#eab308', desc: 'VANTS PRO y CREATOR: insignias, ventajas en torneos y el pase de temporada.', items: ['VANTS PRO', 'VANTS CREATOR', 'Pase de temporada'] },
       { key: 'tienda', href: 'tienda.html', icon: 'shopping-bag', title: 'TIENDA', small: 'Oficial × VegaStore', color: '#22d3ee', desc: 'La tienda oficial VANTS × VegaStore: jerseys, accesorios y la identidad visual de la arena.', items: ['Jerseys oficiales', 'Pagos seguros por Stripe'] },
-      { key: 'descargar', href: 'descargar.html', icon: 'monitor-down', title: 'DESCARGAR', small: 'App para Windows', color: '#ff0d2e', desc: 'El VANTS HUB para Windows: la arena en tu escritorio con avisos de partidas y torneos.', items: ['Instalador para Windows', 'Avisos en vivo del circuito'] },
+      { key: 'descargar', href: 'descargar.html', icon: 'monitor-down', title: 'DESCARGAR', small: 'App para Windows', color: '#ff0d2e', desc: 'El VANTS HUB para Windows: la arena en tu escritorio con avisos de partidas y torneos.', items: ['Instalador para Windows', 'Avisos en vivo del circuito'], noPreview: true },
     ],
   },
 ];
@@ -150,7 +153,7 @@ export default function Explore() {
                       key={c.key}
                       className="hc-row transition-all duration-200"
                       href={c.href}
-                      onMouseEnter={() => setActive(c)}
+                      onMouseEnter={() => { if (!c.noPreview) setActive(c); }}
                     >
                       <i {...(mounted ? { 'data-lucide': c.icon } : {})}></i>
                       <span className="md-txt">{c.title}<small>{c.small}</small></span>
