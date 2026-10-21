@@ -1,42 +1,30 @@
 /* ============================================================
    VANTS · tests/e2e/home-fullstack.spec.js — E2E de la home FULL STACK
    ------------------------------------------------------------
-   La home se compila con Astro + React (isla EXPLORAR) + Tailwind
-   sobre el runtime arena. Este spec verifica:
-     1) estructura mínima (hero, EN VIVO, EXPLORAR, footer, arena.css)
-     2) la isla React: hover en una categoría cambia la preview
-     3) que el JS de islands (_astro) está cargado en la página
+   La home se compila con Astro + Vue (emblema 3D) + Tailwind sobre
+   el runtime arena. Este spec verifica:
+     1) estructura mínima (hero, EN VIVO, footer, arena.css)
+     2) que el JS de islands (_astro) está cargado en la página
+   La sección EXPLORAR fue retirada de la portada (decisión D20):
+   sus asertos de isla React se quitaron con ella.
    ============================================================ */
 const { test, expect } = require('@playwright/test');
 
 const BASE = process.env.E2E_BASE || process.env.VANTS_E2E_URL || 'https://vants.vants.workers.dev';
 
-test.describe('Home full stack (Astro + React)', () => {
-  test('estructura: hero, panel EN VIVO, EXPLORAR y footer', async ({ page }) => {
+test.describe('Home full stack (Astro + Vue)', () => {
+  test('estructura: hero, panel EN VIVO, footer y runtime arena', async ({ page }) => {
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
 
     await expect(page.locator('#heroTitle')).toContainText('ASCENSIÓN');
     await expect(page.locator('#liveEvent')).toBeVisible();
-    await expect(page.locator('#explorar')).toBeVisible();
     await expect(page.locator('footer')).toBeVisible();
-    // runtime arena intacto (arena.css v10 y arena.js v33 siguen siendo la capa viva)
+    // la sección EXPLORAR ya no existe (D20): ni sección ni panel de preview
+    await expect(page.locator('#explorar')).toHaveCount(0);
+    await expect(page.locator('#hcPreview')).toHaveCount(0);
+    // runtime arena intacto (arena.css v10 y arena.js v34 siguen siendo la capa viva)
     await expect(page.locator('link[href*="arena.css?v=10"]')).toHaveCount(1);
-    await expect(page.locator('script[src*="arena.js?v=33"]')).toHaveCount(1);
-  });
-
-  test('isla React EXPLORAR: la preview cambia al pasar el mouse', async ({ page }) => {
-    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
-
-    const preview = page.locator('#hcPreview');
-    await expect(preview).toBeVisible();
-    // estado inicial: PERFIL DE JUGADOR
-    await expect(preview).toContainText('PERFIL DE JUGADOR');
-
-    // hover en la fila de RANKING -> la preview debe pintar RANKING
-    const row = page.locator('#explorar a.hc-row', { hasText: 'RANKING' }).first();
-    await row.hover();
-    await expect(preview).toContainText('RANKING', { timeout: 5000 });
-    await expect(preview).toContainText('La tabla de líderes');
+    await expect(page.locator('script[src*="arena.js?v=34"]')).toHaveCount(1);
   });
 
   test('las islands de Astro (_astro) están referenciadas y cargan', async ({ page }) => {

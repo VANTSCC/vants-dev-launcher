@@ -332,10 +332,9 @@
     } catch (eT) { return ''; }
   }
 
-  /* banner superior del perfil real: misma pieza del demo (pf-banner) +skins del pase */
+  /* banner superior del perfil real: misma pieza del demo (pf-banner) +skins del pase.
+     SIN emblema de rango: el rango ya vive en la sección RANGO del perfil (D21). */
   function pfBannerHTML(sel, rawRank) {
-    var rkKey = 'fundicion';
-    try { if (rawRank != null) rkKey = rankFor(rawRank); } catch (eB) {}
     /* la imagen viva manda (se refleja al instante al subirla/quitarla) */
     var foto = (typeof window.VANTS_BANNER_FOTO === 'string' && window.VANTS_BANNER_FOTO.indexOf('data:image') === 0) ? window.VANTS_BANNER_FOTO : null;
     if (!foto && ME.player.stats && typeof ME.player.stats.banner_foto === 'string' && ME.player.stats.banner_foto.indexOf('data:image') === 0) foto = ME.player.stats.banner_foto;
@@ -344,7 +343,7 @@
       (!foto && sel === 'bananim' ? '<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>' : '') +
       (!foto && sel === 'dorado' ? '<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>' : '') +
       (((ME.player.twitch_channel) || (ME.player.kick_channel)) ? '<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>' : '') +
-      rankSVG(rkKey, 92, 'remblem') + '</div>';
+      '</div>';
   }
 
   /* -------- MI EQUIPO (datos + foto editables por el dueño del perfil).

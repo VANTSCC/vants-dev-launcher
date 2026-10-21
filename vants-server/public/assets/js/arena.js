@@ -788,11 +788,12 @@ function renderProfileGrid(){
     const eqChip=eq?'<div style="display:flex;align-items:center;gap:7px;margin-top:9px;border:1px solid var(--line2,#303039);background:#0d0d10;padding:5px 8px">'
       +'<span style="width:22px;height:22px;flex:none;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 8px var(--mono);color:var(--accent)">'+((eq.foto&&String(eq.foto).indexOf('data:image/')===0)?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
       +'<span style="font:700 9px var(--mono);letter-spacing:.08em;color:var(--mut,#93939D);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(String(eq.nombre).toUpperCase())+'</span></div>':'';
-    /* banner del perfil del jugador (imagen editable en su cuenta) sobre la franja del card */
+    /* banner del perfil del jugador (imagen editable en su cuenta) sobre la franja del card.
+       SIN emblema de rango: el rango ya vive en pc-rank del propio card (D21). */
     const bFoto=(p.stats&&p.stats.banner_foto)?String(p.stats.banner_foto):'';
     const bImg=(bFoto&&/^data:image\//.test(bFoto))?'<img src="'+bFoto+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62"><span style="position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,9,12,.78),rgba(8,9,12,.18) 55%,rgba(8,9,12,.66))"></span>':'';
     return '<div class="pcard" style="--rc:'+rc.c1+'" onclick="openPlayerProfile(\''+p.id+'\')">'
-      +'<div class="pc-banner">'+bImg+rankSVG(k,64,'remblem')+(vivoDe(p.id)?vivoChipHTML(vivoDe(p.id),true):'')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
+      +'<div class="pc-banner">'+bImg+(vivoDe(p.id)?vivoChipHTML(vivoDe(p.id),true):'')+(live?'<span class="live-chip"><i data-lucide="radio"></i>CANAL VINCULADO</span>':'')+'</div>'
       +'<div class="pc-body"><span class="ava s1" style="--rc:'+rc.c1+'">'+ava+'</span>'
       +'<div class="pc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'<small>'+escHtml(p.country||'—')+(p.region?' · '+escHtml(p.region):'')+'</small></div>'
       +'<div class="pc-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span style="font:500 9px/1 var(--mono);color:var(--dim)">SIN INSIGNIAS — PLAN FREE</span>')+'</div>'
@@ -807,14 +808,14 @@ function renderProfileGrid(){
    Mismo diseño que el perfil real (CUENTA REAL VANTS), en solo lectura:
    banner con skin, insignias, stats, rango, cuentas conectadas y canal. */
 function bannerPublicoHTML(sel,rawRank,foto){
-  let rkKey='fundicion';
-  try{if(rawRank!=null)rkKey=rankFor(rawRank);}catch(e){}
+  /* SIN emblema de rango en el banner: el rango ya vive en la sección RANGO
+     de la ficha (rangoPublicoHTML) (D21). */
   const f=(foto&&String(foto).indexOf('data:image/')===0)?String(foto):'';
   return '<div class="pf-banner">'
     +(f?'<img src="'+f+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.6"><span style="position:absolute;inset:0;background:linear-gradient(115deg,rgba(8,9,12,.8),rgba(8,9,12,.3) 55%,rgba(8,9,12,.7))"></span>':'')
     +(sel==='bananim'?'<div style="position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,13,46,.30),transparent);animation:bnlight 2.6s linear infinite"></div>':'')
     +(sel==='dorado'?'<div style="position:absolute;inset:0;background:linear-gradient(120deg,rgba(58,44,7,.55),rgba(23,17,6,.2) 55%,rgba(42,32,5,.55))"></div>':'')
-    +rankSVG(rkKey,92,'remblem')+'</div>';
+    +'</div>';
 }
 function rangoPublicoHTML(raw,mmr,wins,losses,xp){
   const xpExtra=xpFaceitHTML(xp);

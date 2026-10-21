@@ -265,3 +265,42 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   0 preflight) linkeado desde la home; espejo ×3 = 77 archivos; el panel usa
   `p-5` (padding del aside, sustituye al `.pv-body` del modo clásico).
 - Fecha: 2026-10-21.
+
+## D20 · La sección EXPLORAR sale por completo de la portada
+- **Decisión**: la sección `/// EXPLORAR · CATEGORÍAS DE LA ARENA` (título,
+  grid de categorías y panel de preview) sale ENTERA de la portada. Aclaración
+  del dueño: cuando marcó la imagen con la tarjeta DESCARGAR rota, pedía
+  quitar la sección EXPLORAR completa, no solo esa tarjeta. Se retiran: la
+  isla React (`webapp/src/components/Explore.tsx` — archivo eliminado), su
+  montaje en `index.astro`, el modo clásico y el CSS `.hc-*` de
+  `assets/js/menu-preview.js` (que queda SOLO para el preview del nav) y el
+  flag `data-explore` del `<html>` en `Base.astro`. **El import de
+  `styles/tw.css` SE MANTIENE**: lo sigue necesitando el wrapper del emblema
+  3D (`Emblema3D.vue`, clases h-[230px] etc.) — D19 queda vigente en esa parte.
+- **Motivo**: petición explícita del dueño ("Te dije quita /// EXPLORAR
+  Categorías de la arena").
+- **Qué la invalidaría**: que el dueño pida volver a tener la sección (recuperar
+  Explore.tsx del historial git y re-montarla en index.astro).
+- **Consecuencias**: el spec e2e pierde sus asertos de isla (home-fullstack.
+  spec.js reescrito: #explorar/#hcPreview ahora esperan count=0); cache bumps
+  `menu-preview.js v=8→v=9`, `arena.js v=33→v=34`, `arena-live.js v=34→v=35`
+  en todos los HTML ×3 + Base.astro; espejo ×3 = 75 archivos. El preview del
+  nav (TIENDA, CLIPS, etc.) NO cambia; D17/D18 siguen aplicando a los tabs.
+- Fecha: 2026-10-21.
+
+## D21 · Sin emblema de rango en los banners de perfil
+- **Decisión**: el banner del perfil NO muestra el emblema de rango. Fuera en
+  las 3 superficies: `pc-banner` de las tarjetas de jugador (arena.js),
+  `bannerPublicoHTML` (ficha pública, arena.js) y `pfBannerHTML` (perfil real,
+  arena-live.js). El rango sigue apareciendo donde corresponde: `pc-rank` del
+  card, sección RANGO de la ficha (`rangoPublicoHTML` / `pf-rank` en
+  arena-live.js) y el grid RANGOS (`renderRanks`).
+- **Motivo**: petición del dueño — "quita que aparezca el rango en banner
+  porque ya está en rango" (el hexágono del banner duplicaba la info).
+- **Qué la invalidaría**: que el dueño pida volver a ver el emblema sobre el
+  banner (re-agregar el `rankSVG(...,'remblem')` en los 3 builders + bump de
+  cache de arena/arena-live).
+- **Consecuencias**: bumps `arena.js v=33→v=34` y `arena-live.js v=34→v=35`
+  (compartidos con D20); spec e2e actualizado a `arena.js?v=34`. El CSS
+  `.remblem` queda (lo usa renderRanks).
+- Fecha: 2026-10-21.
