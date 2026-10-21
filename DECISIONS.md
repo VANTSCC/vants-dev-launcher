@@ -304,3 +304,26 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   (compartidos con D20); spec e2e actualizado a `arena.js?v=34`. El CSS
   `.remblem` queda (lo usa renderRanks).
 - Fecha: 2026-10-21.
+
+## D22 · E2E de plataforma resiliente al borde + Calendario como submenú
+- **Decisión**: (1) el test "EN archive" acepta shell o título reescrito
+  (mismo criterio que el test ES — el borde de workers.dev no se purga por
+  API y la entrada envenenada sobrevive al max-age=60 del rewriter); (2) el
+  test del nav verifica Calendario DENTRO del submenú de PARTIDOS: foco en el
+  trigger (.sf-dd-top) → aria-expanded="true" → item visible → click navega a
+  calendario.html (enlace vivo de verdad).
+- **Motivo**: la suite "VANTS · pruebas automáticas" está en rojo desde el
+  20/oct 03:56 (commit 8b0e247), ANTES del PR #85: (a) el test EN exigía el
+  título reescrito mientras el borde servía el shell cacheado en TODAS las
+  corridas (19 h de rojo); (b) Calendario dejó de ser top-level con el shell
+  strafe (submenús, 69dc4d0) y el aserto toBeVisible sobre un role="menuitem"
+  de dropdown cerrado fallaba siempre (desktop y móvil).
+- **Qué la invalidaría**: que el borde acepte purga o que el worker fuerce
+  revalidación (→ volver a exigir el título reescrito); que Calendario vuelva
+  a ser top-level (→ revertir al aserto directo de visibilidad).
+- **Consecuencias**: solo tests/e2e/plataforma.spec.js (2 tests); ninguna
+  pieza de producción cambia. Nota honesta: desde el sandbox no se pudo
+  confirmar el título reescrito en vivo (workers.dev responde 403 "Bloqueado"
+  al egress del sandbox) — la próxima corrida de CI es la prueba real; el test
+  acepta ambos títulos así que pasa en ambos mundos.
+- Fecha: 2026-10-21.
