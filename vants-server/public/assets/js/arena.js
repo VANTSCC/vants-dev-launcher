@@ -890,7 +890,7 @@ function openPlayerProfile(pid){
     +'<p class="pf-bio">'+escHtml(stats.bio||'Jugador del circuito VANTS.')+'</p>'
     +'<div class="pf-stats"><div><b>'+(mPart==null?'—':mPart)+'</b><span>PARTIDOS</span></div><div><b>'+(mWr==null?'—':mWr+'%')+'</b><span>WINRATE</span></div><div><b>'+(mRtg==null?'—':(typeof mRtg==='number'?mRtg.toFixed(2):mRtg))+'</b><span>RATING</span></div><div><b>'+(mKd==null?'—':(typeof mKd==='number'?mKd.toFixed(2):mKd))+'</b><span>K/D</span></div></div>'
     +rangoPublicoHTML(raw,mmr,wins,losses,p.xp)
-    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+Object.keys(handles).map(kk=>platRow(kk,handles[kk]?escHtml(handles[kk]):null,false)).join('')+'</div>'
+    +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+Object.keys(handles).map(kk=>platRow(kk,handles[kk]||null,false)).join('')+'</div>'
     +(c?'<p class="d-sec">TRANSMISIÓN</p><div class="rail-card" style="--plc:'+PLAT[c.k].c+';cursor:pointer" onclick="window.open(\''+url+'\',\'_blank\',\'noopener\')">'
       +'<div class="rc-top">'+platIc(c.k)+'<div class="rc-info"><div class="rc-name">'+escHtml((p.display_name||p.username||'JUGADOR').toUpperCase())+'</div><p class="rc-title">Canal vinculado · '+escHtml(c.h)+'</p></div></div>'
       +'<div class="rc-foot"><span class="rc-view"><i data-lucide="radio"></i><b>'+PLAT[c.k].n+'</b></span><span class="rc-game">VER CANAL</span></div></div>':'')
@@ -1019,7 +1019,7 @@ function platRow(k,handle,own){
   const estado=rl&&!rl.verified?'CONECTADO · MANUAL':'CONECTADO';
   return '<div class="plat-row'+(connected?'':' off')+'" style="--pc:'+p.c+'">'
     +platIc(k)
-    +'<div class="plat-info"><b>'+p.n+'</b><small>'+(p.k==='game'?'CUENTA DE JUEGO':'RED SOCIAL')+' · '+(connected?h:'NO CONECTADA')+'</small></div>'
+    +'<div class="plat-info"><b>'+p.n+'</b><small>'+(p.k==='game'?'CUENTA DE JUEGO':'RED SOCIAL')+' · '+(connected?escHtml(h):'NO CONECTADA')+'</small></div>'
     +(connected
       ?(own?'<button class="plat-x" onclick="disconnect(\''+k+'\')" title="Desconectar"><i data-lucide="x"></i></button>':'')
         +'<span class="plat-state">'+SVG_CHECK.replace('<svg','<svg width="12" height="12"')+estado+'</span>'
@@ -1273,7 +1273,7 @@ function renderAccount(){
   const foto=real?(real.avatar_url||null):me.avatar;
   const k=rankFor(0.96+me.rr/1000);
   a.style.setProperty('--rc',RANKS[k].c1);
-  a.innerHTML=foto?'<img alt="" src="'+foto+'">':(nombre||'V').slice(0,2).toUpperCase();
+  a.innerHTML=foto?'<img alt="" src="'+escHtml(foto)+'">':(nombre||'V').slice(0,2).toUpperCase();
   const nm=$('#accName');if(nm)nm.textContent=nombre.toUpperCase();
   const lv=$('#accLive');if(lv)lv.style.display=me.live?'block':'none';
   a.style.filter=me.live?'drop-shadow(0 0 8px rgba(255,13,46,.8))':'';

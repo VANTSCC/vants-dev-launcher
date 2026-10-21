@@ -13,6 +13,9 @@ name: "Neon · deploy de funciones (linker + vantsdata + vantsbot)"
 #   DISCORD_BOT_TOKEN   — token del bot (dueno; Discord Developer Portal)
 #   DISCORD_PUBLIC_KEY  — Public Key de la app de Discord (portal → General)
 #   VANTS_BOT_SECRET    — cabecera x-vants-bot para /tarea y /setup (>=32)
+#   AGENT_DISCORD_IDS   — (opcional) ids de Discord separados por comas:
+#                         allowlist de /agente en vantsbot. Sin ella, cualquier
+#                         usuario con la app instalada puede invocar el comando.
 #   SUPERVISOR_DM_ID    — (opcional) Discord id del dueño para DMs
 # Se ejecuta al cambiar neon-functions/** o manualmente (Run workflow).
 
@@ -35,6 +38,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # environment: production  (configurar en Settings→Environments con revisores)
     env:
       NK: ${{ secrets.NEON_API_KEY }}
@@ -50,6 +54,8 @@ jobs:
       # DISCORD_APP_ID); /setup lo usa si no puede derivarlo del token.
       DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID || secrets.DISCORD_ID_APP }}
       VANTS_BOT_SECRET: ${{ secrets.VANTS_BOT_SECRET }}
+      # Allowlist de /agente: ids de Discord separados por comas (secret o var).
+      AGENT_DISCORD_IDS: ${{ secrets.AGENT_DISCORD_IDS || vars.AGENT_DISCORD_IDS }}
       SUPERVISOR_DM_ID: ${{ secrets.SUPERVISOR_DM_ID }}
     steps:
       - name: Checkout
@@ -99,6 +105,7 @@ jobs:
             ${DISCORD_BOT_TOKEN:+--env DISCORD_BOT_TOKEN=$DISCORD_BOT_TOKEN} \
             ${DISCORD_APP_ID:+--env DISCORD_APP_ID=$DISCORD_APP_ID} \
             ${VANTS_BOT_SECRET:+--env VANTS_BOT_SECRET=$VANTS_BOT_SECRET} \
+            ${AGENT_DISCORD_IDS:+--env AGENT_DISCORD_IDS=$AGENT_DISCORD_IDS} \
             ${SUPERVISOR_DM_ID:+--env SUPERVISOR_DM_ID=$SUPERVISOR_DM_ID}
 
       - name: "Desplegar mm (matchmaking serverless · cola, partidas, RR, historiales, invites)"

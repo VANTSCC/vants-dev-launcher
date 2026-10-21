@@ -2,7 +2,7 @@
 
 ## Qué cubre
 - **VLR / Valorant**: `vlr-results/app.py` + `vlr-results/ranked.py` (backend Flask de
-  resultados y VANTS RANKED) lee la clave desde la variable de entorno `HENRIK_API_KEY`.
+  resultados y del ladder ranked) lee la clave desde la variable de entorno `HENRIK_API_KEY`.
 - **Web (agenda en vivo)**: el Worker expone `GET /api/valorant/esports`, que consulta
   `api.henrikdev.xyz/valorant/v1/esports/schedule` con el secret `HENRIKDEV_API_KEY`
   y caché de 5 minutos. Si el secret no está configurado, responde 503 y la web

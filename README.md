@@ -83,7 +83,7 @@ node scripts/test_plataforma.js    # 90 asserts (lógica de la plataforma + inte
 node scripts/test_agente.js        # 61 asserts (agente)
 node scripts/test_mm_fase4.js      # 54 asserts (matchmaking)
 node scripts/test_llm_agente.js    # 30 asserts · test_sandbox_agente.js 60 · test_vantsbot.js 36 · test_mm_neon.js 16
-node scripts/audit_enlaces.js      # crawler interno (804 enlaces, 0 rotos)
+node scripts/audit_enlaces.js      # crawler interno (752 enlaces, 0 rotos)
 # total de asserts: 347 verdes en las 7 suites
 # webapp Astro (islas): tipos + build reproducible (bundles _astro byte-idénticos)
 cd webapp && npx astro check && npm run build && cd ..
