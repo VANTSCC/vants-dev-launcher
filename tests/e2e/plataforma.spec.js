@@ -170,7 +170,7 @@ test.describe('Búsqueda, navegación e i18n (F5/F10)', () => {
     const dd = page.locator('.sf-dd').filter({ has: page.locator('a.sf-dd-top[href="partidos.html"]') });
     await dd.locator('.sf-dd-top').focus();
     await expect(dd.locator('.sf-dd-top')).toHaveAttribute('aria-expanded', 'true');
-    const navCal = dd.locator('.sf-dd-panel a[role="menuitem"[href="calendario.html"]');
+    const navCal = dd.locator('.sf-dd-panel a[role="menuitem"][href="calendario.html"]');
     await expect(navCal).toBeVisible();
     await navCal.click();
     await expect(page).toHaveURL(/calendario\.html/);
