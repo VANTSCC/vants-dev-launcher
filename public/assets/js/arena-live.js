@@ -467,7 +467,7 @@
     var mWr = (wins + losses > 0) ? Math.round((wins / (wins + losses)) * 100) : (stats.wr != null ? stats.wr : null);
     var mRtg = (raw != null ? raw : (stats.rtg != null ? stats.rtg : null));
     var mKd = (stats.kd != null ? stats.kd : null);
-    var cell = function (v, lbl) { return '<div><b>' + (v == null ? '—' : v) + '</b><span>' + lbl + '</span></div>'; };
+    var cell = function (v, lbl) { return '<div><b>' + (v == null ? '—' : escHtml(v)) + '</b><span>' + lbl + '</span></div>'; };
     var fmt = function (v) { return (typeof v === 'number') ? v.toFixed(2) : v; };
     var statsGrid = '<div class="pf-stats">' + cell(mPartidos, 'PARTIDOS') + cell(mWr == null ? null : mWr + '%', 'WINRATE') + cell(mRtg == null ? null : fmt(mRtg), 'RATING') + cell(mKd == null ? null : fmt(mKd), 'K/D') + '</div>';
 

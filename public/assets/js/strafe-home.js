@@ -123,9 +123,9 @@
     var cnt = $('#sfTCount');
     if (cnt) {
       cnt.textContent = rows.length
-        ? (SF.cache === FALLBACK ? 'CALENDARIO DEMO · DATOS DE EJEMPLO' : 'DATOS EN VIVO · NEON · ' + rows.length + ' TORNEOS')
+        ? (rows === FALLBACK ? 'CALENDARIO DEMO · DATOS DE EJEMPLO' : 'DATOS EN VIVO · NEON · ' + rows.length + ' TORNEOS')
         : 'CALENDARIO DEMO · DATOS DE EJEMPLO';
-      cnt.classList.toggle('on', SF.cache !== FALLBACK && rows.length > 0);
+      cnt.classList.toggle('on', rows !== FALLBACK && rows.length > 0);
     }
     safe(function () { if (window.lucide && window.lucide.createIcons) window.lucide.createIcons(); });
   }
