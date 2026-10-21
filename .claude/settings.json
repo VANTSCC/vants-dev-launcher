@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Write(./**/*.pem)",
+      "Write(./**/*.key)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf ~:*)",
+      "Bash(rm -rf .:*)",
+      "Bash(rm -rf ./*)",
+      "Bash(git push origin main)",
+      "Bash(git push origin HEAD:main)"
+    ]
+  }
+}
