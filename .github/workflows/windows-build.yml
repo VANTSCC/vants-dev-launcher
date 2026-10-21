@@ -1,0 +1,55 @@
+name: Build Windows · VANTS HUB Setup
+
+# Compila el instalador NSIS x64 del VANTS HUB (desktop-electron) en un runner
+# Windows real — sin wine, sin atajos. Dos formas de dispararlo:
+#   1. Manual: pestaña Actions → "Build Windows · VANTS HUB Setup" → Run workflow.
+#   2. Automático: push de un tag hub-v* (ej.: hub-v2.4.1, hub-v2.5.0).
+# En cada ejecución queda un ARTEFACTO descargable; en tags, además un BORRADOR
+# de release con el .exe adjunto (lo revisas y lo publicas cuando quieras).
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "hub-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: NSIS x64 (windows-latest)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop-electron
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Dependencias (npm ci)
+        run: npm ci
+
+      - name: Compilar instalador NSIS x64
+        run: npm run dist:win
+
+      - name: Subir artefacto (todas las ejecuciones)
+        uses: actions/upload-artifact@v4
+        with:
+          name: VANTS-Hub-Setup-x64
+          path: desktop-electron/dist/VANTS-Hub-Setup-*.exe
+          if-no-files-found: error
+
+      - name: Borrador de release con el instalador (solo tags hub-v*)
+        if: startsWith(github.ref, 'refs/tags/hub-v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#hub-v}"
+          gh release create "$GITHUB_REF_NAME" desktop-electron/dist/VANTS-Hub-Setup-*.exe \
+            --draft --title "VANTS HUB $VERSION" \
+            --notes "Instalador oficial del VANTS HUB (captura de trafico HAR + integracion ExitLag + deteccion de juego fiable). Descarga, ejecuta el Setup y el launcher se auto-actualiza solo (electron-updater)."
