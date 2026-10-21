@@ -1,0 +1,16 @@
+# Cabeceras de cache para el Worker (Workers Assets aplica este archivo en el
+# deploy). Objetivo: que las mejoras de la web se vean AL INSTANTE despues de
+# cada deploy, sin depender del cache del navegador ni de entradas viejas del
+# edge de workers.dev (que no se pueden purgar por API ni por panel).
+#
+# max-age=0 + must-revalidate: el navegador pregunta SIEMPRE si el archivo
+# cambio (con ETag la respuesta es 304 y no baja de nuevo — costo minimo).
+# El pool de assets de Cloudflare sigue siendo el servidor real, asi que el
+# costo es una validacion, no una descarga.
+#
+# NOTA: las rutas reescritas de torneos (/es|en/tournaments/...) fijan su
+# propio Cache-Control: max-age=60 desde el codigo del worker (intencional).
+#
+# TODO el sitio estatico revalida siempre (HTML, JS, CSS, imagenes):
+/*
+  Cache-Control: public, max-age=0, must-revalidate
