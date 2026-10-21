@@ -140,9 +140,11 @@ export function construir(sobre: Partial<Dependencias> = {}) {
 
   return async function handler(req: Request): Promise<Response> {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-    let ruta = '/';
-    try { ruta = new URL(req.url).pathname.replace(/\/+$/, '') || '/'; } catch { /* '/' */ }
-    const url = new URL(req.url);
+    // URL única y parseada UNA vez: antes se parseaba dos veces y la segunda
+    // quedaba fuera del try (una URL inválida acababa en 500 sin JSON).
+    let url: URL;
+    try { url = new URL(req.url); } catch { return err('url_invalida', 400); }
+    const ruta = url.pathname.replace(/\/+$/, '') || '/';
     const q = url.searchParams;
 
     if (req.method === 'GET' && (ruta === '/' || ruta === '/salud')) {

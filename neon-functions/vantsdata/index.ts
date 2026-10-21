@@ -307,6 +307,9 @@ export default async function handler(req: Request): Promise<Response> {
   } catch (e) {
     const msg = String((e as Error)?.message ?? e);
     const cliente = /inválida|inválido|no permitido|no soportado|requiere|demasiado/.test(msg);
-    return json({ error: cliente ? msg : 'db_error', detalle: cliente ? null : msg.slice(0, 180) }, cliente ? 400 : 500);
+    // Regla 10: el mensaje crudo de la BD (columnas/tablas internas) no sale en
+    // la respuesta de un endpoint público — solo al log de la función.
+    if (!cliente) console.error('vantsdata db_error:', msg.slice(0, 180));
+    return json({ error: cliente ? msg : 'db_error' }, cliente ? 400 : 500);
   }
 }

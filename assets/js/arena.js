@@ -24,7 +24,7 @@ const SVG_INFO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 
 function toast(msg,type='ok'){
   const el=document.createElement('div');el.className='toast';
-  el.innerHTML=(type==='ok'?SVG_CHECK:SVG_INFO)+'<span>'+msg+'</span>';
+  el.innerHTML=(type==='ok'?SVG_CHECK:SVG_INFO)+'<span>'+escHtml(msg)+'</span>'; /* escHtml: el mensaje a veces lleva texto de la URL o del servidor */
   $('#toasts').appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));
   setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),320)},3400);
 }
@@ -395,15 +395,15 @@ function renderMatches(){
   if(!document.getElementById('matchList'))return;
   const list=D().matches;
   $('#matchList').innerHTML=list.length?list.map((m,i)=>{
-    const chip=m.status==='live'?'<span class="chip live"><i class="dot"></i>LIVE</span>':m.status==='final'?'<span class="chip fin">FINAL</span>':'<span class="chip up">'+m.t+'</span>';
+    const chip=m.status==='live'?'<span class="chip live"><i class="dot"></i>LIVE</span>':m.status==='final'?'<span class="chip fin">FINAL</span>':'<span class="chip up">'+escHtml(m.t)+'</span>';
     const sa=m.status==='live'?null:m.sa,sb=m.status==='live'?null:m.sb;
     return '<div class="mrow" data-idx="'+i+'">'
-      +'<div class="m-time"><b class="mono">'+(m.status==='live'?'AHORA':m.t)+'</b>'+chip+'</div>'
-      +'<div class="m-team" style="justify-content:flex-end"><span>'+m.a+'</span></div>'
+      +'<div class="m-time"><b class="mono">'+(m.status==='live'?'AHORA':escHtml(m.t))+'</b>'+chip+'</div>'
+      +'<div class="m-team" style="justify-content:flex-end"><span>'+escHtml(m.a)+'</span></div>'
       +'<div class="m-score mono">'+(m.status==='up'?'<i>vs</i>':(sa>sb?'<b>'+sa+'</b><i>:</i>'+sb:sa+'<i>:</i><b>'+sb+'</b>'))+'</div>'
-      +'<div class="m-team"><span>'+m.b+'</span></div>'
-      +'<div class="m-map"><b>'+m.map.toUpperCase()+'</b>'+(m.bo||'BO3')+'</div>'
-      +'<div class="m-ev">'+m.ev.toUpperCase()+'</div>'
+      +'<div class="m-team"><span>'+escHtml(m.b)+'</span></div>'
+      +'<div class="m-map"><b>'+escHtml(m.map.toUpperCase())+'</b>'+(m.bo||'BO3')+'</div>'
+      +'<div class="m-ev">'+escHtml(m.ev.toUpperCase())+'</div>'
       +'<span class="m-go"><i data-lucide="chevron-right"></i></span></div>';
   }).join(''):'<div style="grid-column:1/-1;border:1px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;font:600 11px/1.8 var(--mono);letter-spacing:.12em;color:var(--dim)">SIN PARTIDOS CARGADOS PARA ESTE JUEGO · COBERTURA PRO REAL EN LA AGENDA DE VALORANT (VLR.GG)</div>';icons();
 }
@@ -415,11 +415,11 @@ function openMatchDetail(m){
   if(m.real){
     const isUp=m.status==='up';
     openDrawer('<div class="d-head"><span class="kicker">'+(isUp?'PRÓXIMO · PARTIDO REAL':'RESULTADO REAL')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
-      +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+m.ev.toUpperCase()+'</p>'
-      +'<div class="d-score"><div class="d-team">'+m.a+'</div><div class="d-num">'+(isUp?'<i>VS</i>':m.sa+'<i>:</i>'+m.sb)+'</div><div class="d-team r">'+m.b+'</div></div>'
-      +'<p class="d-map">'+(isUp?('COMIENZA: '+m.t+' (HORA CARACAS) · '+m.bo):('SERIE '+m.bo+' · FINALIZADA'))+'</p>'
+      +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+escHtml(m.ev.toUpperCase())+'</p>'
+      +'<div class="d-score"><div class="d-team">'+escHtml(m.a)+'</div><div class="d-num">'+(isUp?'<i>VS</i>':m.sa+'<i>:</i>'+m.sb)+'</div><div class="d-team r">'+escHtml(m.b)+'</div></div>'
+      +'<p class="d-map">'+(isUp?('COMIENZA: '+escHtml(m.t)+' (HORA CARACAS) · '+m.bo):('SERIE '+m.bo+' · FINALIZADA'))+'</p>'
       +'<p class="d-sec">FUENTE OFICIAL · DATOS REALES</p>'
-      +(m.url?'<a class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%;justify-content:center" href="'+m.url+'" target="_blank" rel="noopener">VER PARTIDO COMPLETO EN VLR.GG <i data-lucide="external-link"></i></a>':'')
+      +(m.url?'<a class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%;justify-content:center" href="'+escHtml(m.url)+'" target="_blank" rel="noopener">VER PARTIDO COMPLETO EN VLR.GG <i data-lucide="external-link"></i></a>':'')
       +'<p class="d-empty">Sincronizado con vlr.gg. VANTS no simula resultados del circuito profesional: mapas, round a round y estadísticas detalladas viven en la fuente oficial.</p>'
       +'</div>');
     return;
@@ -429,8 +429,8 @@ function openMatchDetail(m){
   const isUp=m.status==='up'||m.status==='live';
   const sa=m.status==='final'?m.sa:null,sb=m.status==='final'?m.sb:null;
   openDrawer('<div class="d-head"><span class="kicker">'+(isUp?'PREVIA':'DETALLE')+'</span><button class="d-x" onclick="closeDrawer()"><i data-lucide="x"></i></button></div>'
-    +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+m.ev.toUpperCase()+'</p>'
-    +'<div class="d-score"><div class="d-team">'+m.a+'</div><div class="d-num">'+(isUp?'<i>vs</i>':sa+'<i>:</i>'+sb)+'</div><div class="d-team r">'+m.b+'</div></div>'
+    +'<div class="d-body"><p class="mono" style="font-size:10px;letter-spacing:.12em;color:var(--dim);margin-bottom:18px">'+escHtml(m.ev.toUpperCase())+'</p>'
+    +'<div class="d-score"><div class="d-team">'+escHtml(m.a)+'</div><div class="d-num">'+(isUp?'<i>vs</i>':sa+'<i>:</i>'+sb)+'</div><div class="d-team r">'+escHtml(m.b)+'</div></div>'
     +'<p class="d-map">'+(isUp?('SERIE PROGRAMADA · '+(m.map||'POR DEFINIR').toUpperCase()):('SERIE '+(m.bo||'BO3')+' · FINALIZADA'))+'</p>'
     +'<p class="d-sec">DATOS DEL CIRCUITO VANTS</p>'
     +'<p class="d-empty">VANTS no inventa round a round ni estadísticas: el detalle completo de cada serie del circuito se publica con el resultado confirmado por ambos capitanes.</p>'
@@ -541,9 +541,9 @@ if(lbSearchEl)lbSearchEl.addEventListener('input',e=>{state.search=e.target.valu
 function bMatch(m,r,i){
   if(!m.a&&!m.b)return '<div class="b-match" style="cursor:default"><div class="b-tbd">POR DEFINIR</div><div class="b-meta">'+m.meta+'</div></div>';
   const head='<div class="b-match" data-r="'+r+'" data-i="'+i+'">';
-  if(!m.a||!m.b){const t=m.a||m.b;return head+'<div class="b-tbd">'+(m.a?t:'POR DEFINIR')+'</div><div class="b-tbd">'+(m.b?t:'POR DEFINIR')+'</div><div class="b-meta">'+m.meta+'</div></div>';}
+  if(!m.a||!m.b){const t=m.a||m.b;return head+'<div class="b-tbd">'+escHtml(m.a?t:'POR DEFINIR')+'</div><div class="b-tbd">'+escHtml(m.b?t:'POR DEFINIR')+'</div><div class="b-meta">'+m.meta+'</div></div>';}
   const hasScore=m.sa!=null;
-  const row=(n,sc,w,l,s)=>'<div class="b-team'+(w?' win':'')+(l?' lose':'')+'"><span class="bt-name"><span class="bt-seed">#'+s+'</span>'+n+'</span><span class="bt-score">'+(hasScore?sc:'—')+'</span></div>';
+  const row=(n,sc,w,l,s)=>'<div class="b-team'+(w?' win':'')+(l?' lose':'')+'"><span class="bt-name"><span class="bt-seed">#'+s+'</span>'+escHtml(n)+'</span><span class="bt-score">'+(hasScore?sc:'—')+'</span></div>';
   return head
     +row(m.a,m.sa,hasScore&&m.sa>m.sb,hasScore&&m.sa<m.sb,1)
     +row(m.b,m.sb,hasScore&&m.sb>m.sa,hasScore&&m.sb<m.sa,2)
@@ -580,7 +580,7 @@ function renderTournaments(){
     const prizeTxt=(t.prize==null)?'POR ANUNCIAR':money(t.prize);
     return '<div class="trow'+(done?' done':'')+'">'
       +'<div class="t-date"><b>'+t.day+'</b><span>'+t.mon+'</span></div>'
-      +'<div class="t-info"><h3>'+t.name+'</h3><div class="t-tags"><span class="tag'+(t.tier==='PRO'?' prem':'')+'">'+t.tier+'</span>'+t.tags.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div></div>'
+      +'<div class="t-info"><h3>'+escHtml(t.name)+'</h3><div class="t-tags"><span class="tag'+(t.tier==='PRO'?' prem':'')+'">'+escHtml(t.tier)+'</span>'+t.tags.map(x=>'<span class="tag">'+escHtml(x)+'</span>').join('')+'</div></div>'
       +'<div class="t-prize"><b>'+prizeTxt+'</b><span>POZO DE PREMIOS</span></div>'
       +(t.slots!=null
         ?'<div class="t-slots"><div class="sl-bar"><i style="width:'+(t.filled/t.slots*100)+'%"></i></div><div class="sl-txt"><span>CUPOS</span><span>'+t.filled+' / '+t.slots+'</span></div></div>'
@@ -600,7 +600,7 @@ const heroJoinEl=$('#heroJoin');
 if(heroJoinEl)heroJoinEl.addEventListener('click',()=>openEnroll(D().tournaments[0]));
 function openEnroll(t){
   const fee=t.fee||0;
-  openModal('<div class="mc-head"><h3>Inscripción · '+t.name+'</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
+  openModal('<div class="mc-head"><h3>Inscripción · '+escHtml(t.name)+'</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
     +'<div class="field-row"><div class="field"><label>NOMBRE DEL EQUIPO</label><input id="fTeam" type="text" placeholder="Ej: BANDA DEL MEDIO" maxlength="26"></div>'
     +'<div class="field"><label>TAG (2–4)</label><input id="fTag" type="text" placeholder="BDM" maxlength="4"></div></div>'
     +'<div class="field"><label>CAPITÁN (nick#000)</label><input id="fCap" type="text" placeholder="'+me.name.toLowerCase()+'#VNTS"></div>'
@@ -619,8 +619,8 @@ function openEnroll(t){
 function openPayStep(t,team,tag){
   if(vantsEsOwner()){inscribirReal(t,team,tag);toast('Privilegio OWNER: inscripción gratuita');return;}
   openModal('<div class="mc-head"><h3>Confirmar pago</h3><button class="d-x" id="mClose"><i data-lucide="x"></i></button></div><div class="mc-body">'
-    +'<div class="mc-sum"><span>'+t.name+'</span><span>'+(D().gameLabel||(state.game==='valorant'?'VALORANT':'CS2'))+'</span></div>'
-    +'<div class="mc-sum"><span>Equipo</span><span>'+team+' ['+tag+']</span></div>'
+    +'<div class="mc-sum"><span>'+escHtml(t.name)+'</span><span>'+(D().gameLabel||(state.game==='valorant'?'VALORANT':'CS2'))+'</span></div>'
+    +'<div class="mc-sum"><span>Equipo</span><span>'+escHtml(team)+' ['+escHtml(tag)+']</span></div>'
     +'<div class="mc-sum"><span>Fee de inscripción</span><span>'+money(t.fee)+'</span></div>'
     +'<div class="mc-sum"><span>Reembolso hasta 48 h antes</span><span style="color:var(--accent)">INCLUIDO</span></div>'
     +'<div class="mc-total"><span>TOTAL HOY</span><b>'+money(t.fee)+'</b></div>'
@@ -633,7 +633,7 @@ function finishEnroll(t,team,tag){
   state.entered[t.id]=true;
   const tt=D().tournaments.find(x=>x.id===t.id);if(tt)tt.filled=Math.min(tt.slots||64,(tt.filled||0)+1);
   torneosCargar(true);
-  openModal('<div class="success"><div class="ok">'+SVG_CHECK+'</div><h4>Tu equipo está dentro</h4><p>'+team+' ['+tag+'] · '+t.name+'<br>Fixture 24 h antes del inicio.<br>¡Nos vemos en el servidor!</p></div>');
+  openModal('<div class="success"><div class="ok">'+SVG_CHECK+'</div><h4>Tu equipo está dentro</h4><p>'+escHtml(team)+' ['+escHtml(tag)+'] · '+escHtml(t.name)+'<br>Fixture 24 h antes del inicio.<br>¡Nos vemos en el servidor!</p></div>');
   renderTournaments();toast('Inscripción confirmada: '+team+' ['+tag+']');
   vantsDiscord('torneo_inscripcion',{team,tag,tournament:t.name});
   if(typeof loadTeams==='function')setTimeout(loadTeams,900);
@@ -786,7 +786,7 @@ function renderProfileGrid(){
     const ava=p.avatar_url?'<img alt="" src="'+escHtml(p.avatar_url)+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':escHtml((p.display_name||p.username||'V').slice(0,2).toUpperCase());
     const eq=(p.stats&&p.stats.equipo&&p.stats.equipo.nombre)?p.stats.equipo:null;
     const eqChip=eq?'<div style="display:flex;align-items:center;gap:7px;margin-top:9px;border:1px solid var(--line2,#303039);background:#0d0d10;padding:5px 8px">'
-      +'<span style="width:22px;height:22px;flex:none;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 8px var(--mono);color:var(--accent)">'+(eq.foto?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
+      +'<span style="width:22px;height:22px;flex:none;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 8px var(--mono);color:var(--accent)">'+((eq.foto&&String(eq.foto).indexOf('data:image/')===0)?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
       +'<span style="font:700 9px var(--mono);letter-spacing:.08em;color:var(--mut,#93939D);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(String(eq.nombre).toUpperCase())+'</span></div>':'';
     /* banner del perfil del jugador (imagen editable en su cuenta) sobre la franja del card */
     const bFoto=(p.stats&&p.stats.banner_foto)?String(p.stats.banner_foto):'';
@@ -870,7 +870,7 @@ function openPlayerProfile(pid){
   const handles={discord:stats.discord_tag||((window.VANTS_LINKS&&window.VANTS_LINKS.discord)?window.VANTS_LINKS.discord.handle:null),twitch:p.twitch_channel||null,kick:p.kick_channel||null,youtube:stats.youtube||null,tiktok:stats.tiktok||null,x:stats.x||null,riot:stats.riot||null,steam:stats.steam||null,faceit:stats.faceit||((window.VANTS_LINKS&&window.VANTS_LINKS.faceit)?window.VANTS_LINKS.faceit.handle:null)};
   const eq=(stats&&stats.equipo&&stats.equipo.nombre)?stats.equipo:null;
   const eqStrip=eq?'<div style="display:flex;align-items:center;gap:10px;border:1px solid var(--line2,#303039);background:rgba(255,13,46,.05);padding:10px 12px;margin-bottom:14px">'
-    +'<span style="width:44px;height:44px;flex:none;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 13px var(--mono);color:var(--accent)">'+(eq.foto?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
+    +'<span style="width:44px;height:44px;flex:none;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#141419;font:800 13px var(--mono);color:var(--accent)">'+((eq.foto&&String(eq.foto).indexOf('data:image/')===0)?'<img src="'+eq.foto+'" alt="" style="width:100%;height:100%;object-fit:cover">':escHtml(String(eq.tag||'EQ').slice(0,3).toUpperCase()))+'</span>'
     +'<div style="min-width:0"><div style="font:800 12px var(--mono);letter-spacing:.08em;color:var(--ink,#EDEDE7)">'+escHtml(String(eq.nombre).toUpperCase())+'</div>'
     +'<div style="font:600 9px var(--mono);color:var(--mut,#93939D);margin-top:2px">EQUIPO DEL JUGADOR'+(eq.tag?' · '+escHtml(String(eq.tag).toUpperCase()):'')+'</div></div></div>':'';
   const canales=[];
@@ -888,7 +888,7 @@ function openPlayerProfile(pid){
     +eqStrip
     +'<div class="pf-badges">'+(badges.length?badges.map(b=>badgeChip(b)).join(''):'<span class="mono" style="font:500 10px/1.6 var(--mono);color:var(--dim)">Sin insignias todavía.</span>')+'</div>'
     +'<p class="pf-bio">'+escHtml(stats.bio||'Jugador del circuito VANTS.')+'</p>'
-    +'<div class="pf-stats"><div><b>'+(mPart==null?'—':mPart)+'</b><span>PARTIDOS</span></div><div><b>'+(mWr==null?'—':mWr+'%')+'</b><span>WINRATE</span></div><div><b>'+(mRtg==null?'—':(typeof mRtg==='number'?mRtg.toFixed(2):mRtg))+'</b><span>RATING</span></div><div><b>'+(mKd==null?'—':(typeof mKd==='number'?mKd.toFixed(2):mKd))+'</b><span>K/D</span></div></div>'
+    +'<div class="pf-stats"><div><b>'+(mPart==null?'—':escHtml(String(mPart)))+'</b><span>PARTIDOS</span></div><div><b>'+(mWr==null?'—':escHtml(String(mWr))+'%')+'</b><span>WINRATE</span></div><div><b>'+(mRtg==null?'—':(typeof mRtg==='number'?mRtg.toFixed(2):escHtml(String(mRtg))))+'</b><span>RATING</span></div><div><b>'+(mKd==null?'—':(typeof mKd==='number'?mKd.toFixed(2):escHtml(String(mKd))))+'</b><span>K/D</span></div></div>'
     +rangoPublicoHTML(raw,mmr,wins,losses,p.xp)
     +'<p class="d-sec">CUENTAS CONECTADAS</p><div class="plat-list">'+Object.keys(handles).map(kk=>platRow(kk,handles[kk]||null,false)).join('')+'</div>'
     +(c?'<p class="d-sec">TRANSMISIÓN</p><div class="rail-card" style="--plc:'+PLAT[c.k].c+';cursor:pointer" onclick="window.open(\''+url+'\',\'_blank\',\'noopener\')">'
@@ -1344,7 +1344,7 @@ function mapaFotosEquipos(){
   const m=new Map();
   (window.VANTS_PLAYERS||[]).forEach(p=>{
     const e=p&&p.stats&&p.stats.equipo;
-    if(e&&e.foto){
+    if(e&&typeof e.foto==='string'&&e.foto.indexOf('data:image/')===0){
       if(e.tag)m.set(String(e.tag).toLowerCase(),e.foto);
       if(e.nombre)m.set(String(e.nombre).toLowerCase(),e.foto);
     }
@@ -1572,7 +1572,7 @@ window.openAjustesCuenta=function(){
     +'<p class="d-sec">NICK DE JUGADOR</p>'
     +'<div class="field"><label>NICK (SE GUARDA EN LA BD)</label><input id="ajNick" type="text" maxlength="20" value="'+escHtml((window.VANTS_ME&&window.VANTS_ME.player&&window.VANTS_ME.player.display_name)||me.name||'')+'"></div>'
     +'<p class="d-sec">EMAIL DE LA CUENTA</p>'
-    +'<div class="field"><label>ACTUAL</label><input type="text" value="'+email+'" disabled style="opacity:.65"></div>'
+    +'<div class="field"><label>ACTUAL</label><input type="text" value="'+escHtml(email)+'" disabled style="opacity:.65"></div>'
     +'<div class="field"><label>NUEVO EMAIL (OPCIONAL)</label><input id="ajMailNvo" type="email" placeholder="tu@correo.com" autocomplete="email"></div>'
     +'<p style="font:500 10px/1.7 var(--mono);color:var(--dim);margin:6px 0 12px">Auth0 genera un enlace de verificación para confirmar el email. Si es nuevo, la verificación viaja a la dirección nueva.</p>'
     +'<button class="btn btn-ghost" id="ajMail" style="width:100%;justify-content:center"><i data-lucide="mail"></i>CREAR ENLACE DE VERIFICACIÓN</button>'

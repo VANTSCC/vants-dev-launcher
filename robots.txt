@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://feispla.github.io/Vants/sitemap.xml
+Sitemap: https://vants.vants.workers.dev/sitemap.xml

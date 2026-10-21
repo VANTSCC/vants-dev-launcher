@@ -19,9 +19,9 @@ test.describe('Home full stack (Astro + React)', () => {
     await expect(page.locator('#liveEvent')).toBeVisible();
     await expect(page.locator('#explorar')).toBeVisible();
     await expect(page.locator('footer')).toBeVisible();
-    // runtime arena intacto (arena.css v10 y arena.js v32 siguen siendo la capa viva)
+    // runtime arena intacto (arena.css v10 y arena.js v33 siguen siendo la capa viva)
     await expect(page.locator('link[href*="arena.css?v=10"]')).toHaveCount(1);
-    await expect(page.locator('script[src*="arena.js?v=32"]')).toHaveCount(1);
+    await expect(page.locator('script[src*="arena.js?v=33"]')).toHaveCount(1);
   });
 
   test('isla React EXPLORAR: la preview cambia al pasar el mouse', async ({ page }) => {

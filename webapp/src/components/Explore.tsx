@@ -76,11 +76,22 @@ function Preview({ cat }: { cat: Cat }) {
 
 export default function Explore() {
   const [active, setActive] = useState<Cat>(PERFIL);
+  /* React #418: arena.js corre lucide.createIcons() en tiempo de evaluación
+     (antes de que hidrate este módulo). Si el SSR trae data-lucide, lucide
+     reemplaza esos <i> por <svg> y la hidratación no coincide. El atributo se
+     añade recién después del montaje: el HTML inicial no tiene nada que
+     lucide pueda tocar y React hidrata limpio. */
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const w = window as unknown as { lucide?: { createIcons?: () => void } };
     w.lucide?.createIcons?.();
-  }, [active]);
+  }, [active, mounted]);
 
   function abrirPerfil(e: React.MouseEvent<HTMLAnchorElement>) {
     e.preventDefault();
@@ -126,9 +137,9 @@ export default function Explore() {
               onMouseEnter={() => setActive(PERFIL)}
               onClick={abrirPerfil}
             >
-              <i data-lucide="user"></i>
+              <i {...(mounted ? { 'data-lucide': 'user' } : {})}></i>
               <span className="md-txt">PERFIL DE JUGADOR<small>{PERFIL.small}</small></span>
-              <i data-lucide="chevron-right" className="md-go"></i>
+              <i {...(mounted ? { 'data-lucide': 'chevron-right' } : {})} className="md-go"></i>
             </a>
             <div className="hc-cols">
               {COLS.map((col) => (
@@ -141,9 +152,9 @@ export default function Explore() {
                       href={c.href}
                       onMouseEnter={() => setActive(c)}
                     >
-                      <i data-lucide={c.icon}></i>
+                      <i {...(mounted ? { 'data-lucide': c.icon } : {})}></i>
                       <span className="md-txt">{c.title}<small>{c.small}</small></span>
-                      <i data-lucide="chevron-right" className="md-go"></i>
+                      <i {...(mounted ? { 'data-lucide': 'chevron-right' } : {})} className="md-go"></i>
                     </a>
                   ))}
                 </div>
