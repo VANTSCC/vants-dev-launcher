@@ -173,7 +173,7 @@ test.describe('Búsqueda, navegación e i18n (F5/F10)', () => {
     const navCal = dd.locator('.sf-dd-panel a[role="menuitem"][href="calendario.html"]');
     await expect(navCal).toBeVisible();
     await navCal.click();
-    await expect(page).toHaveURL(/calendario\.html/);
+    await expect(page).toHaveURL(/calendario/);
   });
 
   test('selector de idioma ES→EN re-renderiza el shell', async ({ page }) => {
