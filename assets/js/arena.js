@@ -1877,6 +1877,11 @@ async function lbRefrescoVivo(){
 
 /* ---------- MI CUENTA · DASHBOARD EN CAJONES ---------- */
 window.abrirMiCuenta=async function(){
+  /* EL DASHBOARD SE RETIRA: MI CUENTA siempre abre el PERFIL DE JUGADOR
+     (el de antes). A los NUEVOS, vantsAbrirMiPerfil les muestra la ficha
+     de primera vez (MI PERFIL · PRIMERA VEZ) y después el mismo perfil —
+     nunca este dashboard, que queda solo como respaldo absoluto. */
+  if(window.vantsAbrirMiPerfil){try{window.vantsAbrirMiPerfil();return;}catch(eDsh){}}
   if(!(window.VANTS_AUTH&&window.VANTS_AUTH.sub)){
     const lb=$('#arenaLoginBtn');
     if(lb&&!lb.hidden){try{lb.click();}catch(e){}}
@@ -1976,7 +1981,9 @@ window.abrirMiCuenta=async function(){
   if(b)b.addEventListener('click',function(){
     /* UN SOLO PERFIL: MI CUENTA abre el PERFIL DE JUGADOR (ficha editable
        con todo: banner, datos, equipo, cuentas, series, FACEIT, ajustes).
-       El dashboard viejo queda solo como respaldo si la ficha no cargó. */
+       A los NUEVOS (sin ficha todavía) les sale EL PERFIL DE ANTES:
+       vantsAbrirMiPerfil → MI PERFIL · PRIMERA VEZ → su ficha de jugador.
+       El dashboard ya no es la cara de nadie. */
     try{
       var mio=(window.VANTS_ME&&window.VANTS_ME.player)||null;
       if(!mio&&window.VANTS_AUTH&&window.VANTS_AUTH.playerId){
@@ -1984,7 +1991,10 @@ window.abrirMiCuenta=async function(){
       }
       if(mio&&window.openPlayerProfile){window.openPlayerProfile(mio);return;}
     }catch(e){}
-    try{window.abrirMiCuenta();}catch(e){}
+    try{
+      if(window.vantsAbrirMiPerfil)window.vantsAbrirMiPerfil(); /* perfil de antes */
+      else window.abrirMiCuenta();
+    }catch(e){}
   });
   const iv=setInterval(()=>{if(b)b.hidden=!(window.VANTS_AUTH&&window.VANTS_AUTH.sub);},1200);
   setTimeout(()=>clearInterval(iv),45000);
