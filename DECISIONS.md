@@ -241,6 +241,27 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   cache), o que se rediseñe el preview.
 - **Consecuencias**: cache bumped `menu-preview.js?v=7 → v=8` en 33 html ×3 +
   `webapp/src/layouts/Base.astro`; rebuild de webapp y espejos verificados
-  (76 archivos ×3). QA Playwright hover real 9/9: LLAVES/DESCARGAR sin tarjeta
+  (77 archivos ×3, incluye el CSS de Tailwind de la isla). QA Playwright hover
+  real 9/9: LLAVES/DESCARGAR sin tarjeta
   en nav e isla; TIENDA/CLIPS/RANKING/TORNEOS intactas. El resto no cambia.
+- Fecha: 2026-10-21.
+
+## D19 · La isla EXPLORAR compila su Tailwind y el canonical vive en la fuente
+- **Decisión**: (1) `webapp/src/layouts/Base.astro` importa `../styles/tw.css`
+  (Tailwind v4 utilities SIN preflight — arena.css sigue siendo dueño del
+  sistema base). Sin ese import, las clases de `components/Explore.tsx` no se
+  compilan a ningún CSS y el panel de preview sale sin estilos (texto pegado al
+  borde, <ul> con estilos de navegador). (2) El canonical/og:url de la home
+  vive en `Base.astro` apuntando a `https://vants.vants.workers.dev/` — nunca
+  se corrige solo en el index.html compilado: el próximo build lo pisa.
+- **Motivo**: la captura del dueño mostró la tarjeta de preview sin estilos
+  (causa raíz: tw.css existía pero nadie lo importaba); y el rebuild verificó
+  que el fix de canonical del agente 9-f era solo sobre artefacto y se
+  revertía con cada build.
+- **Qué la invalidaría**: que el dueño decida canonical distinto (cambiar la
+  URL en Base.astro), o que la isla deje de usar Tailwind (entonces quitar el
+  import y tw.css).
+- **Consecuencias**: build emite `_astro/index.*.css` (~7 KB, utilities only,
+  0 preflight) linkeado desde la home; espejo ×3 = 77 archivos; el panel usa
+  `p-5` (padding del aside, sustituye al `.pv-body` del modo clásico).
 - Fecha: 2026-10-21.

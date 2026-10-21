@@ -164,7 +164,9 @@ export default function Explore() {
               ))}
             </div>
           </div>
-          <aside className="hc-preview" id="hcPreview" aria-live="polite">
+          {/* p-5: la isla no usa .pv-body (padding del modo clásico), sin esto
+              el texto pega contra el borde izquierdo del panel. */}
+          <aside className="hc-preview p-5" id="hcPreview" aria-live="polite">
             <Preview cat={active} />
           </aside>
         </div>
