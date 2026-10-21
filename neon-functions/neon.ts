@@ -34,5 +34,9 @@ export default defineConfig({
       name: "VANTS Bot (mando del Agente por Discord, sin hosting de pago)",
       source: "./vantsbot/index.ts",
     },
+    mm: {
+      name: "MM (matchmaking serverless: cola, partidas, RR, historiales, invites)",
+      source: "./mm/index.ts",
+    },
   },
 });

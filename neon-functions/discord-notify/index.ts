@@ -5,6 +5,7 @@
 // ============================================
 
 import { Pool } from 'pg';
+import { timingSafeEqual } from 'node:crypto';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -159,9 +160,16 @@ async function deliver(row: Row): Promise<string> {
 }
 
 function authorized(req: Request): boolean {
+  // Comparación timing-safe (mismo patrón que vantsbot.autorizado): sin el
+  // guard de igual longitud, timingSafeEqual lanza; sin timing-safe, el tiempo
+  // de respuesta filtraba cuántos caracteres acierta quien adivina el secreto.
   const given = req.headers.get('x-vants-notify') ?? '';
-  if (given.length < 32 || given !== NOTIFY_SECRET) return false;
-  return true;
+  if (!NOTIFY_SECRET || NOTIFY_SECRET.length < 32 || given.length !== NOTIFY_SECRET.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(given, 'utf8'), Buffer.from(NOTIFY_SECRET, 'utf8'));
+  } catch {
+    return false;
+  }
 }
 
 export default async function handler(req: Request): Promise<Response> {
