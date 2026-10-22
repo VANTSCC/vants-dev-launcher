@@ -439,7 +439,8 @@ function openMatchDetail(m){
 }
 const liveMoreEl=$('#liveMore');
 if(liveMoreEl)liveMoreEl.addEventListener('click',()=>{const L=D().live;
-  openMatchDetail({real:true,status:'up',a:L.a,b:L.b,map:L.map,bo:L.bo||'BO5',ev:L.ev,url:L.url,t:L.hora});});
+  const fin=!!L.fin&&L.sa!=null&&L.sb!=null;
+  openMatchDetail({real:true,status:fin?'final':'up',sa:fin?L.sa:null,sb:fin?L.sb:null,a:L.a,b:L.b,map:L.map,bo:L.bo||'BO5',ev:L.ev,url:L.url,t:L.hora});});
 
 /* ================= RANKING ================= */
 const COLS=[

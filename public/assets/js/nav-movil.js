@@ -33,10 +33,11 @@
     btn.setAttribute('aria-expanded', String(open));
     btn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
   }
+  nav.classList.add('nav-js');
   set(false);
 
   btn.addEventListener('click', function () { set(!nav.classList.contains('nav-open')); });
-  links.addEventListener('click', function (e) { if (e.target.closest('a')) set(false); });
+  links.addEventListener('click', function (e) { if (e.target.closest('a') && !e.defaultPrevented) set(false); });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && nav.classList.contains('nav-open')) { set(false); btn.focus(); }
   });
