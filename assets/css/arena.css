@@ -1168,10 +1168,14 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
 .cin-grain{will-change:transform;contain:strict}
 
 /* Accesibilidad: con «reducir movimiento» en el sistema se congelan las
-   animaciones infinitas (ticker, pulsos, grano, sweep) y las transiciones. */
+   animaciones infinitas (ticker, pulsos, grano, sweep) y las transiciones.
+   El ticker no queda a media frase (fix D27): se apila completo y legible,
+   sin movimiento — igual criterio que el emblema en #117. */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{
     animation-duration:.01ms!important;animation-iteration-count:1!important;
     transition-duration:.01ms!important;scroll-behavior:auto!important
   }
+  .ticker-track{width:auto;flex-wrap:wrap;transform:none}
+  .ticker span{white-space:normal;padding:8px 18px}
 }
