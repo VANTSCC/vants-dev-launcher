@@ -24,6 +24,7 @@
  */
 
 import CORE from './plataforma-core.js';
+import { debeReportarSentry, sentryEnvelope, validarLote } from './telemetria-core.js';
 
 const COLORS = {
   rojo: 0xff0d2e,
@@ -111,6 +112,7 @@ const JWKS_TTL_MS = 60 * 60_000;
 let jwksCache = { at: 0, keys: null };
 
 const rlClips = new Map();
+const telemetriaHits = new Map();
 
 // Caché de la agenda esports (5 min): evita golpear api.henrikdev.xyz en cada visita.
 const ESPORTS_TTL_MS = 5 * 60_000;
@@ -889,8 +891,7 @@ async function handleGpr() {
 
 /* ==================== WORKER PRINCIPAL ==================== */
 
-export default {
-  async fetch(request, env, ctx) {
+async function fetchWorker(request, env, ctx) {
     const url = new URL(request.url);
     const ip = request.headers.get('cf-connecting-ip') || 'desconocida';
     const ua = (request.headers.get('user-agent') || '').toLowerCase();
@@ -907,7 +908,7 @@ export default {
     if (method === 'OPTIONS') {
       const origin = request.headers.get('origin') || '';
       const isGetApi = url.pathname === '/api/valorant/esports' || url.pathname === '/api/teams' || url.pathname === '/api/teams-live' || url.pathname === '/api/gpr' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/bracket' || url.pathname === '/api/en-vivo' || url.pathname === '/api/games' || url.pathname === '/api/tournaments' || url.pathname === '/api/matches' || url.pathname === '/api/players' || url.pathname === '/api/articles' || url.pathname === '/api/search' || /^\/api\/tournaments\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/articles\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/teams\/[a-z0-9-]+$/.test(url.pathname) || /^\/api\/players\/[a-z0-9-]+$/.test(url.pathname);
-      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/inscribir' || url.pathname === '/api/torneos/gestionar';
+      const isPostApi = url.pathname === '/api/discord/notify' || url.pathname === '/api/account/email-verify' || url.pathname === '/api/account/password-reset' || url.pathname === '/api/clips/featured' || url.pathname === '/api/torneos/inscribir' || url.pathname === '/api/torneos/gestionar' || url.pathname === '/api/telemetria';
       if ((isPostApi || isGetApi) && SITE_ORIGINS.has(origin)) {
         return harden(new Response(null, { status: 204 }), {
           'Access-Control-Allow-Origin': origin,
@@ -917,6 +918,89 @@ export default {
         });
       }
       return new Response(null, { status: 204 });
+    }
+
+    if (url.pathname === '/api/health') {
+      if (method !== 'GET') return json({ ok: false, error: 'Solo GET' }, 405, { Allow: 'GET' });
+      return json({ ok: true, servicio: 'vants-worker', ts: new Date().toISOString() }, 200, { 'Cache-Control': 'no-store' });
+    }
+
+    if (url.pathname === '/api/telemetria') {
+      if (method !== 'POST') return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      const contentLength = Number(request.headers.get('content-length') || 0);
+      if (contentLength > 64 * 1024) return json({ ok: false, error: 'payload_too_large' }, 413);
+
+      let raw = '';
+      try {
+        const reader = request.body && request.body.getReader();
+        if (reader) {
+          const chunks = [];
+          let total = 0;
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            total += value.byteLength;
+            if (total > 64 * 1024) {
+              await reader.cancel();
+              return json({ ok: false, error: 'payload_too_large' }, 413);
+            }
+            chunks.push(value);
+          }
+          const bytes = new Uint8Array(total);
+          let offset = 0;
+          for (const chunk of chunks) {
+            bytes.set(chunk, offset);
+            offset += chunk.byteLength;
+          }
+          raw = new TextDecoder().decode(bytes);
+        }
+      } catch {
+        return json({ ok: false, error: 'bad_json' }, 400);
+      }
+      let body;
+      try { body = JSON.parse(raw); } catch { return json({ ok: false, error: 'bad_json' }, 400); }
+      const validado = validarLote(body);
+      if (!validado.ok) return json({ ok: false, error: validado.error }, 400);
+
+      const now = Date.now();
+      const hits = (telemetriaHits.get(ip) || []).filter((hit) => now - hit < WINDOW_MS);
+      if (hits.length + validado.eventos.length > 60) {
+        telemetriaHits.set(ip, hits);
+        return json({ ok: false, error: 'rate_limited' }, 429, { 'Retry-After': '60' });
+      }
+      for (let i = 0; i < validado.eventos.length; i++) hits.push(now);
+      telemetriaHits.set(ip, hits);
+      if (telemetriaHits.size > 5000) {
+        for (const [key, timestamps] of telemetriaHits) {
+          if (timestamps.every((timestamp) => now - timestamp >= WINDOW_MS)) telemetriaHits.delete(key);
+        }
+      }
+
+      const dsn = String((env && env.SENTRY_DSN) || '');
+      for (const evento of validado.eventos) {
+        const registro = Object.assign({}, evento, { tipo: 'telemetria' });
+        const linea = JSON.stringify(registro);
+        if (debeReportarSentry(evento.kind)) console.error(linea);
+        else console.log(linea);
+        if (dsn && debeReportarSentry(evento.kind) && ctx && typeof ctx.waitUntil === 'function') {
+          const envelope = sentryEnvelope(dsn, evento, { url: request.url });
+          if (envelope) {
+            ctx.waitUntil(fetch(envelope.url, { method: 'POST', headers: envelope.headers, body: envelope.body }).catch(() => {}));
+          }
+        }
+      }
+
+      const supervisorUrl = String((env && env.SUPERVISOR_URL) || '').replace(/\/+$/, '');
+      if (supervisorUrl && ctx && typeof ctx.waitUntil === 'function') {
+        const target = /\/events$/i.test(supervisorUrl) ? supervisorUrl : supervisorUrl + '/events';
+        const forwarded = Object.assign({}, body, { events: validado.eventos });
+        ctx.waitUntil(fetch(target, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-vants-supervisor': 'web', 'x-forwarded-for': ip },
+          body: JSON.stringify(forwarded),
+        }).catch(() => {}));
+      }
+      return json({ ok: true, recibidos: validado.eventos.length }, 200, { 'Cache-Control': 'no-store' });
     }
 
     // --- 3) User-Agent vacío o herramienta de ataque conocida → fuera
@@ -1943,5 +2027,34 @@ export default {
     }
 
     return txt(404, 'Not found');
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      return await fetchWorker(request, env, ctx);
+    } catch (error) {
+      let path = '';
+      let requestUrl = '';
+      try {
+        requestUrl = request.url;
+        path = new URL(requestUrl).pathname;
+      } catch (innerError) {}
+      const evento = {
+        kind: 'WORKER_ERROR',
+        message: String(error && error.message || error || 'Error interno').slice(0, 300),
+        stack: String(error && error.stack || '').slice(0, 1000),
+        url: requestUrl,
+      };
+      try {
+        console.error(JSON.stringify({ tipo: 'worker_error', path, message: evento.message, stack: evento.stack }));
+        const dsn = String((env && env.SENTRY_DSN) || '');
+        const envelope = dsn ? sentryEnvelope(dsn, evento, { url: requestUrl }) : null;
+        if (envelope && ctx && typeof ctx.waitUntil === 'function') {
+          ctx.waitUntil(fetch(envelope.url, { method: 'POST', headers: envelope.headers, body: envelope.body }).catch(() => {}));
+        }
+      } catch (reportError) {}
+      return txt(500, 'Internal Server Error');
+    }
   },
 };

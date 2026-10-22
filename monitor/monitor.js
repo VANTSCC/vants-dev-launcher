@@ -12,7 +12,7 @@ const tls = require('tls');
 
 const DIR = __dirname;
 let cfg = {
-  site: 'https://feispla.github.io/Vants/',
+  site: 'https://vants.vants.workers.dev/',
   proxy: 'https://br-sweet-shape-b42xhogj-vantsdata.compute.c-6.us-east-2.aws.neon.tech/',
   webhookUrl: '',
   slowMs: 4000,
@@ -26,7 +26,8 @@ const REPORT = process.argv.includes('--report');
 const COLORS = { up: 0x3ddc84, degraded: 0xffb547, down: 0xff4655, info: 0x5865f2 };
 
 const CRIT = [
-  { id: 'web', label: 'Web (GitHub Pages)', url: cfg.site, markers: ['VANTS GAMES', 'arena-live.js'] },
+  { id: 'web', label: 'Web (Cloudflare Worker)', url: cfg.site, markers: ['VANTS GAMES', 'arena-live.js'] },
+  { id: 'health', label: 'API health', url: cfg.site + 'api/health', markers: ['"ok":true'] },
   { id: 'css', label: 'arena.css', url: cfg.site + 'assets/css/arena.css' },
   { id: 'arena', label: 'arena.js', url: cfg.site + 'assets/js/arena.js' },
   { id: 'live', label: 'arena-live.js', url: cfg.site + 'assets/js/arena-live.js' },
@@ -44,7 +45,7 @@ async function httpCheck(c) {
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), cfg.timeoutMs);
-    const r = await fetch(c.url, { signal: ctrl.signal, headers: { 'accept': '*/*' } });
+    const r = await fetch(c.url, { signal: ctrl.signal, headers: { 'accept': '*/*', 'user-agent': 'Mozilla/5.0 (compatible; VANTS-Monitor/1.0)' } });
     clearTimeout(timer);
     const ms = Date.now() - t0;
     const headers = {};
@@ -175,4 +176,5 @@ function mejoras(crit, extern, certs) {
 
   console.log(`\nESTADO: ${status} (${okCount}/${crit.length + extern.length} OK)`);
   fs.writeFileSync(path.join(DIR, 'state.json'), JSON.stringify({ status, since: changed ? Date.now() : (st.since || Date.now()), lastRun: new Date().toISOString() }, null, 2));
+  if (failed.length) process.exitCode = 1;
 })();

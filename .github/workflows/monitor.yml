@@ -1,0 +1,61 @@
+name: "VANTS · monitor cada 30 minutos"
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Node 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Ejecutar monitor
+        env:
+          VANTS_DISCORD_WEBHOOK: ${{ secrets.VANTS_DISCORD_WEBHOOK }}
+        run: |
+          set +e
+          node monitor/monitor.js 2>&1 | tee monitor-output.log
+          result=${PIPESTATUS[0]}
+          exit "$result"
+
+      - name: Abrir o actualizar incidente
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create monitor-caida --description "Caída detectada por el monitor VANTS" --color "d73a4a" >/dev/null 2>&1 || true
+          issue=$(gh issue list --state open --label monitor-caida --json number --jq '.[0].number // empty')
+          tail=$(tail -n 60 monitor-output.log)
+          body=$(printf 'El monitor detectó una caída. [Ejecución](%s).\n\n```text\n%s\n```' "$RUN_URL" "$tail")
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$body"
+          else
+            gh issue create --title "[monitor] VANTS caído" --label monitor-caida --body "$body"
+          fi
+
+      - name: Cerrar incidentes recuperados
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          issues=$(gh issue list --state open --label monitor-caida --json number --jq '.[].number')
+          while IFS= read -r issue; do
+            [ -z "$issue" ] && continue
+            gh issue comment "$issue" --body "✅ VANTS recuperado. [Ejecución](${RUN_URL})."
+            gh issue close "$issue"
+          done <<< "$issues"

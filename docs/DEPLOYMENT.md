@@ -42,6 +42,10 @@ AGENT_LLM_URL · DISCORD_ID_APP · DISCORD_PUBLIC_KEY · VANTS_BOT_SECRET.
 En el Worker: DISCORD_PUBLIC_KEY, VANTS_BOT_URL/VANTS_BOT_SECRET y (OPCIONAL desde la
 auditoría del 20-oct) AUTH0_SPA_CLIENT_ID — client_id del SPA para los tickets de
 verificación de email; si falta, el ticket se crea igual (el Management Token autoriza).
+Observabilidad opcional del Worker: `SENTRY_DSN` envía errores a Sentry y
+`SUPERVISOR_URL` reenvía eventos a la Neon Function `supervisor`. Configúralas como
+secrets con `npx wrangler secret put SENTRY_DSN` y
+`npx wrangler secret put SUPERVISOR_URL`; sin ellas, la ingesta local sigue activa.
 En agent-service (si se publica): AGENT_TOKEN (recomendado) — sin él la API /api/v1 queda
 CERRADA (503) salvo AGENT_ALLOW_OPEN=1 explícito.
 Ningún secreto vive en el repo (`.env.example` solo con placeholders).
