@@ -34,7 +34,10 @@ jobs:
         run: npm ci
 
       - name: Compilar instalador NSIS x64
-        run: npm run dist:win
+        # --publish=never: el release lo crea el paso 'gh release create' de abajo con
+        # github.token. Sin esto, electron-builder activa implicit publishing al ver el
+        # tag y aborta exigiendo GH_TOKEN (así el build no depende de tokens en build).
+        run: npm run dist:win -- --publish=never
 
       - name: Subir artefacto (todas las ejecuciones)
         uses: actions/upload-artifact@v4
