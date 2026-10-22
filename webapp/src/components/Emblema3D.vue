@@ -6,11 +6,16 @@ import * as THREE from 'three';
 // placa octogonal oscura con bisel rojo, "V" de dos trazos — izquierdo blanco
 // degradado que afila al vértice, derecho rojo con corte horizontal — y la
 // cuña roja flotante junto al vértice. Degradados por vértice (color attr).
+//
+// Rendimiento: el bucle solo corre cuando el emblema está en pantalla, la
+// pestaña visible y el usuario no pidió reduced-motion (en ese caso se pinta
+// UN fotograma quieto). DPR hasta 3 para que en 4K/retina no se vea borroso.
 const host = ref<HTMLDivElement | null>(null);
-let raf = 0;
+const sinWebgl = ref(false);
 let dispose = () => {};
 
 type Pt = [number, number];
+const MAX_DPR = 3;
 
 const octagonShape = (w: number, c: number) => {
   const s = new THREE.Shape();
@@ -73,16 +78,29 @@ const extrudeGradient = (
 onMounted(() => {
   const el = host.value;
   if (!el) return;
-  const W = el.clientWidth || 240;
-  const H = el.clientHeight || 240;
+  let W = el.clientWidth || 240;
+  let H = el.clientHeight || 240;
+
+  let renderer: THREE.WebGLRenderer;
+  try {
+    renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance',
+    });
+  } catch {
+    // Sin WebGL (navegador capado, GPU bloqueada): queda el símbolo SVG oficial.
+    sinWebgl.value = true;
+    return;
+  }
 
   const scene = new THREE.Scene();
   const cam = new THREE.PerspectiveCamera(38, W / H, 0.1, 50);
   cam.position.set(0, 0, 5.4);
 
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  const aplicarDpr = () => renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_DPR));
+  aplicarDpr();
   renderer.setSize(W, H);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   el.appendChild(renderer.domElement);
 
   // ── Materiales de marca ──
@@ -194,18 +212,107 @@ onMounted(() => {
   back.position.set(0, 2, -4);
   scene.add(back);
 
-  const clock = new THREE.Clock();
-  const tick = () => {
-    raf = requestAnimationFrame(tick);
-    const t = clock.getElapsedTime();
-    g.rotation.y = t * 0.5;
-    g.rotation.x = Math.sin(t * 0.8) * 0.14;
+  // ── Bucle: solo gira si se ve, con pestaña visible y sin reduced-motion ──
+  const clock = new THREE.Clock(false);
+  let t = 0;
+  let raf = 0;
+  let enPantalla = true;
+  let contextoPerdido = false;
+  const mqReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  const pose = (tiempo: number) => {
+    g.rotation.y = tiempo * 0.5;
+    g.rotation.x = Math.sin(tiempo * 0.8) * 0.14;
+  };
+  const fotograma = () => {
     renderer.render(scene, cam);
   };
-  tick();
+  const tick = () => {
+    raf = requestAnimationFrame(tick);
+    // Delta acotado: tras volver de una pestaña oculta el emblema no pega un salto.
+    t += Math.min(clock.getDelta(), 0.05);
+    pose(t);
+    fotograma();
+  };
+  const debeAnimar = () =>
+    enPantalla && !contextoPerdido && document.visibilityState !== 'hidden' && !mqReduce.matches;
+  const sincronizar = () => {
+    if (debeAnimar()) {
+      if (!raf) {
+        clock.start();
+        clock.getDelta();
+        tick();
+      }
+    } else {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      clock.stop();
+      if (mqReduce.matches && !contextoPerdido) {
+        // Quieto pero con la pose del logo oficial (de frente, leve inclinación).
+        pose(0.55);
+        fotograma();
+      }
+    }
+  };
+
+  const io =
+    'IntersectionObserver' in window
+      ? new IntersectionObserver(
+          (entries) => {
+            enPantalla = entries.some((e) => e.isIntersecting);
+            sincronizar();
+          },
+          { rootMargin: '80px' }
+        )
+      : null;
+  io?.observe(el);
+
+  const onVisibilidad = () => sincronizar();
+  document.addEventListener('visibilitychange', onVisibilidad);
+  const onReduce = () => sincronizar();
+  mqReduce.addEventListener?.('change', onReduce);
+
+  const ro =
+    'ResizeObserver' in window
+      ? new ResizeObserver(() => {
+          const w = el.clientWidth || W;
+          const h = el.clientHeight || H;
+          if (w === W && h === H) return;
+          W = w;
+          H = h;
+          cam.aspect = W / H;
+          cam.updateProjectionMatrix();
+          aplicarDpr();
+          renderer.setSize(W, H);
+          if (!raf) fotograma();
+        })
+      : null;
+  ro?.observe(el);
+
+  const canvas = renderer.domElement;
+  const onLost = (ev: Event) => {
+    ev.preventDefault();
+    contextoPerdido = true;
+    sincronizar();
+  };
+  const onRestored = () => {
+    contextoPerdido = false;
+    sincronizar();
+  };
+  canvas.addEventListener('webglcontextlost', onLost);
+  canvas.addEventListener('webglcontextrestored', onRestored);
+
+  sincronizar();
 
   dispose = () => {
-    cancelAnimationFrame(raf);
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    io?.disconnect();
+    ro?.disconnect();
+    document.removeEventListener('visibilitychange', onVisibilidad);
+    mqReduce.removeEventListener?.('change', onReduce);
+    canvas.removeEventListener('webglcontextlost', onLost);
+    canvas.removeEventListener('webglcontextrestored', onRestored);
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         obj.geometry.dispose();
@@ -215,7 +322,7 @@ onMounted(() => {
       }
     });
     renderer.dispose();
-    if (renderer.domElement.parentElement === el) el.removeChild(renderer.domElement);
+    if (canvas.parentElement === el) el.removeChild(canvas);
   };
 });
 
@@ -223,5 +330,7 @@ onBeforeUnmount(() => dispose());
 </script>
 
 <template>
-  <div ref="host" class="h-full w-full"></div>
+  <div ref="host" class="h-full w-full">
+    <svg v-if="sinWebgl" class="emblema-svg" viewBox="0 0 64 64" aria-hidden="true"><use href="#vmark" /></svg>
+  </div>
 </template>

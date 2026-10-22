@@ -6,14 +6,17 @@ import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
 import Emblema3D from '../components/Emblema3D.vue';
 import Footer from '../components/Footer.astro';
+import '../styles/home-motion.css';
 ---
 <Base>
   <Vmark />
   <Ticker />
   <Nav />
   <Hero />
-  <div class="relative mx-auto h-[230px] w-[230px] opacity-60" aria-hidden="true">
-    <Emblema3D client:only="vue" />
+  {/* client:visible: Three (~560 KB) solo se descarga cuando el emblema entra
+      en pantalla; en móvil queda bajo el hero y no compite con la portada. */}
+  <div class="emblema-3d relative mx-auto h-[230px] w-[230px] opacity-70" aria-hidden="true">
+    <Emblema3D client:visible />
   </div>
   <Footer />
 </Base>
