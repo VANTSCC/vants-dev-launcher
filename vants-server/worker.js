@@ -85,7 +85,8 @@ const LIMIT_TEAMS = 30;      // peticiones por minuto por IP a /api/teams
 const LIMIT_GPR = 20;        // peticiones por minuto por IP a /api/gpr
 const LIMIT_ACCOUNT = 10;    // peticiones por minuto por IP a /api/account/*
 const LIMIT_TORNEO = 15;     // peticiones por minuto por IP a /api/torneos/*
-const LIMIT_CLIPS = 6;       // peticiones por minuto por IP a /api/clips/* (subidas/bajas)
+const LIMIT_CLIPS = 6;
+const LIMIT_VERCEL = 20;     // peticiones por minuto por IP al webhook de Vercel       // peticiones por minuto por IP a /api/clips/* (subidas/bajas)
 const WINDOW_MS = 60_000;    // ventana de 1 minuto
 const MAX_BODY_NOTIFY = 8192; // máximo 8 KB por notificación
 const MAX_CLIP_BYTES = 48 * 1024 * 1024; // vídeo destacado: máx 48 MB
@@ -113,6 +114,7 @@ const JWKS_TTL_MS = 60 * 60_000;
 let jwksCache = { at: 0, keys: null };
 
 const rlClips = new Map();
+const rlVercel = new Map();
 const rlTelemetriaRequests = new Map();
 const telemetriaHits = new Map();
 const SUPERVISOR_KINDS = new Set(['JS_ERROR', 'NETWORK_ERROR', 'PAGE_VIEW', 'LOGIN_OK', 'LOGIN_FAILED', 'CHECKOUT_RETURN']);
@@ -649,6 +651,64 @@ async function hmacSha256Hex(clave, mensaje) {
   return hex;
 }
 
+// HMAC-SHA1 → hex (Vercel firma sus webhooks así: x-vercel-signature).
+async function hmacSha1Hex(clave, mensaje) {
+  const enc = new TextEncoder();
+  const k = await crypto.subtle.importKey('raw', enc.encode(String(clave)), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const mac = await crypto.subtle.sign('HMAC', k, enc.encode(String(mensaje)));
+  let hex = '';
+  for (const b of new Uint8Array(mac)) hex += b.toString(16).padStart(2, '0');
+  return hex;
+}
+
+/* Webhook de Vercel → repository_dispatch(vercel_deploy) en GitHub, para que
+   el Agente VANTS (agente.yml) reaccione al momento a un deploy fallido sin
+   esperar al cron de 30 min. Solo deployment.error / deployment.canceled del
+   proyecto vants; el resto se ignora con 200. Seguridad: firma
+   x-vercel-signature (HMAC-SHA1 del cuerpo con VERCEL_WEBHOOK_SECRET, tiempo
+   constante), cuerpo ≤ 64 KB, rate limit, y el PAT (GH_DISPATCH_TOKEN, alcance
+   mínimo: contents:write solo en este repo) nunca sale en la respuesta. Sin
+   los dos secretos configurados responde 503 y no hace nada. */
+const VERCEL_PROJECT_ID = 'prj_vxL6Wd8RgsiMF6Eg8AnMGiTriITn';
+async function handleVercelWebhook(request, env) {
+  const secreto = String((env && env.VERCEL_WEBHOOK_SECRET) || '');
+  const ghToken = String((env && env.GH_DISPATCH_TOKEN) || '');
+  if (!secreto || !ghToken) return json({ ok: false, error: 'vercel_webhook_no_config' }, 503);
+  if (parseInt(request.headers.get('content-length') || '0', 10) > 64 * 1024) return json({ ok: false, error: 'payload_too_large' }, 413);
+  const crudo = await request.text();
+  if (crudo.length > 64 * 1024) return json({ ok: false, error: 'payload_too_large' }, 413);
+  const firma = String(request.headers.get('x-vercel-signature') || '').trim().toLowerCase();
+  const esperada = await hmacSha1Hex(secreto, crudo);
+  if (!firma || !comparacionConstante(firma, esperada)) return json({ ok: false, error: 'firma_invalida' }, 401);
+  let ev = null;
+  try { ev = JSON.parse(crudo); } catch {}
+  if (!ev || typeof ev.type !== 'string') return json({ ok: false, error: 'json_invalido' }, 400);
+  const p = ev.payload || {};
+  const proyecto = String((p.project && p.project.id) || '');
+  if (!/^deployment\.(error|canceled)$/.test(ev.type) || (proyecto && proyecto !== VERCEL_PROJECT_ID)) {
+    return json({ ok: true, ignorado: ev.type }, 200);
+  }
+  const d = p.deployment || {};
+  const meta = d.meta || {};
+  const client_payload = {
+    tipo: ev.type,
+    uid: String(d.id || '').slice(0, 64),
+    sha: String(meta.githubCommitSha || '').slice(0, 40),
+    ref: String(meta.githubCommitRef || '').slice(0, 100),
+    url: String(d.url || '').slice(0, 200),
+    proyecto: proyecto.slice(0, 64),
+    creado: ev.createdAt || null,
+  };
+  const repo = String((env && env.GH_DISPATCH_REPO) || 'feispla/Vants');
+  const r = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
+    method: 'POST',
+    headers: { accept: 'application/vnd.github+json', authorization: 'Bearer ' + ghToken, 'content-type': 'application/json', 'user-agent': 'vants-worker' },
+    body: JSON.stringify({ event_type: 'vercel_deploy', client_payload }),
+  });
+  if (r.status === 204) return json({ ok: true, despachado: 'vercel_deploy', uid: client_payload.uid }, 200);
+  return json({ ok: false, error: 'github_' + r.status }, 502);
+}
+
 async function handleNotify(request, env) {
   try {
     const crudoTxt = await request.text();
@@ -930,6 +990,13 @@ async function fetchWorker(request, env, ctx) {
         });
       }
       return new Response(null, { status: 204 });
+    }
+
+    if (url.pathname === '/api/vercel/webhook') {
+      if (method !== 'POST') return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      const rlV = rateLimit(rlVercel, ip, LIMIT_VERCEL);
+      if (!rlV.ok) return json({ ok: false, error: 'rate_limited' }, 429, { 'Retry-After': String(rlV.retry) });
+      return handleVercelWebhook(request, env);
     }
 
     if (url.pathname === '/api/health') {

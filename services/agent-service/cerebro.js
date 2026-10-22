@@ -15,6 +15,7 @@ const REGLAS = {
   workflows:      { severity: 'warn',     kind: 'workflow_fallo' },
   neon:           { severity: 'error',    kind: 'bd_problema' },
   matchmaking:    { severity: 'warn',     kind: 'mm_problema' },
+  vercel_deploy:  { severity: 'error',    kind: 'vercel_deploy_fallo' },
 };
 
 function normalizar(t) {
@@ -43,6 +44,7 @@ function evaluar(resultados) {
       accion_sugerida: f.id === 'web' ? 'redispatch_cloudflare'
         : f.id === 'workflows' ? 'rerun_fallidos'
         : f.id === 'launcher' ? 'revisar_release'
+        : f.id === 'vercel_deploy' ? 'redeploy_vercel'
         : null,
     });
   }
@@ -68,6 +70,11 @@ function evaluar(resultados) {
       else if (f.id === 'neon-migrate') acciones.push({ id: 'redispatch_neon_migrate', seguridad: 'auto', motivo: `workflow falló (${f.sha})`, sha: f.sha });
       else acciones.push({ id: 'rerun_fallidos', seguridad: 'auto', motivo: `workflow ${f.id} falló`, runId: f.runId });
     }
+  }
+
+  const vercelFallo = fallos.find((f) => f.id === 'vercel_deploy');
+  if (vercelFallo && vercelFallo.datos && vercelFallo.datos.uid) {
+    acciones.push({ id: 'redeploy_vercel', seguridad: 'auto', motivo: `deploy Vercel ${vercelFallo.datos.estado || 'fallido'} (${vercelFallo.datos.sha || vercelFallo.datos.uid})`, sha: vercelFallo.datos.sha, uid: vercelFallo.datos.uid });
   }
 
   const partes = conDatos.map((c) => `${c.id}:${c.estado}`).join(' ');

@@ -152,7 +152,7 @@ async function ejecutarCiclo(ctx, opciones = {}) {
     // acciones automaticas seguras
     for (const accion of decision.acciones || []) {
       if (accion.seguridad !== 'auto') continue;
-      const r = await acciones.ejecutar(accion.id, { motivo: accion.motivo, sha: accion.sha, runId: accion.runId });
+      const r = await acciones.ejecutar(accion.id, { motivo: accion.motivo, sha: accion.sha, runId: accion.runId, uid: accion.uid });
       registro.acciones.push({ id: accion.id, ...r });
     }
 

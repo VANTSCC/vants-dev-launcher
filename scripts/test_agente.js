@@ -11,6 +11,8 @@ const path = require('path');
 const cerebro = require(path.join(__dirname, '..', 'services', 'agent-service', 'cerebro'));
 const { crearMemoriaMemoria } = require(path.join(__dirname, '..', 'services', 'agent-service', 'memoria'));
 const { ejecutarCiclo, ejecutarIntencion } = require(path.join(__dirname, '..', 'services', 'agent-service', 'nucleo'));
+const { crearChequeos } = require(path.join(__dirname, '..', 'services', 'agent-service', 'chequeos'));
+const { crearAcciones } = require(path.join(__dirname, '..', 'services', 'agent-service', 'acciones'));
 
 let PASSED = 0;
 function ok(cond, nombre) { if (!cond) { console.error(`  FAIL ${nombre}`); process.exit(1); } PASSED++; console.log(`  ok ${nombre}`); }
@@ -143,6 +145,54 @@ async function test_nucleo() {
   ok(resResolver.includes('No encontre'), 'resolver id inexistente avisa');
 }
 
+// respuesta falsa estilo fetch
+const respuesta = (status, cuerpo) => ({ status, ok: status >= 200 && status < 300, text: async () => JSON.stringify(cuerpo) });
+
+async function test_vercel() {
+  console.log('\n— Vercel: chequeo vercel_deploy + acción redeploy_vercel —');
+  const deploy = (estado, extra = {}) => ({ uid: 'dpl_abc', readyState: estado, url: 'vants-xyz.vercel.app', inspectorUrl: 'https://vercel.com/vants/vants/dpl_abc', target: 'production', meta: { githubCommitSha: 'a1b2c3d4e5f6', githubCommitRef: 'main' }, ...extra });
+  const conApi = (lista) => crearChequeos({ vercel: { token: 'tok' }, fetchImpl: async (url) => { ok(url.includes('/v6/deployments?projectId=prj_') && url.includes('teamId=team_'), 'pide a /v6/deployments con projectId y teamId'); return respuesta(200, { deployments: lista }); } });
+
+  const omitido = await crearChequeos({}).vercelDeploy();
+  ok(omitido.estado === 'omitido' && /VERCEL_TOKEN/.test(omitido.detalle), 'sin VERCEL_TOKEN → omitido (no falla)');
+  const okV = await conApi([deploy('READY')]).vercelDeploy();
+  ok(okV.estado === 'ok' && okV.datos.uid === 'dpl_abc' && okV.datos.sha === 'a1b2c3d4e5', 'READY → ok con uid y sha');
+  const fallo = await conApi([deploy('ERROR')]).vercelDeploy();
+  ok(fallo.estado === 'fallo' && fallo.datos.estado === 'ERROR' && fallo.url.includes('vercel.com'), 'ERROR → fallo con URL del log');
+  const cancel = await conApi([deploy('CANCELED')]).vercelDeploy();
+  ok(cancel.estado === 'fallo', 'CANCELED → fallo');
+  const build = await conApi([deploy('BUILDING')]).vercelDeploy();
+  ok(build.estado === 'aviso', 'BUILDING → aviso');
+  const preview = await conApi([deploy('ERROR', { target: null, meta: { githubCommitSha: 'ffff', githubCommitRef: 'rama-preview' } }), deploy('READY')]).vercelDeploy();
+  ok(preview.estado === 'ok', 'un preview roto no tapa al último deploy de main');
+  const caida = await crearChequeos({ vercel: { token: 'tok' }, fetchImpl: async () => respuesta(500, {}) }).vercelDeploy();
+  ok(caida.estado === 'aviso' && /500/.test(caida.detalle), 'API de Vercel caída → aviso, no fallo');
+
+  // cerebro: fallo de vercel → acción auto redeploy_vercel con uid+sha
+  const ev = cerebro.evaluar([fallo, R_OK]);
+  ok(ev.estadoGlobal === 'DEGRADED' && ev.incidentes[0].severity === 'error', 'deploy Vercel fallido → DEGRADED/error');
+  ok(ev.incidentes[0].accion_sugerida === 'redeploy_vercel', 'incidente sugiere redeploy_vercel');
+  ok(ev.acciones.some((a) => a.id === 'redeploy_vercel' && a.uid === 'dpl_abc' && a.sha === 'a1b2c3d4e5'), 'acción auto redeploy_vercel con uid y sha');
+
+  // acción: POST v13 con deploymentId, guarda 2 intentos por sha
+  const memoria = crearMemoriaMemoria();
+  const posts = [];
+  const acc = crearAcciones({ memoria, vercel: { token: 'tok' }, fetchImpl: async (url, opts) => { posts.push({ url, body: JSON.parse(opts.body) }); return respuesta(200, { id: 'dpl_nuevo', inspectorUrl: 'https://vercel.com/vants/vants/dpl_nuevo' }); } });
+  const r1 = await acc.ejecutar('redeploy_vercel', { uid: 'dpl_abc', sha: 'a1b2c3d4e5', motivo: 'test' });
+  ok(r1.ejecutada && posts.length === 1 && posts[0].url.includes('/v13/deployments?teamId=team_'), 'redeploy_vercel → POST /v13/deployments');
+  ok(posts[0].body.deploymentId === 'dpl_abc' && posts[0].body.name === 'vants' && posts[0].body.target === 'production', 'cuerpo: name, deploymentId (uid fallido), target production');
+  const r2 = await acc.ejecutar('redeploy_vercel', { uid: 'dpl_abc', sha: 'a1b2c3d4e5', motivo: 'test' });
+  ok(r2.ejecutada && posts.length === 2 && /2\/2/.test(r2.resultado), '2º fallo del mismo sha → 2º intento');
+  const r3 = await acc.ejecutar('redeploy_vercel', { uid: 'dpl_abc', sha: 'a1b2c3d4e5', motivo: 'test' });
+  ok(!r3.ejecutada && posts.length === 2 && /guarda/.test(r3.resultado), '3º → frenado por la guarda (máx. 2 por sha)');
+  const sinUid = await acc.ejecutar('redeploy_vercel', { sha: 'zzz' });
+  ok(!sinUid.ejecutada && /uid/.test(sinUid.resultado), 'sin uid → solo propuesta');
+  const sinToken = await crearAcciones({ memoria, vercel: { token: '' }, fetchImpl: async () => { throw new Error('no debe llamar'); } }).ejecutar('redeploy_vercel', { uid: 'x', sha: 'y' });
+  ok(!sinToken.ejecutada && /VERCEL_TOKEN/.test(sinToken.resultado), 'sin VERCEL_TOKEN → solo propuesta');
+  const api500 = await crearAcciones({ memoria, vercel: { token: 'tok' }, fetchImpl: async () => respuesta(403, { error: { code: 'forbidden', message: 'Not authorized' } }) }).ejecutar('redeploy_vercel', { uid: 'dpl_otro', sha: 'otro', motivo: 'test' });
+  ok(!api500.ejecutada && /403/.test(api500.resultado) && /forbidden/.test(api500.resultado), 'Vercel 403 → no ejecutada con el código del error');
+}
+
 async function test_servidor() {
   console.log('\n— servidor: endpoints con fastify.inject —');
   let Fastify;
@@ -195,6 +245,7 @@ async function test_servidor() {
     await test_nlu();
     await test_memoria();
     await test_nucleo();
+    await test_vercel();
     await test_servidor();
     console.log(`\n✅ AGENTE VANTS — ${PASSED}/${PASSED} asserts PASS`);
     process.exit(0);

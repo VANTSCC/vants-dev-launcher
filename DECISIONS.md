@@ -422,3 +422,38 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   actualizados; sin bump de cache manual (los bundles _astro van con hash de
   contenido).
 - Fecha: 2026-10-21.
+
+## D26 · Vercel entra bajo el Agente VANTS (vigilancia + redeploy + webhook)
+- **Contexto**: el repo despliega también en Vercel (previews y `vants.vercel.app`)
+  pero Vercel no tiene agente: un deploy fallido allí no lo veía nadie y
+  `@vercel/analytics` pedía `/_vercel/insights/script.js` en Cloudflare (404
+  en cada carga). El dueño: «Vercel no tiene agente: metele el Agente VANTS.
+  Objetivo: que vigile y re-lance los deploys de Vercel igual que hace con
+  Cloudflare/Neon, y avise a Discord».
+- **Decisión**: chequeo `vercel_deploy` + acción `redeploy_vercel` (redeploy
+  del MISMO commit vía `deploymentId`, máx. 2 intentos por SHA, misma guarda
+  en `agent_events` que `redispatch`), registrada en `cerebro.js` como
+  automática. Disparo inmediato por webhook de Vercel → ruta nueva en el
+  Worker `vants-server` (`POST /api/vercel/webhook`: firma HMAC-SHA1,
+  filtro por proyecto, `repository_dispatch` con PAT de alcance mínimo) →
+  `agente.yml` escucha `repository_dispatch: [vercel_deploy]`. `vercel.json`
+  en raíz deja el sitio como estático sin build (como `netlify.toml`) con
+  cache `immutable` para `/_astro/` y `/assets/*?v=`. Analytics de Vercel se
+  carga solo si `location.hostname` es de Vercel.
+- **Motivo**: el redeploy del mismo commit es lo que arregla los fallos
+  transitorios de Vercel (build cancelado, cuota, red) sin tocar `main`; el
+  tope de 2 por SHA evita el bucle «re-lanzar un fallo eterno» que el dueño
+  pidió evitar; el webhook ahorra hasta 30 min de espera frente al cron.
+- **Qué NO cambia**: el cron de 30 min sigue siendo la red de seguridad; sin
+  `VERCEL_TOKEN` el chequeo se omite (nunca falla el ciclo); sin los secretos
+  del Worker el endpoint responde 503 y no hace nada; no se despliega nada
+  nuevo desde el agente, solo se re-lanza lo que ya existía.
+- **Qué la invalidaría**: que Vercel deje de usarse (→ quitar chequeo, acción,
+  ruta y `vercel.json`); que Vercel cambie la firma de sus webhooks (hoy
+  HMAC-SHA1 en `x-vercel-signature`) o la API `v13/deployments`.
+- **Consecuencias**: 4 secretos nuevos a cargo del dueño (`VERCEL_TOKEN` en
+  GitHub; `VERCEL_WEBHOOK_SECRET` y `GH_DISPATCH_TOKEN` en el Worker; el
+  webhook en el dashboard de Vercel); `@vercel/analytics` sale de las
+  dependencias del webapp (script inline condicional en `Base.astro`).
+- Fecha: 2026-10-22.
+
