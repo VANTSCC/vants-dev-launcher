@@ -302,7 +302,7 @@
     // config responde {ok:false, reason:'disabled-…'} y sigue derecho.
     let msg = '';
     try {
-      const el = await H.exitlag('activar-juego', { id: juegoEl.value, nombre: JUEGO_LABEL[juegoEl.value] || juegoEl.value });
+      const el = await H.exitlag('activar-juego', juegoEl.value);
       if (el && el.ok) msg = ' · ExitLag: ' + (el.perfil || 'activo');
     } catch (e) { /* sin puente exitlag: sigue derecho */ }
     readyEstado('todos confirmaron — lanzando en 3…' + msg);
@@ -355,7 +355,7 @@
     const bib = await H.biblioteca();
     const lista = (bib && bib.juegos) || [];
     const objetivo = lista.find((j) => (j.id === juego) || (j.nombre || '').toLowerCase().includes(juego === 'cs2' ? 'counter-strike' : juego));
-    if (objetivo) { await H.jugar(objetivo); return; }
+    if (objetivo) { await H.jugar(objetivo.id); return; }
     // sin biblioteca local: abrir por vía conocida
     if (juego === 'cs2') await H.abrir('steam://rungameid/730');
     else await H.abrir('https://playvalorant.com/');

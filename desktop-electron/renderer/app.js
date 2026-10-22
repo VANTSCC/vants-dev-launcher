@@ -118,7 +118,7 @@ async function cargarRapido() {
 }
 async function jugarPorId(id) {
   const j = BIBLIOTECA.find(x => String(x.id) === String(id));
-  if (j) await H.jugar(j);
+  if (j) await H.jugar(j.id);
 }
 
 // ───────── portadas ─────────

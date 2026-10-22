@@ -41,6 +41,7 @@
       "main.js",
       "preload.js",
       "telemetria.js",
+      "seguridad.js",
       "renderer/**/*"
     ],
     "win": {
