@@ -75,7 +75,7 @@ SQL (PostgREST `POST /rpc/<fn>` para el HUB; conexión directa para el service):
 | `mm_reportar(p_match_id, p_sub, score_a, score_b)` | valida participante + reporta + aplica RR (mm_aplicar_resultado) en una transacción |
 | `mm_aplicar_resultado(p_match_id)` | win +0.015 / draw +0.002 / loss −0.012, clamp [0.50,1.60], placement 0.95; rr_before/after; season stats vía faceit_stats_delta; idempotente |
 | `mm_historial_de(p_sub, limite)` | historial RR propio (vista `mm_historial`) |
-| `mm_invitar(p_to_email, p_game, p_mode, p_region)` | invitación HUB por email (24): valida destino con perfil, anti-duplicado por pareja+juego, vigencia 10 min |
+| `mm_invitar(p_to_email, p_game, p_mode, p_region)` | invitación HUB por email **o nick** (24 + 32): con `@` busca email, sin `@` busca username/display_name (case-insensitive); remitente excluido del lookup (si varios comparten email/nick gana el más reciente); anti-duplicado por pareja+juego, vigencia 10 min |
 | `mm_invites_pendientes(p_limite)` | mis invitaciones recibidas + enviadas (24); expira vencidas al vuelo |
 | `mm_responder_invite(p_id, p_aceptar)` | destino acepta → queda ENCOLADO con los parámetros vía `mm_encolar` (24); destino rechaza; remitente cancela |
 | `mm_listo(p_match_id)` | ready-check (30): participante confirma "estoy listo"; PK (match_id, sub) = idempotente; rechaza `timeout` y `partida_anulada` |

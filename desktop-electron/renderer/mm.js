@@ -3,10 +3,10 @@
 // ------------------------------------------------------------
 // Módulo independiente (patrón Fase 2 del plan): no toca app.js,
 // solo se enchufa a los elementos de #cajon-buscar y a vantsHub.
-// Toda la lógica vive en SQL (migraciones 21–24, 30 y 31): mm_encolar,
+// Toda la lógica vive en SQL (migraciones 21–24, 30, 31 y 32): mm_encolar,
 // mm_ticket_estado, mm_salir, mm_reportar, mm_historial_de, las
-// invitaciones (mm_invitar, mm_invites_pendientes,
-// mm_responder_invite), el ready-check (mm_listo, mm_estado_ready,
+// invitaciones flexibles por email o nick (mm_invitar, migras 24+32),
+// mm_invites_pendientes, mm_responder_invite, el ready-check (mm_listo,
 // mm_anular_si_timeout) y el contador de cola (migra 31:
 // cola_total/necesarios en mm_ticket_estado) — llamadas por
 // PostgREST con el Bearer de la sesión.
@@ -413,7 +413,8 @@
   async function invitar() {
     if (!SESION || !SESION.sub) { invEstado('inicia sesión primero'); return; }
     const email = (invEmail && invEmail.value || '').trim();
-    if (!email || email.indexOf('@') < 1) { invEstado('escribe el email del jugador'); return; }
+    // migra 32: puede ser email (con @) o nick (sin @) — el SQL decide
+    if (!email || email.length < 2) { invEstado('escribí el email o el nick del jugador'); return; }
     if (invEnviar) invEnviar.disabled = true;
     invEstado('enviando…');
     try {
@@ -424,8 +425,8 @@
         p_region: regionEl.value,
       });
       if (!r.ok) {
-        const msg = r.error === 'destino_no_encontrado' ? 'no hay jugador VANTS con ese email'
-          : r.error === 'destino_es_tu_email' ? 'ese email es el tuyo'
+        const msg = r.error === 'destino_no_encontrado' ? 'nadie con ese email o nick tiene perfil VANTS — tu amigo tiene que entrar al HUB una vez con su cuenta (el perfil se crea solo) y lo invitás de nuevo'
+          : r.error === 'destino_es_tu_email' ? 'ese sos vos — invitá a tu amigo con SU email o nick de VANTS'
           : r.error === 'no_elegible' ? 'tu perfil no es elegible'
           : r.error === 'sin_sesion' ? 'inicia sesión primero'
           : (r.error || 'no se pudo invitar');

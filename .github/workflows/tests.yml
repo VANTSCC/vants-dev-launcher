@@ -132,6 +132,9 @@ jobs:
       - name: Launcher VANTS · ready-check del matchmaking + cadena ExitLag (45 asserts)
         run: node scripts/test_mm_ready.js
 
+      - name: Launcher VANTS · invitaciones por email o nick (21 asserts)
+        run: node scripts/test_mm_invitar.js
+
   e2e:
     name: E2E Playwright · plataforma en producción
     runs-on: ubuntu-latest
