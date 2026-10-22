@@ -25,7 +25,7 @@ test.describe('Home full stack (Astro + Vue)', () => {
     // runtime arena intacto (arena.css v12 desde D24 y arena.js v34 siguen siendo la capa viva)
     /* Resiliente al deploy: produccion puede seguir sirviendo v=11 hasta
        que aterrice este PR (misma leccion del PR #93 con v=10). Acepta ambos. */
-    await expect(page.locator('link[ref*="arena.css?v=12"], link[ref*="arena.css?v=11"]')).toHaveCount(1);
+    await expect(page.locator('link[href*="arena.css?v=12"], link[href*="arena.css?v=11"]')).toHaveCount(1);
     await expect(page.locator('script[src*="arena.js?v=34"]')).toHaveCount(1);
   });
 
