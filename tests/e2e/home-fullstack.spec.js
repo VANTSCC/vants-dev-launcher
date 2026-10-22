@@ -43,4 +43,21 @@ test.describe('Home full stack (Astro + Vue)', () => {
     expect(respuestas.length, 'la página debe pedir al menos un bundle _astro').toBeGreaterThan(0);
     for (const s of respuestas) expect(s, 'bundle _astro debe responder 2xx/3xx').toBeLessThan(400);
   });
+
+  test('sin restos de merge ni errores de script en la portada', async ({ page, request }) => {
+    /* #104 llego a main con restos de una resolucion de conflictos a mano:
+       lineas sueltas (` main`, `devin/...`) dentro de un <script> inline y la
+       portada duplicada otra vez. El HTML servido no puede traer marcadores
+       ni nombres de rama, y la carga no puede lanzar ReferenceError/SyntaxError. */
+    const html = await (await request.get(BASE + '/')).text();
+    expect(html).not.toMatch(/^(<<<<<<<|=======|>>>>>>>)/m);
+    expect(html).not.toMatch(/^\s*(main|devin\/\S+)\s*$/m);
+
+    const errores = [];
+    page.on('pageerror', (e) => {
+      if (/ReferenceError|SyntaxError/.test(String(e))) errores.push(String(e));
+    });
+    await page.goto(BASE + '/', { waitUntil: 'load' });
+    expect(errores, 'scripts inline rotos en la home').toEqual([]);
+  });
 });
