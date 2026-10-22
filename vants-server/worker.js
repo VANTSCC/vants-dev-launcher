@@ -79,6 +79,7 @@ const SCANNER_PATHS = [
 // Rate limiting por IP (por instancia del Worker; suficiente como anti-flood).
 const LIMIT_GENERAL = 240;   // peticiones por minuto por IP (navegar gasta ~20)
 const LIMIT_NOTIFY = 8;      // peticiones por minuto por IP a la API de Discord
+const LIMIT_TELEMETRIA_REQUESTS = 30; // peticiones por minuto por IP al colector
 const LIMIT_ESPORTS = 30;    // peticiones por minuto por IP a la agenda Valorant
 const LIMIT_TEAMS = 30;      // peticiones por minuto por IP a /api/teams
 const LIMIT_GPR = 20;        // peticiones por minuto por IP a /api/gpr
@@ -112,7 +113,9 @@ const JWKS_TTL_MS = 60 * 60_000;
 let jwksCache = { at: 0, keys: null };
 
 const rlClips = new Map();
+const rlTelemetriaRequests = new Map();
 const telemetriaHits = new Map();
+const SUPERVISOR_KINDS = new Set(['JS_ERROR', 'NETWORK_ERROR', 'PAGE_VIEW', 'LOGIN_OK', 'LOGIN_FAILED', 'CHECKOUT_RETURN']);
 
 // Caché de la agenda esports (5 min): evita golpear api.henrikdev.xyz en cada visita.
 const ESPORTS_TTL_MS = 5 * 60_000;
@@ -927,6 +930,10 @@ async function fetchWorker(request, env, ctx) {
 
     if (url.pathname === '/api/telemetria') {
       if (method !== 'POST') return json({ ok: false, error: 'Solo POST' }, 405, { Allow: 'POST' });
+      const requestLimit = rateLimit(rlTelemetriaRequests, ip, LIMIT_TELEMETRIA_REQUESTS);
+      if (!requestLimit.ok) {
+        return json({ ok: false, error: 'rate_limited' }, 429, { 'Retry-After': String(requestLimit.retry) });
+      }
       const contentLength = Number(request.headers.get('content-length') || 0);
       if (contentLength > 64 * 1024) return json({ ok: false, error: 'payload_too_large' }, 413);
 
@@ -991,14 +998,20 @@ async function fetchWorker(request, env, ctx) {
       }
 
       const supervisorUrl = String((env && env.SUPERVISOR_URL) || '').replace(/\/+$/, '');
-      if (supervisorUrl && ctx && typeof ctx.waitUntil === 'function') {
+      const supervisorEvents = validado.eventos.filter((evento) => SUPERVISOR_KINDS.has(evento.kind));
+      if (supervisorUrl && supervisorEvents.length && ctx && typeof ctx.waitUntil === 'function') {
         const target = /\/events$/i.test(supervisorUrl) ? supervisorUrl : supervisorUrl + '/events';
-        const forwarded = Object.assign({}, body, { events: validado.eventos });
-        ctx.waitUntil(fetch(target, {
+        const forwarded = { events: supervisorEvents };
+        const forwardPromise = fetch(target, {
           method: 'POST',
           headers: { 'content-type': 'application/json', 'x-vants-supervisor': 'web', 'x-forwarded-for': ip },
           body: JSON.stringify(forwarded),
-        }).catch(() => {}));
+        }).then((response) => {
+          if (!response.ok) console.error(JSON.stringify({ tipo: 'supervisor_forward_error', status: response.status || 0 }));
+        }).catch(() => {
+          console.error(JSON.stringify({ tipo: 'supervisor_forward_error', status: 'fetch_error' }));
+        });
+        ctx.waitUntil(forwardPromise);
       }
       return json({ ok: true, recibidos: validado.eventos.length, descartados: validado.descartados }, 200, { 'Cache-Control': 'no-store' });
     }

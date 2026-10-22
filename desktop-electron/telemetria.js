@@ -7,7 +7,28 @@ const os = require('os');
 const COLLECTOR = 'https://vants.vants.workers.dev/api/telemetria';
 const MAX_LOG_BYTES = 1024 * 1024;
 const MAX_BATCH = 20;
+const MAX_QUEUE = 100;
+const MIN_BACKOFF_MS = 5000;
+const MAX_BACKOFF_MS = 5 * 60 * 1000;
 const REDACTAR = /token|authorization|cookie|password|secret/i;
+
+function clasificarSalida(reason) {
+  if (reason === 'clean-exit') return null;
+  if (reason === 'killed') return 'HUB_ERROR';
+  if (['crashed', 'oom', 'abnormal-exit', 'launch-failed', 'integrity-failure'].includes(reason)) return 'HUB_CRASH';
+  return null;
+}
+
+function siguienteBackoff(ms) {
+  const actual = Number.isFinite(ms) && ms > 0 ? ms : MIN_BACKOFF_MS;
+  return Math.min(actual * 2, MAX_BACKOFF_MS);
+}
+
+function reencolarLote(queue, lote, max = MAX_QUEUE) {
+  const limite = Number.isFinite(max) ? Math.max(0, Math.floor(max)) : MAX_QUEUE;
+  const eventos = lote.concat(queue);
+  return limite ? eventos.slice(-limite) : [];
+}
 
 function sanear(value, seen = new WeakSet(), key = '') {
   if (typeof value === 'string') return value.slice(0, key.toLowerCase() === 'stack' ? 1000 : 300);
@@ -62,6 +83,7 @@ function iniciar({ app, log } = {}) {
   let queue = [];
   let timer = null;
   let sending = false;
+  let backoffMs = MIN_BACKOFF_MS;
 
   function escribir(evento) {
     try {
@@ -72,12 +94,12 @@ function iniciar({ app, log } = {}) {
     } catch (error) {}
   }
 
-  function programar() {
+  function programar(delayMs = backoffMs) {
     if (timer || sending || !queue.length) return;
     timer = setTimeout(() => {
       timer = null;
       void enviar();
-    }, 5000);
+    }, delayMs);
     if (timer && typeof timer.unref === 'function') timer.unref();
   }
 
@@ -86,16 +108,24 @@ function iniciar({ app, log } = {}) {
     if (timer) { clearTimeout(timer); timer = null; }
     sending = true;
     const eventos = queue.splice(0, MAX_BATCH);
+    let retryDelay = null;
     try {
-      await fetch(COLLECTOR, {
+      const response = await fetch(COLLECTOR, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ events: eventos }),
       });
+      if (!response.ok && response.status !== 400 && response.status !== 413) {
+        throw new Error('collector_http_' + response.status);
+      }
+      if (response.ok) backoffMs = MIN_BACKOFF_MS;
     } catch (error) {
+      queue = reencolarLote(queue, eventos, MAX_QUEUE);
+      retryDelay = backoffMs;
+      backoffMs = siguienteBackoff(backoffMs);
     } finally {
       sending = false;
-      if (queue.length) programar();
+      if (queue.length) programar(retryDelay == null ? backoffMs : retryDelay);
     }
   }
 
@@ -110,8 +140,8 @@ function iniciar({ app, log } = {}) {
       }));
       escribir(evento);
       try { if (typeof log === 'function') log('telemetria:', evento.kind, evento.message); } catch (error) {}
-      queue.push(evento);
-      if (queue.length >= MAX_BATCH) void enviar();
+      queue = queue.concat(evento).slice(-MAX_QUEUE);
+      if (queue.length >= MAX_BATCH && !sending && !timer) void enviar();
       else programar();
       return evento;
     } catch (error) {
@@ -133,7 +163,9 @@ function iniciar({ app, log } = {}) {
     });
     process.on('unhandledRejection', (reason) => report('HUB_ERROR', describe(reason)));
     app.on('render-process-gone', (event, webContents, details = {}) => {
-      report('HUB_CRASH', {
+      const kind = clasificarSalida(details.reason);
+      if (!kind) return;
+      report(kind, {
         message: 'renderer process gone',
         reason: details.reason,
         exitCode: details.exitCode,
@@ -141,7 +173,9 @@ function iniciar({ app, log } = {}) {
       });
     });
     app.on('child-process-gone', (event, details = {}) => {
-      report('HUB_CRASH', {
+      const kind = clasificarSalida(details.reason);
+      if (!kind) return;
+      report(kind, {
         message: 'child process gone',
         reason: details.reason,
         exitCode: details.exitCode,
@@ -163,4 +197,4 @@ function iniciar({ app, log } = {}) {
   return { report, flush: enviar };
 }
 
-module.exports = { iniciar, sanear, rotarSiGrande };
+module.exports = { iniciar, sanear, rotarSiGrande, clasificarSalida, siguienteBackoff, reencolarLote };

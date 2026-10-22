@@ -10,9 +10,20 @@ const KINDS = new Set([
   'WORKER_ERROR',
 ]);
 const SENTRY_KINDS = new Set(['JS_ERROR', 'NETWORK_ERROR', 'LOGIN_FAILED', 'HUB_ERROR', 'HUB_CRASH', 'WORKER_ERROR']);
+const EVENT_FIELDS = new Set([
+  'event_id', 'kind', 'page', 'session_id', 'url', 'referrer', 'data', 'message', 'stack',
+  'release', 'os', 'motivo', 'status', 'endpoint', 'file', 'reason', 'exitCode', 'type',
+  'serviceName', 'webContentsId', 'filename', 'lineno', 'colno',
+]);
+const PII_KEY = /email|correo|user|usuario|nombre|name|nick|^sub$|token|password|cookie|authorization|secret|phone|telefono/i;
+const URL_FIELDS = new Set(['url', 'referrer', 'endpoint', 'callback', 'redirect', 'redirect_uri', 'returnto']);
 
-function sanearValor(value, key = '', seen = new WeakSet()) {
-  if (typeof value === 'string') return value.slice(0, key.toLowerCase() === 'stack' ? 1000 : 300);
+function sanearValor(value, key = '', seen = new WeakSet(), eventRoot = false) {
+  if (typeof value === 'string') {
+    const field = key.toLowerCase();
+    const safe = URL_FIELDS.has(field) ? value.replace(/[?#].*$/, '') : value;
+    return safe.slice(0, field === 'stack' ? 1000 : 300);
+  }
   if (value === null || typeof value === 'number' || typeof value === 'boolean') return value;
   if (!value || typeof value !== 'object' || seen.has(value)) return undefined;
   seen.add(value);
@@ -23,6 +34,7 @@ function sanearValor(value, key = '', seen = new WeakSet()) {
   }
   const result = {};
   for (const [name, item] of Object.entries(value)) {
+    if (PII_KEY.test(name) && !(eventRoot && EVENT_FIELDS.has(name))) continue;
     const clean = sanearValor(item, name, seen);
     if (clean !== undefined) result[name.slice(0, 40)] = clean;
   }
@@ -45,7 +57,7 @@ export function validarLote(body) {
       descartados++;
       continue;
     }
-    eventos.push(sanearValor(raw));
+    eventos.push(sanearValor(raw, '', new WeakSet(), true));
   }
   if (!eventos.length) return { ok: false, error: 'no hay eventos válidos', descartados };
   return { ok: true, eventos, descartados };
@@ -59,10 +71,12 @@ export function sentryEnvelope(dsn, evento, meta = {}) {
     if (parsed.protocol !== 'https:' || !publicKey || !/^[A-Za-z0-9_-]+$/.test(projectId)) return null;
 
     const eventId = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-    const kind = String(evento && evento.kind || 'ERROR');
-    const d = evento && evento.data && typeof evento.data === 'object' ? sanearValor(evento.data) || {} : {};
-    const message = String(evento && evento.message || d.message || (d.endpoint ? `${kind} ${d.status} ${d.endpoint}` : kind)).slice(0, 300);
-    const stack = evento && evento.stack || d.stack;
+    const eventoSeguro = sanearValor(evento, '', new WeakSet(), true) || {};
+    const metaSegura = sanearValor(meta) || {};
+    const kind = String(eventoSeguro.kind || 'ERROR');
+    const d = eventoSeguro.data && typeof eventoSeguro.data === 'object' ? eventoSeguro.data : {};
+    const message = String(eventoSeguro.message || d.message || (d.endpoint ? `${kind} ${d.status} ${d.endpoint}` : kind)).slice(0, 300);
+    const stack = eventoSeguro.stack || d.stack;
     const origen = kind.startsWith('HUB_') ? 'hub' : kind === 'WORKER_ERROR' ? 'worker' : 'web';
     const event = {
       event_id: eventId,
@@ -81,11 +95,11 @@ export function sentryEnvelope(dsn, evento, meta = {}) {
       tags: {
         origen,
         kind,
-        ...((evento && evento.release) || meta.release ? { release: String(evento && evento.release || meta.release).slice(0, 300) } : {}),
-        ...(evento && evento.page != null ? { page: String(evento.page).slice(0, 300) } : {}),
-        ...(evento && evento.session_id != null ? { session_id: String(evento.session_id).slice(0, 300) } : {}),
+        ...(eventoSeguro.release || metaSegura.release ? { release: String(eventoSeguro.release || metaSegura.release).slice(0, 300) } : {}),
+        ...(eventoSeguro.page != null ? { page: String(eventoSeguro.page).slice(0, 300) } : {}),
+        ...(eventoSeguro.session_id != null ? { session_id: String(eventoSeguro.session_id).slice(0, 300) } : {}),
       },
-      request: { url: String(evento && evento.url || meta.url || '').slice(0, 300) },
+      request: { url: String(eventoSeguro.url || metaSegura.url || '').slice(0, 300) },
     };
     const envelope = [
       JSON.stringify({ event_id: eventId, sent_at: new Date().toISOString(), dsn: String(dsn) }),
