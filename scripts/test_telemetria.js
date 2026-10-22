@@ -30,6 +30,7 @@ async function main() {
     const result = validarLote({ events: [evento] });
     assert.strictEqual(result.ok, true);
     assert.strictEqual(result.eventos[0].kind, 'JS_ERROR');
+    assert.strictEqual(result.descartados, 0);
   });
   t('rechaza un lote vacío', () => {
     assert.strictEqual(validarLote({ events: [] }).ok, false);
@@ -37,8 +38,21 @@ async function main() {
   t('rechaza más de 20 eventos', () => {
     assert.strictEqual(validarLote({ events: Array(21).fill(evento) }).ok, false);
   });
-  t('rechaza kinds desconocidos', () => {
-    assert.strictEqual(validarLote({ events: [{ kind: 'UNKNOWN' }] }).ok, false);
+  t('acepta eventos válidos y descarta kinds desconocidos', () => {
+    const result = validarLote({ events: [evento, { kind: 'UNKNOWN' }] });
+    assert.strictEqual(result.ok, true);
+    assert.strictEqual(result.eventos.length, 1);
+    assert.strictEqual(result.descartados, 1);
+  });
+  t('rechaza un lote sin eventos válidos', () => {
+    const result = validarLote({ events: [{ kind: 'UNKNOWN' }] });
+    assert.strictEqual(result.ok, false);
+    assert.strictEqual(result.descartados, 1);
+  });
+  t('acepta CHECKOUT_RETURN sin reportarlo a Sentry', () => {
+    const result = validarLote({ events: [{ kind: 'CHECKOUT_RETURN' }] });
+    assert.strictEqual(result.ok, true);
+    assert.strictEqual(debeReportarSentry(result.eventos[0].kind), false);
   });
   t('trunca strings generales a 300 y stack a 1000 caracteres', () => {
     const result = validarLote({ events: [{ kind: 'JS_ERROR', message: 'm'.repeat(350), stack: 's'.repeat(1200) }] });
@@ -54,7 +68,27 @@ async function main() {
     const lines = result.body.split('\n');
     assert.strictEqual(lines.length, 3);
     assert.strictEqual(JSON.parse(lines[1]).type, 'event');
-    assert.strictEqual(JSON.parse(lines[2]).tags.origen, 'web');
+    const sentryEvent = JSON.parse(lines[2]);
+    assert.strictEqual(sentryEvent.tags.origen, 'web');
+    assert.strictEqual(sentryEvent.message, evento.data.message);
+    assert.strictEqual(sentryEvent.extra.message, evento.data.message);
+    assert.strictEqual(sentryEvent.tags.page, evento.page);
+    assert.strictEqual(sentryEvent.tags.session_id, evento.session_id);
+  });
+  t('mapea stack y datos anidados de JS_ERROR al envelope', () => {
+    const webError = Object.assign({}, evento, {
+      data: { message: 'ReferenceError: x is not defined', stack: 'ReferenceError\n at app.js:10', file: 'app.js' },
+    });
+    const result = sentryEnvelope('https://public123@o123.ingest.sentry.io/456', webError);
+    const sentryEvent = JSON.parse(result.body.split('\n')[2]);
+    assert.strictEqual(sentryEvent.message, webError.data.message);
+    assert.strictEqual(sentryEvent.exception.values[0].stacktrace.frames.length, 2);
+    assert.deepStrictEqual(sentryEvent.extra, webError.data);
+  });
+  t('usa el mensaje data-only de NETWORK_ERROR', () => {
+    const networkError = { kind: 'NETWORK_ERROR', data: { message: 'request timed out' } };
+    const result = sentryEnvelope('https://public123@o123.ingest.sentry.io/456', networkError);
+    assert.strictEqual(JSON.parse(result.body.split('\n')[2]).message, networkError.data.message);
   });
   t('devuelve null para DSN inválido', () => {
     assert.strictEqual(sentryEnvelope('not-a-dsn', evento), null);
@@ -65,7 +99,7 @@ async function main() {
     for (const kind of ['JS_ERROR', 'NETWORK_ERROR', 'LOGIN_FAILED', 'HUB_ERROR', 'HUB_CRASH', 'WORKER_ERROR']) {
       assert.strictEqual(debeReportarSentry(kind), true, kind);
     }
-    for (const kind of ['PAGE_VIEW', 'LOGIN_OK', 'UNKNOWN']) assert.strictEqual(debeReportarSentry(kind), false, kind);
+    for (const kind of ['PAGE_VIEW', 'LOGIN_OK', 'CHECKOUT_RETURN', 'UNKNOWN']) assert.strictEqual(debeReportarSentry(kind), false, kind);
   });
 
   console.log('\n— telemetria del launcher —');
@@ -93,6 +127,19 @@ async function main() {
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  console.log('\n— Worker telemetry endpoint —');
+  const worker = (await import('../vants-server/worker.js')).default;
+  const response = await worker.fetch(new Request('https://vants.vants.workers.dev/api/telemetria', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ events: [evento, { kind: 'UNKNOWN' }] }),
+  }), {}, { waitUntil() {} });
+  const responseBody = await response.json();
+  assert.strictEqual(response.status, 200);
+  assert.deepStrictEqual(responseBody, { ok: true, recibidos: 1, descartados: 1 });
+  OK++;
+  console.log('  ✓ responde con recibidos y descartados');
 
   console.log(`\n✅ ${OK} comprobaciones de telemetría aprobadas`);
 }

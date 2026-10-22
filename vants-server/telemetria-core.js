@@ -4,6 +4,7 @@ const KINDS = new Set([
   'PAGE_VIEW',
   'LOGIN_OK',
   'LOGIN_FAILED',
+  'CHECKOUT_RETURN',
   'HUB_ERROR',
   'HUB_CRASH',
   'WORKER_ERROR',
@@ -37,14 +38,17 @@ export function validarLote(body) {
     return { ok: false, error: 'el lote debe contener entre 1 y 20 eventos' };
   }
   const eventos = [];
+  let descartados = 0;
   for (const raw of body.events) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw) ||
         typeof raw.kind !== 'string' || raw.kind.length > 40 || !KINDS.has(raw.kind)) {
-      return { ok: false, error: 'evento inválido' };
+      descartados++;
+      continue;
     }
     eventos.push(sanearValor(raw));
   }
-  return { ok: true, eventos };
+  if (!eventos.length) return { ok: false, error: 'no hay eventos válidos', descartados };
+  return { ok: true, eventos, descartados };
 }
 
 export function sentryEnvelope(dsn, evento, meta = {}) {
@@ -56,7 +60,9 @@ export function sentryEnvelope(dsn, evento, meta = {}) {
 
     const eventId = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
     const kind = String(evento && evento.kind || 'ERROR');
-    const message = String(evento && evento.message || kind).slice(0, 300);
+    const d = evento && evento.data && typeof evento.data === 'object' ? sanearValor(evento.data) || {} : {};
+    const message = String(evento && evento.message || d.message || (d.endpoint ? `${kind} ${d.status} ${d.endpoint}` : kind)).slice(0, 300);
+    const stack = evento && evento.stack || d.stack;
     const origen = kind.startsWith('HUB_') ? 'hub' : kind === 'WORKER_ERROR' ? 'worker' : 'web';
     const event = {
       event_id: eventId,
@@ -68,13 +74,16 @@ export function sentryEnvelope(dsn, evento, meta = {}) {
         values: [{
           type: kind,
           value: message,
-          ...(evento && evento.stack ? { stacktrace: { frames: String(evento.stack).slice(0, 1000).split('\n').map((line) => ({ filename: line.slice(0, 300) })) } } : {}),
+          ...(stack ? { stacktrace: { frames: String(stack).slice(0, 1000).split('\n').map((line) => ({ filename: line.slice(0, 300) })) } } : {}),
         }],
       },
+      extra: d,
       tags: {
         origen,
         kind,
         ...((evento && evento.release) || meta.release ? { release: String(evento && evento.release || meta.release).slice(0, 300) } : {}),
+        ...(evento && evento.page != null ? { page: String(evento.page).slice(0, 300) } : {}),
+        ...(evento && evento.session_id != null ? { session_id: String(evento.session_id).slice(0, 300) } : {}),
       },
       request: { url: String(evento && evento.url || meta.url || '').slice(0, 300) },
     };

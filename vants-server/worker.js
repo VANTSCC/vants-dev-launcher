@@ -1000,7 +1000,7 @@ async function fetchWorker(request, env, ctx) {
           body: JSON.stringify(forwarded),
         }).catch(() => {}));
       }
-      return json({ ok: true, recibidos: validado.eventos.length }, 200, { 'Cache-Control': 'no-store' });
+      return json({ ok: true, recibidos: validado.eventos.length, descartados: validado.descartados }, 200, { 'Cache-Control': 'no-store' });
     }
 
     // --- 3) User-Agent vacío o herramienta de ataque conocida → fuera
