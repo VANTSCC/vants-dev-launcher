@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import * as THREE from 'three';
+import type * as T from 'three';
+
+// Three se importa en diferido (solo las clases que usa, ver lib/three-min): la isla hidrata liviana y el motor
+// 3D se descarga y arma recién cuando la página ya cargó y el hilo está libre.
+let THREE: typeof import('../lib/three-min');
 
 // Emblema 3D de VANTS — réplica del LOGO OFICIAL (apple-touch-icon.png):
 // placa octogonal oscura con bisel rojo, "V" de dos trazos — izquierdo blanco
@@ -38,7 +42,7 @@ const polygonShape = (pts: Pt[]) => {
   return s;
 };
 
-const extrude = (shape: THREE.Shape, depth: number, bevel = false) =>
+const extrude = (shape: T.Shape, depth: number, bevel = false) =>
   new THREE.ExtrudeGeometry(shape, {
     depth,
     bevelEnabled: bevel,
@@ -50,7 +54,7 @@ const extrude = (shape: THREE.Shape, depth: number, bevel = false) =>
 
 /** Extruye un shape y pinta un degradado vertical por vértice. */
 const extrudeGradient = (
-  shape: THREE.Shape,
+  shape: T.Shape,
   depth: number,
   top: string,
   bottom: string
@@ -75,13 +79,35 @@ const extrudeGradient = (
   return geo;
 };
 
+/** Ejecuta cb cuando la página ya cargó y el hilo principal está ocioso. */
+const cuandoOcioso = (cb: () => void) => {
+  const idle = () =>
+    'requestIdleCallback' in window
+      ? window.requestIdleCallback(cb, { timeout: 2500 })
+      : window.setTimeout(cb, 250);
+  if (document.readyState === 'complete') idle();
+  else window.addEventListener('load', idle, { once: true });
+};
+
 onMounted(() => {
   const el = host.value;
   if (!el) return;
+  let cancelado = false;
+  dispose = () => {
+    cancelado = true;
+  };
+  cuandoOcioso(async () => {
+    THREE = await import('../lib/three-min');
+    if (cancelado || !el.isConnected) return;
+    arrancar(el);
+  });
+});
+
+const arrancar = (el: HTMLDivElement) => {
   let W = el.clientWidth || 240;
   let H = el.clientHeight || 240;
 
-  let renderer: THREE.WebGLRenderer;
+  let renderer: T.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -316,7 +342,7 @@ onMounted(() => {
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         obj.geometry.dispose();
-        const m = obj.material as THREE.Material | THREE.Material[];
+        const m = obj.material as T.Material | T.Material[];
         if (Array.isArray(m)) m.forEach((x) => x.dispose());
         else m.dispose();
       }
@@ -324,7 +350,7 @@ onMounted(() => {
     renderer.dispose();
     if (canvas.parentElement === el) el.removeChild(canvas);
   };
-});
+};
 
 onBeforeUnmount(() => dispose());
 </script>
