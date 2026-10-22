@@ -1,4 +1,4 @@
-# CAPTURA DE TRÁFICO · VANTS Hub
+# CAPTURA DE TRÁFICO · VANTS
 
 Modo diagnóstico del lanzador para **ver y exportar todo el tráfico de red del HUB**.
 Cubierto al 100% porque el HUB concentra toda su red en el proceso principal:
@@ -17,11 +17,11 @@ o cualquier visor HAR.
 ## 1. Uso rápido (Windows)
 
 ### Opción A · Interruptor en la bandeja (sin consola)
-1. Abre VANTS Hub.
+1. Abre VANTS.
 2. Clic derecho en el icono de la bandeja → **● Capturar tráfico (HAR)**.
 3. Usa el HUB con normalidad (login, partidos, biblioteca…).
 4. Clic derecho → **■ Detener captura de tráfico**.
-5. El archivo se guarda en: `%APPDATA%\VANTS Hub\captures\`
+5. El archivo se guarda en: `%APPDATA%\VANTS\captures\`
    — mientras capturas, `captura-en-curso.har` se refresca cada 30 s
    (si el proceso muere, no se pierde nada) y al **detener** queda el
    definitivo `captura-<fecha>.har`.
@@ -63,7 +63,7 @@ Por defecto el HAR viene **saneado**: `Authorization`, `Cookie`, `Set-Cookie`,
 npx electron . --captura --captura-sin-redaccion
 ```
 ⚠️ Ese archivo contiene tokens vivos: no lo subas al repo ni lo compartas.
-(Caduca solo, pero bórralo tras usarlo: `%APPDATA%\VANTS Hub\captures\`.)
+(Caduca solo, pero bórralo tras usarlo: `%APPDATA%\VANTS\captures\`.)
 
 ---
 
@@ -135,7 +135,7 @@ plataforma. Para métricas de partidas usa las fuentes ya integradas
 | `--proxy-bypass-list=<lista>` | dominios excluidos del proxy, separados por `;` |
 | `--captura-sin-redaccion` | guarda tokens y cookies reales en el HAR |
 | Bandeja → *Capturar tráfico (HAR)* | inicia/detiene y guarda |
-| Bandeja → *Abrir carpeta de capturas* | abre `%APPDATA%\VANTS Hub\captures\` |
+| Bandeja → *Abrir carpeta de capturas* | abre `%APPDATA%\VANTS\captures\` |
 | (autoguardado) | `captura-en-curso.har` se refresca cada 30 s durante la captura |
 | `window.vantsHub.captura('iniciar')` | API del renderer (preload) |
 | `window.vantsHub.captura('detener')` | detiene, guarda y devuelve `{ archivo }` |

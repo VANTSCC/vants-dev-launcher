@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// VANTS HUB · app.js — renderer (estilo FACEIT, cajones VANTS)
+// VANTS · app.js — renderer (estilo FACEIT, cajones VANTS)
 // Sesión Auth0 · Mi Cuenta · Partidos · Bracket · Líderes ·
 // En Vivo · Biblioteca con portadas · Membresía (planes dentro
 // del hub) · Conexiones gestionadas 100% desde el hub · Buscador
@@ -66,7 +66,7 @@ function pintarSesion() {
   $('#conn-sin').classList.toggle('oculto', con);
   $('#hero-hola').textContent = con
     ? 'Hola, ' + String(SESION.name || 'jugador').split(' ')[0].toUpperCase()
-    : 'Bienvenido a VANTS HUB';
+    : 'Bienvenido a VANTS';
   $('#hero-sub').textContent = con
     ? 'Tu cuenta está conectada a la arena. Juega, compite y sigue el torneo desde aquí.'
     : 'Tu cuenta, tus partidos, el bracket y tu biblioteca — todo en un solo lugar.';

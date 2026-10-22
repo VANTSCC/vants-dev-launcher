@@ -1,8 +1,8 @@
 {
   "name": "vants-hub",
-  "productName": "VANTS Hub",
-  "version": "2.4.1",
-  "description": "VANTS HUB · Launcher oficial de VANTS para Windows: tu cuenta, membresía, conexiones, partidos, bracket, líderes, en vivo y tu biblioteca de juegos con portadas — cada categoría en su cajón.",
+  "productName": "VANTS",
+  "version": "2.4.2",
+  "description": "VANTS · Launcher oficial para Windows: tu cuenta, membresía, conexiones, partidos, bracket, líderes, en vivo y tu biblioteca de juegos con portadas — cada categoría en su cajón.",
   "author": "VANTS <contact@vants.app>",
   "homepage": "https://vants.vants.workers.dev",
   "license": "MIT",
@@ -16,7 +16,7 @@
   },
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win nsis --x64",
+    "dist:win": "electron-builder --win --x64",
     "dist": "electron-builder"
   },
   "devDependencies": {
@@ -25,7 +25,7 @@
   },
   "build": {
     "appId": "gg.vants.hub",
-    "productName": "VANTS Hub",
+    "productName": "VANTS",
     "copyright": "Copyright © 2026 VANTS",
     "directories": {
       "output": "dist",
@@ -45,12 +45,22 @@
     "win": {
       "target": [
         {
+          "target": "msi",
+          "arch": ["x64"]
+        },
+        {
           "target": "nsis",
           "arch": ["x64"]
         }
       ],
       "icon": "build/icon.ico",
-      "artifactName": "VANTS-Hub-Setup-${version}.${ext}"
+      "artifactName": "VANTS-Setup-${version}.${ext}"
+    },
+    "msi": {
+      "oneClick": false,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "upgradeCode": "4b3de2bc-5454-4d30-8866-f72998ee4077"
     },
     "nsis": {
       "oneClick": false,
@@ -58,8 +68,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "VANTS Hub",
-      "uninstallDisplayName": "VANTS Hub ${version}"
+      "shortcutName": "VANTS",
+      "uninstallDisplayName": "VANTS ${version}"
     }
   }
 }

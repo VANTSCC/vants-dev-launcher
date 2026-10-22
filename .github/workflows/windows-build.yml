@@ -1,11 +1,12 @@
-name: Build Windows · VANTS HUB Setup
+name: Build Windows · VANTS Setup
 
-# Compila el instalador NSIS x64 del VANTS HUB (desktop-electron) en un runner
-# Windows real — sin wine, sin atajos. Dos formas de dispararlo:
-#   1. Manual: pestaña Actions → "Build Windows · VANTS HUB Setup" → Run workflow.
-#   2. Automático: push de un tag hub-v* (ej.: hub-v2.4.1, hub-v2.5.0).
-# En cada ejecución queda un ARTEFACTO descargable; en tags, además un BORRADOR
-# de release con el .exe adjunto (lo revisas y lo publicas cuando quieras).
+# Compila el instalador del launcher VANTS (desktop-electron) en un runner
+# Windows real — dos tecnologias de instalador en cada build:
+#   · MSI  (WiX Toolset)  — instalador profesional para distribucion/empresas
+#   · NSIS                — el que usa electron-updater para el auto-update
+# Disparo: manual (workflow_dispatch) o push de un tag hub-v* (ej. hub-v2.4.2).
+# Artefacto en cada ejecucion; en tags, borrador de release con MSI + EXE +
+# latest.yml (canal de auto-update).
 
 on:
   workflow_dispatch:
@@ -18,7 +19,7 @@ permissions:
 
 jobs:
   build:
-    name: NSIS x64 (windows-latest)
+    name: MSI (WiX) + NSIS x64 (windows-latest)
     runs-on: windows-latest
     defaults:
       run:
@@ -42,8 +43,11 @@ jobs:
       - name: Subir artefacto (todas las ejecuciones)
         uses: actions/upload-artifact@v4
         with:
-          name: VANTS-Hub-Setup-x64
-          path: desktop-electron/dist/VANTS-Hub-Setup-*.exe
+          name: VANTS-Setup-x64
+          path: |
+            desktop-electron/dist/VANTS-Setup-*.exe
+            desktop-electron/dist/VANTS-Setup-*.msi
+            desktop-electron/dist/latest.yml
           if-no-files-found: error
 
       - name: Borrador de release con el instalador (solo tags hub-v*)
@@ -53,14 +57,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          EXE=$(ls desktop-electron/dist/VANTS-Hub-Setup-*.exe | head -1)
-          echo "Instalador: $EXE"
+          # MSI + EXE + latest.yml (+ blockmaps si existen) — lo que haya en dist/
+          FILES=()
+          for f in desktop-electron/dist/VANTS-Setup-*.exe \
+                   desktop-electron/dist/VANTS-Setup-*.msi \
+                   desktop-electron/dist/VANTS-Setup-*.exe.blockmap \
+                   desktop-electron/dist/latest.yml; do
+            [ -e "$f" ] && FILES+=("$f")
+          done
+          [ ${#FILES[@]} -eq 0 ] && { echo "ERROR: no hay instaladores en dist/"; exit 1; }
+          echo "Assets: ${FILES[*]}"
           VERSION="${GITHUB_REF_NAME#hub-v}"
-          NOTAS="Instalador oficial del VANTS HUB (captura de trafico HAR + integracion ExitLag + deteccion de juego fiable). Descarga, ejecuta el Setup y el launcher se auto-actualiza solo (electron-updater)."
-          # Idempotente: si el release ya existe (creado a mano o en re-run), sube/actualiza el asset
+          NOTAS="Instalador oficial de VANTS (captura de trafico HAR + integracion ExitLag + deteccion de juego por proceso). MSI profesional (WiX) para distribucion/empresas; EXE (NSIS) con auto-update via electron-updater."
+          # Idempotente: si el release ya existe (creado a mano o en re-run), sube/actualiza los assets
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$EXE" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release upload "$GITHUB_REF_NAME" "${FILES[@]}" --clobber --repo "$GITHUB_REPOSITORY"
           else
-            gh release create "$GITHUB_REF_NAME" "$EXE" --draft --repo "$GITHUB_REPOSITORY" \
-              --title "VANTS HUB $VERSION" --notes "$NOTAS"
+            gh release create "$GITHUB_REF_NAME" "${FILES[@]}" --draft --repo "$GITHUB_REPOSITORY" \
+              --title "VANTS $VERSION" --notes "$NOTAS"
           fi
