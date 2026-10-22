@@ -31,7 +31,7 @@ contextBridge.exposeInMainWorld('vantsHub', {
   presencia:   (modo) => ipcRenderer.invoke('hub:presencia', modo),
   api:         (ruta, opts) => ipcRenderer.invoke('hub:api', Object.assign({ ruta }, opts || {})),
   biblioteca:  () => ipcRenderer.invoke('hub:biblioteca'),
-  jugar:       (juego) => ipcRenderer.invoke('hub:jugar', juego),
+  jugar:       (id) => ipcRenderer.invoke('hub:jugar', id),
   abrir:       (url) => ipcRenderer.invoke('hub:abrir', url),
   info:        () => ipcRenderer.invoke('hub:info'),
   ventana:     (acc) => ipcRenderer.invoke('hub:ventana', acc),

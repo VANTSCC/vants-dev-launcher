@@ -22,6 +22,7 @@ const os = require('os');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { detectarJuego } = require('./renderer/juegos.js'); // catálogo + detección por proceso (lógica pura, testeada)
+const { urlExternaPermitida, validarPeticionApi, idDeJuego, resolverLanzamiento } = require('./seguridad.js');
 const { iniciar: iniciarTelemetria } = require('./telemetria.js');
 
 // ---------- configuración ----------
@@ -685,8 +686,10 @@ function destacadosPrimero(lista) {
     return ka - kb || (a.nombre || '').localeCompare(b.nombre || '');
   });
 }
+let bibliotecaCache = [];
 function detectarBiblioteca() {
   const juegos = destacadosPrimero([...riotApps(), ...steamApps(), ...epicApps()]);
+  bibliotecaCache = juegos;
   return { juegos, plataforma: process.platform, deteccion: new Date().toISOString() };
 }
 
@@ -899,6 +902,11 @@ function crearVentana() {
       contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false
     }
   });
+  win.webContents.on('will-navigate', (event) => event.preventDefault());
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (urlExternaPermitida(url)) shell.openExternal(url).catch(() => {});
+    return { action: 'deny' };
+  });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   capturaAdjuntar(win);
   win.once('ready-to-show', () => win.show());
@@ -914,30 +922,45 @@ function ipcRegistrar() {
   });
   ipcMain.handle('hub:logout', async () => { await apagarPresencia(); sesion = null; borrarSesion(); enviarEstado(); return { ok: true }; });
   ipcMain.handle('hub:presencia', (e, modo) => { estadoPresencia = (modo === 'invisible') ? 'invisible' : 'online'; enviarEstado(); return estadoPresencia; });
-  ipcMain.handle('hub:api', async (e, { ruta, metodo, cuerpo, prefer }) => {
+  ipcMain.handle('hub:api', async (e, peticion) => {
+    const { ruta, metodo, cuerpo, prefer } = peticion || {};
+    const v = validarPeticionApi(ruta, metodo, prefer);
+    if (!v.ok) return { __error: v.error };
     const tk = await tokenVigente();
     if (!tk) return { __noauth: true };
     try {
-      const datos = await apiFetch(ruta, { method: metodo || 'GET', body: cuerpo ? JSON.stringify(cuerpo) : undefined, headers: prefer ? { Prefer: prefer } : {} }, tk);
+      const datos = await apiFetch(ruta, { method: v.metodo, body: cuerpo ? JSON.stringify(cuerpo) : undefined, headers: prefer ? { Prefer: prefer } : {} }, tk);
       return datos;
     } catch (err) { return { __error: err.message }; }
   });
   ipcMain.handle('hub:biblioteca', () => detectarBiblioteca());
-  ipcMain.handle('hub:jugar', async (e, juego) => {
+  ipcMain.handle('hub:jugar', async (e, arg) => {
+    const id = idDeJuego(arg);
+    let r = resolverLanzamiento(bibliotecaCache, id);
+    if (id && r.error === 'juego no encontrado') {
+      detectarBiblioteca();
+      r = resolverLanzamiento(bibliotecaCache, id);
+    }
+    if (r.error) return { ok: false, error: r.error };
+    const juego = bibliotecaCache.find((x) => x && String(x.id) === id);
     try {
       let via = null;
-      if (juego.exe && Array.isArray(juego.args)) {       // Riot
-        const hijo = spawn(juego.exe, juego.args, { detached: true, stdio: 'ignore', windowsHide: true });
+      if (r.tipo === 'proceso') {
+        const hijo = spawn(r.exe, r.args, { detached: true, stdio: 'ignore', windowsHide: true });
         hijo.unref(); via = 'riot-client';
-      } else if (juego.lanzar) {                          // steam:// o epic://
-        await shell.openExternal(juego.lanzar); via = juego.lanzar.split(':')[0] + '-protocol';
-      } else return { ok: false, error: 'sin vía de lanzamiento' };
-      // ExitLag: activate the configured profile right after a successful launch
+      } else {
+        await shell.openExternal(r.url);
+        via = r.url.split(':')[0] + '-protocol';
+      }
       const exitlagRes = await exitlagActivar(juego);
       return { ok: true, via, exitlag: exitlagRes };
     } catch (err) { return { ok: false, error: err.message }; }
   });
-  ipcMain.handle('hub:abrir', (e, url) => shell.openExternal(url));
+  ipcMain.handle('hub:abrir', async (e, url) => {
+    if (!urlExternaPermitida(url)) return { ok: false, error: 'URL no permitida' };
+    await shell.openExternal(url);
+    return { ok: true };
+  });
   ipcMain.handle('hub:info', () => ({ version: app.getVersion(), plataforma: process.platform, juego: juegoActual }));
   ipcMain.handle('hub:actualizar-instalar', () => {
     try {
@@ -966,13 +989,11 @@ function ipcRegistrar() {
   ipcMain.handle('hub:exitlag', async (e, acc, extra) => {
     try {
       if (acc === 'activar') return await exitlagActivar(null, null);
-      // 'activar-juego' — cadena ready-check → ExitLag → juego (mm.js).
-      // extra = {id,nombre} (o string con el slug). OFF por defecto:
-      // sin exitlag.config.json enabled responde {ok:false, reason:…} y
-      // el lanzamiento sigue derecho. Nunca toca procesos del juego.
       if (acc === 'activar-juego') {
-        const j = typeof extra === 'string' ? { id: extra, nombre: extra } : (extra || null);
-        return await exitlagActivar(j, null);
+        const id = idDeJuego(extra);
+        const nombres = { valorant: 'VALORANT', cs2: 'Counter-Strike 2' };
+        if (!Object.prototype.hasOwnProperty.call(nombres, id)) return { ok: false, reason: 'juego no permitido' };
+        return await exitlagActivar({ id, nombre: nombres[id] }, null);
       }
       if (acc === 'desactivar') return await exitlagDesactivar('renderer');
       if (acc === 'recargar') { exitlagCargarConfig(); return { ok: true, estado: exitlagEstado() }; }

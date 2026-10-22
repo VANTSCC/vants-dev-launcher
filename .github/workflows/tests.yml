@@ -123,6 +123,9 @@ jobs:
       - name: Launcher VANTS (detección de juego por proceso + presencia, 24 asserts)
         run: node scripts/test_hub_juegos.js
 
+      - name: Launcher VANTS HUB IPC security (30 tests)
+        run: node scripts/test_hub_seguridad.js
+
       - name: Telemetría (Worker + launcher)
         run: node scripts/test_telemetria.js
 

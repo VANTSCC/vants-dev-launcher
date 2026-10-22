@@ -194,10 +194,10 @@ process.on('unhandledRejection', (e) => console.log('UNHANDLED-REJECTION:', e &&
   inter(3000).fn();
   await ticks(4);
   const [acc, extra] = llamadas.exitlag[0] || [];
-  ok(acc === 'activar-juego' && extra && extra.id === 'valorant' && extra.nombre === 'VALORANT', 'ExitLag: activar-juego con {id,nombre} del juego');
+  ok(acc === 'activar-juego' && extra === 'valorant', 'ExitLag: activar-juego solo con el id del juego');
   while (timeouts.length) timeouts.shift()();
   await ticks(3);
-  ok(llamadas.jugar.length === 1 && llamadas.jugar[0].id === 'valorant', 'juego lanzado automáticamente (biblioteca)');
+  ok(llamadas.jugar.length === 1 && llamadas.jugar[0] === 'valorant', 'juego lanzado automáticamente por id (biblioteca)');
   ok(/juego lanzado/.test(els['#mm-ready-estado'].textContent), 'mensaje de juego lanzado');
   ok(/ExitLag: valorant/.test(els['#mm-ready-estado'].textContent), 'cadena anota el perfil ExitLag activado');
   ok(!els['#mm-reportar'].classList.contains('oculto'), 'reporte visible tras lanzar');
