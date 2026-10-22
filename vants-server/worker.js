@@ -2044,7 +2044,17 @@ async function fetchWorker(request, env, ctx) {
 
     // --- 8) Resto: archivos estáticos con cabeceras de seguridad
     if (env.ASSETS) {
-      const res = await env.ASSETS.fetch(request);
+      /* Los enlaces internos van a /torneos.html, etc. Workers Assets responde
+         307 → /torneos a esas URLs y el visitante paga un viaje extra (~800 ms
+         en movil segun Lighthouse) en CADA clic del menu. Se pide el asset por
+         su ruta limpia y se sirve directo con 200; el canonical de cada pagina
+         ya apunta a la URL .html. */
+      let peticion = request;
+      if (request.method === 'GET' && /\.html$/i.test(url.pathname)) {
+        const limpia = url.pathname === '/index.html' ? '/' : url.pathname.replace(/\.html$/i, '');
+        peticion = new Request(new URL(limpia + url.search, url.origin), request);
+      }
+      const res = await env.ASSETS.fetch(peticion);
       const out = harden(new Response(res.body, res));
       if (res.status === 200 && esAssetInmutable(url)) {
         out.headers.set('Cache-Control', 'public, max-age=31536000, immutable');

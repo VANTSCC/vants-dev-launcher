@@ -12,6 +12,9 @@
 
 @media (prefers-reduced-motion: no-preference){
   .hero-left > *{animation:vm-rise .72s cubic-bezier(.2,.7,.2,1) both}
+  /* El h1 es el LCP: si arranca en opacity:0 el navegador no lo cuenta como
+     pintado hasta que acaba la animacion (+0.7 s de LCP en movil). Solo transform. */
+  .hero-left > h1{animation-name:vm-rise-solid}
   .hero-left > :nth-child(1){animation-delay:.04s}
   .hero-left > :nth-child(2){animation-delay:.12s}
   .hero-left > :nth-child(3){animation-delay:.2s}
@@ -26,6 +29,10 @@
   .hero h1 .acc{animation:vm-acc 3.2s ease-in-out 1.2s infinite}
 }
 
+@keyframes vm-rise-solid{
+  from{transform:translate3d(0,18px,0)}
+  to{transform:translate3d(0,0,0)}
+}
 @keyframes vm-rise{from{opacity:0;transform:translate3d(0,18px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
 @keyframes vm-panel{from{opacity:0;transform:translate3d(28px,0,0) scale(.985)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
 @keyframes vm-emblem{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}

@@ -170,7 +170,7 @@
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="./assets/js/arena.js?v=36"></script>
+<script src="./assets/js/arena.js?v=36" defer></script>
 <script>fetch('https://api.github.com/repos/feispla/Vants/releases/latest').then(function(r){return r.ok?r.json():null}).then(function(j){var v=j&&String(j.tag_name||'').replace(/^hub-v/,'');if(!/^\d+\.\d+\.\d+$/.test(v))return;document.getElementById('dlVer').textContent=v;var f=document.getElementById('dlFile');if(f)f.textContent='VANTS-Setup-'+v+'.exe';}).catch(function(){});</script>
 <!-- Capa viva: Auth0 (login) + Neon (cuenta real) -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
