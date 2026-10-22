@@ -1,11 +1,20 @@
+/* Fallbacks con las métricas de la fuente real (fontTools sobre los TTF de
+   Google Fonts vs Arial/Liberation Sans; Barlow: media de mayúsculas .78 y
+   minúsculas .85 porque la UI va casi toda en mayúsculas): mientras llega la web font, el texto
+   del sistema ocupa el mismo ancho y alto → sin salto de layout al hacer swap
+   (Lighthouse móvil: CLS 0.13–0.21 en torneos/ranking, todo «Web font loaded»). */
+@font-face{font-family:'Barlow SC Fallback';src:local('Arial'),local('Liberation Sans'),local('Roboto');size-adjust:82%;ascent-override:122%;descent-override:24.4%;line-gap-override:0%}
+@font-face{font-family:'Archivo Fallback';src:local('Arial'),local('Liberation Sans'),local('Roboto');size-adjust:101%;ascent-override:86.9%;descent-override:20.8%;line-gap-override:0%}
+@font-face{font-family:'Archivo Black Fallback';src:local('Arial'),local('Liberation Sans'),local('Roboto');size-adjust:114%;ascent-override:77%;descent-override:18.4%;line-gap-override:0%}
+@font-face{font-family:'JetBrains Mono Fallback';src:local('Courier New'),local('Liberation Mono'),local('Roboto Mono');size-adjust:100%;ascent-override:102%;descent-override:30%;line-gap-override:0%}
 
 :root{
   --bg:#0A0A0C; --bg2:#0D0D10; --panel:#131317; --panel2:#18181E;
   --line:#222228; --line2:#303039;
-  --text:#EDEDE7; --muted:#93939D; --dim:#5C5C66;
+  --text:#EDEDE7; --muted:#93939D; --dim:#7E7E88;
   --accent:#FF0D2E; --accent-ink:#160608;
   --gold:#F5C044; --cy:#4CC9F0; --vi:#B44CFF; --grn:#3EE6A0;
-  --mono:'JetBrains Mono',monospace; --sans:'Archivo',sans-serif; --disp:'Archivo Black',sans-serif;
+  --mono:'JetBrains Mono','JetBrains Mono Fallback',monospace; --sans:'Archivo','Archivo Fallback',sans-serif; --disp:'Archivo Black','Archivo Black Fallback',sans-serif;
 }
 body[data-game="cs2"]{ --accent:#FFB43A; --accent-ink:#171002; }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -282,6 +291,11 @@ body.is-pro .pro-cta-row{display:none}
 
 /* ============ TORNEOS ============ */
 .tlist{border:1px solid var(--line)}
+/* #tournList y #lbBody llegan vacíos y los rellena arena.js tras `load`: sin
+   reservar sitio, el feed y el footer saltan ~230 px al pintarse (CLS 0.15–0.2
+   en móvil). Se reserva la altura de una fila/diez filas hasta que haya datos. */
+#tournList:empty{min-height:150px}
+#lbBody:empty{display:block;min-height:320px}
 .trow{display:grid;grid-template-columns:110px 1fr 150px 200px 90px 150px;align-items:center;gap:22px;padding:22px 24px;border-bottom:1px solid var(--line);transition:background .15s}
 .trow:last-child{border-bottom:none}
 .trow:hover{background:var(--panel)}
@@ -522,7 +536,7 @@ body.is-pro .pro-cta-row{display:none}
 footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2)}
 .f-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px;margin-bottom:44px}
 .f-brand p{font-size:13px;line-height:1.7;color:var(--muted);margin-top:14px;max-width:320px}
-.f-col h5{font:700 10px/1 var(--mono);letter-spacing:.2em;color:var(--dim);margin-bottom:18px}
+.f-col h2{font:700 10px/1 var(--mono);letter-spacing:.2em;color:var(--dim);margin-bottom:18px}
 .f-col a{display:block;font:600 13px/1 var(--sans);color:var(--muted);padding:7px 0;transition:color .2s}
 .f-col a:hover{color:var(--accent)}
 .f-bottom{border-top:1px solid var(--line);padding-top:24px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font:500 10.5px/1.7 var(--mono);color:var(--dim)}
@@ -1139,6 +1153,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
   font:500 10px/1.8 var(--mono);color:var(--dim)}
 .dl-note b{color:var(--muted)}
 @media(max-width:760px){
+  #tournList:empty{min-height:228px}
   .dl-card{flex-direction:column;align-items:stretch}
   .dl-actions{min-width:0}
   .dl-feats{grid-template-columns:1fr 1fr;gap:8px}
