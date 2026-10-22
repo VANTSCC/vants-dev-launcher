@@ -391,3 +391,34 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   arena.css?v=12; plataforma.spec.js no cambia (el trigger sigue siendo
   a[href=partidos.html], el foco abre el panel igual).
 - Fecha: 2026-10-21.
+
+## D25 · El emblema 3D replica el logo oficial (placa octogonal, V blanca y roja, cuña)
+- **Contexto**: el dueño vio el preview 3D del sandbox (página de verificación
+  Vue+Three) y dijo: «este preview no tiene nada de identidad con el logo
+  porque no se ve la V ahí; colocá ese 3D con el logo oficial». El emblema del
+  webapp (Emblema3D.vue, portada) era la V roja genérica de prismas sobre
+  placa oscura: sin el trazo blanco ni la cuña del logo real.
+- **Decisión**: Emblema3D.vue reproduce el logo oficial (apple-touch-icon.png)
+  en 3D: bisel rojo (octógono 1.44) dentro del grosor de la placa oscura
+  (1.27) → las DOS caras muestran cara oscura + anillo rojo fino; "V" de dos
+  trazos extruidos con degradado por vértice — izquierdo BLANCO
+  (#ffffff→#878d97) que afila al vértice, derecho ROJO (#ff344b→#b90d24) con
+  cortes horizontales — más la cuña roja flotante junto al vértice. La V va
+  también por detrás (grupo clonado, rotation.y=π): mitad del giro muestra el
+  reverso y sin eso no se vería la V ahí. Luces: key blanca 2.4, relleno
+  blanco trasero 2.4 (sin él el reverso queda teñido rojo por el rimLight,
+  bajado de 30 a 12), ambiente 0.9. El dispose ahora libera geometrías y
+  materiales (hallazgo de la auditoría 2-d).
+- **Motivo**: identidad de marca explícita pedida por el dueño; el emblema es
+  el cierre visual de la portada y no se reconocía como el logo.
+- **Qué NO cambia**: el contenedor (230×230, opacity .6), el loop rAF
+  (t*0.5 rad/s + wobble), client:only="vue", ni el resto de la portada. La
+  página de verificación del sandbox replica la MISMA geometría.
+- **Qué la invalidaría**: que el dueño pida volver a la V roja plana
+  (→ git revert de este commit); que cambie el logo oficial (→ re-medir los
+  polígonos y los degradados).
+- **Consecuencias**: nuevo bundle _astro/Emblema3D.*.js (hash nuevo, el
+  espejo ×3 se regenera con scripts/build-webapp.mjs); index.html ×3
+  actualizados; sin bump de cache manual (los bundles _astro van con hash de
+  contenido).
+- Fecha: 2026-10-21.
