@@ -1,8 +1,11 @@
 /* ============================================================
    VANTS · VISTA PREVIA DE CATEGORÍAS
    ------------------------------------------------------------
-   · Nav superior: al pasar el mouse por SALA/PARTIDOS/RANKING/...,
-     se despliega un panel de vista previa. Clic = abre la sección.
+   · Nav superior: los items con submenú despliegan su panel .dd
+     (hover/foco/click — D24: el click NO navega, abre el panel).
+     El preview #navPv vive SOLO en los links de adentro (.dd) y en
+     los tabs sin submenú (TIENDA): antes se montaba sobre el tab y
+     tapaba el panel (v10).
    · La sección EXPLORAR de la portada (isla React y modo clásico) fue
      retirada por el dueño (decisión D20): este módulo queda SOLO
      para el preview del nav.
@@ -151,7 +154,10 @@
     if (hideTimer) clearTimeout(hideTimer);
     hideTimer = setTimeout(function () { navPv.classList.remove('on'); }, delay || 160);
   }
-  $$('.nav-links a').forEach(function (a) {
+  /* D24: el preview se ancla a los links INTERIORES (.dd) y a los tabs sin
+     submenú. Los tabs has-sub ya no lo disparan: su panel .dd es el que
+     abre (el card tapaba al panel y confundía el click con navegación). */
+  $$('.nav-links .dd a, .nav-links .ni:not(.has-sub) > a').forEach(function (a) {
     var key = keyFor(a.getAttribute('href') || '');
     if (!DATA[key]) return;
     a.setAttribute('data-pv', key);

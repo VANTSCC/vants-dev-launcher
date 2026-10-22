@@ -22,8 +22,8 @@ test.describe('Home full stack (Astro + Vue)', () => {
     // la sección EXPLORAR ya no existe (D20): ni sección ni panel de preview
     await expect(page.locator('#explorar')).toHaveCount(0);
     await expect(page.locator('#hcPreview')).toHaveCount(0);
-    // runtime arena intacto (arena.css v11 desde D23 y arena.js v34 siguen siendo la capa viva)
-    await expect(page.locator('link[href*="arena.css?v=11"]')).toHaveCount(1);
+    // runtime arena intacto (arena.css v12 desde D24 y arena.js v34 siguen siendo la capa viva)
+    await expect(page.locator('link[href*="arena.css?v=12"]')).toHaveCount(1);
     await expect(page.locator('script[src*="arena.js?v=34"]')).toHaveCount(1);
   });
 

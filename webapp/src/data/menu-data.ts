@@ -57,7 +57,8 @@ export const menu_data: MenuData[] = [
       { title: 'Llaves · Bracket', link: 'llaves.html' },
     ],
   },
-  { id: 5, title: 'LLAVES', link: 'llaves.html' },
+  /* D24: el tab LLAVES salió del nav (el dueño lo pidió: ya vive en el
+     submenú de TORNEOS → "Llaves · Bracket"). llaves.html sigue existiendo. */
   { id: 6, title: 'TIENDA', link: 'tienda.html' },
   { id: 7, title: 'DESCARGAR', link: 'descargar.html' },
   {
@@ -70,5 +71,7 @@ export const menu_data: MenuData[] = [
       { title: 'Guía de la arena', link: 'guia.html' },
     ],
   },
-  { id: 9, title: 'NOTICIAS', link: 'noticias.html' },
+  /* D24: la sección NOTICIAS salió COMPLETA del sitio (página borrada y tab
+     fuera) — el dueño no quiere que el nav mande a páginas fuera de la
+     principal; noticias.html/noticia.html fueron eliminadas. */
 ];
