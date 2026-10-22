@@ -28,8 +28,8 @@ body.sf{
   --sf-orange:#DE9B35;
   --sf-radius:10px;
   --mono:'JetBrains Mono',monospace;
-  --sans:'Barlow Semi Condensed','Archivo','Arial Narrow',sans-serif;
-  --disp:'Barlow Semi Condensed','Archivo Black',sans-serif;
+  --sans:'Barlow Semi Condensed','Barlow SC Fallback','Archivo','Arial Narrow',sans-serif;
+  --disp:'Barlow Semi Condensed','Barlow SC Fallback','Archivo Black',sans-serif;
   /* alias de variables legacy de páginas autocontenidas → strafe */
   --acc:var(--accent); --pvc:var(--accent);
   background:var(--bg); color:var(--text);
@@ -406,7 +406,7 @@ body.sf .reveal{transition-duration:.35s}
 body.sf footer{background:var(--bg);border-top:1px solid var(--line)}
 body.sf .f-grid{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:34px;padding:46px 0 30px}
 body.sf .f-brand p{margin-top:14px;font:500 13px/1.7 var(--sans);color:var(--muted);max-width:300px}
-body.sf .f-col h5{font:700 12.5px/1 var(--sans);letter-spacing:.06em;color:var(--text);text-transform:uppercase;margin-bottom:15px}
+body.sf .f-col h2{font:700 12.5px/1 var(--sans);letter-spacing:.06em;color:var(--text);text-transform:uppercase;margin-bottom:15px}
 body.sf .f-col a{display:block;padding:4.5px 0;font:500 13px/1.5 var(--sans);color:var(--muted)}
 body.sf .f-col a:hover{color:var(--accent)}
 body.sf .f-bottom{border-top:1px solid var(--line);padding:16px 0;display:flex;align-items:center;gap:18px;flex-wrap:wrap;font:500 12px/1.6 var(--sans);color:var(--dim)}
