@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// VANTS · app.js — renderer (estilo FACEIT, cajones VANTS)
+// VANTS HUB · app.js — renderer (estilo FACEIT, cajones VANTS)
 // Sesión Auth0 · Mi Cuenta · Partidos · Bracket · Líderes ·
 // En Vivo · Biblioteca con portadas · Membresía (planes dentro
 // del hub) · Conexiones gestionadas 100% desde el hub · Buscador
@@ -13,6 +13,64 @@ let BIBLIOTECA = [];
 let presModo = 'online';
 let periodo = 'mo';     // mo | yr (planes)
 const timers = {};
+
+// ═══════════════════════════════════════════════════════════════
+// CACHE DE API: reduce llamadas redundantes
+// ═══════════════════════════════════════════════════════════════
+const API_CACHE = new Map();
+const CACHE_TTL = 30 * 1000; // 30 segundos
+
+async function api(ruta, opts) {
+  const cacheKey = ruta + (opts ? JSON.stringify(opts) : '');
+  const cached = API_CACHE.get(cacheKey);
+  const now = Date.now();
+
+  // Retornar caché si es válido y no es una operación de escritura
+  if (cached && (opts?.metodo === 'GET' || !opts?.metodo) && (now - cached.ts) < CACHE_TTL) {
+    return cached.data;
+  }
+
+  const r = await H.api(ruta, opts);
+  if (r && r.__noauth) throw new Error('sin sesión');
+  if (r && r.__error) throw new Error(r.__error);
+
+  // Guardar en caché solo para GET
+  if (!opts?.metodo || opts.metodo === 'GET') {
+    API_CACHE.set(cacheKey, { ts: now, data: r });
+  }
+
+  return r;
+}
+
+// Limpiar caché periódicamente
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of API_CACHE.entries()) {
+    if ((now - val.ts) > CACHE_TTL) {
+      API_CACHE.delete(key);
+    }
+  }
+}, 60 * 1000); // Limpiar cada minuto
+
+// ═══════════════════════════════════════════════════════════════
+// PERSONALIZACIÓN: tema y accesibilidad
+// ═══════════════════════════════════════════════════════════════
+let tema = localStorage.getItem('vants-tema') || 'oscuro';
+let tamFuente = parseInt(localStorage.getItem('vants-tam-fuente') || '14', 10);
+
+function aplicarTema() {
+  document.documentElement.setAttribute('data-tema', tema);
+  localStorage.setItem('vants-tema', tema);
+}
+
+function aplicarTamFuente() {
+  document.documentElement.style.fontSize = tamFuente + 'px';
+  localStorage.setItem('vants-tam-fuente', tamFuente);
+}
+
+// Inicializar personalización
+aplicarTema();
+aplicarTamFuente();
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
@@ -37,7 +95,8 @@ function irACajon(nombre) {
   const cargas = {
     inicio: cargarInicio, cuenta: cargarCuenta, partidos: cargarPartidos,
     bracket: cargarBracket, lideres: cargarLideres, vivo: cargarVivo,
-    biblioteca: cargarBiblioteca, membresia: cargarMembresia, conexiones: cargarConexiones
+    biblioteca: cargarBiblioteca, membresia: cargarMembresia, conexiones: cargarConexiones,
+    config: cargarConfig
   };
   if (cargas[nombre]) cargas[nombre]();
   $('#main').scrollTop = 0;
@@ -48,6 +107,7 @@ $('#btn-conexiones-ir').addEventListener('click', () => irACajon('conexiones'));
 $('#btn-tienda').addEventListener('click', () => H.abrir('https://vants.vants.workers.dev/tienda.html'));
 $('#btn-ver-en-web').addEventListener('click', () => H.abrir('https://vants.vants.workers.dev/jugadores.html'));
 $('#rail-web').addEventListener('click', () => H.abrir('https://vants.vants.workers.dev/'));
+$('#btn-config').addEventListener('click', () => irACajon('config'));
 
 // ───────── sesión ─────────
 async function refrescarSesion() {
@@ -66,7 +126,7 @@ function pintarSesion() {
   $('#conn-sin').classList.toggle('oculto', con);
   $('#hero-hola').textContent = con
     ? 'Hola, ' + String(SESION.name || 'jugador').split(' ')[0].toUpperCase()
-    : 'Bienvenido a VANTS';
+    : 'Bienvenido a VANTS HUB';
   $('#hero-sub').textContent = con
     ? 'Tu cuenta está conectada a la arena. Juega, compite y sigue el torneo desde aquí.'
     : 'Tu cuenta, tus partidos, el bracket y tu biblioteca — todo en un solo lugar.';
@@ -118,7 +178,7 @@ async function cargarRapido() {
 }
 async function jugarPorId(id) {
   const j = BIBLIOTECA.find(x => String(x.id) === String(id));
-  if (j) await H.jugar(j.id);
+  if (j) await H.jugar(j);
 }
 
 // ───────── portadas ─────────
@@ -139,6 +199,13 @@ function coverDe(j) {
   const n = String((j && j.nombre) || '');
   for (const [re, id] of COVER_MAP) if (re.test(n)) return 'covers/' + id + '.jpg';
   return 'covers/_fallback.jpg';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LAZY LOADING DE IMÁGENES: uso loading="lazy" nativo
+// ═══════════════════════════════════════════════════════════════
+function imgLazy(src) {
+  return `<img src="${src}" loading="lazy" alt="" />`;
 }
 
 // ───────── MI CUENTA ─────────
@@ -286,7 +353,7 @@ async function cargarVivoEn(id) {
       <div class="fila">
         <div class="dot ${f.estado === 'jugando' ? 'naranja' : 'verde'}"></div>
         <div class="nom ${f.role === 'owner' ? 'oro-nombre' : ''}">${esc(f.display_name || f.username)}${f.verified ? ' ✅' : ''}</div>
-        <div class="meta">${f.estado === 'jugando' ? '🎮 JUGANDO ' + esc(VANTS_JUEGOS.nombreDe(f.juego).toUpperCase()) : '🟢 EN LÍNEA'}</div>
+        <div class="meta">${f.estado === 'jugando' ? '🎮 JUGANDO ' + esc(f.juego || '').toUpperCase() : '🟢 EN LÍNEA'}</div>
       </div>`).join('') : '<div class="dim">nadie conectado ahora mismo — tú podrías ser el primero</div>';
   } catch (e) {
     ['#nav-vivo-n', '#rail-vivo-n'].forEach(sel => { const b = $(sel); if (b) b.classList.add('oculto'); });
@@ -306,7 +373,7 @@ async function cargarBiblioteca() {
     $('#biblio-grid').innerHTML = BIBLIOTECA.length ? BIBLIOTECA.map(j => `
       <div class="juego-card" id="jc-${esc(String(j.id)).replace(/[^a-zA-Z0-9_-]/g, '')}">
         <div class="juego-portada">
-          <img src="${esc(coverDe(j))}" alt="" loading="lazy" />
+          ${imgLazy(esc(coverDe(j)))}
           <span class="juego-fuente">${esc((j.fuente || '').toUpperCase())}</span>
           <span class="tag-corriendo oculto">EN JUEGO</span>
         </div>
@@ -327,7 +394,7 @@ const PLANES = [
   {
     id: 'free', nombre: 'VANTS FREE', precio: { mo: '$0', yr: '$0' }, per: 'PARA SIEMPRE',
     desc: 'Para arrancar a competir hoy mismo.',
-    feats: ['Inscripción a torneos free y ladder nocturna', 'Perfil con rango APEX y RR', 'Stats básicas de temporada', 'Conexión de cuentas de juego'],
+    feats: ['Inscripción a torneos free y ladder nocturna', 'Perfil con rango VANTS RANKED y RR', 'Stats básicas de temporada', 'Conexión de cuentas de juego'],
     btn: 'PLAN ACTUAL', cls: ''
   },
   {
@@ -562,3 +629,41 @@ function refrescarPeriodico(nombre, fn, ms) {
   await refrescarSesion();
   cargarInicio();
 })();
+
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN: tema y tamaño de fuente
+// ═══════════════════════════════════════════════════════════════
+function cargarConfig() {
+  actualizarFuenteActual();
+}
+
+function actualizarFuenteActual() {
+  const el = $('#fuente-actual');
+  if (el) el.textContent = tamFuente + 'px';
+}
+
+$('#tema-oscuro').addEventListener('click', () => {
+  tema = 'oscuro';
+  aplicarTema();
+});
+
+$('#tema-claro').addEventListener('click', () => {
+  tema = 'claro';
+  aplicarTema();
+});
+
+$('#fuente-mas').addEventListener('click', () => {
+  if (tamFuente < 20) {
+    tamFuente += 1;
+    aplicarTamFuente();
+    actualizarFuenteActual();
+  }
+});
+
+$('#fuente-menos').addEventListener('click', () => {
+  if (tamFuente > 12) {
+    tamFuente -= 1;
+    aplicarTamFuente();
+    actualizarFuenteActual();
+  }
+});

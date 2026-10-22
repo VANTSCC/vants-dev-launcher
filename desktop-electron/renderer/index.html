@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; style-src 'self'; img-src 'self' https: data:; script-src 'self'" />
-  <title>VANTS</title>
+  <title>VANTS HUB</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -17,6 +17,7 @@
       <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
       <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
       <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.39a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
       <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
       <symbol id="i-pad" viewBox="0 0 24 24"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></symbol>
       <symbol id="i-crown" viewBox="0 0 24 24"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></symbol>
@@ -74,8 +75,9 @@
 
         <div class="side-pie">
           <button class="btn-linea" id="btn-tienda"><svg class="ic"><use href="#i-bag"/></svg><span>TIENDA</span></button>
+          <button class="btn-linea" id="btn-config"><svg class="ic"><use href="#i-settings"/></svg><span>CONFIGURACIÓN</span></button>
           <div id="estado-capsula" class="capsula">…</div>
-          <div class="ver mono">VANTS · <span id="ver-num">2.4.2</span></div>
+          <div class="ver mono">VANTS HUB · <span id="ver-num">2.4.1</span></div>
         </div>
       </aside>
 
@@ -87,7 +89,7 @@
           <div class="hero">
             <div class="hero-txt">
               <span class="kicker mono">ARENA VANTS · HUB DE JUEGOS PC</span>
-              <h1 id="hero-hola">Bienvenido a VANTS</h1>
+              <h1 id="hero-hola">Bienvenido a VANTS HUB</h1>
               <p id="hero-sub">Tu cuenta, tus partidos, el bracket y tu biblioteca — todo en un solo lugar.</p>
               <div class="hero-acciones">
                 <button class="btn primario" id="btn-login"><svg class="ic"><use href="#i-zap"/></svg> INICIAR SESIÓN</button>
@@ -292,6 +294,39 @@
           </div>
         </section>
 
+        <!-- ── CONFIGURACIÓN ── -->
+        <section class="cajon" id="cajon-config">
+          <div class="cajon-head">
+            <h2>CONFIGURACIÓN</h2>
+            <span class="kicker mono">PERSONALIZA TU HUB</span>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>🎨 TEMA</h3></div>
+            <div class="mm-form">
+              <label>
+                <button class="btn fantasma" id="tema-oscuro">Tema Oscuro</button>
+              </label>
+              <label>
+                <button class="btn fantasma" id="tema-claro">Tema Claro</button>
+              </label>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>🔤 TAMAÑO DE FUENTE</h3></div>
+            <div class="mm-form">
+              <label>
+                <button class="btn fantasma" id="fuente-mas">Aumentar</button>
+              </label>
+              <label>
+                <button class="btn fantasma" id="fuente-menos">Reducir</button>
+              </label>
+              <label>
+                <span class="dim mono" id="fuente-actual">14px</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
         <!-- ── BUSCAR PARTIDA (Fase 4/5 · matchmaking real) ── -->
         <section class="cajon" id="cajon-buscar">
           <div class="panel">
@@ -329,15 +364,6 @@
           <div class="panel oculto" id="mm-panel-match">
             <div class="panel-head"><h3>⚔️ PARTIDA ENCONTRADA</h3><span class="dim mono" id="mm-match-id"></span></div>
             <div id="mm-match" class="mm-match"></div>
-            <div class="mm-ready oculto" id="mm-ready">
-              <div class="mm-ready-linea">
-                <b id="mm-ready-cont">LISTOS 0/2</b>
-                <span class="dim mono" id="mm-ready-tiempo"></span>
-                <button class="btn primario" id="mm-listo" style="padding:7px 14px;font-size:12px">ESTOY LISTO</button>
-              </div>
-              <div class="mm-ready-bar"><i id="mm-ready-fill"></i></div>
-              <div class="dim" id="mm-ready-estado"></div>
-            </div>
             <div class="mm-form">
               <button class="btn fantasma" id="mm-lanzar">ABRIR EL JUEGO</button>
             </div>
@@ -356,11 +382,10 @@
             <div class="panel-head"><h3>🤝 INVITA A UN AMIGO</h3><span class="dim mono" id="mm-inv-estado">—</span></div>
             <p class="dim" style="margin:10px 0 0;font-size:12px">Mándale una convocatoria con el juego, modo y región del formulario: al aceptar, entra en cola igual que tú y el emparejador los cruza. Vigencia 10 minutos.</p>
             <div class="mm-form">
-              <label>EMAIL O NICK DEL JUGADOR
-                <input id="mm-inv-email" type="text" placeholder="jugador@correo.com o nick" style="min-width:220px" />
+              <label>EMAIL DEL JUGADOR
+                <input id="mm-inv-email" type="email" placeholder="jugador@correo.com" style="min-width:220px" />
               </label>
               <div class="mm-botones"><button class="btn primario" id="mm-inv-enviar">ENVIAR INVITACIÓN</button></div>
-              <div class="dim mono" style="font-size:11px;margin-top:6px">tu amigo necesita perfil VANTS: que entre al HUB o la web una vez con su cuenta (se crea solo) · aceptá/invitá por nick</div>
             </div>
             <div id="mm-inv-recibidas" class="tabla" style="margin-top:12px"><div class="dim">sin invitaciones pendientes</div></div>
             <div class="dim mono" id="mm-inv-enviadas" style="margin-top:8px;font-size:11px"></div>
@@ -408,7 +433,6 @@
     </div>
   </div>
 
-  <script src="juegos.js"></script>
   <script src="app.js"></script>
   <script src="mm.js"></script>
   <script src="update-ui.js"></script>
