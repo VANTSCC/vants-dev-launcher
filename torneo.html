@@ -12,11 +12,38 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
-<link rel="stylesheet" href="./assets/css/arena.css?v=10">
-<link rel="stylesheet" href="./assets/css/strafe.css?v=2">
+<link rel="stylesheet" href="./assets/css/arena.css?v=11">
+<link rel="stylesheet" href="./assets/css/strafe.css?v=3">
   <link rel="stylesheet" href="./assets/css/vants-arena-reskin.css?v=1">
 </head>
 <body class="sf" data-game="valorant" data-crumb="TORNEOS|FICHA DEL TORNEO">
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a href="index.html" class="nav-logo">
+      <svg class="mark"><use href="#vmark"/></svg>
+      <span class="wordmark"><b>VANT<em>S</em></b><small>GAMES</small></span>
+    </a>
+    <nav class="nav-links">
+      <div class="ni has-sub"><a href="jugadores.html">SALA<span class="chev" aria-hidden="true">▾</span></a><div class="dd" role="menu"><a href="jugadores.html" role="menuitem">Sala de jugadores</a><a href="equipos.html" role="menuitem">Equipos del circuito</a><a href="equipo.html" role="menuitem">Equipo VANTS DE 5</a></div></div>
+      <div class="ni has-sub"><a href="partidos.html">PARTIDOS<span class="chev" aria-hidden="true">▾</span></a><div class="dd" role="menu"><a href="partidos.html" role="menuitem">Agenda en vivo</a><a href="resultados.html" role="menuitem">Resultados</a><a href="calendario.html" role="menuitem">Calendario</a></div></div>
+      <div class="ni has-sub"><a href="ranking.html">RANKING<span class="chev" aria-hidden="true">▾</span></a><div class="dd" role="menu"><a href="ranking.html" role="menuitem">Ranking global</a><a href="rangos.html" role="menuitem">Rangos</a></div></div>
+      <div class="ni has-sub"><a href="torneos.html">TORNEOS<span class="chev" aria-hidden="true">▾</span></a><div class="dd" role="menu"><a href="torneos.html" role="menuitem">Calendario abierto</a><a href="torneo.html" role="menuitem">Torneo actual · Ascensión S4</a><a href="llaves.html" role="menuitem">Llaves · Bracket</a></div></div>
+      <div class="ni"><a href="llaves.html">LLAVES</a></div>
+      <div class="ni"><a href="tienda.html">TIENDA</a></div>
+      <div class="ni"><a href="descargar.html">DESCARGAR</a></div>
+      <div class="ni has-sub"><a href="clips.html">CLIPS<span class="chev" aria-hidden="true">▾</span></a><div class="dd" role="menu"><a href="clips.html" role="menuitem">Momentos destacados</a><a href="historia.html" role="menuitem">Historia</a><a href="guia.html" role="menuitem">Guía de la arena</a></div></div>
+      <div class="ni"><a href="noticias.html">NOTICIAS</a></div>
+    </nav>
+    <div class="nav-right">
+      <span class="pro-badge" id="proBadge"><i data-lucide="zap"></i>PRO</span>
+      <a class="btn btn-ghost btn-sm" href="membresias.html"><i data-lucide="crown"></i>MEMBRESÍAS</a>
+      <button class="btn btn-ghost btn-sm" id="arenaLoginBtn" hidden><i data-lucide="log-in"></i>ENTRAR</button>
+      <button class="btn btn-ghost btn-sm" id="miCuentaBtn" hidden><i data-lucide="layout-dashboard"></i>MI CUENTA</button>
+    </div>
+  </div>
+</header>
+
 
 <!-- ===== SYMBOL DEL LOGO VANTS ===== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -35,7 +62,6 @@
   </symbol>
 </svg>
 
-<!-- El shell strafe (top bar + nav + breadcrumb) lo construye strafe-shell.js -->
 
 <!-- ===== HERO DEL EVENTO ===== -->
 <section class="sf-event-hero">
@@ -140,7 +166,6 @@
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
 <script src="./assets/js/vants-supervisor.js?v=1" defer></script>
-<script src="./assets/js/strafe-shell.js?v=1" defer></script>
 <script>
 /* ===== FICHA DEL TORNEO: lee ?id= y pinta con datos reales (Neon) ===== */
 (function () {
