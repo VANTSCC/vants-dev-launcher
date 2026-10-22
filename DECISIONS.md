@@ -423,37 +423,28 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   contenido).
 - Fecha: 2026-10-21.
 
-## D26 · Vercel entra bajo el Agente VANTS (vigilancia + redeploy + webhook)
-- **Contexto**: el repo despliega también en Vercel (previews y `vants.vercel.app`)
-  pero Vercel no tiene agente: un deploy fallido allí no lo veía nadie y
-  `@vercel/analytics` pedía `/_vercel/insights/script.js` en Cloudflare (404
-  en cada carga). El dueño: «Vercel no tiene agente: metele el Agente VANTS.
-  Objetivo: que vigile y re-lance los deploys de Vercel igual que hace con
-  Cloudflare/Neon, y avise a Discord».
-- **Decisión**: chequeo `vercel_deploy` + acción `redeploy_vercel` (redeploy
-  del MISMO commit vía `deploymentId`, máx. 2 intentos por SHA, misma guarda
-  en `agent_events` que `redispatch`), registrada en `cerebro.js` como
-  automática. Disparo inmediato por webhook de Vercel → ruta nueva en el
-  Worker `vants-server` (`POST /api/vercel/webhook`: firma HMAC-SHA1,
-  filtro por proyecto, `repository_dispatch` con PAT de alcance mínimo) →
-  `agente.yml` escucha `repository_dispatch: [vercel_deploy]`. `vercel.json`
-  en raíz deja el sitio como estático sin build (como `netlify.toml`) con
-  cache `immutable` para `/_astro/` y `/assets/*?v=`. Analytics de Vercel se
-  carga solo si `location.hostname` es de Vercel.
-- **Motivo**: el redeploy del mismo commit es lo que arregla los fallos
-  transitorios de Vercel (build cancelado, cuota, red) sin tocar `main`; el
-  tope de 2 por SHA evita el bucle «re-lanzar un fallo eterno» que el dueño
-  pidió evitar; el webhook ahorra hasta 30 min de espera frente al cron.
-- **Qué NO cambia**: el cron de 30 min sigue siendo la red de seguridad; sin
-  `VERCEL_TOKEN` el chequeo se omite (nunca falla el ciclo); sin los secretos
-  del Worker el endpoint responde 503 y no hace nada; no se despliega nada
-  nuevo desde el agente, solo se re-lanza lo que ya existía.
-- **Qué la invalidaría**: que Vercel deje de usarse (→ quitar chequeo, acción,
-  ruta y `vercel.json`); que Vercel cambie la firma de sus webhooks (hoy
-  HMAC-SHA1 en `x-vercel-signature`) o la API `v13/deployments`.
-- **Consecuencias**: 4 secretos nuevos a cargo del dueño (`VERCEL_TOKEN` en
-  GitHub; `VERCEL_WEBHOOK_SECRET` y `GH_DISPATCH_TOKEN` en el Worker; el
-  webhook en el dashboard de Vercel); `@vercel/analytics` sale de las
-  dependencias del webapp (script inline condicional en `Base.astro`).
-- Fecha: 2026-10-22.
-
+## D26 · El emblema nunca se congela: bajo reduced-motion gira plano y suave (0.4×)
+- **Contexto**: D25 + #104 dejaron el emblema impecable, pero el dueño reportó:
+  «no se mueve en el PC, en el móvil sí» (captura del emblema en pose quieta).
+  Causa: su PC tiene los efectos de animación de Windows apagados → el
+  navegador reporta `prefers-reduced-motion: reduce` → el bucle de #104
+  congelaba el emblema en UN fotograma (pose 0.55). En el móvil la preferencia
+  no está activa y por eso ahí sí giraba.
+- **Decisión**: Emblema3D.vue ya no trata reduced-motion como "congelar":
+  - `debeAnimar()` solo depende de enPantalla, pestaña visible y contexto GPU.
+  - Con `mqReduce.matches` el tiempo avanza a **0.4×** y el vaivén vertical
+    (`rotation.x`) queda a **amplitud 0**: giro plano, calmado, sin balanceo.
+  - Se elimina el fotograma quieto en pose(0.55) y el branch asociado.
+  El sandbox de verificación (emblem3d.ts) recibe el mismo cambio para seguir
+  siendo espejo (badge «REDUCIDA · GIRO SUAVE»).
+- **Motivo**: la preferencia de menos movimiento no puede apagar la identidad
+  de la marca en la portada; un giro lento y plano respeta el espíritu de la
+  preferencia (menos movimiento, nada que persiga el cursor ni parpadee) y el
+  dueño ve su logo vivo en su PC. Las animaciones decorativas del home
+  (hero-rise, halo, ticker) SÍ siguen gated por reduced-motion en CSS.
+- **Qué NO cambia**: velocidad normal (1×) para quien no pide reduced-motion;
+  pausa fuera de pantalla/pestaña oculta (#104); three-min en diferido (#106);
+  home-motion.css; el resto de la portada.
+- **Qué la invalidaría**: que el dueño pida velocidad completa también bajo
+  reduced-motion (subir el factor 0.4 → 1 y recuperar el vaivén), o una queja
+  de mareo por movimiento que obligue a revertir a fotograma quieto.

@@ -11,9 +11,9 @@ let THREE: typeof import('../lib/three-min');
 // degradado que afila al vértice, derecho rojo con corte horizontal — y la
 // cuña roja flotante junto al vértice. Degradados por vértice (color attr).
 //
-// Rendimiento: el bucle solo corre cuando el emblema está en pantalla, la
-// pestaña visible y el usuario no pidió reduced-motion (en ese caso se pinta
-// UN fotograma quieto). DPR hasta 3 para que en 4K/retina no se vea borroso.
+// Rendimiento: el bucle solo corre cuando el emblema está en pantalla y la
+// pestaña visible. Con prefers-reduced-motion gira PLANO y SUAVE (0.4×, sin
+// vaivén — D26): nunca totalmente quieto. DPR hasta 3 para 4K/retina nítido.
 const host = ref<HTMLDivElement | null>(null);
 const sinWebgl = ref(false);
 let dispose = () => {};
@@ -238,7 +238,11 @@ const arrancar = (el: HTMLDivElement) => {
   back.position.set(0, 2, -4);
   scene.add(back);
 
-  // ── Bucle: solo gira si se ve, con pestaña visible y sin reduced-motion ──
+  // ── Bucle: solo gira si se ve y con pestaña visible ──
+  // D26: bajo prefers-reduced-motion NO se congela (el dueño tiene los
+  // «efectos de animación» de Windows apagados y su PC veía la marca muerta):
+  // gira PLANO y SUAVE (0.4×, sin vaivén vertical), que es lo que pide esa
+  // preferencia sin apagar la identidad del logo.
   const clock = new THREE.Clock(false);
   let t = 0;
   let raf = 0;
@@ -248,7 +252,8 @@ const arrancar = (el: HTMLDivElement) => {
 
   const pose = (tiempo: number) => {
     g.rotation.y = tiempo * 0.5;
-    g.rotation.x = Math.sin(tiempo * 0.8) * 0.14;
+    g.rotation.x =
+      Math.sin(tiempo * 0.8) * 0.14 * (mqReduce.matches ? 0 : 1);
   };
   const fotograma = () => {
     renderer.render(scene, cam);
@@ -256,12 +261,12 @@ const arrancar = (el: HTMLDivElement) => {
   const tick = () => {
     raf = requestAnimationFrame(tick);
     // Delta acotado: tras volver de una pestaña oculta el emblema no pega un salto.
-    t += Math.min(clock.getDelta(), 0.05);
+    t += Math.min(clock.getDelta(), 0.05) * (mqReduce.matches ? 0.4 : 1);
     pose(t);
     fotograma();
   };
   const debeAnimar = () =>
-    enPantalla && !contextoPerdido && document.visibilityState !== 'hidden' && !mqReduce.matches;
+    enPantalla && !contextoPerdido && document.visibilityState !== 'hidden';
   const sincronizar = () => {
     if (debeAnimar()) {
       if (!raf) {
@@ -273,11 +278,6 @@ const arrancar = (el: HTMLDivElement) => {
       if (raf) cancelAnimationFrame(raf);
       raf = 0;
       clock.stop();
-      if (mqReduce.matches && !contextoPerdido) {
-        // Quieto pero con la pose del logo oficial (de frente, leve inclinación).
-        pose(0.55);
-        fotograma();
-      }
     }
   };
 
@@ -295,6 +295,7 @@ const arrancar = (el: HTMLDivElement) => {
 
   const onVisibilidad = () => sincronizar();
   document.addEventListener('visibilitychange', onVisibilidad);
+  // La velocidad se lee por frame; esto solo re-sincroniza el bucle y la pose.
   const onReduce = () => sincronizar();
   mqReduce.addEventListener?.('change', onReduce);
 
