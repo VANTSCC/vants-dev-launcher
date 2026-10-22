@@ -22,11 +22,16 @@ test.describe('Home full stack (Astro + Vue)', () => {
     // la sección EXPLORAR ya no existe (D20): ni sección ni panel de preview
     await expect(page.locator('#explorar')).toHaveCount(0);
     await expect(page.locator('#hcPreview')).toHaveCount(0);
-    // runtime arena intacto (arena.css v12 desde D24 y arena.js v34 siguen siendo la capa viva)
-    /* Resiliente al deploy: produccion puede seguir sirviendo v=11 hasta
-       que aterrice este PR (misma leccion del PR #93 con v=10). Acepta ambos. */
-    await expect(page.locator('link[href*="arena.css?v=12"], link[href*="arena.css?v=11"]')).toHaveCount(1);
-    await expect(page.locator('script[src*="arena.js?v=34"]')).toHaveCount(1);
+    // runtime arena intacto: arena.css y arena.js siguen siendo la capa viva.
+    /* Sin version hardcodeada: cada bump de cache (?v=N) rompia este aserto
+       (PRs #93 y #101 lo dejaron en rojo). Lo que importa es que se cargue
+       UNA sola vez cada uno, no el numero. */
+    await expect(page.locator('link[href*="assets/css/arena.css?v="]')).toHaveCount(1);
+    await expect(page.locator('script[src*="assets/js/arena.js?v="]')).toHaveCount(1);
+    /* D25 dejo la portada duplicada en produccion (dos h1#heroTitle, dos islas
+       Emblema3D, una con hash 404): el hero y la isla 3D deben ser unicos. */
+    await expect(page.locator('#heroTitle')).toHaveCount(1);
+    await expect(page.locator('astro-island')).toHaveCount(1);
   });
 
   test('las islands de Astro (_astro) están referenciadas y cargan', async ({ page }) => {
