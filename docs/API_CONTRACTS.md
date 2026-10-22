@@ -78,6 +78,9 @@ SQL (PostgREST `POST /rpc/<fn>` para el HUB; conexión directa para el service):
 | `mm_invitar(p_to_email, p_game, p_mode, p_region)` | invitación HUB por email (24): valida destino con perfil, anti-duplicado por pareja+juego, vigencia 10 min |
 | `mm_invites_pendientes(p_limite)` | mis invitaciones recibidas + enviadas (24); expira vencidas al vuelo |
 | `mm_responder_invite(p_id, p_aceptar)` | destino acepta → queda ENCOLADO con los parámetros vía `mm_encolar` (24); destino rechaza; remitente cancela |
+| `mm_listo(p_match_id)` | ready-check (30): participante confirma "estoy listo"; PK (match_id, sub) = idempotente; rechaza `timeout` y `partida_anulada` |
+| `mm_estado_ready(p_match_id)` | ready-check (30): `{ status, listos, total, deadline, vencido }` para el contador X/N del HUB (solo participantes) |
+| `mm_anular_si_timeout(p_match_id)` | ready-check (30): UNA VEZ vencido el deadline (120 s desde el match) y sin confirmación completa, cualquier participante anula; lazy + transaccional (FOR UPDATE); los tickets quedan `matched` y cada HUB se re-encola solo |
 
 Guard de identidad: si la llamada trae JWT (PostgREST), `p_sub` debe coincidir
 con `request.jwt.claim.sub`; el service (conexión directa) pasa por diseño

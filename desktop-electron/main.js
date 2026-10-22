@@ -963,9 +963,17 @@ function ipcRegistrar() {
       return { activa: captura.activa, entradas: captura.entradas.length, ultimoArchivo: captura.ultimoArchivo, redactar: captura.redactar, proxy: CLI.proxy };
     } catch (err) { return { ok: false, error: err.message }; }
   });
-  ipcMain.handle('hub:exitlag', async (e, acc) => {
+  ipcMain.handle('hub:exitlag', async (e, acc, extra) => {
     try {
       if (acc === 'activar') return await exitlagActivar(null, null);
+      // 'activar-juego' — cadena ready-check → ExitLag → juego (mm.js).
+      // extra = {id,nombre} (o string con el slug). OFF por defecto:
+      // sin exitlag.config.json enabled responde {ok:false, reason:…} y
+      // el lanzamiento sigue derecho. Nunca toca procesos del juego.
+      if (acc === 'activar-juego') {
+        const j = typeof extra === 'string' ? { id: extra, nombre: extra } : (extra || null);
+        return await exitlagActivar(j, null);
+      }
       if (acc === 'desactivar') return await exitlagDesactivar('renderer');
       if (acc === 'recargar') { exitlagCargarConfig(); return { ok: true, estado: exitlagEstado() }; }
       if (acc === 'abrir-config') { shell.showItemInFolder(EXITLAG_CFG_FILE()); return { ok: true }; }

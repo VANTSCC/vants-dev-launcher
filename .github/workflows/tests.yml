@@ -120,11 +120,14 @@ jobs:
       - name: Lógica pura compartida worker↔tests (validación, orden, paginación, fechas, XSS, fichas, proveedores)
         run: node scripts/test_plataforma.js
 
-      - name: Launcher VANTS HUB (detección de juego por proceso + presencia, 24 asserts)
+      - name: Launcher VANTS (detección de juego por proceso + presencia, 24 asserts)
         run: node scripts/test_hub_juegos.js
 
       - name: Telemetría (Worker + launcher)
         run: node scripts/test_telemetria.js
+
+      - name: Launcher VANTS · ready-check del matchmaking + cadena ExitLag (45 asserts)
+        run: node scripts/test_mm_ready.js
 
   e2e:
     name: E2E Playwright · plataforma en producción
