@@ -48,11 +48,19 @@ jobs:
 
       - name: Borrador de release con el instalador (solo tags hub-v*)
         if: startsWith(github.ref, 'refs/tags/hub-v')
+        working-directory: ${{ github.workspace }}   # ruta desde la RAIZ del repo (el default del job es desktop-electron/)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          EXE=$(ls desktop-electron/dist/VANTS-Hub-Setup-*.exe | head -1)
+          echo "Instalador: $EXE"
           VERSION="${GITHUB_REF_NAME#hub-v}"
-          gh release create "$GITHUB_REF_NAME" desktop-electron/dist/VANTS-Hub-Setup-*.exe \
-            --draft --title "VANTS HUB $VERSION" \
-            --notes "Instalador oficial del VANTS HUB (captura de trafico HAR + integracion ExitLag + deteccion de juego fiable). Descarga, ejecuta el Setup y el launcher se auto-actualiza solo (electron-updater)."
+          NOTAS="Instalador oficial del VANTS HUB (captura de trafico HAR + integracion ExitLag + deteccion de juego fiable). Descarga, ejecuta el Setup y el launcher se auto-actualiza solo (electron-updater)."
+          # Idempotente: si el release ya existe (creado a mano o en re-run), sube/actualiza el asset
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$EXE" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$GITHUB_REF_NAME" "$EXE" --draft --repo "$GITHUB_REPOSITORY" \
+              --title "VANTS HUB $VERSION" --notes "$NOTAS"
+          fi
