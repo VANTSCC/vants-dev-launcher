@@ -194,7 +194,8 @@ test.describe('Búsqueda, navegación e i18n (F5/F10)', () => {
     const mundo = await page
       .waitForSelector('.sf-top, header.nav', { timeout: 12000 })
       .catch(() => null);
-    if (mundo && /sf-top/.test(mundo.getAttribute('class') || '')) {
+    const esShellViejo = !!mundo && (await mundo.evaluate((el) => el.classList.contains('sf-top')));
+    if (esShellViejo) {
       test.skip(true, 'producción aún con shell strafe (deploy de D23 pendiente)');
     }
     await expect(page.locator('header.nav')).toBeVisible();
