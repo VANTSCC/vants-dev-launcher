@@ -97,6 +97,19 @@ jobs:
         run: |
           psql "$NEON_CS" -c "SELECT relname AS tabla, n_live_tup AS filas_aprox FROM pg_stat_user_tables WHERE schemaname = 'public' ORDER BY relname;" || true
 
+      - name: Diagnóstico invitaciones mm (mascarado, sin PII)
+        if: always() && env.NEON_CS != ''
+        run: |
+          set +e
+          echo "— inventario de players —"
+          psql "$NEON_CS" -c "SELECT count(*) FILTER (WHERE auth0_sub IS NOT NULL) AS con_sesion, count(*) FILTER (WHERE coalesce(btrim(email),'') <> '') AS con_email, count(*) AS total FROM players;"
+          echo "— perfiles (email mascarado) —"
+          psql "$NEON_CS" -c "SELECT coalesce(nullif(username,''),'?') AS username, coalesce(nullif(display_name,''),'?') AS nombre, CASE WHEN auth0_sub IS NULL THEN 'sin_sesion' ELSE 'con_sesion' END AS sesion, CASE WHEN coalesce(btrim(email),'')='' THEN '(sin email)' ELSE left(btrim(email),3)||'***'||split_part(btrim(email),'@',2) END AS email_mascarado, created_at::date AS creado FROM players ORDER BY created_at LIMIT 20;"
+          echo "— emails compartidos por varios perfiles —"
+          psql "$NEON_CS" -c "SELECT left(btrim(email),3)||'***'||split_part(btrim(email),'@',2) AS email_mascarado, count(*) AS perfiles, count(*) FILTER (WHERE auth0_sub IS NOT NULL) AS con_sesion FROM players WHERE coalesce(btrim(email),'')<>'' GROUP BY 1 HAVING count(*) > 1;"
+          echo "— mm_invites por estado —"
+          psql "$NEON_CS" -c "SELECT status, count(*) FROM mm_invites GROUP BY 1 ORDER BY 2 DESC;" || true
+
       - name: Estado de la base → rama estado-db (verificación legible)
         if: always() && env.NEON_CS != ''
         run: |
