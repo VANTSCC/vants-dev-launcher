@@ -188,10 +188,13 @@ test.describe('Búsqueda, navegación e i18n (F5/F10)', () => {
 
   test('D23: sin menús de strafe en las interiores + i18n ?lang=en vivo', async ({ page }) => {
     await page.goto('/equipos.html');
-    await page.waitForTimeout(600); /* el shell viejo se construía por JS */
-    /* Resiliente al deploy: si el edge aún sirve el shell strafe, este test
-       aún no aplica (se valida post-merge, igual que D22). */
-    if (await page.locator('.sf-top').count()) {
+    /* Resiliente al deploy: espera a que aparezca UNO de los dos mundos.
+       Nuevo: header.nav (markup, inmediato). Viejo: .sf-top (lo construye
+       strafe-shell.js en runtime, puede tardar 1-2s con el CDN). */
+    const mundo = await page
+      .waitForSelector('.sf-top, header.nav', { timeout: 12000 })
+      .catch(() => null);
+    if (mundo && /sf-top/.test(mundo.getAttribute('class') || '')) {
       test.skip(true, 'producción aún con shell strafe (deploy de D23 pendiente)');
     }
     await expect(page.locator('header.nav')).toBeVisible();
@@ -207,10 +210,11 @@ test.describe('Búsqueda, navegación e i18n (F5/F10)', () => {
   test('móvil 390: el menú unificado queda navegable (franja o shell de borde)', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/equipos.html');
-    await page.waitForTimeout(600);
-    /* viejo: .sf-nav del shell strafe · nuevo: franja .nav-links del header arena */
+    /* viejo: .sf-nav del shell strafe (JS, tarda en aparecer) ·
+       nuevo: franja .nav-links del header arena (markup, inmediata).
+       toBeVisible reintenta hasta 12s: cubre ambos mundos sin sleep fijo. */
     const nav = page.locator('.sf-nav:visible, header.nav .nav-links:visible');
-    await expect(nav.first()).toBeVisible();
+    await expect(nav.first()).toBeVisible({ timeout: 12000 });
   });
 
   test('movil 390: sin overflow horizontal en ficha de equipo', async ({ page }) => {
