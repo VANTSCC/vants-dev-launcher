@@ -57,9 +57,19 @@ const existe = (document, selector) => {
   return partes.length > 0 && partes.every((p) => RUNTIME.has(p) || document.querySelector('.' + seleccionable(p) + ',#' + seleccionable(p) + ',' + p));
 };
 
-/** Devuelve el CSS mínimo de `css` que aplica al `document`. */
-export const extraerCritico = (css, document) => {
+/** Devuelve el CSS mínimo de `css` que aplica al `document`. `base` es la
+    carpeta de la hoja (p. ej. `./assets/css/`): las url() relativas se
+    reescriben, porque inline pasan a resolverse desde el HTML. */
+export const extraerCritico = (css, document, base = '') => {
   const ast = parse(css);
+  if (base) {
+    walk(ast, {
+      visit: 'Url',
+      enter(u) {
+        if (!/^(?:[a-z]+:|\/|#)/i.test(u.value)) u.value = resolverRelativa(base, u.value);
+      },
+    });
+  }
   const animaciones = new Set();
   const filtrar = (lista) =>
     lista.filter((nodo) => {
@@ -98,6 +108,15 @@ export const extraerCritico = (css, document) => {
   return generate(ast);
 };
 
+const resolverRelativa = (base, rel) => {
+  const partes = base.replace(/\/$/, '').split('/');
+  for (const seg of rel.split('/')) {
+    if (seg === '..') partes.pop();
+    else if (seg !== '.') partes.push(seg);
+  }
+  return partes.join('/');
+};
+
 export default function criticalCss() {
   return {
     name: 'vants:critical-css',
@@ -111,7 +130,7 @@ export default function criticalCss() {
         if (!links.length) return;
         let critico = '';
         for (const [, href] of links) {
-          critico += extraerCritico(readFileSync(join(RAIZ, href.slice(2)), 'utf8'), document);
+          critico += extraerCritico(readFileSync(join(RAIZ, href.slice(2)), 'utf8'), document, href.slice(0, href.lastIndexOf('/') + 1));
         }
         let primero = true;
         html = html.replace(re, (tag, href, v = '') => {
