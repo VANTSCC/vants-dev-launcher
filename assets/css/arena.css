@@ -1147,3 +1147,16 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
   .dl-feat p{display:none}
 }
 .nav-dl{color:var(--accent)!important}
+
+/* Rendimiento 4K: la capa de grano se compone en su propia capa (sin repintar
+   el fondo entero cada 166 ms) y se recorta a su caja. */
+.cin-grain{will-change:transform;contain:strict}
+
+/* Accesibilidad: con «reducir movimiento» en el sistema se congelan las
+   animaciones infinitas (ticker, pulsos, grano, sweep) y las transiciones. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important
+  }
+}

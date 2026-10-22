@@ -153,7 +153,7 @@ footer{border-top:1px solid var(--line)}
 </style>
 <link rel="stylesheet" href="./assets/css/strafe.css?v=3">
   <link rel="stylesheet" href="./assets/css/vants-arena-reskin.css?v=1">
-<link rel="stylesheet" href="./assets/css/arena.css?v=15">
+<link rel="stylesheet" href="./assets/css/arena.css?v=16">
 </head>
 <body class="sf" data-crumb="CLIPS|MOMENTOS DESTACADOS">
 <!-- ===== SYMBOL DEL LOGO VANTS (usable en todo el sitio) ===== -->
@@ -200,7 +200,7 @@ footer{border-top:1px solid var(--line)}
 
 <div class="app">
   <aside class="side">
-    <button class="s-item on" id="sMis"><i data-lucide="folder-video"></i>MIS CLIPS DE JUEGO<b id="sCount">0</b></button>
+    <button class="s-item on" id="sMis"><i data-lucide="folder"></i>MIS CLIPS DE JUEGO<b id="sCount">0</b></button>
     <button class="s-item" id="sDest"><i data-lucide="star"></i>DESTACADOS<b id="sDestCount">0</b></button>
     <button class="s-item" id="sAjustes"><i data-lucide="settings"></i>AJUSTES</button>
     <div class="s-card">
@@ -242,7 +242,7 @@ footer{border-top:1px solid var(--line)}
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer onload="if(window.lucide)lucide.createIcons()"></script>
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
 <script src="./assets/js/auth0-config.js?v=16"></script>
 <script>
