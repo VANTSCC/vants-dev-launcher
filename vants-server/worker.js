@@ -452,6 +452,15 @@ const SEC_HEADERS = {
     'upgrade-insecure-requests',
 };
 
+/* Assets con huella en la URL: /_astro/<nombre>.<hash>.js|css de Astro y los
+   css/js del runtime con ?v=N (el bump de cache del repo). Cambiar el archivo
+   cambia la URL, así que pueden ser immutable un año sin riesgo de servir
+   algo viejo. index.html y el resto siguen con el max-age=0 de Workers Assets. */
+function esAssetInmutable(url) {
+  if (url.pathname.startsWith('/_astro/')) return true;
+  return /\.(css|js|woff2?|png|webp|svg)$/i.test(url.pathname) && /^\d+$/.test(url.searchParams.get('v') || '');
+}
+
 function harden(res, extra = {}) {
   for (const [k, v] of Object.entries(SEC_HEADERS)) res.headers.set(k, v);
   for (const [k, v] of Object.entries(extra)) res.headers.set(k, v);
@@ -2036,7 +2045,11 @@ async function fetchWorker(request, env, ctx) {
     // --- 8) Resto: archivos estáticos con cabeceras de seguridad
     if (env.ASSETS) {
       const res = await env.ASSETS.fetch(request);
-      return harden(new Response(res.body, res));
+      const out = harden(new Response(res.body, res));
+      if (res.status === 200 && esAssetInmutable(url)) {
+        out.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+      return out;
     }
 
     return txt(404, 'Not found');
