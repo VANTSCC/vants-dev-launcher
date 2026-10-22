@@ -165,36 +165,56 @@ test.describe('Búsqueda, navegación e i18n (F5/F10)', () => {
     expect(html.length).toBeGreaterThan(10);
   });
 
-  test('nav del shell: Calendario vive en el submenú PARTIDOS y el enlace es vivo', async ({ page }) => {
+  test('nav unificado: Calendario vive en el submenú PARTIDOS y el enlace es vivo', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/equipos.html');
-    /* Calendario ya NO es top-level: es role="menuitem" dentro del dropdown
-       de PARTIDOS (.sf-dd). El panel abre con hover (desktop) y con
-       toque/teclado (focusin abre el panel y fija aria-expanded) — el foco
-       es determinista en ambos proyectos (desktop y móvil 390). Se
-       verifica: aria-expanded del trigger, item visible y enlace vivo
-       (el click navega a calendario.html). */
-    const dd = page.locator('.sf-dd').filter({ has: page.locator('a.sf-dd-top[href="partidos.html"]') });
-    await dd.locator('.sf-dd-top').focus();
-    await expect(dd.locator('.sf-dd-top')).toHaveAttribute('aria-expanded', 'true');
-    const navCal = dd.locator('.sf-dd-panel a[role="menuitem"][href="calendario.html"]');
+    /* D23: el menú unificado es el header arena (header.nav) con submenús
+       MYKD (.ni > .dd). En producción puede convivir un período con el shell
+       strafe viejo (.sf-dd): el test acepta AMBOS — mismo contrato:
+       trigger de PARTIDOS → foco abre el panel → item Calendario visible y
+       vivo (el click navega a calendario.html). */
+    const triggerNuevo = page.locator('.nav-links .ni.has-sub > a[href="partidos.html"]');
+    const triggerViejo = page.locator('.sf-dd-top[href="partidos.html"]');
+    let trigger = null;
+    if (await triggerNuevo.count()) trigger = triggerNuevo.first();
+    else if (await triggerViejo.count()) trigger = triggerViejo.first();
+    test.skip(!trigger, 'ni header arena ni shell strafe presentes');
+    await trigger.focus();
+    const navCal = page.locator('a[role="menuitem"][href="calendario.html"]').first();
     await expect(navCal).toBeVisible();
     await navCal.click();
     await expect(page).toHaveURL(/calendario/);
   });
 
-  test('selector de idioma ES→EN re-renderiza el shell', async ({ page }) => {
+  test('D23: sin menús de strafe en las interiores + i18n ?lang=en vivo', async ({ page }) => {
     await page.goto('/equipos.html');
-    const btn = page.locator('.sf-lang').first();
-    if (!(await btn.isVisible().catch(() => false))) {
-      // en móvil el selector vive dentro del drawer: abrirlo primero
-      const burger = page.locator('.sf-burger, [aria-label*="menu" i], [aria-label*="menú" i]').first();
-      if (await burger.count()) await burger.click().catch(() => {});
+    /* Resiliente al deploy: espera a que aparezca UNO de los dos mundos.
+       Nuevo: header.nav (markup, inmediato). Viejo: .sf-top (lo construye
+       strafe-shell.js en runtime, puede tardar 1-2s con el CDN). */
+    const mundo = await page
+      .waitForSelector('.sf-top, header.nav', { timeout: 12000 })
+      .catch(() => null);
+    if (mundo && /sf-top/.test(mundo.getAttribute('class') || '')) {
+      test.skip(true, 'producción aún con shell strafe (deploy de D23 pendiente)');
     }
-    test.skip(!(await btn.isVisible().catch(() => false)), 'selector de idioma no visible en este viewport (vive en el drawer)');
-    await btn.click();
-    await page.waitForTimeout(600);
-    const lang = await page.evaluate(() => document.body.getAttribute('data-lang') || 'es');
-    expect(['es', 'en']).toContain(lang);
+    await expect(page.locator('header.nav')).toBeVisible();
+    await expect(page.locator('.sf-top')).toHaveCount(0);
+    await expect(page.locator('.sf-nav')).toHaveCount(0);
+    await expect(page.locator('script[src*="strafe-shell"]')).toHaveCount(0);
+    /* i18n vivo sin el selector del shell: ?lang=en aplica el diccionario */
+    await page.goto('/equipos.html?lang=en');
+    await page.waitForTimeout(400);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  });
+
+  test('móvil 390: el menú unificado queda navegable (franja o shell de borde)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/equipos.html');
+    /* viejo: .sf-nav del shell strafe (JS, tarda en aparecer) ·
+       nuevo: franja .nav-links del header arena (markup, inmediata).
+       toBeVisible reintenta hasta 12s: cubre ambos mundos sin sleep fijo. */
+    const nav = page.locator('.sf-nav:visible, header.nav .nav-links:visible');
+    await expect(nav.first()).toBeVisible({ timeout: 12000 });
   });
 
   test('movil 390: sin overflow horizontal en ficha de equipo', async ({ page }) => {

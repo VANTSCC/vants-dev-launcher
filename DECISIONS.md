@@ -327,3 +327,34 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   al egress del sandbox) — la próxima corrida de CI es la prueba real; el test
   acepta ambos títulos así que pasa en ambos mundos.
 - Fecha: 2026-10-21.
+
+## D23 · Los menús de strafe salen: un solo header VANTS en todo el sitio
+- **Contexto**: el sitio tenía 2 skins por diseño (20/oct, fda68a5): la portada
+  arena rojo/negro y el shell strafe (barra de juegos + tabs + breadcrumb) en
+  las 27 páginas interiores. Al dueño se le ofreció alinearlos (sesión 14) y
+  pidió: «quita el menús de strafe».
+- **Decisión**: fuera el shell strafe de TODAS las interiores. `strafe-shell.js`
+  se borra (×3 árboles) y ninguna página lo carga. Las páginas muestran el
+  header arena con el menú MYKD de `menu-data.ts` (SALA/PARTIDOS/RANKING/
+  TORNEOS con submenús + LLAVES/TIENDA/DESCARGAR/CLIPS/NOTICIAS): el MISMO menú
+  que la portada, con previews de men-preview incluidos. Las 13 páginas que no
+  tenían header propio (plataforma, legales, clips) lo reciben en el markup.
+  Móvil: la franja .nav-links pasa de display:none a scrollable horizontal (el
+  shell era la única navegación móvil de las interiores).
+- **Motivo**: dos menús distintos confunden («veo dos pantallas», sesión 14) y
+  el dueño eligió el arena. Un solo menú = un solo lugar que mantener
+  (menu-data.ts como fuente; las interiores replican su estructura).
+- **Qué NO cambia**: strafe.css, body.sf y el reskin quedan (estilizan el
+  CONTENIDO interior: tabs de torneos, filas, legales); las rutas
+  /es|en/tournaments/:juego/:estado y sus hooks del rewriter quedan (los .sf-tab
+  del contenido siguen en el markup); 404.html e index no tocados (no tenían
+  shell). El selector de idioma ES/EN del shell desaparece: i18n sigue via
+  body[data-lang] y ?lang=.
+- **Qué la invalidaría**: que el dueño vuelva a pedir el shell strafe
+  (git revert + restaurar el tag script); que menu-data.ts deje de ser la
+  fuente del menú (→ regenerar los headers interiores de nuevo).
+- **Consecuencias**: 29 HTML ×3 árboles + arena.css v11 (dropdowns MYKD global
+  + franja móvil) + strafe-shell.js borrado + E2E resiliente (acepta shell
+  viejo en el borde hasta el deploy). QA local desktop/móvil del header,
+  submenús, previews y overflow.
+- Fecha: 2026-10-21.

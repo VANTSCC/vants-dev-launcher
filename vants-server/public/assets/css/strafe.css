@@ -333,8 +333,8 @@ body.sf .sf-fbot a:hover{color:var(--accent)}
 body.sf .sf-fbot span:first-child{margin-right:auto}
 
 /* ---------- 16 · RESKIN DE COMPONENTES ARENA (páginas convertidas) ---------- */
-/* navegación vieja: la reemplaza el shell strafe (strafe-shell.js) */
-body.sf .nav{display:none}
+/* navegación: D23 — el shell strafe se retiró; el header arena vive en el
+   markup de las interiores y vuelve a mostrarse (antes: body.sf .nav{display:none}) */
 /* secciones y encabezados */
 body.sf .sec{padding:34px 0}
 body.sf .sec.alt{background:var(--bg)}
