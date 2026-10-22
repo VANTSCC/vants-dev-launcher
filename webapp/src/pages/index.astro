@@ -12,11 +12,13 @@ import '../styles/home-motion.css';
   <Vmark />
   <Ticker />
   <Nav />
+  <main>
   <Hero />
   {/* client:visible: Three (~560 KB) solo se descarga cuando el emblema entra
       en pantalla; en móvil queda bajo el hero y no compite con la portada. */}
   <div class="emblema-3d relative mx-auto h-[230px] w-[230px] opacity-70" aria-hidden="true">
     <Emblema3D client:visible />
   </div>
+  </main>
   <Footer />
 </Base>
