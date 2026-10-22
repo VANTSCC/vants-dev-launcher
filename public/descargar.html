@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=Archivo+Black&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js"></script>
-<link rel="stylesheet" href="./assets/css/arena.css?v=12">
+<link rel="stylesheet" href="./assets/css/arena.css?v=13">
 <link rel="stylesheet" href="./assets/css/strafe.css?v=3">
   <link rel="stylesheet" href="./assets/css/vants-arena-reskin.css?v=1">
 <style>
@@ -81,7 +81,7 @@
           <span>WINDOWS <b>10 / 11</b> · 64 BITS</span>
           <span>INSTALADOR <b>NSIS</b> (.exe)</span>
           <span>TAMAÑO <b>~90 MB</b></span>
-          <span>VERSIÓN <b id="dlVer">2.3</b></span>
+          <span>VERSIÓN <b id="dlVer">2.4.2</b></span>
         </div>
         <p style="font:500 11px/1.8 var(--mono);color:var(--mut,#93939D);margin:0">VANTS HUB es una app PROPIA (Electron) con diseño tipo FACEIT y cada categoría en su cajón: INICIO, MI CUENTA, PARTIDOS, BRACKET, LÍDERES, EN VIVO, BIBLIOTECA con portadas de tus juegos (Steam · Riot · Epic), MEMBRESÍA (planes y pase sin salir del hub) y CONEXIONES (conecta/desconecta FACEIT, Discord, Steam, Riot y más desde la app). Detecta tus juegos localmente, sabe cuándo estás jugando y late a la arena. Login con tu cuenta Google de VANTS.</p>
       </div>
@@ -93,7 +93,7 @@
     </div>
 
     <div class="dl-steps">
-      <div class="dl-step"><b>DESCARGA</b><p>Pulsa <b>DESCARGAR PARA WINDOWS</b> y elige el instalador <b>VANTS-Hub-Setup-2.4.1.exe</b> de la última versión (Release). <b>Se descarga una sola vez:</b> a partir de aquí el HUB se actualiza solo.</p></div>
+      <div class="dl-step"><b>DESCARGA</b><p>Pulsa <b>DESCARGAR PARA WINDOWS</b> y elige el instalador <b id="dlFile">VANTS-Hub-Setup-2.4.2.exe</b> de la última versión (Release). <b>Se descarga una sola vez:</b> a partir de aquí el HUB se actualiza solo.</p></div>
       <div class="dl-step"><b>INSTALA</b><p>Ejecuta el instalador: "Solo para mí" (sin permisos de administrador). VANTS queda en tu menú Inicio y tu escritorio.</p></div>
       <div class="dl-step"><b>ENTRA CON GOOGLE</b><p>Abre la app y pulsa <b>ENTRAR</b>: la sesión usa tu cuenta VANTS (Google) protegida por Auth0, igual que la web. Misma cuenta, mismo perfil.</p></div>
       <div class="dl-step"><b>VINCULA Y JUEGA</b><p>En <b>CONEXIONES</b> conecta FACEIT, Discord, Steam, Riot, Twitch, Kick y más directamente desde el hub; en <b>MEMBRESÍA</b> revisa tu plan y tu pase; en <b>ESTADO EN VIVO</b> marca <b>JUGANDO</b> para que la arena te vea brillar.</p></div>
@@ -168,7 +168,8 @@
 <div class="modal" id="modal"><div class="modal-bg" id="modalBg"></div><div class="modal-card" id="modalCard"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<script src="./assets/js/arena.js?v=34"></script>
+<script src="./assets/js/arena.js?v=35"></script>
+<script>fetch('https://api.github.com/repos/feispla/Vants/releases/latest').then(function(r){return r.ok?r.json():null}).then(function(j){var v=j&&String(j.tag_name||'').replace(/^hub-v/,'');if(!/^\d+\.\d+\.\d+$/.test(v))return;document.getElementById('dlVer').textContent=v;var f=document.getElementById('dlFile');if(f)f.textContent='VANTS-Hub-Setup-'+v+'.exe';}).catch(function(){});</script>
 <!-- Capa viva: Auth0 (login) + Neon (cuenta real) -->
 <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
 <script src="./assets/js/auth0-config.js?v=16" defer></script>
