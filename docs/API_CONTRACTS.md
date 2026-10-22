@@ -70,7 +70,7 @@ SQL (PostgREST `POST /rpc/<fn>` para el HUB; conexión directa para el service):
 | Función | Hace |
 |---------|------|
 | `mm_encolar(p_sub, p_game, p_mode, p_region, p_ttl_seg)` | valida elegibilidad + reutiliza ticket vivo + inserta (índice parcial anti-duplicados) |
-| `mm_ticket_estado(p_ticket)` | posición FIFO / `matched`+match_id / `expired` (solo dueño) |
+| `mm_ticket_estado(p_ticket)` | posición FIFO / `matched`+match_id / `expired` (solo dueño). Migra 31: en `queued` devuelve también `cola_total` (vivos en la misma cola, incluido uno mismo) y `necesarios` (2/10) para que el HUB muestre "X/N en cola" y cuántos faltan |
 | `mm_salir(p_ticket)` | cancela el ticket propio |
 | `mm_reportar(p_match_id, p_sub, score_a, score_b)` | valida participante + reporta + aplica RR (mm_aplicar_resultado) en una transacción |
 | `mm_aplicar_resultado(p_match_id)` | win +0.015 / draw +0.002 / loss −0.012, clamp [0.50,1.60], placement 0.95; rr_before/after; season stats vía faceit_stats_delta; idempotente |

@@ -3,12 +3,13 @@
 // ------------------------------------------------------------
 // Módulo independiente (patrón Fase 2 del plan): no toca app.js,
 // solo se enchufa a los elementos de #cajon-buscar y a vantsHub.
-// Toda la lógica vive en SQL (migraciones 21–24 y 30): mm_encolar,
+// Toda la lógica vive en SQL (migraciones 21–24, 30 y 31): mm_encolar,
 // mm_ticket_estado, mm_salir, mm_reportar, mm_historial_de, las
 // invitaciones (mm_invitar, mm_invites_pendientes,
-// mm_responder_invite) y el ready-check (mm_listo, mm_estado_ready,
-// mm_anular_si_timeout) — llamadas por PostgREST con el Bearer de
-// la sesión.
+// mm_responder_invite), el ready-check (mm_listo, mm_estado_ready,
+// mm_anular_si_timeout) y el contador de cola (migra 31:
+// cola_total/necesarios en mm_ticket_estado) — llamadas por
+// PostgREST con el Bearer de la sesión.
 // Reglas: 1 ticket activo por jugador y juego · duo 1v1 · team 5v5 ·
 // TTL 10 min · ready-check 120 s (migra 30: si no confirman todos,
 // la partida se anula y cada HUB se re-encola solo) · primer
@@ -152,7 +153,24 @@
       if (r.error === 'no_encontrado') { ticket = null; detenerSondeo(); setEstado('ticket caducado'); btnEntrar.classList.remove('oculto'); btnSalir.classList.add('oculto'); }
       return;
     }
-    if (r.status === 'queued') setEstado('en cola · posición ' + (r.position || 1));
+    if (r.status === 'queued') {
+      // migra 31: la cola muestra cuántos somos y cuántos faltan —
+      // si el modo es team y no llena, el jugador entiende POR QUÉ
+      // no sale y tiene una salida clara (duo/1v1 o invitar amigos).
+      let txt = 'en cola';
+      if (r.cola_total != null && r.necesarios) {
+        txt += ' · ' + r.cola_total + '/' + r.necesarios + ' jugadores';
+        const faltan = r.necesarios - r.cola_total;
+        if (faltan > 0) {
+          txt += ' · faltan ' + faltan;
+          txt += r.necesarios === 10
+            ? ' — probá DUO/1v1 para jugar ya'
+            : ' — invitá a un amigo con el email de arriba';
+        }
+      }
+      txt += ' · posición ' + (r.position || 1);
+      setEstado(txt);
+    }
     else if (r.status === 'matched' && r.match_id) { matchId = r.match_id; detenerTodo(); pintarMatch(); }
     else if (r.status === 'expired') { ticket = null; detenerSondeo(); setEstado('la cola caducó (10 min) — volvé a entrar'); btnEntrar.classList.remove('oculto'); btnSalir.classList.add('oculto'); }
   }
