@@ -5,6 +5,7 @@
   "scripts": {
     "test": "node scripts/test_plataforma.js",
     "test:hub": "node scripts/test_hub_juegos.js",
+    "test:telemetria": "node scripts/test_telemetria.js",
     "test:e2e": "playwright test",
     "sync:faceit": "node scripts/sincronizar-faceit.mjs",
     "sync:faceit:dry": "node scripts/sincronizar-faceit.mjs --dry",

@@ -22,6 +22,7 @@ const os = require('os');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { detectarJuego } = require('./renderer/juegos.js'); // catálogo + detección por proceso (lógica pura, testeada)
+const { iniciar: iniciarTelemetria } = require('./telemetria.js');
 
 // ---------- configuración ----------
 const AUTH0_DOMAIN = 'vants.eu.auth0.com';
@@ -397,6 +398,7 @@ const SESION_FILE = () => path.join(app.getPath('userData'), 'vants-session.bin'
 // UTILIDADES
 // ============================================================
 function log(...a) { try { console.log('[vants-hub]', ...a); } catch (e) {} }
+const telemetria = iniciarTelemetria({ app, log });
 function b64url(buf) { return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 function sha256(s) { return crypto.createHash('sha256').update(s).digest(); }
 function httpErrorBody(r) { return r.text().then(t => t.slice(0, 300)).catch(() => ''); }
@@ -903,6 +905,7 @@ function crearVentana() {
   win.on('closed', () => { win = null; });
 }
 function ipcRegistrar() {
+  ipcMain.on('hub:error', (event, details) => telemetria.report('HUB_ERROR', details));
   ipcMain.handle('hub:sesion', () => perfilPublico());
   ipcMain.handle('hub:login', async () => {
     const r = await loginConPKCE();

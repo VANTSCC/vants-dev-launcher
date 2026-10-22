@@ -14,6 +14,10 @@
      Pega aquí la URL de tu función Neon `supervisor`, por ejemplo:
      'https://br-sweet-shape-b42xhogj-supervisor.compute.c-6.us-east-2.aws.neon.tech' */
   var COLLECTOR = String(window.VANTS_SUPERVISOR_URL || '').replace(/\/+$/, '');
+  if (!COLLECTOR && /^https?:$/.test(location.protocol) &&
+      location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+    COLLECTOR = location.origin + '/api/telemetria';
+  }
 
   var PAGE = /panel\.html$/i.test(location.pathname) ? 'panel' : 'arena';
   var ACTIVO = !!(COLLECTOR && location.protocol !== 'file:');
@@ -86,14 +90,15 @@
       if (!ACTIVO || !cola.length) return;
       var lote = cola.splice(0, cola.length);
       var body = JSON.stringify({ page: PAGE, session_id: sid, events: lote });
+      var destino = /\/api\/telemetria$/i.test(COLLECTOR) ? COLLECTOR : COLLECTOR + '/events';
       var enCola = false;
       try {
         if (navigator.sendBeacon) {
-          enCola = navigator.sendBeacon(COLLECTOR + '/events', new Blob([body], { type: 'application/json' }));
+          enCola = navigator.sendBeacon(destino, new Blob([body], { type: 'application/json' }));
         }
       } catch (eB) { enCola = false; }
       if (!enCola) {
-        fetch(COLLECTOR + '/events', {
+        fetch(destino, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Vants-Supervisor': 'web' },
           body: body,

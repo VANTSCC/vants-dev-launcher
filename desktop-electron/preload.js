@@ -1,6 +1,29 @@
 // VANTS · puente seguro renderer ↔ main
 const { contextBridge, ipcRenderer } = require('electron');
 
+window.addEventListener('error', (event) => {
+  try {
+    const error = event && event.error;
+    ipcRenderer.send('hub:error', {
+      message: String((error && error.message) || (event && event.message) || 'renderer error'),
+      stack: String((error && error.stack) || ''),
+      filename: String((event && event.filename) || ''),
+      lineno: event && event.lineno,
+      colno: event && event.colno,
+    });
+  } catch (error) {}
+});
+window.addEventListener('unhandledrejection', (event) => {
+  try {
+    const reason = event && event.reason;
+    ipcRenderer.send('hub:error', {
+      message: String((reason && reason.message) || reason || 'unhandledrejection'),
+      stack: String((reason && reason.stack) || ''),
+      motivo: 'unhandledrejection',
+    });
+  } catch (error) {}
+});
+
 contextBridge.exposeInMainWorld('vantsHub', {
   sesion:      () => ipcRenderer.invoke('hub:sesion'),
   login:       () => ipcRenderer.invoke('hub:login'),
