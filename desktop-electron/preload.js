@@ -1,4 +1,4 @@
-// VANTS HUB · puente seguro renderer ↔ main
+// VANTS · puente seguro renderer ↔ main
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('vantsHub', {

@@ -1,5 +1,5 @@
 // ============================================================
-// VANTS HUB · mm.js — BUSCAR PARTIDA (matchmaking real, Fase 4/5)
+// VANTS · mm.js — BUSCAR PARTIDA (matchmaking real, Fase 4/5)
 // ------------------------------------------------------------
 // Módulo independiente (patrón Fase 2 del plan): no toca app.js,
 // solo se enchufa a los elementos de #cajon-buscar y a vantsHub.

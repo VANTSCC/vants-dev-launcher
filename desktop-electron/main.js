@@ -1,5 +1,5 @@
 // ============================================================
-// VANTS HUB · main.js — proceso principal de Electron
+// VANTS · main.js — proceso principal de Electron
 // ------------------------------------------------------------
 // · Login Auth0 (PKCE en ventana embebida + respaldo por
 //   sesión de la web) con refresco automático del token.
@@ -317,12 +317,12 @@ function capturaHar() {
   return {
     log: {
       version: '1.2',
-      creator: { name: 'VANTS Hub', version: app.getVersion() },
-      pages: [{ startedDateTime: captura.desde, id: 'vants-hub', title: 'VANTS Hub · captura de tráfico' }],
+      creator: { name: 'VANTS', version: app.getVersion() },
+      pages: [{ startedDateTime: captura.desde, id: 'vants-hub', title: 'VANTS · captura de tráfico' }],
       entries: captura.entradas,
       comment: captura.truncada
         ? 'Captura TRUNCADA: se alcanzó el tope de ' + CAPTURA_MAX_ENTRADAS + ' entradas.'
-        : 'Generada por VANTS Hub' + (captura.redactar ? ' · tokens y cookies redactados' : ' · SIN redacción')
+        : 'Generada por VANTS' + (captura.redactar ? ' · tokens y cookies redactados' : ' · SIN redacción')
     }
   };
 }
@@ -766,7 +766,7 @@ function reiniciarProcesos() {
 // EXITLAG INTEGRATION LAYER (config-driven adapter)
 // ------------------------------------------------------------
 // OFF by default — activated when a config file exists at:
-//   %APPDATA%\VANTS Hub\exitlag.config.json
+//   %APPDATA%\VANTS\exitlag.config.json
 // ExitLag fills in: executable path, activation/deactivation
 // method and per-game profiles. The HUB only orchestrates the
 // TIMING (it never touches game processes or game traffic):
@@ -888,7 +888,7 @@ function crearVentana() {
   win = new BrowserWindow({
     width: 1280, height: 840, minWidth: 1080, minHeight: 700,
     show: false, backgroundColor: '#0A0A0C',
-    title: 'VANTS HUB',
+    title: 'VANTS',
     icon: path.join(__dirname, 'build', 'icon.png'),
     frame: false,            // barra de título propia (estilo FACEIT)
     autoHideMenuBar: true,
@@ -976,8 +976,8 @@ function ipcRegistrar() {
 // ============================================================
 function actualizarTray() {
   const tip = sesion
-    ? ('VANTS Hub · ' + (juegoActual ? 'JUGANDO ' + juegoActual : 'EN LÍNEA'))
-    : 'VANTS Hub · sin sesión';
+    ? ('VANTS · ' + (juegoActual ? 'JUGANDO ' + juegoActual : 'EN LÍNEA'))
+    : 'VANTS · sin sesión';
   if (tray) tray.setToolTip(tip);
 }
 function crearTray() {
@@ -985,7 +985,7 @@ function crearTray() {
     const img = nativeImage.createFromPath(path.join(__dirname, 'renderer', 'tray.png'));
     tray = new Tray(img);
     const menu = Menu.buildFromTemplate([
-      { label: 'Abrir VANTS HUB', click: () => { if (win) win.show(); else crearVentana(); } },
+      { label: 'Abrir VANTS', click: () => { if (win) win.show(); else crearVentana(); } },
       { type: 'separator' },
       { label: juegoActual ? 'Jugando: ' + juegoActual : 'Sin juego en ejecución', enabled: false },
       { type: 'separator' },
@@ -996,7 +996,7 @@ function crearTray() {
       { label: 'Salir', click: () => { app.quit(); } }
     ]);
     tray.setContextMenu(menu);
-    tray.setToolTip('VANTS Hub');
+    tray.setToolTip('VANTS');
     tray.on('double-click', () => { if (win) win.show(); });
   } catch (e) { log('tray:', e.message); }
 }
@@ -1017,7 +1017,7 @@ if (!gotLock) { app.quit(); } else {
     reiniciarProcesos();
     exitlagCargarConfig();
     if (CLI.captura) capturaIniciar('--captura');
-    log('VANTS HUB listo ·', app.getVersion(),
+    log('VANTS listo ·', app.getVersion(),
         CLI.proxy ? '· proxy ' + CLI.proxy : '',
         '· exitlag:', exitlagEstado().habilitado ? 'ON' : 'off');
   });

@@ -1,5 +1,5 @@
 // ============================================================
-// VANTS HUB · update-ui.js — banner de auto-actualización
+// VANTS · update-ui.js — banner de auto-actualización
 // ------------------------------------------------------------
 // Módulo independiente (patrón Fase 2 del plan): no toca app.js
 // ni mm.js. Escucha los eventos hub:update que emite el proceso
@@ -53,7 +53,7 @@
       const caja = document.createElement('div');
       const tit = document.createElement('div');
       tit.className = 'upd-tit';
-      tit.textContent = 'VANTS HUB';
+      tit.textContent = 'VANTS';
       txtEl = document.createElement('div');
       txtEl.className = 'upd-txt';
       barEl = document.createElement('div');

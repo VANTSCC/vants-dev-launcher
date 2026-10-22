@@ -1,5 +1,5 @@
 /* ============================================================
-   VANTS HUB · juegos.js — catálogo de juegos y detección por proceso
+   VANTS · juegos.js — catálogo de juegos y detección por proceso
    ------------------------------------------------------------
    Lógica PURA (sin Electron ni DOM). Una sola fuente de verdad:
      · main.js     → require('./renderer/juegos.js')   (detección + presencia)
