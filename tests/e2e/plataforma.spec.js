@@ -212,10 +212,17 @@ test.describe('Búsqueda, navegación e i18n (F5/F10)', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/equipos.html');
     /* viejo: .sf-nav del shell strafe (JS, tarda en aparecer) ·
-       nuevo: franja .nav-links del header arena (markup, inmediata).
-       toBeVisible reintenta hasta 12s: cubre ambos mundos sin sleep fijo. */
-    const nav = page.locator('.sf-nav:visible, header.nav .nav-links:visible');
+       franja: .nav-links del header arena (markup, sin JS) ·
+       actual (#97/#100): nav-movil.js pliega .nav-links tras el boton
+       hamburguesa .nav-burger, asi que lo visible es el boton y, al tocarlo,
+       el panel con los enlaces. toBeVisible reintenta hasta 12s. */
+    const nav = page.locator('.sf-nav:visible, header.nav .nav-links:visible, header.nav .nav-burger:visible');
     await expect(nav.first()).toBeVisible({ timeout: 12000 });
+    const burger = page.locator('header.nav .nav-burger:visible');
+    if (await burger.count()) {
+      await burger.first().click();
+      await expect(page.locator('header.nav .nav-links a:visible').first()).toBeVisible();
+    }
   });
 
   test('movil 390: sin overflow horizontal en ficha de equipo', async ({ page }) => {
