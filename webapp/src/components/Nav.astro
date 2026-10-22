@@ -45,6 +45,29 @@ import { menu_data } from '../data/menu-data';
   </div>
 </div>
 
+<script is:inline>
+  /* D24 · Tabs con submenú = abren el panel, NO navegan.
+     El dueño quiere quedarse en la página al clickear un tab del menú
+     principal: el clic abre el submenú (los items de adentro siguen siendo
+     los enlaces vivos). Solo puntero fino: en táctil no hay hover y el tab
+     sigue navegando directo (el dropdown no existe en la franja móvil). */
+  (function () {
+    'use strict';
+    var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!fine) return;
+    var tabs = document.querySelectorAll('.nav-links .ni.has-sub > a');
+    Array.prototype.forEach.call(tabs, function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault(); /* el foco (ya puesto por el click) abre el panel via :focus-within */
+        a.focus();
+      });
+      a.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') a.blur();
+      });
+    });
+  })();
+</script>
+
 <style>
   /* Submenús estilo MYKD: panel oscuro que despliega al hover/focus */
   .nav-links .ni {

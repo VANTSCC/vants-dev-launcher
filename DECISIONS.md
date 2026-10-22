@@ -358,3 +358,36 @@ Formato: D# · Decisión · Motivo · Consecuencias · Fecha.
   viejo en el borde hasta el deploy). QA local desktop/móvil del header,
   submenús, previews y overflow.
 - Fecha: 2026-10-21.
+
+## D24 · El nav deja de mandar fuera de la principal: tabs con submenú abren panel, NOTICIAS se borra
+- **Contexto**: con el header ya unificado (D23), el dueño mandó 2 capturas: la
+  portada (la que quiere) y la página NOTICIAS (donde aterriza al clickear).
+  Dijo: «no quiero que manden para esta segunda página cuando le damos a los
+  submenús del principal; cuando le dé a un submenú quédese en la página
+  principal; esa, bórrela ya». La página de noticias solo tenía artículos DEMO.
+- **Decisión**: (1) la sección de noticias sale COMPLETA del sitio: noticias.html
+  y noticia.html borradas (×3 árboles), tab NOTICIAS fuera del nav
+  (menu-data.ts + 29 estáticas ×3), link "Noticias" fuera del footer pf,
+  entradas fuera de sitemap.xml. (2) Los tabs CON submenú (SALA, PARTIDOS,
+  RANKING, TORNEOS, CLIPS) dejan de navegar al clickearlos (desktop, puntero
+  fino): el click abre su panel .dd vía :focus-within y los items de adentro
+  siguen siendo los enlaces vivos. En táctil no hay hover: el tab sigue
+  navegando (la franja móvil no despliega dropdown). (3) El tab LLAVES sale del
+  nav: el dueño ya lo pidió («quita llaves porque ya está en el submenú de
+  torneo»); sigue alcanzable en TORNEOS ▾ → "Llaves · Bracket". (4) El preview
+  #navPv (menu-preview.js v10) ya no se monta sobre los tabs has-sub: tapaba al
+  panel .dd; vive en los links del .dd y en tabs sin submenú (TIENDA).
+- **Implementación**: guard inline en Nav.astro (index) + insertado por codemod
+  en las 29 estáticas con nav (×3): matchMedia '(hover:hover) and (pointer:fine)'
+  → preventDefault + focus (Esc cierra). arena.css v12: chev rota también por
+  :focus-within. Los tabs TIENDA y DESCARGAR siguen siendo enlaces directos
+  (nunca fueron parte del reclamo y son destinos útiles).
+- **Qué la invalidaría**: que el dueño pida volver a navegar con el click del
+  tab (→ quitar el guard, git revert); que pida restaurar noticias
+  (→ git revert + volver a sitemap); que en móvil quiera dropdowns (→ CSS del
+  panel fijo bajo la franja).
+- **Consecuencias**: 31 HTML + sitemap.xml ×3 árboles; noticias.html/noticia.html
+  borradas (bookmarks viejos caen al 404); home-fullstack.spec.js espera
+  arena.css?v=12; plataforma.spec.js no cambia (el trigger sigue siendo
+  a[href=partidos.html], el foco abre el panel igual).
+- Fecha: 2026-10-21.
