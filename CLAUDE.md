@@ -21,7 +21,8 @@ explícitamente, preguntá antes de ejecutar, no después.
 ## 03 · Verificado, o no está terminado
 - «Implementado» no es un estado. Terminar = haber ejercido el cambio.
 - En este repo, terminado significa: `node --check` en cada JS tocado,
-  espejos ×3 byte-idénticos (`scripts/build-webapp.mjs --check` = 76 ficheros),
+  espejos ×3 byte-idénticos (`scripts/build-webapp.mjs --check` en verde; el
+  conteo lo imprime el script y baja/sube con lo que haya en `public/`),
   y QA en navegador del flujo tocado (home + página afectada).
 - Si algo no se pudo verificar (ej. Neon sin credenciales en el sandbox),
   se DICE. Un «no verificado» honesto es información; un «listo» sin comprobar
@@ -94,7 +95,9 @@ explícitamente, preguntá antes de ejecutar, no después.
 - Cada decisión lleva «qué la invalidaría».
 
 ## Chuleta operativa (lo que más se rompió)
-- Espejos: `node scripts/build-webapp.mjs --check` debe decir 76 OK.
+- Espejos: `node scripts/build-webapp.mjs --check` debe terminar en ✅ (el
+  conteo cambia con cada página o chunk de Astro que entra o sale; eran 76
+  antes de borrar NOTICIAS y los menús de strafe).
 - El canal de E/S de algunos sandboxes se come `[m` al mostrar (`[main]` se ve
   `ain]`): los blobs siempre están bien; verificar byte a byte antes de
   «corregir» algo que no está roto.

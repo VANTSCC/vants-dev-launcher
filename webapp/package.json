@@ -23,5 +23,9 @@
     "three": "^0.186.1",
     "typescript": "^5.9.3",
     "vue": "^3.5.44"
+  },
+  "devDependencies": {
+    "css-tree": "^3.2.1",
+    "linkedom": "^0.18.14"
   }
 }
