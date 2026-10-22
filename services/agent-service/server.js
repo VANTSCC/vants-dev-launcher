@@ -135,6 +135,7 @@ function construirContexto(opts = {}) {
     chequeos: opts.chequeos || crearChequeos({
       urls: { web: process.env.URLS_WEB || 'https://vants.vants.workers.dev', workerFaceit: process.env.URLS_WORKER_FACEIT || 'https://vants-faceit-webhook.vants.workers.dev', matchmaking: process.env.URLS_MATCHMAKING || '' },
       github: { token: process.env.GITHUB_TOKEN, repo: process.env.GITHUB_REPOSITORY },
+      vercel: { token: process.env.VERCEL_TOKEN, teamId: process.env.VERCEL_TEAM_ID, projectId: process.env.VERCEL_PROJECT_ID },
       memoria,
     }),
     cerebro,

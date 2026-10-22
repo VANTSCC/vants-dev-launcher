@@ -1,5 +1,4 @@
 ---
-import Analytics from '@vercel/analytics/astro';
 /* Tailwind v4 de la isla EXPLORAR (utilities sin preflight; arena.css sigue
    siendo el dueño del sistema base). Sin este import las clases de
    components/Explore.tsx no se compilan y el panel sale sin estilos. */
@@ -35,7 +34,14 @@ const {
   <script is:inline src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer onload="if(window.lucide)lucide.createIcons()"></script>
   <link rel="stylesheet" href="./assets/css/arena.css?v=16">
   <link rel="stylesheet" href="./assets/css/vants-shop.css?v=1">
-  <Analytics />
+  <!-- Vercel Web Analytics solo cuando la página la sirve Vercel: en
+       Cloudflare /_vercel/insights/script.js no existe (404 en cada carga). -->
+  <script is:inline>
+    if (/\.vercel\.app$/.test(location.hostname) || location.hostname === 'vants.vercel.app') {
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+      var va = document.createElement('script'); va.defer = true; va.src = '/_vercel/insights/script.js'; document.head.appendChild(va);
+    }
+  </script>
 </head>
 <body data-game="valorant">
   <slot />

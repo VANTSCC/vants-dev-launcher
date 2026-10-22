@@ -10,6 +10,7 @@ name: "AGENTE VANTS · vigilancia y control"
 #   · web caída o deploy fallido  → re-lanza cloudflare-deploy (1 vez por commit)
 #   · migraciones fallidas        → re-lanza neon-migrate (1 vez por commit)
 #   · otros workflows fallidos    → re-run (1 vez por run)
+#   · deploy de Vercel fallido    → redeploy_vercel del mismo commit (máx. 2 por sha)
 # El bot de Discord (commands/agente.py + agent_bridge.py) lee esa memoria y
 # avisa por DM al dueño; también puede procesar /agente comando (ruta Neon).
 # Si Discord no está disponible, la evidencia queda en Neon y en este resumen.
@@ -18,6 +19,10 @@ name: "AGENTE VANTS · vigilancia y control"
 on:
   schedule:
     - cron: "*/30 * * * *"
+  # Disparo inmediato desde Vercel: su webhook → POST /api/vercel/webhook en el
+  # Worker vants-server → repository_dispatch(vercel_deploy) con uid/sha/estado.
+  repository_dispatch:
+    types: [vercel_deploy]
   workflow_dispatch:
     inputs:
       modo:
@@ -53,6 +58,14 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_REPOSITORY: ${{ github.repository }}
       VANTS_DISCORD_WEBHOOK: ${{ secrets.VANTS_DISCORD_WEBHOOK }}
+      # Vercel (chequeo vercel_deploy + redeploy_vercel). Sin VERCEL_TOKEN el
+      # chequeo sale "omitido"; team/proyecto por defecto son los de vants.
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID || 'team_aVpm4mk3HtCuZPnzf7uSeSao' }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || 'prj_vxL6Wd8RgsiMF6Eg8AnMGiTriITn' }}
+      VERCEL_PROJECT_NAME: vants
+      # Evento que nos despertó (webhook de Vercel vía repository_dispatch)
+      DISPARO_VERCEL: ${{ github.event_name == 'repository_dispatch' && toJSON(github.event.client_payload) || '' }}
       # Cerebro agéntico GLM: basta AGENT_LLM_KEY (URL por defecto global
       # api.z.ai; solo se define si la key es de bigmodel.cn).
       AGENT_LLM_URL: ${{ secrets.AGENT_LLM_URL || 'https://api.z.ai/api/paas/v4' }}
@@ -102,6 +115,7 @@ jobs:
         run: |
           MODO="${{ github.event.inputs.modo || 'ciclo' }}"
           COMANDO="${{ github.event.inputs.comando }}"
+          if [ -n "$DISPARO_VERCEL" ]; then echo "Despertado por Vercel: $DISPARO_VERCEL"; fi
           if [ "$MODO" = "comando" ] && [ -n "$COMANDO" ]; then
             node cli.js comando "$COMANDO" | tee /tmp/agente_salida.txt
           elif [ "$MODO" = "informe" ]; then
@@ -135,7 +149,8 @@ jobs:
             for (const h of r.hallazgos) {
               if (!h || h.estado === 'omitido') continue;
               const ic = { ok: '✅', aviso: '⚠️', fallo: '❌' }[h.estado] || '·';
-              lineas.push(`| ${h.label || h.id} | ${ic} ${h.estado} | ${String(h.detalle || '').slice(0, 120)} |`);
+              const enlace = h.url ? ` [ver](${h.url})` : '';
+              lineas.push(`| ${h.label || h.id} | ${ic} ${h.estado} | ${String(h.detalle || '').slice(0, 120)}${enlace} |`);
             }
             lineas.push('');
           }

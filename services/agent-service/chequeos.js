@@ -20,6 +20,12 @@ function crearChequeos(cfg = {}) {
     repo: (cfg.github && cfg.github.repo) || 'feispla/vants',
   };
   const db = cfg.memoria || null; // solo si es pg → chequeos de datos
+  const vercel = {
+    token: (cfg.vercel && cfg.vercel.token) || '',
+    teamId: (cfg.vercel && cfg.vercel.teamId) || 'team_aVpm4mk3HtCuZPnzf7uSeSao',
+    projectId: (cfg.vercel && cfg.vercel.projectId) || 'prj_vxL6Wd8RgsiMF6Eg8AnMGiTriITn',
+    rama: (cfg.vercel && cfg.vercel.rama) || 'main',
+  };
 
   function headers() {
     const h = { 'accept': 'application/json', 'user-agent': 'VANTS-Agente/' + VERSION };
@@ -203,7 +209,38 @@ function crearChequeos(cfg = {}) {
     }
   }
 
-  return { web, workerFaceit, launcher, acciones, neon, matchmaking, todos: () => [web(), workerFaceit(), launcher(), acciones(), neon(), matchmaking()] };
+  // --- 7) Deploy de Vercel (último deploy de main) --------------------
+  // Vercel no tiene agente propio: sin VERCEL_TOKEN el chequeo se omite (no
+  // falla). READY = ok · BUILDING/QUEUED/INITIALIZING = aviso · ERROR/CANCELED
+  // = fallo, con uid + sha + URL del log en `datos` para que redeploy_vercel
+  // re-lance ESE deploy (mismo commit).
+  const VERCEL_URL_FALLO = { ERROR: 'build/deploy con error', CANCELED: 'deploy cancelado' };
+  async function vercelDeploy() {
+    const base = { id: 'vercel_deploy', label: 'Deploy Vercel (vants)' };
+    if (!vercel.token) return { ...base, estado: 'omitido', detalle: 'sin VERCEL_TOKEN' };
+    const t0 = Date.now();
+    try {
+      const q = `projectId=${encodeURIComponent(vercel.projectId)}&teamId=${encodeURIComponent(vercel.teamId)}&limit=5`;
+      const r = await pedir(`https://api.vercel.com/v6/deployments?${q}`, { headers: { authorization: 'Bearer ' + vercel.token } });
+      const ms = Date.now() - t0;
+      const lista = r.json && Array.isArray(r.json.deployments) ? r.json.deployments : null;
+      if (!lista) return { ...base, ms, estado: 'aviso', detalle: `Vercel respondio ${r.status}` };
+      // la API devuelve del más nuevo al más viejo; nos quedamos con el último de main
+      const d = lista.find((x) => (x.meta && x.meta.githubCommitRef) === vercel.rama || x.target === 'production') || lista[0];
+      if (!d) return { ...base, ms, estado: 'aviso', detalle: 'sin deploys en el proyecto' };
+      const estadoV = String(d.readyState || d.state || '').toUpperCase();
+      const sha = String((d.meta && d.meta.githubCommitSha) || '').slice(0, 10);
+      const url = d.inspectorUrl || (d.url ? `https://${d.url}` : '');
+      const datos = { uid: d.uid, sha, estado: estadoV, url, ref: (d.meta && d.meta.githubCommitRef) || null, creado: d.createdAt || d.created || null };
+      if (estadoV === 'READY') return { ...base, ms, estado: 'ok', detalle: `READY · ${sha || '?'}` + (d.url ? ` · ${d.url}` : ''), url, datos };
+      if (estadoV in VERCEL_URL_FALLO) return { ...base, ms, estado: 'fallo', detalle: `${estadoV} (${VERCEL_URL_FALLO[estadoV]}) · ${sha || '?'} · ${url}`, url, datos };
+      return { ...base, ms, estado: 'aviso', detalle: `${estadoV || 'desconocido'} · ${sha || '?'} · en curso`, url, datos };
+    } catch (e) {
+      return { ...base, ms: Date.now() - t0, estado: 'aviso', detalle: e.name === 'AbortError' ? 'timeout' : String(e.message).slice(0, 120) };
+    }
+  }
+
+  return { web, workerFaceit, launcher, acciones, neon, matchmaking, vercelDeploy, todos: () => [web(), workerFaceit(), launcher(), acciones(), neon(), matchmaking(), vercelDeploy()] };
 }
 
 module.exports = { crearChequeos, VERSION };
