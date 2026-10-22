@@ -70,7 +70,8 @@ section{scroll-margin-top:92px}
 /* ============ TICKER ============ */
 .ticker{overflow:hidden;background:var(--accent);color:#fff}
 .ticker-track{display:flex;width:max-content;animation:tick 32s linear infinite}
-.ticker:hover .ticker-track{animation-play-state:paused}
+/* sin pausa por hover (D27): la barra ocupa todo el borde superior y el cursor
+   estacionado arriba la pausaba sin querer — el reporte «se dejó de mover» */
 .ticker span{display:flex;align-items:center;gap:8px;padding:9px 26px;font:600 11px/1 var(--mono);letter-spacing:.14em;white-space:nowrap}
 @keyframes tick{to{transform:translateX(-50%)}}
 
