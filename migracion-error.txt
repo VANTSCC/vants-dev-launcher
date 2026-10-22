@@ -1,3 +1,0 @@
-psql:db/migrations/29-pt-players.sql:35: NOTICE:  relation "pt_players" already exists, skipping
-psql:db/migrations/29-pt-players.sql:36: NOTICE:  relation "idx_pt_players_equipo" already exists, skipping
-psql:db/migrations/29-pt-players.sql:37: NOTICE:  relation "idx_pt_players_juego" already exists, skipping
