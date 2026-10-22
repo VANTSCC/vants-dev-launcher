@@ -1,0 +1,42 @@
+name: "MEJORAS · aviso a Discord"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tras cada merge en main, el agente avisa al canal del servidor de Discord
+# con un embed rojo de marca (scripts/notificar-discord.mjs).
+#
+# Configuración (una sola vez, dueño del repo):
+#   1. Discord: Servidor → Ajustes → Integraciones → Webhooks → Nuevo webhook
+#      → copiar URL (elegir el canal de mejoras).
+#   2. GitHub: Settings → Secrets and variables → Actions → New repository
+#      secret → DISCORD_WEBHOOK_MEJORAS = <URL copiada>.
+# Sin el secreto, este workflow avisa en el log y termina OK: el CI no se
+# rompe y la subida de mejoras nunca queda bloqueada por el aviso.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Avisar mejoras al canal de Discord
+        env:
+          DISCORD_WEBHOOK_MEJORAS: ${{ secrets.DISCORD_WEBHOOK_MEJORAS }}
+        run: |
+          TITULO="$(git log -1 --pretty=%s)"
+          SHA="$(git rev-parse --short HEAD)"
+          node scripts/notificar-discord.mjs \
+            --titulo "$TITULO" \
+            --sha "$SHA" \
+            --autor "${GITHUB_ACTOR:-agente}" \
+            --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
