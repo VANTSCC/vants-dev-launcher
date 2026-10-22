@@ -40,8 +40,46 @@ test.describe('Home full stack (Astro + Vue)', () => {
       if (r.url().includes('/_astro/')) respuestas.push(r.status());
     });
     await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+    /* El CSS de Astro va inline y la isla 3D es client:visible: en movil queda
+       bajo el hero, asi que hay que traerla a pantalla para que pida su bundle. */
+    if (!respuestas.length) {
+      await Promise.all([
+        page.waitForResponse((r) => r.url().includes('/_astro/')),
+        page.locator('.emblema-3d').scrollIntoViewIfNeeded(),
+      ]);
+      await page.waitForLoadState('networkidle');
+    }
     expect(respuestas.length, 'la página debe pedir al menos un bundle _astro').toBeGreaterThan(0);
     for (const s of respuestas) expect(s, 'bundle _astro debe responder 2xx/3xx').toBeLessThan(400);
+  });
+
+  test('primer pintado estable sin la hoja completa (CSS critico)', async ({ page, browser }) => {
+    /* arena.css y vants-shop.css ya no bloquean el render: la home pinta con el
+       CSS critico inline (webapp/integrations/critical-css.mjs) y las hojas
+       llegan despues. Si al critico le falta una regla que el runtime usa al
+       arrancar, la portada salta cuando llega la hoja (CLS). Se compara el
+       layout de los bloques visibles con y sin las hojas completas. */
+    const medir = async (pg) => {
+      // sin animaciones de entrada (viven bajo prefers-reduced-motion): medidas estables
+      await pg.emulateMedia({ reducedMotion: 'reduce' });
+      await pg.goto(BASE + '/', { waitUntil: 'load' });
+      await pg.waitForTimeout(800);
+      return pg.evaluate(() =>
+        [...document.querySelectorAll('.ticker, header.nav, .nav-right, .gamebar, .hero, .hero-left > *, .live-panel, .emblema-3d, footer')].map((e) => {
+          const b = e.getBoundingClientRect();
+          return [e.tagName + '.' + e.className.split(' ')[0], Math.round(b.top), Math.round(b.height)].join(':');
+        })
+      );
+    };
+    const html = await (await page.request.get(BASE + '/')).text();
+    expect(html, 'index.html debe traer el CSS critico inline').toContain('<style data-critico>');
+    expect(html).toMatch(/<link rel="preload" as="style" href="\.\/assets\/css\/arena\.css\?v=\d+"/);
+    const completo = await medir(page);
+    const ctx = await browser.newContext({ viewport: page.viewportSize() });
+    const sinHojas = await ctx.newPage();
+    await sinHojas.route(/assets\/css\/(arena|vants-shop)\.css/, (r) => r.abort());
+    expect(await medir(sinHojas)).toEqual(completo);
+    await ctx.close();
   });
 
   test('sin restos de merge ni errores de script en la portada', async ({ page, request }) => {
