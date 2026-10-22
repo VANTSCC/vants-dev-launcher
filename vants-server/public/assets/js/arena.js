@@ -136,13 +136,13 @@ const DATA={
  valorant:{
   title:'ASCENSIÓN<br><span class="out">SERIES</span> <span class="acc">S4</span>',short:'ASCENSIÓN SERIES S4',
   sub:'El circuito competitivo abierto de LATAM. Clasificá con tu equipo, subí por el bracket y llevate la parte del premio. Matchmaking por skill, anti-cheat obligatorio y servidores 128 tick.',
-  extraCol:'ACS',live:{a:'LOUD',b:'TEAM VITALITY',ta:'LOUD',tb:'VIT',ev:'CHAMPIONS 2026 · GRAN FINAL · DOM 18 OCT · 10:00 (CARACAS)',map:'Gran Final',sim:false,url:'https://www.vlr.gg/754737',hora:'10:00',horaLbl:'INICIO (CARACAS)'},
+  extraCol:'ACS',live:{a:'LOUD',b:'TEAM VITALITY',ta:'LOUD',tb:'VIT',ev:'CHAMPIONS 2026 · GRAN FINAL · DOM 18 OCT · LOUD CAMPEÓN',fin:true,sa:3,sb:1,map:'Gran Final',sim:false,url:'https://www.vlr.gg/754737',hora:'10:00',horaLbl:'INICIO (CARACAS)'},
   /* AGENDA REAL: partidos verificados en vlr.gg (Champions 2026 + Game Changers).
      real:true => el detalle muestra datos y enlace oficial, sin simulación. */
   mapPool:['Haven','Bind','Lotus','Split','Sunset','Icebox','Ascent'],
   hows:['Eliminación','Defusa','Planta detonada','Tiempo agotado'],
   matches:[
-    {t:'10:00',status:'up',a:'LOUD',b:'TEAM VITALITY',sa:null,sb:null,map:'Gran Final',bo:'BO5',ev:'Valorant Champions 2026 · Gran Final · Dom 18 Oct · 10:00 Caracas (VET)',real:true,url:'https://www.vlr.gg/754737'},
+    {t:'10:00',status:'final',a:'LOUD',b:'TEAM VITALITY',sa:3,sb:1,map:'Gran Final',bo:'BO5',ev:'Valorant Champions 2026 · Gran Final · Dom 18 Oct',real:true,url:'https://www.vlr.gg/754737'},
     {t:'14:10',status:'final',a:'100 THIEVES',b:'G2 ESPORTS',sa:2,sb:1,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Lower Round 3 · Vie 16 Oct',real:true,url:'https://www.vlr.gg/754742'},
     {t:'10:00',status:'final',a:'TEAM VITALITY',b:'LOUD',sa:1,sb:2,map:'Serie',bo:'BO3',ev:'Valorant Champions 2026 · Upper Final · Vie 16 Oct',real:true,url:'https://www.vlr.gg/754736'},
     {t:'01:00',status:'final',a:'FLYQUEST RED',b:'MIBR GC',sa:2,sb:3,map:'Serie',bo:'BO5',ev:'Game Changers Americas · Last Chance · Gran Final · Vie 16 Oct',real:true,url:'https://www.vlr.gg/744488'},
@@ -376,11 +376,12 @@ function renderLive(){
 function renderLiveIdle(){
   if(!document.getElementById('liveEvent'))return;
   const L=D().live;
-  const bd=$('#liveBadge');if(bd)bd.innerHTML='<i class="dot"></i>PRÓXIMO PARTIDO';
-  const lb=$('#liveSpecLbl');if(lb)lb.textContent=L.horaLbl||'INICIO';
-  $('#liveSpec').textContent=L.hora||'--:--';
+  const fin=!!L.fin&&L.sa!=null&&L.sb!=null;
+  const bd=$('#liveBadge');if(bd)bd.innerHTML='<i class="dot"></i>'+(fin?'ÚLTIMO RESULTADO':'PRÓXIMO PARTIDO');
+  const lb=$('#liveSpecLbl');if(lb)lb.textContent=fin?'FINAL':(L.horaLbl||'INICIO');
+  $('#liveSpec').textContent=fin?(L.bo||'BO5'):(L.hora||'--:--');
   $('#liveEvent').textContent=L.ev;
-  $('#liveScore').innerHTML='<i>VS</i>';
+  $('#liveScore').innerHTML=fin?escHtml(String(L.sa))+'<i>:</i>'+escHtml(String(L.sb)):'<i>VS</i>';
   $('#pipsA').innerHTML='';$('#pipsB').innerHTML='';
   $('#liveFeed').innerHTML='<div class="lf fa"><b>'+L.a+' vs '+L.b+'</b> · '+L.ev+'</div>'
     +'<div class="lf fb">RESULTADOS REALES · SIN SIMULACIÓN · COBERTURA Y ROUND A ROUND EN VLR.GG</div>';
