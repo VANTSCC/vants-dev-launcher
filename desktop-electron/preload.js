@@ -31,7 +31,7 @@ contextBridge.exposeInMainWorld('vantsHub', {
   presencia:   (modo) => ipcRenderer.invoke('hub:presencia', modo),
   api:         (ruta, opts) => ipcRenderer.invoke('hub:api', Object.assign({ ruta }, opts || {})),
   biblioteca:  () => ipcRenderer.invoke('hub:biblioteca'),
-  jugar:       (juego) => ipcRenderer.invoke('hub:jugar', juego),
+  jugar:       (id) => ipcRenderer.invoke('hub:jugar', id),
   abrir:       (url) => ipcRenderer.invoke('hub:abrir', url),
   info:        () => ipcRenderer.invoke('hub:info'),
   ventana:     (acc) => ipcRenderer.invoke('hub:ventana', acc),
@@ -40,5 +40,7 @@ contextBridge.exposeInMainWorld('vantsHub', {
   actualizarInstalar: () => ipcRenderer.invoke('hub:actualizar-instalar'),
   captura:     (accion) => ipcRenderer.invoke('hub:captura', accion), // 'iniciar' | 'detener' | 'carpeta' | undefined = estado
   onCaptura:   (cb) => ipcRenderer.on('hub:captura-estado', (e, d) => cb(d)),
-  exitlag:     (accion) => ipcRenderer.invoke('hub:exitlag', accion)  // 'activar' | 'desactivar' | 'recargar' | 'abrir-config' | undefined = estado
+  // 'activar' | 'activar-juego' (extra={id,nombre}: cadena ready-check→ExitLag→juego) |
+  // 'desactivar' | 'recargar' | 'abrir-config' | undefined = estado
+  exitlag:     (accion, extra) => ipcRenderer.invoke('hub:exitlag', accion, extra)
 });

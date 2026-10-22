@@ -1,16 +1,22 @@
 // ============================================================
-// VANTS · mm.js — BUSCAR PARTIDA (matchmaking real, Fase 4/5)
+// VANTS · mm.js — BUSCAR PARTIDA (matchmaking real, Fase 4/5 + ready-check)
 // ------------------------------------------------------------
 // Módulo independiente (patrón Fase 2 del plan): no toca app.js,
 // solo se enchufa a los elementos de #cajon-buscar y a vantsHub.
-// Toda la lógica vive en SQL (migraciones 21–24): mm_encolar,
-// mm_ticket_estado, mm_salir, mm_reportar, mm_historial_de y las
+// Toda la lógica vive en SQL (migraciones 21–24 y 30): mm_encolar,
+// mm_ticket_estado, mm_salir, mm_reportar, mm_historial_de, las
 // invitaciones (mm_invitar, mm_invites_pendientes,
-// mm_responder_invite) — llamadas por PostgREST con el Bearer de
-// la sesión del HUB.
+// mm_responder_invite) y el ready-check (mm_listo, mm_estado_ready,
+// mm_anular_si_timeout) — llamadas por PostgREST con el Bearer de
+// la sesión.
 // Reglas: 1 ticket activo por jugador y juego · duo 1v1 · team 5v5 ·
-// TTL 10 min · primer reporte gana · RR win +1.5 / draw +0.2 / loss -1.2
-// (escala entera *100 de la web).
+// TTL 10 min · ready-check 120 s (migra 30: si no confirman todos,
+// la partida se anula y cada HUB se re-encola solo) · primer
+// reporte gana · RR win +1.5 / draw +0.2 / loss -1.2 (escala entera
+// *100 de la web).
+// Cadena de arranque (nivel 2+3): PARTIDA ENCONTRADA → ESTOY LISTO
+// → todos confirmaron → ExitLag (si hay config enabled) → juego
+// lanzado en 3 s → reporte del resultado.
 // ============================================================
 (function () {
   'use strict';
@@ -43,6 +49,11 @@
   let ticket = null;
   let matchId = null;
   let sondeo = null;
+  let sondeoReady = null;        // sondeo del ready-check (3 s, migra 30)
+  let sondeoReloj = null;        // cuenta regresiva visual (1 s)
+  let deadlineTs = null;         // ready_deadline en ms epoch (del server)
+  let listoYa = false;           // ya confirmó en ESTA partida
+  let lanzando = false;          // cadena de lanzamiento en curso
   let invSondeo = null;          // sondeo de invitaciones (15 s)
   let invOcupado = false;        // evita solapamiento del poll
   const invProcesadas = new Set(); // aceptaciones ya reaccionadas
@@ -64,6 +75,11 @@
       '.mm-p{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}',
       '.mm-score{font-size:26px;font-weight:900;color:#e8e8ee;margin:6px 0 10px;font-variant-numeric:tabular-nums}',
       '.mm-verde{color:#39d98a}.mm-rojo{color:#ff5c5c}.mm-gris{color:#8b8b96}',
+      '.mm-ready{margin-top:12px;background:#131318;border:1px solid #26262e;border-radius:10px;padding:10px 12px}',
+      '.mm-ready-linea{display:flex;gap:12px;align-items:center;flex-wrap:wrap}',
+      '.mm-ready-linea b{letter-spacing:.08em;font-size:12px;color:#e8e8ee}',
+      '.mm-ready-bar{height:6px;background:#26262e;border-radius:4px;margin:8px 0 6px;overflow:hidden}',
+      '.mm-ready-bar i{display:block;height:100%;width:0;background:#39d98a;border-radius:4px;transition:width .4s ease}',
       '#cajon-buscar .tabla{margin-top:10px}'
     ].join('\n');
     document.head.appendChild(st);
@@ -71,6 +87,11 @@
 
   function setEstado(txt) { if (estadoEl) estadoEl.textContent = txt; }
   function detenerSondeo() { if (sondeo) { clearInterval(sondeo); sondeo = null; } }
+  function detenerTodo() {
+    detenerSondeo();
+    if (sondeoReady) { clearInterval(sondeoReady); sondeoReady = null; }
+    if (sondeoReloj) { clearInterval(sondeoReloj); sondeoReloj = null; }
+  }
 
   // ---------- llamadas rpc (POST cuerpo → PostgREST) ----------
   async function rpc(nombre, cuerpo) {
@@ -103,7 +124,7 @@
       setEstado((r.reutilizado ? 'ya estabas en cola · ' : 'en cola · ') + JUEGO_LABEL[juegoEl.value] + ' · ' + modoEl.value.toUpperCase());
       btnEntrar.classList.add('oculto');
       btnSalir.classList.remove('oculto');
-      detenerSondeo();
+      detenerTodo();
       sondeo = setInterval(poll, 3000);
       poll();
     } finally {
@@ -113,12 +134,14 @@
 
   async function salir() {
     if (!ticket) return;
-    detenerSondeo();
+    detenerTodo();
     await rpc('mm_salir', { p_ticket: ticket });
     ticket = null;
     setEstado('fuera de la cola');
     btnEntrar.classList.remove('oculto');
     btnSalir.classList.add('oculto');
+    const rp = $('#mm-ready');
+    if (rp) rp.classList.add('oculto');
   }
 
   // ---------- sondeo del ticket ----------
@@ -130,7 +153,7 @@
       return;
     }
     if (r.status === 'queued') setEstado('en cola · posición ' + (r.position || 1));
-    else if (r.status === 'matched' && r.match_id) { matchId = r.match_id; detenerSondeo(); pintarMatch(); }
+    else if (r.status === 'matched' && r.match_id) { matchId = r.match_id; detenerTodo(); pintarMatch(); }
     else if (r.status === 'expired') { ticket = null; detenerSondeo(); setEstado('la cola caducó (10 min) — volvé a entrar'); btnEntrar.classList.remove('oculto'); btnSalir.classList.add('oculto'); }
   }
 
@@ -163,13 +186,151 @@
       (verificado ? '<span class="mm-verde">VERIFICADO · RR aplicado</span>' : (s1 != null ? '<span class="mm-gris">reportado</span>' : '<span class="mm-gris">reportá el resultado al terminar</span>')) +
       '</div>' +
       '<div class="mm-side"><h4>EQUIPO 2' + (miTeam === 2 ? ' · VOS' : '') + '</h4>' + lado(2) + '</div>';
-    // reportar visible solo si aún no hay score
-    reportarBox.classList.toggle('oculto', !!(s1 != null || verificado));
+    // ready-check (migra 30): solo tiene sentido con la partida 'propuesto'
+    // y sin score. Ya reportada/verificada → panel listo como antes.
+    const enReady = !!(match && match.status === 'propuesto' && s1 == null);
+    const rp = $('#mm-ready');
+    if (rp) rp.classList.toggle('oculto', !enReady);
+    const bLanzar = $('#mm-lanzar');
+    listoYa = false; lanzando = false; deadlineTs = null;
+    if (enReady) {
+      pintarReady(0, jugadores.length);
+      const bl = $('#mm-listo');
+      if (bl) { bl.disabled = false; bl.textContent = 'ESTOY LISTO'; bl.classList.remove('oculto'); }
+      if (bLanzar) bLanzar.classList.add('oculto');      // el lanzamiento pasa a ser automático
+      readyEstado('confirmá que estás para jugar — 2 min para confirmar todos');
+      reportarBox.classList.add('oculto');               // el reporte aparece cuando todos confirmen
+      iniciarReadyPoll();
+    } else {
+      detenerTodo();
+      if (bLanzar) bLanzar.classList.remove('oculto');
+      // reportar visible solo si aún no hay score
+      reportarBox.classList.toggle('oculto', !!(s1 != null || verificado));
+    }
     historial();
   }
 
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ============================================================
+  // READY-CHECK (migra 30) + cadena de arranque (niveles 2+3).
+  // PARTIDA ENCONTRADA → cada uno pulsa ESTOY LISTO (mm_listo) →
+  // el HUB sondea mm_estado_ready cada 3 s → si no confirman todos
+  // antes del deadline (120 s desde el match), el primer cliente que
+  // lo ve llama mm_anular_si_timeout y TODOS se re-encolan solos →
+  // si confirman todos: ExitLag (si hay config enabled; si no, no-op)
+  // → lanzamiento automático del juego en 3 s → reporte.
+  // ============================================================
+  function readyEstado(txt) {
+    const el = $('#mm-ready-estado');
+    if (el) el.textContent = txt;
+  }
+
+  function pintarReady(listos, total) {
+    const cont = $('#mm-ready-cont');
+    if (cont) cont.textContent = 'LISTOS ' + (listos || 0) + '/' + (total || 0);
+    const fill = $('#mm-ready-fill');
+    if (fill && total > 0) fill.style.width = Math.round(((listos || 0) / total) * 100) + '%';
+    const bl = $('#mm-listo');
+    if (bl && listoYa) { bl.textContent = 'LISTO ✓'; bl.disabled = true; }
+    reloj();
+  }
+
+  function reloj() {
+    const t = $('#mm-ready-tiempo');
+    if (!t) return;
+    if (!deadlineTs) { t.textContent = ''; return; }
+    const s = Math.max(0, Math.round((deadlineTs - Date.now()) / 1000));
+    t.textContent = '· ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function iniciarReadyPoll() {
+    if (sondeoReady) return;
+    sondeoReady = setInterval(readyPoll, 3000);
+    sondeoReloj = setInterval(reloj, 1000);
+    readyPoll();
+  }
+
+  async function readyPoll() {
+    if (!matchId) return detenerTodo();
+    const r = await rpc('mm_estado_ready', { p_match_id: matchId });
+    if (!r.ok) {
+      if (r.error === 'no_encontrado') partidaAnulada('partida inexistente');
+      return;
+    }
+    if (r.status === 'anulado') return partidaAnulada('no confirmaron todos a tiempo');
+    if (r.status !== 'propuesto') { detenerTodo(); return; } // ya reportada/verificada
+    if (r.deadline) deadlineTs = new Date(r.deadline).getTime();
+    pintarReady(r.listos, r.total);
+    if (r.vencido) {
+      const a = await rpc('mm_anular_si_timeout', { p_match_id: matchId });
+      if (a.ok && a.anulado) partidaAnulada('no confirmaron todos a tiempo');
+      return; // si no pudo anular (carrera), el próximo ciclo lo reintenta
+    }
+    if (r.total > 0 && r.listos >= r.total) todosListos();
+  }
+
+  async function marcarListo() {
+    if (!matchId || listoYa || lanzando) return;
+    const bl = $('#mm-listo');
+    if (bl) bl.disabled = true;
+    const r = await rpc('mm_listo', { p_match_id: matchId });
+    if (!r.ok) {
+      if (bl) bl.disabled = false;
+      if (r.error === 'timeout') { readyPoll(); return; }
+      readyEstado(r.error === 'partida_anulada' ? 'la partida fue anulada' : (r.error || 'no se pudo confirmar'));
+      return;
+    }
+    listoYa = true;
+    pintarReady(r.listos, r.total);
+  }
+
+  async function todosListos() {
+    if (lanzando || !matchId) return;
+    lanzando = true;
+    detenerTodo();
+    setEstado('TODOS LISTOS · preparando el juego…');
+    const bl = $('#mm-listo');
+    if (bl) bl.classList.add('oculto');
+    const bLanzar = $('#mm-lanzar');
+    if (bLanzar) bLanzar.classList.remove('oculto'); // queda como reintento manual
+    // Nivel 3 · cadena ExitLag (PREPARADA, OFF por defecto): si existe
+    // %APPDATA%\VANTS\exitlag.config.json con enabled:true y un perfil
+    // para el juego, el perfil se activa ANTES de abrir el juego; sin
+    // config responde {ok:false, reason:'disabled-…'} y sigue derecho.
+    let msg = '';
+    try {
+      const el = await H.exitlag('activar-juego', juegoEl.value);
+      if (el && el.ok) msg = ' · ExitLag: ' + (el.perfil || 'activo');
+    } catch (e) { /* sin puente exitlag: sigue derecho */ }
+    readyEstado('todos confirmaron — lanzando en 3…' + msg);
+    setTimeout(() => { if (lanzando) readyEstado('lanzando en 2…' + msg); }, 1000);
+    setTimeout(() => { if (lanzando) readyEstado('lanzando en 1…' + msg); }, 2000);
+    setTimeout(async () => {
+      if (!lanzando) return;
+      try { await lanzar(); } catch (e) { /* el botón manual queda como reintento */ }
+      readyEstado('juego lanzado' + msg + ' — jueguen y reporten el resultado acá');
+      reportarBox.classList.remove('oculto');
+      historial();
+    }, 3000);
+  }
+
+  function partidaAnulada(motivo) {
+    detenerTodo();
+    const rp = $('#mm-ready');
+    if (rp) rp.classList.add('oculto');
+    panelMatch.classList.add('oculto');
+    reportarBox.classList.add('oculto');
+    matchId = null; ticket = null; listoYa = false; lanzando = false; deadlineTs = null;
+    setEstado('partida anulada (' + motivo + ') · volviendo a la cola…');
+    btnEntrar.classList.remove('oculto');
+    btnSalir.classList.add('oculto');
+    // re-encolado automático con los parámetros del formulario (que
+    // siguen siendo los de la partida anulada). mm_encolar acepta de
+    // nuevo: el ticket viejo quedó 'matched', no bloquea.
+    setTimeout(() => { if (!ticket && !matchId && SESION && SESION.sub) entrar(); }, 2500);
   }
 
   // ---------- reportar ----------
@@ -194,7 +355,7 @@
     const bib = await H.biblioteca();
     const lista = (bib && bib.juegos) || [];
     const objetivo = lista.find((j) => (j.id === juego) || (j.nombre || '').toLowerCase().includes(juego === 'cs2' ? 'counter-strike' : juego));
-    if (objetivo) { await H.jugar(objetivo); return; }
+    if (objetivo) { await H.jugar(objetivo.id); return; }
     // sin biblioteca local: abrir por vía conocida
     if (juego === 'cs2') await H.abrir('steam://rungameid/730');
     else await H.abrir('https://playvalorant.com/');
@@ -368,6 +529,8 @@
     if (bEnviar) bEnviar.addEventListener('click', reportar);
     const bLanzar = $('#mm-lanzar');
     if (bLanzar) bLanzar.addEventListener('click', lanzar);
+    const bListo = $('#mm-listo');
+    if (bListo) bListo.addEventListener('click', marcarListo);
     const bRef = $('#mm-historial-refrescar');
     if (bRef) bRef.addEventListener('click', historial);
     if (invEnviar) invEnviar.addEventListener('click', invitar);
@@ -382,7 +545,14 @@
     H.onEstado(async (d) => {
       SESION = d.sesion;
       if (SESION && SESION.sub) { setEstado('listo'); historial(); invIniciarSondeo(); }
-      else { invDetenerSondeo(); invPintar({ recibidas: [], enviadas: [] }); }
+      else {
+        detenerTodo();
+        invDetenerSondeo(); invPintar({ recibidas: [], enviadas: [] });
+        const rp = $('#mm-ready');
+        if (rp) rp.classList.add('oculto');
+        if (panelMatch) panelMatch.classList.add('oculto');
+        matchId = null; listoYa = false; lanzando = false; deadlineTs = null;
+      }
     });
   }
 

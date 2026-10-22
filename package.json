@@ -4,7 +4,7 @@
   "description": "Dependencias para bundlear las Neon Functions (neon functions deploy) + herramientas de la plataforma de torneos (sync FACEIT, E2E Playwright)",
   "scripts": {
     "test": "node scripts/test_plataforma.js",
-    "test:hub": "node scripts/test_hub_juegos.js",
+    "test:hub": "node scripts/test_hub_juegos.js && node scripts/test_hub_seguridad.js",
     "test:telemetria": "node scripts/test_telemetria.js",
     "test:e2e": "playwright test",
     "sync:faceit": "node scripts/sincronizar-faceit.mjs",

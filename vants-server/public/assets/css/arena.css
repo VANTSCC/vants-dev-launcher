@@ -84,6 +84,7 @@ section{scroll-margin-top:92px}
 .nav-links .dd a{display:block;padding:9px 12px;font:700 10px/1.3 var(--sans);letter-spacing:.1em;color:#b9c0c9;border-left:2px solid transparent;transition:background .12s ease,color .12s ease,border-color .12s ease}
 .nav-links .dd a:hover{background:rgba(255,13,46,.1);border-left-color:var(--accent,#ff0d2e);color:#fff}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.nav-burger,.nav-links .nav-mob-only{display:none}
 .acc-btn{position:relative;display:flex;align-items:center;gap:9px;padding:5px 12px 5px 5px;border:1px solid var(--line2);transition:border-color .2s}
 .acc-btn:hover{border-color:var(--accent)}
 .acc-btn .ava{width:30px;height:30px;font-size:10px}
@@ -759,15 +760,35 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
 }
 @media(max-width:760px){
   .wrap{padding:0 18px}
-  /* Nav móvil: franja horizontal scrollable con el MISMO menú que escritorio (D23).
-     Sustituye al display:none que dejaba a las páginas interiores sin navegación
-     cuando el shell strafe (su nav móvil) se retiró. */
-  .nav-in{flex-wrap:wrap;height:auto;padding:12px 0;row-gap:4px}
-  .nav-links{display:flex;order:3;width:100%;margin-left:0;gap:18px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .nav-links::-webkit-scrollbar{display:none}
-  .nav-links .ni{flex:none}
-  .nav-links .ni>a{white-space:nowrap;padding:8px 0}
-  .nav-links .dd{display:none}
+  /* Nav móvil sin JS: franja horizontal scrollable (respaldo, D23). */
+  .nav:not(.nav-js) .nav-in{flex-wrap:wrap;height:auto;padding:12px 0;row-gap:4px}
+  .nav:not(.nav-js) .nav-links{display:flex;order:3;width:100%;margin-left:0;gap:18px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .nav:not(.nav-js) .nav-links::-webkit-scrollbar{display:none}
+  .nav:not(.nav-js) .nav-links .ni{flex:none}
+  .nav:not(.nav-js) .nav-links .ni>a{white-space:nowrap;padding:8px 0}
+  .nav:not(.nav-js) .nav-links .dd{display:none}
+  .nav-links .nav-mob-only{display:block}
+  /* Nav móvil: hamburguesa (assets/js/nav-movil.js) que abre el MISMO menú de
+     escritorio como panel a pantalla completa, con los submenús desplegados.
+     !important: el Nav de Astro trae estilos con scope de mayor especificidad. */
+  .nav-js .nav-in{gap:12px;height:60px}
+  .nav-js .nav-right{gap:8px}
+  .nav-js .nav-right a[href="membresias.html"]{display:none}
+  .nav-js .nav-burger{display:inline-flex;flex-direction:column;justify-content:center;gap:4px;flex:none;width:40px;height:36px;padding:0 11px;background:var(--panel);border:1px solid var(--line2);cursor:pointer}
+  .nav-js .nav-burger span{display:block;height:2px;background:var(--text);transition:transform .2s,opacity .2s}
+  .nav-js.nav-open .nav-burger{border-color:var(--accent)}
+  .nav-js.nav-open .nav-burger span:nth-child(1){transform:translateY(6px) rotate(45deg)}
+  .nav-js.nav-open .nav-burger span:nth-child(2){opacity:0}
+  .nav-js.nav-open .nav-burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+  .nav-js .nav-links{display:none;position:absolute;left:0;right:0;top:100%;height:calc(100vh - 60px);height:calc(100dvh - 60px);margin:0;flex-direction:column;gap:0;padding:6px 18px 40px;background:#0a0a0c;border-top:1px solid var(--line);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .nav-js.nav-open .nav-links{display:flex}
+  .nav-js .nav-links .ni{border-bottom:1px solid var(--line)}
+  .nav-js .nav-links .ni>a{display:flex!important;padding:16px 0!important;font-size:13px!important;color:var(--text)!important}
+  .nav-js .nav-links .chev{display:none}
+  .nav-js .nav-links .ni.has-sub>.dd{position:static!important;transform:none!important;opacity:1!important;visibility:visible!important;min-width:0!important;background:none!important;border:0!important;box-shadow:none!important;padding:0 0 12px!important;transition:none!important}
+  .nav-js .nav-links .ni.has-sub>.dd::before{display:none}
+  .nav-js .nav-links .dd a{padding:10px 12px!important;font-size:11px!important}
+  html.nav-lock{overflow:hidden}
   .gamebar-in{height:auto;padding:12px 0;flex-wrap:wrap;gap:12px}
   .gb-next{display:none}
   .mrow{grid-template-columns:70px 1fr 60px 1fr;gap:10px}
@@ -1117,4 +1138,12 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;background:var(--bg2
 .dl-note{border:1px dashed var(--line2);border-radius:12px;padding:14px 16px;margin-top:14px;
   font:500 10px/1.8 var(--mono);color:var(--dim)}
 .dl-note b{color:var(--muted)}
+@media(max-width:760px){
+  .dl-card{flex-direction:column;align-items:stretch}
+  .dl-actions{min-width:0}
+  .dl-feats{grid-template-columns:1fr 1fr;gap:8px}
+  .dl-feat{padding:12px}
+  .dl-feat h4{font-size:9px;line-height:1.5;margin:8px 0 0}
+  .dl-feat p{display:none}
+}
 .nav-dl{color:var(--accent)!important}
