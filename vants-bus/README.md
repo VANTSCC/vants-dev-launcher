@@ -1,44 +1,56 @@
-# VANTS-BUS · Cliente para Vants-launcher (Electron)
+# VANTS-BUS · Consumidor REAL del launcher (ACTIVADO)
 
 Bus de eventos central: `https://vants-bus.vants.workers.dev`
 
-El launcher consume el bus con **long-poll** (casi tiempo real, sin CDN ni
-WebSocket todavía) y reacciona a lo que pasa en el ecosistema:
+Estado: **consumidor activo en el proceso main** — cableado en
+`desktop-electron/main.js` (aditivo: si no hay configuración, el
+launcher arranca exactamente igual que siempre). Verificado en vivo
+contra el bus real con stub de Electron (notificación + reenvío al
+renderer + cursor persistido).
 
-- `match.finished` → toast "Ganó X vs Y" en vivo
-- `match.scheduled` / `match.canceled` → actualiza la agenda del overlay
-- `clip.published` → notificación de nuevo clip
-- `alert.detected` → avisos de los agentes
+## Componentes
 
-## Uso (proceso principal de Electron)
+| Archivo | Qué es |
+|---|---|
+| `vants-bus-client.js` | Cliente universal (ESM) para uso avanzado. |
+| `snippet-electron.js` | Ejemplo didáctico. |
+| `../desktop-electron/vants-bus-consumer.js` | **El consumidor real** (CommonJS, autónomo, incluido en `build.files`). |
 
-```js
-const { VantsBus, EVENTS } = require('../vants-bus/vants-bus-client.js');
-// o, si el repo usa ESM: import { VantsBus, EVENTS } from '../vants-bus/vants-bus-client.js';
+## Qué hace el consumidor real
 
-const bus = new VantsBus({
-  busUrl: process.env.VANTS_BUS_URL || 'https://vants-bus.vants.workers.dev',
-  projectId: 'vants-launcher',
-  secret: process.env.VANTS_BUS_SECRET, // NO hardcodear: env o store seguro del usuario
-});
+- **Long-poll 20 s** → toasts casi en tiempo real sin WebSocket.
+- Tipos que escucha: `tournament.inscriptions_opened`,
+  `match.finished`, `match.scheduled`, `match.canceled`,
+  `clip.highlights_ready`, `post.generated`, `alert.detected`.
+- **Notificación nativa del SO** + reenvío a TODAS las ventanas por
+  el canal IPC `vants:bus-evento` (el renderer lo recibe con
+  `window.vantsHub.onBusEvento(ev)` — ya expuesto en `preload.js`).
+- **Cursor persistente** en `userData/vants-bus-cursor.json`: al
+  reiniciar continúa donde quedó, sin duplicados. Primera ejecución
+  NO reproduce el historial: empieza "desde ahora".
+- IPC adicional: `vants:bus-estado` (diagnóstico) y
+  `vants:bus-publicar` (por si el renderer quiere publicar).
+- Helper `publicar(type, data)` en el proceso main para publicar
+  (p. ej. `game.session_started` cuando el launcher abra un juego).
 
-const stop = bus.startPolling({
-  onEvent: (e) => {
-    if (e.type === EVENTS.MATCH_FINISHED) {
-      new Notification({ title: 'Resultado VANTS', body: `${e.data.a} ${e.data.sa} — ${e.data.sb} ${e.data.b}` }).show();
-    }
-  },
-  onError: (err) => console.warn('bus:', err.message),
-  waitSeconds: 25, // long-poll
-});
-// stop() para cancelar al cerrar la app
-```
+## Activación (config)
 
-## Secret del proyecto
+El consumidor se enciende SOLO con configuración (la primera que
+exista gana):
 
-`VANTS_BUS_SECRET` = secreto HMAC de `vants-launcher` (generado y guardado
-en el archivo local de secretos; no se sube a GitHub). En producción
-empaquetado, distribuir con `safeStorage` de Electron o pedirlo al arrancar.
+1. Variables de entorno al arrancar el launcher:
+   `VANTS_BUS_URL` + `VANTS_BUS_SECRET` (secreto de `vants-launcher`).
+2. O un archivo `vants-bus.config.json`:
+   - junto a `main.js`, o
+   - en `%APPDATA%/vants-hub/vants-bus.config.json`:
+     ```json
+     { "busUrl": "https://vants-bus.vants.workers.dev", "secret": "<secreto de vants-launcher>" }
+     ```
 
-`snippet-electron.js` tiene un módulo completo de toasts + agenda listo para
-cargar en el proceso principal.
+El secreto NO va en el repo: se distribuye con `safeStorage` o se
+coloca a mano en la máquina del jugador.
+
+## Nota Cloudflare
+
+El módulo envía `User-Agent` propio: CF Bot Fight Mode bloquea
+clientes con UA genérico (403 error 1010).

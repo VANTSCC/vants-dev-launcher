@@ -42,17 +42,22 @@
       "preload.js",
       "telemetria.js",
       "seguridad.js",
-      "renderer/**/*"
+      "renderer/**/*",
+      "vants-bus-consumer.js"
     ],
     "win": {
       "target": [
         {
           "target": "msi",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",

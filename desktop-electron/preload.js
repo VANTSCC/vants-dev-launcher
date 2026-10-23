@@ -15,5 +15,8 @@ contextBridge.exposeInMainWorld('vantsHub', {
   notificar:   (opts) => ipcRenderer.invoke('hub:notificar', opts),
   onEstado:    (cb) => ipcRenderer.on('hub:estado', (e, d) => cb(d)),
   onActualizacion: (cb) => ipcRenderer.on('hub:update', (e, d) => cb(d)),
-  actualizarInstalar: () => ipcRenderer.invoke('hub:actualizar-instalar')
+  actualizarInstalar: () => ipcRenderer.invoke('hub:actualizar-instalar'),
+  // VANTS-BUS (eventos en vivo del bus: partidos, torneos, clips, alertas)
+  onBusEvento: (cb) => ipcRenderer.on('vants:bus-evento', (e, ev) => cb(ev)),
+  busEstado:   () => ipcRenderer.invoke('vants:bus-estado')
 });

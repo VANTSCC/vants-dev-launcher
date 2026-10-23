@@ -668,6 +668,12 @@ if (typeof app !== 'undefined' && app && app.whenReady) {
     sesion = cargarSesion();
     if (sesion) { reiniciarLatido(); }
     reiniciarProcesos();
+    // VANTS-BUS: consumidor de eventos (aditivo — queda INERTE si no hay
+    // config en env o vants-bus.config.json; nunca rompe el arranque)
+    try {
+      const _busInfo = require('./vants-bus-consumer').iniciar();
+      log('vants-bus:', _busInfo && _busInfo.ok ? 'consumidor activo' : `apagado (${_busInfo && _busInfo.razon})`);
+    } catch (e) { log('vants-bus: no iniciado —', e.message); }
     log('VANTS HUB listo ·', app.getVersion());
 
     app.on('window-all-closed', () => { if (!IS_WIN && !IS_MAC) app.quit(); else app.quit(); });
