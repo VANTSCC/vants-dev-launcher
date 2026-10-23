@@ -1,0 +1,96 @@
+name: "Bootstrap · copiar NEON_API_KEY a la org"
+
+# Copia el secreto NEON_API_KEY de ESTE repo (el que ya lo tiene) hacia:
+#   1. Secreto de ORG VANTSCC (visibility=all) → todos los repos lo heredan
+#   2. Secreto de repo en VANTSCC/VantsBasedetatos (fuente de verdad de la BD)
+#   3. Secreto de repo en VANTSCC/Playvants-web (migraciones neon-functions + agente)
+#
+# Usa BOOTSTRAP_PAT (PAT admin de feispla) y AL TERMINAR SE AUTO-BORRA ese PAT
+# del almacén de secretos de este repo (hygiene: no queda PAT persistente).
+#
+# Re-ejecutable en el futuro si se rota la clave de Neon: actualizar NEON_API_KEY
+# aquí, volver a crear BOOTSTRAP_PAT con el PAT vigente y correr este workflow.
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  copiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Instalar PyNaCl
+        run: python3 -m pip install --quiet pynacl
+
+      - name: Copiar NEON_API_KEY (org + repos) y auto-borrar BOOTSTRAP_PAT
+        env:
+          PAT: ${{ secrets.BOOTSTRAP_PAT }}
+          NEON: ${{ secrets.NEON_API_KEY }}
+        run: |
+          python3 << 'PYEOF'
+          import base64, json, os, urllib.request, urllib.error
+          from nacl import encoding, public as nacl_public
+
+          PAT = os.environ["PAT"]
+          NEON = os.environ["NEON"]
+          ORG = "VANTSCC"
+          REPOS = ["VANTSCC/VantsBasedetatos", "VANTSCC/Playvants-web"]
+          problemas = []
+
+          def req(url, method="GET", data=None):
+              r = urllib.request.Request(url, method=method,
+                  data=json.dumps(data).encode() if data is not None else None,
+                  headers={"Authorization": f"Bearer {PAT}",
+                           "Accept": "application/vnd.github+json"})
+              try:
+                  with urllib.request.urlopen(r) as resp:
+                      body = resp.read()
+                      return json.loads(body) if body else {}
+              except urllib.error.HTTPError as e:
+                  detalle = e.read().decode()[:200]
+                  raise RuntimeError(f"HTTP {e.code} en {method} {url}: {detalle}")
+
+          def sellar(pk_b64, secreto):
+              pkey = nacl_public.PublicKey(pk_b64.encode(), encoding.Base64Encoder())
+              return base64.b64encode(nacl_public.SealedBox(pkey).encrypt(secreto.encode())).decode()
+
+          # 1) Secreto de ORG (visibility=all)
+          try:
+              pk = req(f"https://api.github.com/orgs/{ORG}/actions/secrets/public-key")
+              req(f"https://api.github.com/orgs/{ORG}/actions/secrets/NEON_API_KEY", "PUT", {
+                  "encrypted_value": sellar(pk["key"], NEON),
+                  "key_id": pk["key_id"],
+                  "visibility": "all"})
+              print(f"OK  org secret NEON_API_KEY en {ORG} (visibility=all)")
+          except Exception as e:
+              problemas.append(f"org: {e}")
+              print(f"AVISO org secret fallo: {e}")
+
+          # 2) Secretos de repo (explícitos; pisan al org en esos repos)
+          for repo in REPOS:
+              try:
+                  pk = req(f"https://api.github.com/repos/{repo}/actions/secrets/public-key")
+                  req(f"https://api.github.com/repos/{repo}/actions/secrets/NEON_API_KEY", "PUT", {
+                      "encrypted_value": sellar(pk["key"], NEON),
+                      "key_id": pk["key_id"]})
+                  print(f"OK  repo secret NEON_API_KEY en {repo}")
+              except Exception as e:
+                  problemas.append(f"{repo}: {e}")
+                  print(f"AVISO repo secret fallo en {repo}: {e}")
+
+          # 3) Auto-borrado del PAT temporal (siempre, aunque haya avisos)
+          try:
+              req("https://api.github.com/repos/VANTSCC/vants-dev-launcher/actions/secrets/BOOTSTRAP_PAT", "DELETE")
+              print("OK  BOOTSTRAP_PAT auto-borrado del repo")
+          except Exception as e:
+              problemas.append(f"limpieza: {e}")
+              print(f"AVISO limpieza fallo: {e}")
+
+          if len(problemas) == 1 and problemas[0].startswith("org:"):
+              print("::warning::Solo fallo el org secret; los repos quedan cubiertos.")
+          elif problemas:
+              raise SystemExit(f"ERRORES: {'; '.join(problemas)}")
+          print("RELAY COMPLETO")
+          PYEOF
